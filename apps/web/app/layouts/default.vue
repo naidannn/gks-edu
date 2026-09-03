@@ -13,7 +13,7 @@ const route = useRoute();
  */
 const NAV = [
   { to: '/universities', label: 'Их сургуулиуд' },
-  { to: '/consultation?service=GKS_SCHOLARSHIP', label: 'GKS тэтгэлэг' },
+  { to: '/gks-scholarship', label: 'GKS тэтгэлэг' },
   { to: '/#planner', label: 'Төлөвлөгч' },
   { to: '/consultation', label: 'Зөвлөгөө' },
 ];
@@ -29,7 +29,7 @@ const FOOTER_SERVICES = [
   { to: '/consultation?service=LANGUAGE_PREP', label: 'Хэлний бэлтгэл' },
   { to: '/consultation?service=BACHELOR', label: 'Бакалавр' },
   { to: '/consultation?service=MASTER', label: 'Магистр, доктор' },
-  { to: '/consultation?service=GKS_SCHOLARSHIP', label: 'GKS тэтгэлэг' },
+  { to: '/gks-scholarship', label: 'GKS тэтгэлэг' },
 ];
 
 const year = new Date().getFullYear();

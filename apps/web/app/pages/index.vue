@@ -107,7 +107,7 @@ const SERVICES = [
     text: 'Судалгааны чиглэл, профессор сонгох зөвлөгөө, эрдэм шинжилгээний материалын бэлтгэл.',
   },
   {
-    to: '/consultation?service=GKS_SCHOLARSHIP',
+    to: '/gks-scholarship',
     icon: 'award',
     title: 'GKS тэтгэлэг',
     text: 'БНСУ-ын Засгийн газрын тэтгэлэгт хөтөлбөрийн мэдүүлэг — 2 шатны шалгаруулалт.',
@@ -120,16 +120,6 @@ const STATS = computed(() => [
   { icon: 'compass', value: SERVICES.length, label: 'Үйлчилгээний чиглэл' },
   { icon: 'calendar-clock', value: 4, label: 'Хэлний ангийн элсэлт /жил' },
 ]);
-
-const PROCESS = [
-  { icon: 'message-circle', title: 'Зөвлөгөө', text: 'Боловсрол, хэлний түвшин, төсвөө тодруулж, тохирох хувилбарыг сонгоно.' },
-  { icon: 'file-pen-line', title: 'Гэрээ', text: 'Зуучлалын гэрээг цахимаар байгуулж, урьдчилгаа төлбөрөө QPay-аар төлнө.' },
-  { icon: 'folder-check', title: 'Материал', text: 'Шаардлагатай бичиг баримтын жагсаалт автоматаар гарч, онлайнаар хянагдана.' },
-  { icon: 'send', title: 'Мэдүүлэг', text: 'Сургуульд мэдүүлэг илгээж, хариуг хүлээн авна.' },
-  { icon: 'mail', title: 'Урилга', text: 'Сургалтын төлбөр шилжүүлж, албан ёсны урилгыг авна.' },
-  { icon: 'stamp', title: 'Виз', text: 'Визний материал бүрдүүлж, элчин сайдын яаманд мэдүүлнэ.' },
-  { icon: 'plane', title: 'Явах бэлтгэл', text: 'Билет, даатгал, байр, тосох үйлчилгээ — чеклистээр хянана.' },
-];
 
 // FAQ content sourced from gksedu.md §5.4–§5.5, §9, §6.
 const FAQ = [
@@ -301,20 +291,6 @@ useSeoMeta({
         </div>
       </div>
     </dl>
-
-    <section>
-      <h2 class="gks-section__title">Хэрхэн явагддаг вэ</h2>
-      <ol class="gks-process">
-        <li v-for="(item, index) in PROCESS" :key="item.title" class="gks-process__step">
-          <span class="gks-process__badge gks-tnum">
-            <DsIcon :name="item.icon" :size="18" />
-            {{ String(index + 1).padStart(2, '0') }}
-          </span>
-          <h3 class="gks-process__title">{{ item.title }}</h3>
-          <p class="gks-process__text">{{ item.text }}</p>
-        </li>
-      </ol>
-    </section>
 
     <section v-if="trustWall.length">
       <div class="gks-section__head gks-trust__head">
@@ -546,36 +522,6 @@ useSeoMeta({
   color: var(--text-strong);
 }
 .gks-stats__item dt { font-size: var(--fs-caption); color: var(--text-muted); }
-
-/* ---- Process ---- */
-.gks-process {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: var(--sp-4);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.gks-process__step {
-  padding: var(--sp-5);
-  background: var(--surface-card);
-  border: var(--border-hair) solid var(--line-soft);
-  border-radius: var(--radius-3);
-}
-.gks-process__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px var(--sp-3);
-  background: var(--brand-050);
-  color: var(--brand-700);
-  font-family: var(--font-mono);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-semibold);
-  border-radius: var(--radius-pill);
-}
-.gks-process__title { margin-top: var(--sp-3); font-size: var(--fs-body-lg); font-weight: var(--fw-bold); }
-.gks-process__text { margin-top: var(--sp-2); font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--text-muted); }
 
 /* ---- Trust wall ---- */
 .gks-trust__head { align-items: center; margin-bottom: var(--sp-5); }
