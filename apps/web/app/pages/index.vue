@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UniversityCard, UniversityFacets } from '@gks/shared';
 
-/** Public landing page: hero, planner, services, trust wall, process, FAQ, CTA (1A-09). */
+/** Public landing page: hero, planner, active admissions, services, trust wall, FAQ, CTA (1A-09). */
 const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets');
 const selectedCity = ref('');
 const featuredQuery = computed(() => ({
@@ -198,6 +198,8 @@ useSeoMeta({
     </section>
 
     <HomeRoadmapTimeline />
+
+    <HomeActiveAdmissions />
 
     <section>
       <div class="gks-section__head">
