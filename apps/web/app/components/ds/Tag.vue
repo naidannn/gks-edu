@@ -39,7 +39,7 @@ const emit = defineEmits<{ click: []; remove: [] }>();
   background: var(--n-000);
   color: var(--text-body);
   border: var(--border-hair) solid var(--line-strong);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-pill);
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
   transition: var(--transition-control);

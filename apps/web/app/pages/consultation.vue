@@ -24,6 +24,12 @@ const initialService = (() => {
   return typeof value === 'string' && value in SERVICE_LABELS ? (value as ServiceType) : null;
 })();
 
+/** A visitor arriving from the homepage roadmap widget keeps their target-date note. */
+const initialNote = (() => {
+  const value = route.query.note;
+  return typeof value === 'string' ? value.slice(0, 2000) : '';
+})();
+
 const form = reactive({
   lastName: '',
   firstName: '',
@@ -36,7 +42,7 @@ const form = reactive({
   englishLevel: '',
   interestedServices: (initialService ? [initialService] : []) as ServiceType[],
   interestedMajor: '',
-  note: '',
+  note: initialNote,
   /** Honeypot — a real visitor never sees this. */
   website: '',
 });
@@ -344,7 +350,7 @@ useSeoMeta({
   border: var(--border-hair) solid var(--line-hairline);
   border-bottom: var(--border-rail) solid var(--line-hairline);
 }
-.gks-steps__item--active { color: var(--text-strong); border-bottom-color: var(--red-700); }
+.gks-steps__item--active { color: var(--text-strong); border-bottom-color: var(--brand-600); }
 .gks-steps__item--done { color: var(--text-muted); border-bottom-color: var(--green-600); }
 .gks-steps__index {
   display: grid;

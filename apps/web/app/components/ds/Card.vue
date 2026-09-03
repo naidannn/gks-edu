@@ -34,10 +34,11 @@ withDefaults(
 <style scoped>
 .gks-card {
   background: var(--surface-card);
-  border: var(--border-hair) solid var(--line-hairline);
-  border-radius: var(--radius-1);
+  border: var(--border-hair) solid var(--line-soft);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-raised);
 }
-.gks-card--accent { border-top: var(--border-rail) solid var(--red-700); }
+.gks-card--accent { border-top: var(--border-rail) solid var(--red-700); border-start-start-radius: var(--radius-3); border-start-end-radius: var(--radius-3); }
 
 .gks-card__header {
   display: flex;

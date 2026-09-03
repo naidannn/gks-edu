@@ -55,10 +55,10 @@ const checkboxId = useId();
   border: var(--border-hair) solid var(--line-strong);
   background: var(--n-000);
   color: var(--text-inverse);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   transition: var(--transition-control);
 }
-.gks-checkbox__box--checked { border-color: var(--ink-800); background: var(--ink-800); }
+.gks-checkbox__box--checked { border-color: var(--brand-600); background: var(--brand-600); }
 
 .gks-checkbox__text { display: flex; flex-direction: column; gap: 2px; }
 .gks-checkbox__label { font-size: var(--fs-body-sm); color: var(--text-body); }

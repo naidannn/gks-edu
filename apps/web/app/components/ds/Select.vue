@@ -54,7 +54,7 @@ const selectId = useId();
   padding: 0 var(--sp-9) 0 var(--sp-4);
   background: var(--n-000);
   border: var(--border-hair) solid var(--line-strong);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   font-family: var(--font-sans);
   font-size: var(--fs-body);
   color: var(--text-body);
@@ -62,7 +62,7 @@ const selectId = useId();
   cursor: pointer;
   transition: var(--transition-control);
 }
-.gks-field__select:focus { border-color: var(--ink-800); box-shadow: inset 0 0 0 1px var(--ink-800); }
+.gks-field__select:focus { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
 .gks-field__select--error { border-color: var(--red-700); }
 .gks-field__select:disabled { background: var(--n-050); color: var(--text-disabled); cursor: not-allowed; }
 .gks-field__chevron { position: absolute; right: var(--sp-4); pointer-events: none; color: var(--text-muted); }

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * Primary action control. Square-edged (2px), ink-first; `accent` (red) is
- * reserved for the single most consequential action on a screen.
+ * Primary action control. Soft-rounded; `accent` is the brand blue and belongs
+ * to the single most consequential action on a screen, `primary` is the neutral
+ * ink button used inside the app UI.
  */
 withDefaults(
   defineProps<{
@@ -39,7 +40,7 @@ const ICON_SIZE = { sm: 16, md: 18, lg: 20 } as const;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   border: var(--border-hair) solid transparent;
   font-family: var(--font-sans);
   font-weight: var(--fw-semibold);
@@ -60,11 +61,21 @@ const ICON_SIZE = { sm: 16, md: 18, lg: 20 } as const;
 .gks-btn--primary:hover:not(:disabled) { background: var(--ink-700); border-color: var(--ink-700); }
 .gks-btn--primary:active:not(:disabled) { background: var(--ink-900); border-color: var(--ink-900); }
 
-.gks-btn--accent { background: var(--red-700); border-color: var(--red-700); color: var(--text-inverse); }
-.gks-btn--accent:hover:not(:disabled) { background: var(--red-600); border-color: var(--red-600); }
-.gks-btn--accent:active:not(:disabled) { background: var(--red-800); border-color: var(--red-800); }
+.gks-btn--accent {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-brand);
+}
+.gks-btn--accent:hover:not(:disabled) { background: var(--brand-700); border-color: var(--brand-700); }
+.gks-btn--accent:active:not(:disabled) { background: var(--brand-800); border-color: var(--brand-800); }
 
-.gks-btn--secondary { background: var(--n-000); border-color: var(--line-strong); color: var(--ink-800); }
+.gks-btn--secondary {
+  background: var(--n-000);
+  border-color: var(--line-hairline);
+  color: var(--ink-800);
+  box-shadow: var(--shadow-raised);
+}
 .gks-btn--secondary:hover:not(:disabled) { background: var(--surface-hover); }
 .gks-btn--secondary:active:not(:disabled) { background: var(--surface-active); }
 

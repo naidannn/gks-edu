@@ -48,7 +48,7 @@ const textareaId = useId();
 .gks-field__textarea {
   padding: var(--sp-3) var(--sp-4);
   border: var(--border-hair) solid var(--line-strong);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   background: var(--n-000);
   resize: vertical;
   font-family: var(--font-sans);
@@ -58,7 +58,7 @@ const textareaId = useId();
   outline: none;
   transition: var(--transition-control);
 }
-.gks-field__textarea:focus { border-color: var(--ink-800); box-shadow: inset 0 0 0 1px var(--ink-800); }
+.gks-field__textarea:focus { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
 .gks-field__textarea--error { border-color: var(--red-700); }
 .gks-field__textarea:disabled { background: var(--n-050); color: var(--text-disabled); }
 

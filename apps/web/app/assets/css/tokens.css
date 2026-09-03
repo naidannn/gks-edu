@@ -1,8 +1,13 @@
 /*
  * GKS EDU GROUP design tokens.
- * Ported verbatim from the Claude Design system project
- * (claude.ai/design/p/118f1105-e6a5-4e4e-af7e-eaf0ab44c721) — do not hand-edit
- * values here without updating the source design system too.
+ * Base scales ported from the Claude Design system project
+ * (claude.ai/design/p/118f1105-e6a5-4e4e-af7e-eaf0ab44c721).
+ *
+ * 2026 marketing refresh: the public site leads with **blue** (--brand-*) as the
+ * primary action colour and a soft, rounded, low-contrast card surface. The GKS
+ * red stays as the brand accent — logo, the Korea destination marker, and the
+ * one "this matters" highlight per screen. Keep this file and the source design
+ * system in sync when either changes.
  */
 
 :root {
@@ -13,6 +18,11 @@
   /* ---- Base: Red (sampled from the logo bar, rgb 195 38 45) ---- */
   --red-900: #75161b; --red-800: #9a1e24; --red-700: #c3262d; --red-600: #d93a41;
   --red-300: #f0a5a8; --red-100: #f9dedf; --red-050: #fdf2f2;
+
+  /* ---- Base: Brand blue (primary action colour of the public site) ---- */
+  --brand-950: #0f1f4a; --brand-900: #172554; --brand-800: #1e3a8a; --brand-700: #1d4ed8;
+  --brand-600: #2563eb; --brand-500: #3b82f6; --brand-400: #60a5fa; --brand-300: #93c5fd;
+  --brand-200: #bfdbfe; --brand-100: #dbeafe; --brand-050: #eff6ff; --brand-025: #f6faff;
 
   /* ---- Base: Neutral (cool, slightly blue-shifted to sit with the ink) ---- */
   --n-000: #ffffff; --n-025: #fafbfc; --n-050: #f4f6f8; --n-100: #eaedf1;
@@ -31,30 +41,40 @@
   --text-muted: var(--n-600);
   --text-subtle: var(--n-500);
   --text-inverse: var(--n-000);
-  --text-accent: var(--red-700);
+  --text-accent: var(--brand-600);
+  --text-brand: var(--brand-600);
+  --text-red: var(--red-700);
   --text-link: var(--ink-800);
-  --text-link-hover: var(--red-700);
+  --text-link-hover: var(--brand-700);
   --text-disabled: var(--n-400);
 
   /* ---- Semantic: surfaces ---- */
-  --surface-page: var(--n-050);
+  --surface-page: #f6f8fc;
   --surface-card: var(--n-000);
   --surface-raised: var(--n-000);
   --surface-sunken: var(--n-025);
   --surface-inverse: var(--ink-800);
+  --surface-footer: #101a2b;
   --surface-inverse-2: var(--ink-700);
-  --surface-accent: var(--red-700);
+  --surface-accent: var(--brand-600);
+  --surface-brand-soft: var(--brand-050);
+  --surface-red: var(--red-700);
+  /* Hero / CTA wash — the pale blue gradient the marketing pages sit on. */
+  --surface-wash: linear-gradient(160deg, #eef4ff 0%, #f7fafd 58%, #eef6ff 100%);
   --surface-hover: var(--n-050);
   --surface-active: var(--n-100);
-  --surface-selected: var(--blue-050);
+  --surface-selected: var(--brand-050);
 
   /* ---- Semantic: lines. Hairlines do the work that radii don't. ---- */
   --line-hairline: var(--n-200);
   --line-strong: var(--n-300);
   --line-ink: var(--ink-800);
-  --line-accent: var(--red-700);
+  --line-accent: var(--brand-600);
+  --line-brand: var(--brand-600);
+  --line-red: var(--red-700);
+  --line-soft: var(--n-100);
   --line-inverse: rgba(255, 255, 255, .16);
-  --focus-ring: var(--blue-600);
+  --focus-ring: var(--brand-600);
 
   /* ---- Semantic: document / application status (5-state pipeline) ---- */
   --status-missing-fg: var(--slate-700);  --status-missing-bg: var(--slate-050);  --status-missing-line: var(--n-300);
@@ -99,8 +119,9 @@
   --sp-6: 24px; --sp-7: 32px; --sp-8: 40px; --sp-9: 48px; --sp-10: 64px;
   --sp-11: 80px; --sp-12: 112px; --sp-13: 160px;
 
-  --radius-0: 0px; --radius-1: 2px; --radius-2: 3px; --radius-3: 4px;
-  --radius-pill: 0px;
+  --radius-0: 0px; --radius-1: 8px; --radius-2: 12px; --radius-3: 16px;
+  --radius-4: 24px; --radius-5: 32px;
+  --radius-pill: 999px;
   --bevel: 10px;
 
   --border-hair: 1px; --border-thick: 2px; --border-rail: 3px;
@@ -108,14 +129,18 @@
   --control-sm: 36px; --control-md: 44px; --control-lg: 52px;
 
   --container-prose: 68ch; --container-narrow: 720px;
-  --container-content: 1080px; --container-wide: 1320px; --container-full: 1600px;
+  --container-content: 1080px; --container-page: 1180px;
+  --container-wide: 1320px; --container-full: 1600px;
 
   --gutter-mobile: 20px; --gutter-tablet: 32px; --gutter-desktop: 48px;
 
   /* ---- Elevation ---- */
   --shadow-none: none;
   --shadow-hairline: 0 0 0 1px var(--line-hairline);
-  --shadow-raised: 0 1px 2px rgba(13, 17, 22, .06);
+  --shadow-raised: 0 1px 2px rgba(19, 32, 64, .05), 0 1px 3px rgba(19, 32, 64, .05);
+  --shadow-card: 0 2px 4px -2px rgba(19, 32, 64, .06), 0 8px 24px -12px rgba(19, 32, 64, .14);
+  --shadow-lift: 0 4px 8px -4px rgba(19, 32, 64, .08), 0 16px 32px -16px rgba(19, 32, 64, .20);
+  --shadow-brand: 0 6px 16px -8px rgba(37, 99, 235, .55);
   --shadow-menu: 0 8px 24px -8px rgba(13, 17, 22, .20), 0 0 0 1px rgba(13, 17, 22, .06);
   --shadow-dialog: 0 24px 64px -16px rgba(13, 17, 22, .32), 0 0 0 1px rgba(13, 17, 22, .08);
   --shadow-focus: 0 0 0 2px var(--n-000), 0 0 0 4px var(--focus-ring);

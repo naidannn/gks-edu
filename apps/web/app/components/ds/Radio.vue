@@ -54,8 +54,8 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
   justify-content: center;
   transition: var(--transition-control);
 }
-.gks-radio__dot--checked { border-color: var(--ink-800); }
-.gks-radio__dot-inner { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-800); }
+.gks-radio__dot--checked { border-color: var(--brand-600); }
+.gks-radio__dot-inner { width: 10px; height: 10px; border-radius: 50%; background: var(--brand-600); }
 
 .gks-radio__text { display: flex; flex-direction: column; gap: 2px; }
 .gks-radio__label { font-size: var(--fs-body-sm); color: var(--text-body); }

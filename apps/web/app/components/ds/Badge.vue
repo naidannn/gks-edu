@@ -23,7 +23,7 @@ withDefaults(
   gap: 6px;
   padding: 3px var(--sp-2);
   border: var(--border-hair) solid transparent;
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-pill);
   font-size: var(--fs-micro);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-caps-tight);

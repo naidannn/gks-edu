@@ -32,7 +32,7 @@ const DIM = { sm: 36, md: 44, lg: 52 } as const;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   border: var(--border-hair) solid transparent;
   background: transparent;
   color: var(--ink-700);

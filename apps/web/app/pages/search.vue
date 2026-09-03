@@ -95,7 +95,7 @@ async function search() {
 
 .gks-hit-list { display: flex; flex-direction: column; gap: var(--sp-2); list-style: none; margin: 0; padding: 0; }
 .gks-hit { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); }
-.gks-hit__title { font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--red-700); }
+.gks-hit__title { font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--brand-700); }
 .gks-hit__score { flex-shrink: 0; font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-hit__content { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); }
 

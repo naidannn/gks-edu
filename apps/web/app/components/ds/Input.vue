@@ -61,10 +61,10 @@ const inputId = useId();
   padding: 0 var(--sp-4);
   background: var(--n-000);
   border: var(--border-hair) solid var(--line-strong);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   transition: var(--transition-control);
 }
-.gks-field__control:focus-within { border-color: var(--ink-800); box-shadow: inset 0 0 0 1px var(--ink-800); }
+.gks-field__control:focus-within { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
 .gks-field__control--error { border-color: var(--red-700); }
 .gks-field__control--error:focus-within { box-shadow: inset 0 0 0 1px var(--red-700); }
 .gks-field__control--disabled { background: var(--n-050); }

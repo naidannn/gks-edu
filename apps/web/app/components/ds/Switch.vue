@@ -43,10 +43,10 @@ defineEmits<{ 'update:modelValue': [value: boolean] }>();
   padding: 2px;
   display: flex;
   background: var(--n-300);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-2);
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
-.gks-switch__track--checked { background: var(--ink-800); }
+.gks-switch__track--checked { background: var(--brand-600); }
 
 .gks-switch__thumb {
   width: 20px;

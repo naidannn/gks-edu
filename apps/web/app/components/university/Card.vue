@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import type { UniversityCard } from '@gks/shared';
 
-const props = defineProps<{ university: UniversityCard }>();
+const props = withDefaults(
+  defineProps<{
+    university: UniversityCard;
+    nameLanguage?: 'mn' | 'en';
+    showLivingCost?: boolean;
+  }>(),
+  { nameLanguage: 'mn', showLivingCost: true },
+);
 
 const students = computed(() => formatNumber(props.university.studentsTotal));
+const displayName = computed(() =>
+  props.nameLanguage === 'en' ? props.university.nameEn : props.university.nameMn,
+);
 const monthlyCost = computed(() =>
   formatKrwRange(
     props.university.livingCost?.monthlyTotalMin,
@@ -21,20 +31,21 @@ const monthlyCost = computed(() =>
         :alt="`${university.nameMn} лого`"
         class="gks-uni-card__logo"
         loading="lazy"
-        width="56"
-        height="56"
+        width="72"
+        height="72"
       >
       <div v-else class="gks-uni-card__logo gks-uni-card__logo--empty" aria-hidden="true">
         <DsIcon name="graduation-cap" :size="24" />
       </div>
 
       <div class="gks-uni-card__title">
-        <h3 class="gks-uni-card__name">{{ university.nameMn }}</h3>
+        <span v-if="university.type !== 'NATIONAL'" class="gks-uni-card__type">
+          {{ UNIVERSITY_TYPE_LABELS[university.type] }}
+        </span>
+        <h3 class="gks-uni-card__name">{{ displayName }}</h3>
         <p class="gks-uni-card__name-ko">{{ university.nameKo }}</p>
       </div>
     </div>
-
-    <p v-if="university.shortIntroMn" class="gks-uni-card__intro">{{ university.shortIntroMn }}</p>
 
     <dl class="gks-uni-card__facts">
       <div>
@@ -45,14 +56,13 @@ const monthlyCost = computed(() =>
         <dt>Оюутны тоо</dt>
         <dd :class="{ 'gks-uni-card__unknown': !students }">{{ students ?? '—' }}</dd>
       </div>
-      <div>
+      <div v-if="showLivingCost">
         <dt>Амьжиргаа / сар</dt>
         <dd :class="{ 'gks-uni-card__unknown': !monthlyCost }">{{ monthlyCost ?? '—' }}</dd>
       </div>
     </dl>
 
     <div class="gks-uni-card__tags">
-      <DsBadge tone="neutral">{{ UNIVERSITY_TYPE_LABELS[university.type] }}</DsBadge>
       <DsBadge v-if="university.acceptsLanguagePrep" tone="info">Хэлний бэлтгэл</DsBadge>
       <DsBadge v-if="university.isGksEligible" tone="accent">GKS</DsBadge>
     </div>
@@ -63,7 +73,7 @@ const monthlyCost = computed(() =>
 .gks-uni-card {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-3);
   height: 100%;
   padding: var(--sp-5);
   background: var(--surface-card);
@@ -80,8 +90,8 @@ const monthlyCost = computed(() =>
 
 .gks-uni-card__head { display: flex; align-items: center; gap: var(--sp-4); }
 .gks-uni-card__logo {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   flex: none;
   background: var(--surface-sunken);
@@ -94,6 +104,20 @@ const monthlyCost = computed(() =>
   color: var(--text-subtle);
 }
 .gks-uni-card__title { min-width: 0; }
+.gks-uni-card__type {
+  display: inline-flex;
+  margin-bottom: 3px;
+  padding: 2px 6px;
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--text-subtle);
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
 .gks-uni-card__name {
   font-family: var(--font-display);
   font-size: var(--fs-body-lg);
@@ -106,17 +130,6 @@ const monthlyCost = computed(() =>
   margin-top: 2px;
   font-size: var(--fs-caption);
   color: var(--text-subtle);
-}
-
-.gks-uni-card__intro {
-  font-size: var(--fs-body-sm);
-  line-height: var(--lh-body);
-  color: var(--text-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .gks-uni-card__facts {
