@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.output
+**/.nuxt
+**/coverage
+**/*.tsbuildinfo
+apps/api/src/generated
+.git
+.env
+.env.*
+!.env.example

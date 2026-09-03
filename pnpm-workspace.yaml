@@ -1,0 +1,24 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Which dependencies may run install scripts (pnpm 11 `allowBuilds`).
+# The allowed ones each need it to fetch or compile a native binary;
+# @scarf/scarf is analytics-only and is denied on purpose.
+allowBuilds:
+  '@prisma/engines': true
+  '@swc/core': true
+  esbuild: true
+  prisma: true
+  unrs-resolver: true
+  '@scarf/scarf': false
+
+peerDependencyRules:
+  allowedVersions:
+    # @nestjs/throttler has not published a Nest 12 peer range yet. Its guard
+    # API is unchanged and works against v12 — drop this once it catches up.
+    '@nestjs/throttler>@nestjs/common': '12'
+    '@nestjs/throttler>@nestjs/core': '12'
+
+minimumReleaseAgeExclude:
+  - vue-router@5.3.1

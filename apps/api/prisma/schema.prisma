@@ -1,0 +1,92 @@
+// Prisma schema — PostgreSQL 17 with the pgvector extension.
+//
+// Prisma 7 keeps connection URLs out of this file; they live in
+// `prisma.config.ts` (CLI) and in the driver adapter (`PrismaService`).
+//
+// `Unsupported("vector(1536)")` maps the pgvector column type: Prisma tracks it
+// in migrations but cannot read or write it through the typed client, so
+// embeddings go through raw queries in `src/modules/vector/vector.service.ts`.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  // NestJS 12 is ESM-only, so the client is generated as ESM too.
+  moduleFormat    = "esm"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  // On Supabase these already exist in the `extensions` schema, so the
+  // generated `CREATE EXTENSION IF NOT EXISTS` is a no-op there.
+  extensions = [vector, pg_trgm]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  documents     Document[]
+
+  @@index([createdAt])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  /// SHA-256 of the issued refresh token — the raw token is never stored.
+  tokenHash String    @unique
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model Document {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  source    String?
+  metadata  Json     @default("{}")
+  authorId  String?  @db.Uuid
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chunks DocumentChunk[]
+
+  @@index([authorId])
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @db.Uuid
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// Position of this chunk inside the parent document.
+  chunkIndex Int
+  content    String
+  /// pgvector column. Keep the dimension in sync with EMBEDDING_DIMENSIONS.
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime @default(now())
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@map("document_chunks")
+}

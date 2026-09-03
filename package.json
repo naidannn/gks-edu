@@ -1,0 +1,32 @@
+{
+  "name": "gks-edu",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "dev:api": "pnpm --filter @gks/api dev",
+    "dev:web": "pnpm --filter @gks/web dev",
+    "build": "pnpm -r build",
+    "start": "pnpm -r --parallel --filter \"./apps/*\" start",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,vue,js,json,md,yml}\"",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "db:up": "docker compose up -d redis",
+    "db:up:local": "docker compose --profile local-db up -d",
+    "db:down": "docker compose --profile local-db down",
+    "db:reset": "docker compose --profile local-db down -v && docker compose --profile local-db up -d",
+    "prisma:generate": "pnpm --filter @gks/api prisma:generate",
+    "prisma:migrate": "pnpm --filter @gks/api prisma:migrate",
+    "prisma:studio": "pnpm --filter @gks/api prisma:studio",
+    "prisma:seed": "pnpm --filter @gks/api prisma:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3"
+  }
+}

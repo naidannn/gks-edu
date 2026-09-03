@@ -1,0 +1,7 @@
+node_modules
+dist
+.output
+.nuxt
+coverage
+pnpm-lock.yaml
+apps/api/src/generated
