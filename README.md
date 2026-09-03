@@ -46,8 +46,14 @@ cp .env.example .env        # then fill in the Supabase password + JWT secrets
 pnpm db:up                  # Redis
 pnpm prisma:migrate         # apply migrations
 pnpm prisma:seed            # admin@gks.edu / student@gks.edu — password123
+pnpm universities:import --publish   # 135 Korean universities + logos (see below)
 pnpm dev                    # web :3000 + api :3001
 ```
+
+`universities:import` reads `UNIVERSITIES_DATA_DIR` (135 JSON records + logos, outside this
+repo), upserts by `slug`, and copies the logos into `apps/web/public/universities/logos`.
+Re-running refreshes the dataset fields and never overwrites the staff-maintained columns
+(`acceptsLanguagePrep` … `internalNote`, `isPublished`).
 
 - Web — <http://localhost:3000>
 - API — <http://localhost:3001/api/v1>
@@ -79,6 +85,8 @@ pnpm db:up:local            # postgres 17 + pgvector + redis
 | `pnpm typecheck` / `pnpm lint` | across the workspace |
 | `pnpm db:up` / `db:up:local` / `db:down` / `db:reset` | docker compose |
 | `pnpm prisma:generate` / `migrate` / `deploy` / `studio` / `seed` | Prisma |
+| `pnpm universities:import` | import the Korean university dataset (`--publish`, `--no-assets`) |
+| `pnpm tasks [epic]` | roadmap progress from `docs/TASKS.md` |
 
 ## API
 
@@ -103,6 +111,12 @@ POST   /api/v1/documents/search   cosine similarity search
 GET    /api/v1/documents
 GET    /api/v1/documents/:id
 DELETE /api/v1/documents/:id
+
+GET    /api/v1/universities       public — q, region, type, level, languagePrep, gks, sort, page
+GET    /api/v1/universities/facets public — filter counts by region and type
+GET    /api/v1/universities/:slug public — detail + programmes + intake terms
+
+POST   /api/v1/leads/public       public, 5 req/hour — website consultation request
 
 GET    /api/v1/health             public
 ```

@@ -13,17 +13,23 @@
 
 ---
 
-## Одоогийн байдал (2026-09-03)
+## Одоогийн байдал (2026-09-04)
 
-Бэлэн болсон: pnpm monorepo, NestJS 12 API (auth/JWT/refresh rotation, users, health,
+Бэлэн болсон суурь: pnpm monorepo, NestJS 12 API (auth/JWT/refresh rotation, users, health,
 global guard + алдааны нэг бүтэц), Prisma 7 + Supabase + pgvector (HNSW), Redis cache,
 Nuxt 4 + GKS дизайн систем (`tokens.css`, 12 DS компонент).
 
-Бизнесийн домэйн код **хараахан байхгүй** — `Lead`, `Case`, `Contract`, `Payment`,
-`CaseDocument` зэрэг нэг ч хүснэгт үүсээгүй. Өөрөөр хэлбэл суурь 100%, домэйн 0%.
+**Үе шат 1 эхэлсэн — `1A`-гийн цөм хэсэг бэлэн** (`TASKS.md`-д `review` төлөвтэй):
+`University` / `UniversityProgram` / `IntakeTerm` ба `Lead` / `LeadActivity` схем,
+135 сургуулийн импорт (`pnpm universities:import`), нийтийн `GET /universities`
+(хайлт, шүүлтүүр, facets) ба `GET /universities/:slug`, `POST /leads/public`
+(rate limit + honeypot + давхардал нэгтгэх), нүүр хуудас, сургуулийн каталог,
+сургуулийн дэлгэрэнгүй, 3 алхамт зөвлөгөөний форм.
 
-Бэлэн нөөц: `/Users/user/korean-universities-data` — 135 сургуулийн JSON + 108 лого,
-импортлоход бэлэн. `Burduuleh_materialiin_jagsaalt_negdsen.docx` — материалын бодит дүрэм.
+Домэйны үлдсэн хэсэг (`Case`, `Contract`, `Payment`, `CaseDocument` …) хараахан байхгүй.
+
+Бэлэн нөөц: `/Users/user/korean-universities-data` — 135 сургуулийн JSON + 108 лого
+(импортлогдсон). `Burduuleh_materialiin_jagsaalt_negdsen.docx` — материалын бодит дүрэм.
 
 ---
 

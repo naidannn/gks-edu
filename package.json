@@ -24,6 +24,7 @@
     "prisma:migrate": "pnpm --filter @gks/api prisma:migrate",
     "prisma:studio": "pnpm --filter @gks/api prisma:studio",
     "prisma:seed": "pnpm --filter @gks/api prisma:seed",
+    "universities:import": "pnpm --filter @gks/api universities:import",
     "tasks": "node scripts/task-status.mjs"
   },
   "devDependencies": {

@@ -10,6 +10,8 @@ import { configuration } from './config/configuration.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { LeadsModule } from './modules/leads/leads.module.js';
+import { UniversitiesModule } from './modules/universities/universities.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { VectorModule } from './modules/vector/vector.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -30,6 +32,8 @@ import { RedisModule } from './redis/redis.module.js';
     HealthModule,
     AuthModule,
     UsersModule,
+    UniversitiesModule,
+    LeadsModule,
     VectorModule,
   ],
   providers: [

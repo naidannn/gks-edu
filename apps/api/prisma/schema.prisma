@@ -16,7 +16,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
   // On Supabase these already exist in the `extensions` schema, so the
   // generated `CREATE EXTENSION IF NOT EXISTS` is a no-op there.
   extensions = [vector, pg_trgm]
@@ -37,8 +37,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
-  documents     Document[]
+  refreshTokens  RefreshToken[]
+  documents      Document[]
+  leads          Lead[]
+  assignedLeads  Lead[]         @relation("LeadAssignee")
+  leadActivities LeadActivity[]
 
   @@index([createdAt])
   @@map("users")
@@ -76,17 +79,296 @@ model Document {
 }
 
 model DocumentChunk {
-  id         String   @id @default(uuid()) @db.Uuid
-  documentId String   @db.Uuid
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  id         String                       @id @default(uuid()) @db.Uuid
+  documentId String                       @db.Uuid
+  document   Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
   /// Position of this chunk inside the parent document.
   chunkIndex Int
   content    String
   /// pgvector column. Keep the dimension in sync with EMBEDDING_DIMENSIONS.
   embedding  Unsupported("vector(1536)")?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime                     @default(now())
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
   @@map("document_chunks")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// University reference data (ARCHITECTURE.md §3)
+//
+// Imported from /Users/user/korean-universities-data by `prisma/import-universities.ts`.
+// Fields the dataset cannot know — whether the school takes Mongolian students,
+// agent contract terms, internal notes — are edited by staff and the importer
+// never overwrites them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UniversityType {
+  NATIONAL
+  PUBLIC
+  PRIVATE
+}
+
+enum AgentContractStatus {
+  NONE
+  IN_TALKS
+  SIGNED
+  EXPIRED
+}
+
+/// A brokerage service line (ARCHITECTURE.md §5).
+enum ServiceType {
+  LANGUAGE_PREP
+  BACHELOR
+  MASTER
+  PHD
+  GKS_SCHOLARSHIP
+}
+
+/// What a university actually teaches — GKS_SCHOLARSHIP is a service, not a level.
+enum ProgramLevel {
+  LANGUAGE_PREP
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum IntakeStatus {
+  PLANNED
+  OPEN
+  CLOSED
+}
+
+model University {
+  id     String         @id @default(uuid()) @db.Uuid
+  slug   String         @unique
+  nameKo String
+  nameEn String
+  nameMn String
+  type   UniversityType
+
+  foundedYear Int?
+  cityEn      String
+  cityMn      String
+  regionEn    String
+  regionMn    String
+  address     String?
+  lat         Float?
+  lon         Float?
+
+  logoPath  String?
+  coverPath String?
+
+  shortIntroMn          String?
+  detailedIntroMn       String?
+  studentsTotal         Int?
+  /// Unfilled by design in the source dataset — render null as "мэдээлэл шинэчлэгдэж байна".
+  internationalStudents Int?
+  mongolianStudents     Int?
+  numCampuses           Int?
+  campusInfo            String?
+  distanceFromSeoulKm   Float?
+  travelTimeFromSeoul   String?
+  /// Nearest metro/bus access — unfilled by design in the source dataset.
+  nearestTransit        String?
+  /// 3–6 editorial sentences in Mongolian; a human verifies these before launch.
+  advantages            String[] @default([])
+
+  /// Regional estimate: tier, monthly min/max, breakdown, isEstimate.
+  livingCost Json?
+  /// Usually null — the UI must render that as "мэдээлэл шинэчлэгдэж байна", not 0.
+  dormitory  Json?
+  /// officialWebsite, wikipedia, wikidata.
+  links      Json  @default("{}")
+  /// Per-field provenance: verified / editorial / estimated.
+  quality    Json  @default("{}")
+
+  // --- Staff-maintained; never touched by the importer ---
+  acceptsLanguagePrep Boolean             @default(false)
+  acceptsFromMongolia Boolean             @default(true)
+  isGksEligible       Boolean             @default(false)
+  agentContractStatus AgentContractStatus @default(NONE)
+  /// Internal — commission terms, never exposed on public endpoints.
+  commissionNote      String?
+  /// Internal — staff notes, never exposed on public endpoints.
+  internalNote        String?
+  isPublished         Boolean             @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs UniversityProgram[]
+  intakes  IntakeTerm[]
+
+  @@index([isPublished])
+  @@index([regionEn])
+  @@index([type])
+  @@map("universities")
+}
+
+model UniversityProgram {
+  id            String       @id @default(uuid()) @db.Uuid
+  universityId  String       @db.Uuid
+  university    University   @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  level         ProgramLevel
+  nameMn        String
+  nameEn        String?
+  nameKo        String?
+  /// Field of study, for filtering: "Инженерчлэл", "Бизнес" …
+  faculty       String?
+  durationYears Float?
+
+  tuitionPerYearKrw Int?
+  tuitionPerTermKrw Int?
+  /// Minimum TOPIK level required for admission (1–6).
+  topikLevel        Int?
+  ieltsScore        Float?
+  otherRequirements String?
+
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([universityId, level, nameMn])
+  @@index([universityId])
+  @@index([level])
+  @@map("university_programs")
+}
+
+/// Intake round. Language prep runs four a year, degree programmes two (§4.1, §4.2).
+model IntakeTerm {
+  id           String       @id @default(uuid()) @db.Uuid
+  universityId String       @db.Uuid
+  university   University   @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  level        ProgramLevel
+  year         Int
+  /// 3, 6, 9 or 12 — the Korean academic intake months.
+  month        Int
+
+  applicationDeadline DateTime?
+  status              IntakeStatus @default(PLANNED)
+  note                String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([universityId, level, year, month])
+  @@index([universityId])
+  @@index([year, month])
+  @@map("intake_terms")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CRM — leads (ARCHITECTURE.md §4, gksedu.md §5.2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EducationLevel {
+  SECONDARY_SCHOOL
+  VOCATIONAL
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum LeadSource {
+  WEBSITE
+  AI_CHAT
+  PHONE
+  SOCIAL
+  OFFICE
+  /// "Хэлний сургалтын төв" — the only trace the deferred MIRAE module leaves here.
+  LANGUAGE_CENTER
+  REFERRAL
+  OTHER
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  CONSULTED
+  PROPOSAL_SENT
+  CONTRACT_PENDING
+  WON
+  LOST
+}
+
+enum LeadActivityType {
+  NOTE
+  CALL
+  MEETING
+  MESSAGE
+  EMAIL
+  CHAT
+  STAGE_CHANGE
+}
+
+model Lead {
+  id     String  @id @default(uuid()) @db.Uuid
+  /// Set once the lead registers an account.
+  userId String? @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  firstName String
+  lastName  String
+  phone     String
+  email     String?
+
+  age            Int?
+  educationLevel EducationLevel?
+  gpa            Float?
+  /// gksedu.md §24 question 1 — the GPA scale in use is still undecided.
+  gpaScale       String?
+  koreanLevel    String?
+  englishLevel   String?
+
+  interestedServices      ServiceType[] @default([])
+  interestedUniversityIds String[]      @default([]) @db.Uuid
+  interestedMajor         String?
+  plannedIntakeId         String?       @db.Uuid
+
+  source LeadSource
+  stage  LeadStage  @default(NEW)
+
+  assignedToId   String?   @db.Uuid
+  assignedTo     User?     @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  nextContactAt  DateTime?
+  /// gksedu.md §15.1 "гэрээ болох магадлал", 0–100.
+  winProbability Int?
+  lostReason     String?
+
+  note String?
+  /// Marketing attribution: utm_source/medium/campaign, referrer, landing page.
+  utm  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities LeadActivity[]
+
+  @@index([stage])
+  @@index([assignedToId])
+  @@index([source])
+  @@index([createdAt])
+  @@index([phone])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id     String           @id @default(uuid()) @db.Uuid
+  leadId String           @db.Uuid
+  lead   Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type   LeadActivityType
+  body   String?
+  /// Type-specific payload: call duration, previous/next stage, channel …
+  meta   Json             @default("{}")
+
+  /// Null for system-generated entries.
+  actorId String? @db.Uuid
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  occurredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([leadId, occurredAt])
+  @@map("lead_activities")
 }

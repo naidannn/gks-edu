@@ -19,6 +19,7 @@ async function onLogout() {
 
         <div class="gks-appbar__links">
           <NuxtLink to="/" class="gks-appbar__link">Нүүр</NuxtLink>
+          <NuxtLink to="/universities" class="gks-appbar__link">Сургуулиуд</NuxtLink>
           <NuxtLink v-if="auth.isAuthenticated" to="/documents" class="gks-appbar__link">Баримт</NuxtLink>
           <NuxtLink v-if="auth.isAuthenticated" to="/search" class="gks-appbar__link">Хайлт</NuxtLink>
 
@@ -26,7 +27,10 @@ async function onLogout() {
             <span class="gks-appbar__user gks-tnum">{{ auth.user?.email }}</span>
             <DsButton variant="inverse" size="sm" icon-left="log-out" @click="onLogout">Гарах</DsButton>
           </template>
-          <DsButton v-else variant="accent" size="sm" @click="navigateTo('/login')">Нэвтрэх</DsButton>
+          <template v-else>
+            <NuxtLink to="/login" class="gks-appbar__link">Нэвтрэх</NuxtLink>
+            <DsButton variant="accent" size="sm" @click="navigateTo('/consultation')">Зөвлөгөө авах</DsButton>
+          </template>
         </div>
       </nav>
     </header>
@@ -36,7 +40,19 @@ async function onLogout() {
     </main>
 
     <footer class="gks-footer">
-      <p class="gks-footer__text">Nuxt 4 · NestJS · Prisma · PostgreSQL 17 + pgvector · Redis</p>
+      <div class="gks-footer__inner">
+        <div>
+          <p class="gks-footer__brand">«Жи Кэй Эс Эдү Групп» ХХК</p>
+          <p class="gks-footer__text">
+            Eco International Tower, 17 давхар, 1707 тоот · Утас
+            <a href="tel:+97677109000" class="gks-footer__link gks-tnum">7710-9000</a>
+          </p>
+        </div>
+        <nav class="gks-footer__nav" aria-label="Хөлийн цэс">
+          <NuxtLink to="/universities" class="gks-footer__link">Сургуулиуд</NuxtLink>
+          <NuxtLink to="/consultation" class="gks-footer__link">Зөвлөгөө авах</NuxtLink>
+        </nav>
+      </div>
     </footer>
   </div>
 </template>
@@ -83,8 +99,20 @@ async function onLogout() {
 
 .gks-footer {
   border-top: var(--border-hair) solid var(--line-hairline);
-  padding: var(--sp-5) var(--gutter-desktop);
-  text-align: center;
+  padding: var(--sp-6) var(--gutter-desktop);
 }
-.gks-footer__text { font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-footer__inner {
+  max-width: var(--container-content);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+.gks-footer__brand { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-body); }
+.gks-footer__text { margin-top: var(--sp-1); font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-footer__nav { display: flex; gap: var(--sp-5); }
+.gks-footer__link { font-size: var(--fs-caption); color: var(--text-link); text-decoration: none; }
+.gks-footer__link:hover { color: var(--text-link-hover); }
 </style>

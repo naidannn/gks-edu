@@ -48,27 +48,27 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 |---|---|---|---|---|
-| `1A-01` | Prisma схем: `University`, `UniversityProgram`, `IntakeTerm` + enum-ууд | todo | M | 0-03 |
-| `1A-02` | Импорт скрипт: `korean-universities-data/data/*.json` → DB (`slug` upsert, гараар бөглөсөн талбарыг дарж бичихгүй) | todo | M | 1A-01 |
-| `1A-03` | Лого/cover зургийг storage bucket руу хуулах + зам DB-д бичих (108 лого) | todo | S | 1A-02, 0-08 |
-| `1A-04` | `GET /universities` — хайлт (`pg_trgm`), шүүлтүүр (бүс, төрөл, хэлний бэлтгэлтэй эсэх), эрэмбэ, хуудаслалт | todo | M | 1A-01 |
-| `1A-05` | `GET /universities/:slug` — дэлгэрэнгүй + хөтөлбөр + элсэлтийн улирал | todo | S | 1A-04 |
-| `1A-06` | Frontend: сургуулийн каталог хуудас (карт grid, шүүлтүүрийн самбар, хайлт) | todo | L | 1A-04 |
-| `1A-07` | Frontend: сургуулийн дэлгэрэнгүй хуудас (6 бүлэг: үндсэн, байршил, үзүүлэлт, дотуур байр, зардал, давуу тал) | todo | L | 1A-05 |
-| `1A-08` | `null` талбарыг "мэдээлэл шинэчлэгдэж байна" гэж үзүүлэх нэгдсэн дүрэм + `quality` badge | todo | S | 1A-07 |
-| `1A-09` | Нүүр хуудас: hero, үйлчилгээний 3 карт, процессын алхмууд, тоон үзүүлэлт, CTA | todo | L | 0-05 |
+| `1A-01` | Prisma схем: `University`, `UniversityProgram`, `IntakeTerm` + enum-ууд | review | M | 0-03 |
+| `1A-02` | Импорт скрипт: `korean-universities-data/data/*.json` → DB (`slug` upsert, гараар бөглөсөн талбарыг дарж бичихгүй) | review | M | 1A-01 |
+| `1A-03` | Лого/cover зургийг storage bucket руу шилжүүлэх + cover зургийг татаж авах. *(Одоогоор 105 лого `apps/web/public/universities/logos`-оос шууд үйлчилж байна — `0-08` бэлэн болмогц энэ таск storage руу нүүлгэнэ)* | todo | S | 1A-02, 0-08 |
+| `1A-04` | `GET /universities` — хайлт (`pg_trgm`), шүүлтүүр (бүс, төрөл, хэлний бэлтгэлтэй эсэх), эрэмбэ, хуудаслалт | review | M | 1A-01 |
+| `1A-05` | `GET /universities/:slug` — дэлгэрэнгүй + хөтөлбөр + элсэлтийн улирал | review | S | 1A-04 |
+| `1A-06` | Frontend: сургуулийн каталог хуудас (карт grid, шүүлтүүрийн самбар, хайлт) | review | L | 1A-04 |
+| `1A-07` | Frontend: сургуулийн дэлгэрэнгүй хуудас (6 бүлэг: үндсэн, байршил, үзүүлэлт, дотуур байр, зардал, давуу тал) | review | L | 1A-05 |
+| `1A-08` | `null` талбарыг "мэдээлэл шинэчлэгдэж байна" гэж үзүүлэх нэгдсэн дүрэм + `quality` badge | review | S | 1A-07 |
+| `1A-09` | Нүүр хуудас: hero, үйлчилгээний 3 карт, процессын алхмууд, тоон үзүүлэлт, CTA | review | L | 0-05 |
 | `1A-10` | Үйлчилгээний хуудсууд ×4 (хэлний бэлтгэл, бакалавр, магистр/доктор, GKS тэтгэлэг) — үнэ, нөхцөл, процесс | todo | M | 1A-09 |
 | `1A-11` | Prisma схем + API: `Post` (блог/мэдээ), `FaqItem` | todo | M | 0-03 |
 | `1A-12` | Frontend: блог жагсаалт + нийтлэлийн хуудас (SEO мета, OG зураг) | todo | M | 1A-11 |
 | `1A-13` | Frontend: FAQ хуудас (аккордеон, ангилалаар) | todo | S | 1A-11 |
-| `1A-14` | Prisma схем: `Lead`, `LeadActivity` + enum (`LeadStage`, `LeadSource`, `EducationLevel`) | todo | M | 0-03 |
-| `1A-15` | `POST /leads/public` — зөвлөгөөний хүсэлт (`@Public()`, rate limit, honeypot/captcha) | todo | M | 1A-14 |
-| `1A-16` | Frontend: зөвлөгөө авах форм (олон алхамт: холбоо барих → боловсрол → сонирхол) | todo | M | 1A-15 |
+| `1A-14` | Prisma схем: `Lead`, `LeadActivity` + enum (`LeadStage`, `LeadSource`, `EducationLevel`) | review | M | 0-03 |
+| `1A-15` | `POST /leads/public` — зөвлөгөөний хүсэлт (`@Public()`, rate limit, honeypot/captcha) | review | M | 1A-14 |
+| `1A-16` | Frontend: зөвлөгөө авах форм (олон алхамт: холбоо барих → боловсрол → сонирхол) | review | M | 1A-15 |
 | `1A-17` | Шинэ сэжим ирэхэд ажилтанд имэйл мэдэгдэл | todo | S | 1A-15, 0-10 |
 | `1A-18` | Хэрэглэгчийн бүртгэл/нэвтрэх хуудас, "сургууль хадгалах" (`SavedUniversity`) | todo | M | 0-04, 1A-05 |
 | `1A-19` | SEO суурь: sitemap.xml, robots.txt, мета/OG бүх хуудсанд, structured data | todo | M | 1A-12 |
 | `1A-20` | Мобайл responsive аудит + Lighthouse ≥ 90 (performance, SEO, a11y) | todo | M | 1A-09 |
-| `1A-21` | Аналитик (GA4/Plausible) + сурталчилгааны UTM-ийг `Lead.source`-д хадгалах | todo | S | 1A-15 |
+| `1A-21` | Аналитик (GA4/Plausible). *(UTM хадгалалт `Lead.utm`-д хийгдсэн — үлдсэн нь аналитикийн скрипт)* | todo | S | 1A-15 |
 | `1A-22` | Танилцуулга контент бөглөх: 4 үйлчилгээ, 5+ нийтлэл, 20+ FAQ (бизнес талаас) | todo | M | 1A-10 |
 
 ---

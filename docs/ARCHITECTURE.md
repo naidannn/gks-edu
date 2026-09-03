@@ -91,6 +91,13 @@ model University {
   shortIntroMn  String?
   detailedIntroMn String?
   studentsTotal Int?
+  internationalStudents Int?    // датад бөглөгдөөгүй — "мэдээлэл шинэчлэгдэж байна"
+  mongolianStudents     Int?
+  numCampuses           Int?
+  campusInfo            String?
+  distanceFromSeoulKm   Float?
+  travelTimeFromSeoul   String?
+  nearestTransit        String?  // датад бөглөгдөөгүй
   advantages    String[]                  // 3–6 монгол өгүүлбэр
   livingCost    Json?                     // tier, min/max, задаргаа, isEstimate
   dormitory     Json?                     // ихэвчлэн null — "мэдээлэл шинэчлэгдэж байна"
@@ -113,6 +120,10 @@ model University {
   шаардлага (TOPIK/IELTS), сургалтын төлбөр, элсэлтийн шаардлага.
 - `IntakeTerm` — жил, сар (3/6/9/12), мэдүүлгийн эцсийн хугацаа, төлөв.
   Хэлний бэлтгэл жилд 4 удаа, үндсэн анги 2 удаа (§4.1, §4.2).
+
+**Хэрэгжилт:** `apps/api/prisma/import-universities.ts` (`pnpm universities:import`,
+`--publish` тугтай бол нийтэлнэ, `--no-assets` бол зөвхөн DB). Лого нь `0-08` (storage
+adapter) бэлэн болтол `apps/web/public/universities/logos`-оос үйлчилнэ.
 
 **Импортын дүрэм:** JSON-оос ирсэн талбарууд `quality`-тэй хамт хадгалагдана; `null` утгыг
 frontend дээр "мэдээлэл шинэчлэгдэж байна" гэж үзүүлнэ, 0 гэж биш. `advantages`, `nameMn` нь
