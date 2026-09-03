@@ -2,6 +2,13 @@
 
 pnpm workspace monorepo.
 
+> **Product docs** (Mongolian) — `docs/gksedu.md` is the business spec,
+> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) the technical design,
+> [`docs/ROADMAP.md`](docs/ROADMAP.md) the phases, and
+> [`docs/TASKS.md`](docs/TASKS.md) every task with its status (`pnpm tasks` prints progress).
+> [`CLAUDE.md`](CLAUDE.md) is the working guide, including what is **out of scope**.
+> Below is the boilerplate this all sits on.
+
 | Layer     | Stack |
 |-----------|-------|
 | Frontend  | Nuxt 4 · Vue 3 · TypeScript · Pinia · Tailwind CSS 4 |

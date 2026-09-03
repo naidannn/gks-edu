@@ -1,0 +1,505 @@
+# ARCHITECTURE.md — GKSedu.mn зуучлалын систем
+
+> Энэ баримт нь `gksedu.md` (бизнесийн тодорхойлолт) дээр суурилсан **техникийн архитектур**.
+> Бизнесийн шаардлага зөрчилдвөл `gksedu.md` давуу эрхтэй; энд зөвхөн түүнийг хэрхэн барих
+> шийдвэрийг тэмдэглэнэ. Хэрэгжүүлэх дараалал → `ROADMAP.md`, таск бүрийн төлөв → `TASKS.md`.
+
+---
+
+## 0. Хамрах хүрээ
+
+**Хамаарна (Үе шат 1–4):** зуучлалын бүх процесс — сэжим → гэрээ → төлбөр → материал →
+мэдүүлэг → урилга → виз → явах бэлтгэл, түүнчлэн нийтийн вэбсайт, сургуулийн сан,
+AI чат туслах, дотоод удирдлага, тайлан.
+
+**ХАМААРАХГҮЙ:** Хэл сургалтын төвийн модуль (MIRAE Smart Education — анги, хуваарь, багш,
+ирц, сургалтын төлбөрийн мөчлөг). `gksedu.md` §4.4-т тодорхой хойшлуулсан. Түүний техникийн
+тодорхойлолт `GKSEDU-ARCHITECTURE.md`-д зөвхөн **ирээдүйн лавлагаа** болгон хадгалагдана.
+Энэ системд үлдэх цорын ганц ул мөр нь `Lead.source = "LANGUAGE_CENTER"` гэсэн утга.
+
+---
+
+## 1. Систем түвшний бүтэц
+
+```
+                    ┌──────────────────────────────────────────────┐
+   Зочин ───────────▶                                              │
+   Бүртгэлтэй ──────▶   apps/web  ·  Nuxt 4 (SSR)                  │
+   Гэрээтэй ────────▶   ├── (public)  танилцуулга, сургуулийн сан  │
+   Ажилтан ─────────▶   ├── (app)     хэрэглэгчийн кабинет         │
+   Админ ───────────▶   └── (admin)   CRM, материал, тайлан        │
+                    └───────────────────┬──────────────────────────┘
+                                        │ REST /api/v1 (JWT)
+                    ┌───────────────────▼──────────────────────────┐
+                    │  apps/api · NestJS 12 (ESM)                   │
+                    │  auth │ leads │ cases │ contracts │ payments  │
+                    │  documents │ applications │ visa │ notify     │
+                    │  universities │ content │ rag │ reports       │
+                    └───┬─────────┬──────────┬──────────┬──────────┘
+                        │         │          │          │
+                 ┌──────▼──┐ ┌────▼────┐ ┌───▼────┐ ┌───▼────────┐
+                 │Postgres │ │ Redis 8 │ │ Object │ │ Гадаад:    │
+                 │ 17 +    │ │ cache + │ │ storage│ │ QPay v2    │
+                 │ pgvector│ │ BullMQ  │ │(privat)│ │ Email/SMS  │
+                 └─────────┘ └─────────┘ └────────┘ │ LLM API    │
+                                                    └────────────┘
+```
+
+Нэг API, нэг өгөгдлийн сан. Хэрэглэгчийн кабинет ба админ хэсэг **нэг Nuxt апп** дотор
+route бүлгээр тусгаарлагдана (тусдаа апп болгох шаардлага одоогоор алга).
+
+---
+
+## 2. Технологийн шийдвэрүүд
+
+| # | Шийдвэр | Шалтгаан |
+|---|---|---|
+| A1 | Монолит API (NestJS модулиуд), микросервис биш | Багийн хэмжээ, домэйн хоорондын гүйлгээ (гэрээ↔төлбөр↔материал) нэг транзакцид байх шаардлагатай |
+| A2 | Postgres нэг сан, `pgvector` мөн адил тэнд | RAG-ийн эх сурвалж нь бизнесийн өгөгдөлтэй ижил эрхийн шүүлтүүр хэрэглэнэ (§12) |
+| A3 | Файл — Supabase Storage (S3-нийцтэй), **private bucket** + signed URL | Хувийн бичиг баримт (паспорт, дансны хуулга). DB-д файлын мета, blob биш |
+| A4 | BullMQ (Redis) — мэдэгдэл, OCR, PDF үүсгэлт, QPay polling | HTTP хүсэлт дотор гуравдагч талын API-г хүлээхгүй |
+| A5 | Төлбөр — QPay v2 (invoice + callback webhook + polling fallback) | `gksedu.md` §5.5. Webhook алдагдвал polling нөхнө |
+| A6 | Гэрээ — сервер талд PDF үүсгэж, OTP-баталгаажсан цахим зөвшөөрөл | Дан систем/ЭЦС-ийн интеграц одоогоор тодорхойгүй (§18 асуулт 3) |
+| A7 | RBAC + эзэмшлийн шалгалт (ownership guard) | Ажилтан зөвхөн өөрт хуваарилагдсан хэргийг харна (§18.4) |
+| A8 | Бүх төлөвийн шилжилт — тусдаа `*_transitions` хүснэгтэд аудит | §17.7 "процессийн явц харагддаггүй" асуудлыг шийдэх үндэс |
+
+---
+
+## 3. Сургуулийн мэдээллийн сан
+
+Эх сурвалж: `/Users/user/korean-universities-data` (135 бичлэг, 108 стандарт лого).
+Гараар дахин оруулахгүй — seed скриптээр импортлоно.
+
+```prisma
+model University {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique          // ajou-university
+  nameKo        String
+  nameEn        String
+  nameMn        String
+  type          UniversityType            // NATIONAL | PUBLIC | PRIVATE
+  foundedYear   Int?
+  cityEn        String
+  cityMn        String
+  regionEn      String
+  regionMn      String
+  address       String?
+  lat           Float?
+  lon           Float?
+  logoPath      String?
+  coverPath     String?
+  shortIntroMn  String?
+  detailedIntroMn String?
+  studentsTotal Int?
+  advantages    String[]                  // 3–6 монгол өгүүлбэр
+  livingCost    Json?                     // tier, min/max, задаргаа, isEstimate
+  dormitory     Json?                     // ихэвчлэн null — "мэдээлэл шинэчлэгдэж байна"
+  links         Json                      // officialWebsite, wikipedia, wikidata
+  quality       Json                      // талбар бүрийн эх сурвалж
+  // --- зуучлалд шаардлагатай, дата сангаас ИРЭХГҮЙ, гараар бөглөнө ---
+  acceptsLanguagePrep   Boolean @default(false)   // §4.1 бүх сургууль МУ-аас авдаггүй
+  acceptsFromMongolia   Boolean @default(true)
+  isGksEligible         Boolean @default(false)   // §4.3
+  agentContractStatus   AgentContractStatus @default(NONE)
+  commissionNote        String?                   // дотоод, §15.5
+  internalNote          String?                   // дотоод
+  isPublished           Boolean @default(false)
+  programs      UniversityProgram[]
+  intakes       IntakeTerm[]
+}
+```
+
+- `UniversityProgram` — түвшин (`LANGUAGE_PREP|BACHELOR|MASTER|PHD`), мэргэжил, хэлний
+  шаардлага (TOPIK/IELTS), сургалтын төлбөр, элсэлтийн шаардлага.
+- `IntakeTerm` — жил, сар (3/6/9/12), мэдүүлгийн эцсийн хугацаа, төлөв.
+  Хэлний бэлтгэл жилд 4 удаа, үндсэн анги 2 удаа (§4.1, §4.2).
+
+**Импортын дүрэм:** JSON-оос ирсэн талбарууд `quality`-тэй хамт хадгалагдана; `null` утгыг
+frontend дээр "мэдээлэл шинэчлэгдэж байна" гэж үзүүлнэ, 0 гэж биш. `advantages`, `nameMn` нь
+редакцийн текст — нээлтээс өмнө хүн шалгана. Дахин импорт нь `slug`-аар `upsert` хийж,
+гараар бөглөсөн талбаруудыг (`acceptsLanguagePrep` … `internalNote`) **дарж бичихгүй**.
+
+---
+
+## 4. CRM — боломжит харилцагч (Lead)
+
+```prisma
+model Lead {
+  id              String     @id @default(uuid()) @db.Uuid
+  userId          String?    @db.Uuid        // бүртгүүлсэн бол холбогдоно
+  firstName String;  lastName String
+  phone     String;  email String?
+  age Int?;  educationLevel EducationLevel?
+  gpa Float?;  gpaScale String?              // §24 асуулт 1 — шаталбар тодорхойгүй
+  koreanLevel String?;  englishLevel String?
+  interestedServices  ServiceType[]
+  interestedUniversityIds String[] @db.Uuid
+  interestedMajor String?
+  plannedIntakeId String?  @db.Uuid
+  source          LeadSource                 // WEBSITE|AI_CHAT|PHONE|SOCIAL|OFFICE|LANGUAGE_CENTER|REFERRAL
+  stage           LeadStage  @default(NEW)
+  assignedToId    String?    @db.Uuid
+  nextContactAt   DateTime?
+  winProbability  Int?                       // §15.1 "гэрээ болох магадлал", 0–100
+  lostReason      String?
+  activities      LeadActivity[]
+}
+```
+
+**Борлуулалтын үе шат (`LeadStage`):**
+
+```
+NEW → CONTACTED → CONSULTED → PROPOSAL_SENT → CONTRACT_PENDING → WON
+                                    └──────────────────────────→ LOST
+```
+
+`WON` болоход систем `Case`-ийг үүсгэнэ (§5). `LeadActivity` нь дуудлага, уулзалт,
+чат, тэмдэглэл, даалгаврыг нэг цаг хугацааны хэлхээнд хадгална (§15.1).
+
+---
+
+## 5. `Case` — гол агрегат
+
+Нэг `Case` = нэг хэрэглэгч × нэг үйлчилгээ × нэг зорилтот сургууль × нэг элсэлтийн улирал.
+Хэрэглэгч дараа нь бакалаврт дахин зуучлуулбал шинэ `Case` үүснэ (§20).
+
+```prisma
+model Case {
+  id            String @id @default(uuid()) @db.Uuid
+  code          String @unique                 // GKS-2026-0417 — хүн уншихад
+  userId        String @db.Uuid
+  serviceType   ServiceType                    // LANGUAGE_PREP|BACHELOR|MASTER|PHD|GKS_SCHOLARSHIP
+  universityId  String? @db.Uuid
+  programId     String? @db.Uuid
+  intakeId      String? @db.Uuid
+  stage         CaseStage @default(CONTRACT_DRAFT)
+  assignedConsultantId String? @db.Uuid
+  assignedDocOfficerId String? @db.Uuid
+  contract      Contract?
+  documents     CaseDocument[]
+  application   Application?
+  visaCase      VisaCase?
+  payments      Payment[]
+  transitions   CaseTransition[]
+}
+```
+
+**Үе шатны урсгал** (`CaseStage`) — үйлчилгээний төрлөөс хамааран **төлбөрийн байрлал ялгаатай**:
+
+```
+Энгийн зуучлал (хэлний бэлтгэл / BA / MA / PhD):
+CONTRACT_DRAFT → CONTRACT_SIGNED → PREPAYMENT_PAID → DOCUMENTS → APPLICATION_SUBMITTED
+  → ADMITTED → TUITION_INVOICED → INVITATION_RECEIVED → VISA → VISA_APPROVED
+  → BALANCE_PAID → COLLATERAL_CONTRACT* → PRE_DEPARTURE → DEPARTED → COMPLETED
+
+GKS тэтгэлэг:
+CONTRACT_DRAFT → CONTRACT_SIGNED → PREPAYMENT_PAID → DOCUMENTS → APPLICATION_SUBMITTED
+  → GKS_ROUND1_PASSED → GKS_ROUND2_PASSED → BALANCE_PAID → VISA → VISA_APPROVED
+  → PRE_DEPARTURE → DEPARTED → COMPLETED
+
+Хаана ч болж болох: ON_HOLD, CANCELLED, REJECTED
+```
+
+`*` `COLLATERAL_CONTRACT` — зөвхөн **энгийн зуучлалын хэлний бэлтгэл**-д (§5.4).
+
+Үе шатны дараалал кодод хатуу биш, `CaseFlowDefinition` (үйлчилгээ тус бүрийн шатны
+жагсаалт + шилжилтийн нөхцөл) байдлаар өгөгдөл болж хадгалагдана. Шилжилт бүр
+`CaseTransition`-д (хэн, хэзээ, ямар шалтгаанаар) бичигдэнэ.
+
+---
+
+## 6. Гэрээ ба төлбөр
+
+### 6.1. Үйлчилгээний үнэ
+
+```prisma
+model ServicePricing {
+  serviceType     ServiceType
+  totalAmount     Decimal        // 1,200,000₮ / 5,000,000₮ — ОДООГИЙН утга
+  prepaymentMode  PrepaymentMode // PERCENT | FIXED   (§5.4)
+  prepaymentValue Decimal
+  balanceTrigger  BalanceTrigger // AFTER_VISA_APPROVED | AFTER_SCHOLARSHIP_RESULT  (§9)
+  effectiveFrom   DateTime
+  effectiveTo     DateTime?
+}
+```
+
+Үнэ **хувилбартай** (`effectiveFrom/To`). Гэрээ үүсэхдээ тухайн үеийн pricing-ийн snapshot-ыг
+`Contract` дээр хуулж авна — дараа үнэ өөрчлөгдөхөд хуучин гэрээ өөрчлөгдөхгүй
+(§24 асуулт 4-ийн хариу нь энэ загвараар "зөвхөн шинэ гэрээнд").
+
+### 6.2. Гэрээ
+
+`Contract`: төрөл (`ELECTRONIC|PHYSICAL`), төлөв
+(`DRAFT → SENT → SIGNED → ACTIVE → COMPLETED | TERMINATED`), үнийн snapshot, төлбөрийн
+хуваарь, буцаалтын нөхцөл (`refundPolicy Json`), PDF файл, гарын үсгийн бүртгэл
+(`signedAt`, `signedIp`, `otpVerifiedAt`), биет гэрээний скан.
+
+`CollateralContract` (барьцааны гэрээ, §5.4) — зөвхөн **3 талбар**: байгуулагдсан эсэх,
+хугацаа (эхлэх/дуусах), биет файл. Хөрөнгийн үнэлгээ, дүн систем тооцохгүй, төлбөрийн
+модультай холбогдохгүй.
+
+### 6.3. Төлбөр
+
+```prisma
+model Payment {
+  caseId      String @db.Uuid
+  kind        PaymentKind    // PREPAYMENT | BALANCE | SCHOOL_TUITION | TRANSFER_FEE | EXTRA_SERVICE | REFUND
+  amountMnt   Decimal
+  amountKrw   Decimal?       // сургуулийн төлбөрт (§8)
+  fxRate      Decimal?
+  status      PaymentStatus  // PENDING | PAID | FAILED | EXPIRED | REFUNDED
+  qpayInvoiceId String?
+  qpayPaymentId String?
+  paidAt      DateTime?
+  receiptPath String?
+  dueAt       DateTime?
+}
+```
+
+**QPay урсгал:** нэхэмжлэл үүсгэх → QR/deeplink буцаах → (a) webhook callback, (b) 10 сек
+тутам 15 минутын турш polling (BullMQ давтагдах ажил). Хоёулаа **идемпотент** —
+`qpayInvoiceId` дээр unique. Төлбөр `PAID` болмогц `Case` үе шат урагшилж, мэдэгдэл явна.
+
+> **Тодруулга шаардлагатай:** §9-д "үлдэгдэл төлөгдсөний дараа визний хэсэг нээгдэнэ" гэсэн
+> нь энгийн зуучлалын "виз гарсны дараа үлдэгдэл" дүрэмтэй зөрчилдөж байна. Одоогийн загвар
+> `BalanceTrigger`-ийг тохиргоо болгосон тул хоёуланг нь дэмжинэ — гэхдээ бизнесийн талаас
+> эцсийн дараалал батлагдах шаардлагатай (§18, асуулт 6).
+
+---
+
+## 7. Материалын шаардлагын хөдөлгүүр (хамгийн чухал модуль)
+
+Одоо ажилтан жагсаалтыг гараар гаргадаг (§17.4). Систем үүнийг **дүрмээр** үүсгэнэ.
+
+### 7.1. Загвар ба дүрэм
+
+```prisma
+model DocumentTemplate {
+  code            String @unique       // PASSPORT, ID_REF_EN, HS_TRANSCRIPT …
+  nameMn          String
+  descriptionMn   String?
+  sourceHint      String?              // "E-Mongolia-аас"
+  issuerHint      String?              // ямар байгууллагаар баталгаажуулах
+  validityDays    Int?                 // хүчинтэй хугацаа
+  needsTranslation Boolean @default(false)
+  needsNotary      Boolean @default(false)
+  needsApostille   Boolean @default(false)
+  needsPhysicalOriginal Boolean @default(false)   // "эх хувиар авчрах"
+  acceptedFileTypes String[]           // pdf, docx, jpg
+  sampleFilePath  String?
+  tipsMn          String?
+}
+
+model RequirementRule {
+  templateId     String @db.Uuid
+  stage          DocStage        // ADMISSION | VISA          (§6, §10)
+  serviceTypes   ServiceType[]   // хоосон = бүгд
+  educationLevels EducationLevel[]
+  universityId   String? @db.Uuid // null = бүх сургууль
+  guarantorTypes GuarantorType[] // EMPLOYEE | COMPANY_DIRECTOR | SELF_EMPLOYED | NONE
+  necessity      Necessity       // REQUIRED | CONDITIONAL | OPTIONAL
+  conditionNote  String?         // "байгаа тохиолдолд", "манай байгууллагаас шаардсан үед"
+  sortOrder      Int
+}
+```
+
+`Burduuleh_materialiin_jagsaalt_negdsen.docx`-д байгаа бодит дүрмүүд яг энэ загварт буудаг:
+
+| Нөхцөл | Үр дүн |
+|---|---|
+| `educationLevel = HIGH_SCHOOL_GRAD` | 9 үндсэн материал (аттестат, 10–12-р ангийн дүн …) |
+| `educationLevel = UNIVERSITY_GRAD` | 10 үндсэн материал (диплом, 1–4 курсын дүн …) |
+| `guarantorType = EMPLOYEE` | НД-ын лавлагаа + ажлын газрын тодорхойлолт |
+| `guarantorType = COMPANY_DIRECTOR` | ХЭ-ийн лавлагаа + татварын тодорхойлолт + дансны хуулга |
+| `guarantorType = SELF_EMPLOYED` | түрээсийн гэрээ + тодорхойлолт + дансны хуулга |
+| батлан даагч нь ах/эгч/авга/нагац | + төрөл садангийн лавлагаа |
+
+**Шийдэлт (resolution):** `Case` нь `DOCUMENTS` шатанд орох үед хөдөлгүүр
+`(stage, serviceType, educationLevel, universityId, guarantorType)`-аар дүрмүүдийг шүүж
+`CaseDocument` мөрүүдийг үүсгэнэ. Хэрэглэгчийн нөхцөл өөрчлөгдвөл (жишээ нь батлан даагчаа
+солих) жагсаалт **дахин тооцоологдоно** — аль хэдийн илгээгдсэн материалыг устгахгүй,
+шинээр нэмэгдсэнийг л оруулна.
+
+### 7.2. Материалын төлөв (§6.2 — 12 төлөв)
+
+```
+NOT_STARTED → IN_PROGRESS → SUBMITTED → UNDER_REVIEW ─┬→ NEEDS_FIX → RESUBMIT_REQUIRED ──┐
+                                                      │                                   │
+                                                      └→ ACCEPTED → IN_TRANSLATION →      │
+                                                         TRANSLATED → CERTIFIED → READY   │
+                                                         → SENT_TO_UNIVERSITY             │
+                                             ◀────────────────────────────────────────────┘
+```
+
+`CaseDocument` нь олон `DocumentFile` хувилбартай (засварын түүх хадгалагдана, §15.4).
+Ажилтны тайлбар бүр `DocumentReviewNote` — хэрэглэгч юуг яагаад засахыг харна (§6.3).
+
+### 7.3. Ажлын хуваарилалт
+
+Орчуулга, анкет бөглөх, эсээ боловсруулах зэрэг нь `WorkTask` (§6.4) — гүйцэтгэгч,
+эцсийн хугацаа, төлөвтэй. Ажилтны ачааллын тайлан эндээс гарна (§15.6).
+
+---
+
+## 8. Мэдүүлэг → урилга → виз
+
+**`Application`** (§7) — төлөв:
+`PREPARING → READY → SUBMITTED → UNDER_REVIEW → ADDITIONAL_DOCS_REQUESTED → INTERVIEW_SCHEDULED → ACCEPTED | REJECTED | DEFERRED`
+
+GKS-ийн хувьд шийдвэр **хоёр шаттай** — `ApplicationResult` мөрүүд `round` талбартай
+(1, 2); энгийн зуучлалд ганц мөр (`round = 1`).
+
+**`SchoolInvoice` + `Invitation`** (§8) — воны дүн, ханш, шимтгэл, эцсийн хугацаа, төлсөн
+баримт, сургууль хүлээн авсан эсэх. Урилга ирснээр визний шат нээгдэнэ.
+
+**`VisaCase`** (§10) — төлөв:
+`COLLECTING → REVIEWING → READY → SUBMITTED → ADDITIONAL_DOCS_REQUESTED → APPROVED | REJECTED | REAPPLY`
+Визний материалын жагсаалт нь §7-гийн ижил хөдөлгүүрээр, `stage = VISA` дүрмүүдээр үүснэ.
+
+**`DeparturePlan`** (§11) — чеклист (билет, даатгал, тосох, байр, SIM, банк …), гарын авлага,
+видео заавар, санамжийн огноо.
+
+---
+
+## 9. Файл хадгалалт
+
+- Private bucket, зам: `cases/{caseId}/{docCode}/{version}-{uuid}.{ext}`
+- Хандалт зөвхөн богино хугацааны signed URL-аар (5 мин), API нь эрх шалгасны дараа гаргана
+- Байршуулах өмнө: MIME sniff, хэмжээний хязгаар (20MB), вирус скан (дараагийн үе шат)
+- Устгал — logical (`deletedAt`), гэрээний хугацаанд бодит устгал хийхгүй
+
+---
+
+## 10. Мэдэгдэл ба автоматжуулалт (§16)
+
+`NotificationTemplate` (код, суваг, монгол загвар текст) + `Notification` (хүлээн авагч,
+төлөв, илгээсэн огноо). Сувгууд: **in-app** (үргэлж), **email**, **SMS**, дараа нь push.
+
+Триггер хоёр эх үүсвэртэй:
+1. **Үйл явдал** — төлөв өөрчлөгдөх (гэрээ баталгаажсан, материал буцаагдсан, урилга ирсэн …)
+2. **Хуваарь** — BullMQ давтагдах ажил өдөр бүр: хугацаа дөхсөн материал (D-7, D-3, D-1),
+   төлбөрийн эцсийн хугацаа, виз сунгалт, явах өдөр
+
+Хэрэглэгч бүр сувгийн тохиргоотой; SMS зөвхөн чухал үйл явдалд (өртөгтэй).
+
+---
+
+## 11. Эрхийн загвар
+
+| Роль | Хамрах хүрээ |
+|---|---|
+| `GUEST` (нэвтрээгүй) | нийтийн контент, сургуулийн сан, зөвлөгөөний хүсэлт |
+| `USER` | өөрийн профайл, хадгалсан сургууль, өөрийн `Case`-үүд |
+| `CONSULTANT` | өөрт хуваарилагдсан `Lead`/`Case`, гэрээ үүсгэх, төлбөр харах |
+| `DOC_OFFICER` | өөрт хуваарилагдсан `Case`-ийн материал, орчуулга, мэдүүлэг |
+| `ADMIN` | бүгд + тохиргоо, үнэ, загвар, ажилтны эрх, AI мэдлэгийн сан |
+
+"Гэрээтэй хэрэглэгч" (§18.3) нь **роль биш** — идэвхтэй `Contract`-тай `USER`. Эрхийг
+`CaseAccessGuard` шалгана: роль + эзэмшил (`userId` эсвэл `assigned*Id`) хоёулаа таарах ёстой.
+Бүх мэдрэмтгий үйлдэл `AuditLog`-д (хэн, юуг, хэзээ, өмнөх/дараах утга).
+
+---
+
+## 12. AI чат туслах ба мэдээллийн эрхийн түвшин (§13)
+
+RAG нь одоо байгаа `Document` / `DocumentChunk` (pgvector, HNSW cosine) дээр суурилна,
+дараах нэмэлттэй:
+
+```prisma
+model Document {
+  accessLevel  AccessLevel   // PUBLIC | REGISTERED | CONTRACTED | INTERNAL   (§13.3)
+  category     String?       // school | service | pricing | scholarship | faq | policy
+  universityId String? @db.Uuid
+  sourceFile   String?       // эх Word/PDF
+}
+```
+
+Хайлтын үед хэрэглэгчийн түвшнээс **дээш** эрхийн бичиг баримт огт буцаахгүй — шүүлтүүр нь
+SQL `WHERE` дотор, LLM-ийн prompt дотор биш. Хариулт бүр эх сурвалжийн ишлэлтэй.
+Мэдэхгүй зүйлээ зохиохгүй (заавал "ажилтантай холбогдох" fallback).
+
+> ⚠️ Одоогийн `EmbeddingService` бол SHA-256 суурьтай **stub** — утга агуулгагүй. Жинхэнэ
+> embedding загвар (жишээ нь `text-embedding-3-small`, 1536 хэмжээст) солигдох хүртэл RAG
+> таск "дууссан" гэж тооцогдохгүй.
+
+Чат бүр `ChatSession`/`ChatMessage`-д хадгалагдаж, зочин хэрэглэгчийн мэдээлэл цуглуулсан
+тохиолдолд `Lead` үүсгэнэ (§13.1). Хариултын чанарын үнэлгээ (👍/👎) тайланд орно.
+
+---
+
+## 13. Тайлан (§19)
+
+Материалжуулсан харагдац (materialized view) 4: борлуулалтын юүлүүр, санхүү, материалын
+явц, ажилтны гүйцэтгэл. Шөнө бүр шинэчилнэ; хяналтын самбар эдгээрээс уншина —
+гүйлгээний хүснэгтүүд дээр шууд агрегат хийхгүй.
+
+---
+
+## 14. API конвенц
+
+- Бааз зам `/api/v1`, `AllExceptionsFilter`-ийн нэг алдааны бүтэц + `requestId`
+- Жагсаалт бүр `?page&limit&sort&q` — `PaginationDto`
+- Төлөв өөрчлөх нь тусдаа үйлдлийн endpoint: `POST /cases/:id/transitions`, ерөнхий
+  `PATCH` биш — ингэснээр зөвшөөрөгдсөн шилжилтийг сервер шалгана
+- Бүх бичих үйлдэл zod/`class-validator`-аар шалгагдана; хуваалцсан схем `packages/shared`
+- Swagger `/api/docs` — бүх endpoint тайлбартай
+
+---
+
+## 15. Frontend бүтэц
+
+```
+apps/web/app/pages/
+├── index.vue, services/, universities/, blog/, faq/   ← нийтийн (SSR, SEO)
+├── auth/                                              ← нэвтрэх, бүртгүүлэх
+├── app/                                               ← хэрэглэгчийн кабинет
+│   ├── cases/[id]/  (явц, материал, төлбөр, гэрээ)
+│   └── profile.vue
+└── admin/                                             ← ажилтан/админ
+    ├── leads/, cases/, documents/, universities/,
+    ├── contracts/, payments/, content/, reports/, settings/
+```
+
+`components/ds/*` бол одоо байгаа дизайн системийн үндэс (`tokens.css` — GKS EDU GROUP-ийн
+өнгө, төлөвийн 5 шатны токен аль хэдийн тодорхойлогдсон). Шинэ UI зөвхөн эдгээр токеноор.
+
+---
+
+## 16. Аюулгүй байдал
+
+- Хувийн мэдээлэл (паспорт, регистр, дансны хуулга) — хандалт бүр аудитлагдана
+- Нууц үг Argon2/bcrypt, refresh токен SHA-256-аар хадгалагдана (одоо ч тийм)
+- Rate limit — нэвтрэх 5/мин, файл байршуулах 20/цаг
+- QPay webhook — гарын үсэг/IP шалгалт, идемпотент боловсруулалт
+- Backup — Supabase PITR; файлын bucket өдөр тутам
+
+---
+
+## 17. Орчин
+
+| Орчин | Зориулалт |
+|---|---|
+| local | Docker Redis + Supabase (эсвэл `pnpm db:up:local`) |
+| staging | бүрэн хуулбар, QPay sandbox, туршилтын өгөгдөл |
+| production | Supabase + тусдаа Redis, өдөр тутмын backup |
+
+CI: `pnpm typecheck && pnpm lint && pnpm test` + `prisma migrate deploy` release дээр.
+
+---
+
+## 18. Нээлттэй асуултууд
+
+`gksedu.md` §24-ийн 5 асуулт хүчинтэй хэвээр. Архитектурын талаас нэмж:
+
+6. **Үлдэгдэл төлбөр ↔ виз дараалал** — §4.1 "виз гарсны дараа үлдэгдэл" vs §9 "үлдэгдэл
+   төлөгдсөний дараа визний хэсэг нээгдэнэ". Аль нь үнэн бэ? (одоогийн загвар хоёуланг
+   тохиргоогоор дэмжинэ)
+7. **Цахим гэрээний хуулийн хүчин төгөлдөр байдал** — OTP-баталгаажуулалт хангалттай юу,
+   эсвэл ЭЦС/Дан системийн ЭТГ шаардлагатай юу?
+8. **Сургуулийн элсэлтийн шаардлага хэн, хэзээ оруулах вэ** — 135 сургуулийн хөтөлбөр,
+   элсэлтийн хугацаа, төлбөр нь дата сангаас ирэхгүй. MVP-д хэдэн сургуулийг бүрэн
+   бөглөх вэ?
+9. **Файлын хадгалалтын хугацаа** — гэрээ дууссаны дараа хувийн бичиг баримтыг хэдэн жил
+   хадгалах вэ (хууль зүйн шаардлага)?
+10. **SMS үйлчилгээ үзүүлэгч** — Монголын аль gateway (шимтгэл, дамжуулах хурд)?
