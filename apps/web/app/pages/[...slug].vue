@@ -3,9 +3,22 @@ useHead({ title: 'Олдсонгүй' });
 </script>
 
 <template>
-  <section class="py-16 text-center">
-    <p class="text-5xl font-bold text-neutral-300 dark:text-neutral-700">404</p>
-    <h1 class="mt-4 text-xl font-semibold">Хуудас олдсонгүй</h1>
-    <NuxtLink to="/" class="mt-6 inline-block text-brand-600 underline">Нүүр хуудас руу</NuxtLink>
+  <section class="gks-404">
+    <p class="gks-404__code gks-tnum">404</p>
+    <h1 class="gks-404__title">Хуудас олдсонгүй</h1>
+    <DsButton variant="secondary" icon-left="arrow-left" @click="navigateTo('/')">Нүүр хуудас руу</DsButton>
   </section>
 </template>
+
+<style scoped>
+.gks-404 {
+  padding: var(--sp-12) 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.gks-404__code { font-size: var(--fs-display-1); font-weight: var(--fw-black); color: var(--n-300); font-family: var(--font-mono); }
+.gks-404__title { font-size: var(--fs-h3); font-weight: var(--fw-semibold); }
+</style>

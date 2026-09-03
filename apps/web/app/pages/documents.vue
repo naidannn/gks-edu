@@ -56,57 +56,52 @@ async function remove(id: string) {
 </script>
 
 <template>
-  <section class="space-y-8">
+  <section class="gks-page">
     <div>
-      <h1 class="text-2xl font-bold">Баримтууд</h1>
-      <p class="mt-1 text-sm text-neutral-500">
-        Мөр бүр нэг chunk болж embed хийгдэн pgvector-т хадгалагдана.
-      </p>
+      <h1 class="gks-page__title">Баримтууд</h1>
+      <p class="gks-page__lede">Мөр бүр нэг chunk болж embed хийгдэн pgvector-т хадгалагдана.</p>
     </div>
 
-    <form
-      class="space-y-3 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
-      @submit.prevent="create"
-    >
-      <input
-        v-model="title"
-        type="text"
-        placeholder="Гарчиг"
-        class="w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
-      >
-      <textarea
-        v-model="rawChunks"
-        rows="4"
-        placeholder="Мөр тус бүр нэг chunk…"
-        class="w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-950"
-      />
-      <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-      <button
-        type="submit"
-        :disabled="pending"
-        class="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-      >
-        {{ pending ? 'Хадгалж байна…' : 'Нэмэх' }}
-      </button>
-    </form>
+    <DsCard>
+      <form class="gks-doc-form" @submit.prevent="create">
+        <DsInput v-model="title" label="Гарчиг" placeholder="Гарчиг" />
+        <DsTextarea v-model="rawChunks" label="Агуулга" :rows="4" placeholder="Мөр тус бүр нэг chunk…" />
+        <p v-if="error" class="gks-doc-form__error">{{ error }}</p>
+        <DsButton type="submit" :disabled="pending" :loading="pending">
+          {{ pending ? 'Хадгалж байна…' : 'Нэмэх' }}
+        </DsButton>
+      </form>
+    </DsCard>
 
-    <ul v-if="data?.items.length" class="space-y-2">
-      <li
-        v-for="doc in data.items"
-        :key="doc.id"
-        class="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <div>
-          <p class="font-medium">{{ doc.title }}</p>
-          <p class="text-xs text-neutral-500">
-            {{ doc._count.chunks }} chunk · {{ new Date(doc.createdAt).toLocaleString('mn-MN') }}
-          </p>
-        </div>
-        <button type="button" class="text-sm text-red-600 hover:underline" @click="remove(doc.id)">
-          Устгах
-        </button>
+    <ul v-if="data?.items.length" class="gks-doc-list">
+      <li v-for="doc in data.items" :key="doc.id">
+        <DsCard :padding="'var(--sp-4)'">
+          <div class="gks-doc-row">
+            <div>
+              <p class="gks-doc-row__title">{{ doc.title }}</p>
+              <p class="gks-doc-row__meta gks-tnum">
+                {{ doc._count.chunks }} chunk · {{ new Date(doc.createdAt).toLocaleString('mn-MN') }}
+              </p>
+            </div>
+            <DsButton variant="danger" size="sm" icon-left="trash-2" @click="remove(doc.id)">Устгах</DsButton>
+          </div>
+        </DsCard>
       </li>
     </ul>
-    <p v-else class="text-sm text-neutral-500">Одоогоор баримт алга.</p>
+    <p v-else class="gks-page__lede">Одоогоор баримт алга.</p>
   </section>
 </template>
+
+<style scoped>
+.gks-page { display: flex; flex-direction: column; gap: var(--sp-8); }
+.gks-page__title { font-size: var(--fs-h1); font-weight: var(--fw-bold); }
+.gks-page__lede { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-muted); }
+
+.gks-doc-form { display: flex; flex-direction: column; gap: var(--sp-3); align-items: flex-start; }
+.gks-doc-form__error { font-size: var(--fs-caption); color: var(--red-800); }
+
+.gks-doc-list { display: flex; flex-direction: column; gap: var(--sp-2); list-style: none; margin: 0; padding: 0; }
+.gks-doc-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); }
+.gks-doc-row__title { font-weight: var(--fw-medium); color: var(--text-body); }
+.gks-doc-row__meta { margin-top: 2px; font-size: var(--fs-micro); color: var(--text-subtle); }
+</style>

@@ -1,0 +1,207 @@
+/*
+ * GKS EDU GROUP design tokens.
+ * Ported verbatim from the Claude Design system project
+ * (claude.ai/design/p/118f1105-e6a5-4e4e-af7e-eaf0ab44c721) — do not hand-edit
+ * values here without updating the source design system too.
+ */
+
+:root {
+  /* ---- Base: Ink (sampled from the logo wordmark, rgb 27 34 42) ---- */
+  --ink-950: #0d1116; --ink-900: #141a21; --ink-800: #1b222a; --ink-700: #28323d;
+  --ink-600: #3a4756; --ink-500: #4f5f70; --ink-400: #6b7c8e;
+
+  /* ---- Base: Red (sampled from the logo bar, rgb 195 38 45) ---- */
+  --red-900: #75161b; --red-800: #9a1e24; --red-700: #c3262d; --red-600: #d93a41;
+  --red-300: #f0a5a8; --red-100: #f9dedf; --red-050: #fdf2f2;
+
+  /* ---- Base: Neutral (cool, slightly blue-shifted to sit with the ink) ---- */
+  --n-000: #ffffff; --n-025: #fafbfc; --n-050: #f4f6f8; --n-100: #eaedf1;
+  --n-200: #dce1e7; --n-300: #c3cbd4; --n-400: #9ba6b2; --n-500: #75818f;
+  --n-600: #5a6673; --n-700: #3f4a56; --n-800: #28313a; --n-900: #151b21;
+
+  /* ---- Base: Semantic hues (status pipeline) ---- */
+  --amber-700: #8a5a00; --amber-600: #b37400; --amber-100: #fbebc8; --amber-050: #fdf7e8;
+  --blue-700: #12507e; --blue-600: #1a6ba6; --blue-100: #d3e6f4; --blue-050: #edf5fb;
+  --green-700: #14663c; --green-600: #1b8149; --green-100: #d2ebdc; --green-050: #edf7f1;
+  --slate-700: #4a5561; --slate-100: #e4e8ec; --slate-050: #f2f4f6;
+
+  /* ---- Semantic: text ---- */
+  --text-strong: var(--ink-900);
+  --text-body: var(--ink-800);
+  --text-muted: var(--n-600);
+  --text-subtle: var(--n-500);
+  --text-inverse: var(--n-000);
+  --text-accent: var(--red-700);
+  --text-link: var(--ink-800);
+  --text-link-hover: var(--red-700);
+  --text-disabled: var(--n-400);
+
+  /* ---- Semantic: surfaces ---- */
+  --surface-page: var(--n-050);
+  --surface-card: var(--n-000);
+  --surface-raised: var(--n-000);
+  --surface-sunken: var(--n-025);
+  --surface-inverse: var(--ink-800);
+  --surface-inverse-2: var(--ink-700);
+  --surface-accent: var(--red-700);
+  --surface-hover: var(--n-050);
+  --surface-active: var(--n-100);
+  --surface-selected: var(--blue-050);
+
+  /* ---- Semantic: lines. Hairlines do the work that radii don't. ---- */
+  --line-hairline: var(--n-200);
+  --line-strong: var(--n-300);
+  --line-ink: var(--ink-800);
+  --line-accent: var(--red-700);
+  --line-inverse: rgba(255, 255, 255, .16);
+  --focus-ring: var(--blue-600);
+
+  /* ---- Semantic: document / application status (5-state pipeline) ---- */
+  --status-missing-fg: var(--slate-700);  --status-missing-bg: var(--slate-050);  --status-missing-line: var(--n-300);
+  --status-waiting-fg: var(--amber-700);  --status-waiting-bg: var(--amber-050);  --status-waiting-line: var(--amber-100);
+  --status-review-fg: var(--blue-700);    --status-review-bg: var(--blue-050);    --status-review-line: var(--blue-100);
+  --status-approved-fg: var(--green-700); --status-approved-bg: var(--green-050); --status-approved-line: var(--green-100);
+  --status-returned-fg: var(--red-800);   --status-returned-bg: var(--red-050);   --status-returned-line: var(--red-100);
+
+  /* ---- Semantic: deadline proximity (3 levels) ---- */
+  --deadline-far-fg: var(--n-600);      --deadline-far-bg: var(--n-050);
+  --deadline-near-fg: var(--amber-700); --deadline-near-bg: var(--amber-050);
+  --deadline-over-fg: var(--red-800);   --deadline-over-bg: var(--red-050);
+
+  /* ---- Semantic: feedback ---- */
+  --info-fg: var(--blue-700); --info-bg: var(--blue-050); --info-line: var(--blue-100);
+  --success-fg: var(--green-700); --success-bg: var(--green-050); --success-line: var(--green-100);
+  --warning-fg: var(--amber-700); --warning-bg: var(--amber-050); --warning-line: var(--amber-100);
+  --danger-fg: var(--red-800); --danger-bg: var(--red-050); --danger-line: var(--red-100);
+
+  /* ---- Type ---- */
+  --font-display: "Golos Text", "Noto Sans KR", system-ui, sans-serif;
+  --font-sans: "Golos Text", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Noto Sans KR", ui-monospace, monospace;
+
+  --fs-display-1: 56px; --fs-display-2: 44px;
+  --fs-h1: 34px; --fs-h2: 27px; --fs-h3: 22px; --fs-h4: 19px;
+  --fs-body-lg: 18px; --fs-body: 16px; --fs-body-sm: 15px;
+  --fs-label: 14px; --fs-caption: 13px; --fs-micro: 12px;
+
+  --lh-tight: 1.08; --lh-snug: 1.2; --lh-heading: 1.28;
+  --lh-body: 1.62; --lh-loose: 1.75;
+
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700; --fw-black: 900;
+
+  --ls-display: -0.022em; --ls-heading: -0.012em; --ls-body: 0em;
+  --ls-label: 0.01em; --ls-caps: 0.09em; --ls-caps-tight: 0.06em;
+
+  --num-tabular: "tnum" 1, "lnum" 1;
+
+  /* ---- Space, radius, borders ---- */
+  --sp-0: 0px; --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-7: 32px; --sp-8: 40px; --sp-9: 48px; --sp-10: 64px;
+  --sp-11: 80px; --sp-12: 112px; --sp-13: 160px;
+
+  --radius-0: 0px; --radius-1: 2px; --radius-2: 3px; --radius-3: 4px;
+  --radius-pill: 0px;
+  --bevel: 10px;
+
+  --border-hair: 1px; --border-thick: 2px; --border-rail: 3px;
+
+  --control-sm: 36px; --control-md: 44px; --control-lg: 52px;
+
+  --container-prose: 68ch; --container-narrow: 720px;
+  --container-content: 1080px; --container-wide: 1320px; --container-full: 1600px;
+
+  --gutter-mobile: 20px; --gutter-tablet: 32px; --gutter-desktop: 48px;
+
+  /* ---- Elevation ---- */
+  --shadow-none: none;
+  --shadow-hairline: 0 0 0 1px var(--line-hairline);
+  --shadow-raised: 0 1px 2px rgba(13, 17, 22, .06);
+  --shadow-menu: 0 8px 24px -8px rgba(13, 17, 22, .20), 0 0 0 1px rgba(13, 17, 22, .06);
+  --shadow-dialog: 0 24px 64px -16px rgba(13, 17, 22, .32), 0 0 0 1px rgba(13, 17, 22, .08);
+  --shadow-focus: 0 0 0 2px var(--n-000), 0 0 0 4px var(--focus-ring);
+  --shadow-focus-inverse: 0 0 0 2px var(--ink-800), 0 0 0 4px var(--focus-ring);
+
+  --scrim: rgba(13, 17, 22, .56);
+  --blur-scrim: blur(2px);
+
+  /* ---- Motion: short, flat, factual ---- */
+  --dur-instant: 80ms;
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 260ms;
+  --ease-standard: cubic-bezier(.2, 0, .2, 1);
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --transition-control: background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms;
+  }
+}
+
+/* ---- Base element resets ---- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-body);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  margin: 0;
+  text-wrap: balance;
+}
+
+p { margin: 0; text-wrap: pretty; }
+
+a {
+  color: var(--text-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--n-300);
+  transition: var(--transition-control);
+}
+a:hover { color: var(--text-link-hover); text-decoration-color: currentColor; }
+
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, [tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+:where(button, input, select, textarea) { font: inherit; color: inherit; }
+
+/* ---- GKS brand utility classes ---- */
+.gks-tnum { font-variant-numeric: tabular-nums lining-nums; }
+
+.gks-eyebrow {
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.gks-rule { border: 0; border-top: 1px solid var(--line-hairline); margin: 0; }
+
+.gks-bevel {
+  clip-path: polygon(0 0, calc(100% - var(--bevel)) 0, 100% var(--bevel), 100% 100%, var(--bevel) 100%, 0 calc(100% - var(--bevel)));
+}
+.gks-bevel-tr {
+  clip-path: polygon(0 0, calc(100% - var(--bevel)) 0, 100% var(--bevel), 100% 100%, 0 100%);
+}

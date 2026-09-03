@@ -15,33 +15,69 @@ const stack = [
 </script>
 
 <template>
-  <section class="space-y-8">
+  <section class="gks-page">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">GKS Edu boilerplate</h1>
-      <p class="mt-2 text-neutral-600 dark:text-neutral-400">
-        Full-stack эхлэлийн төсөл. API нь
-        <code class="rounded bg-neutral-200 px-1 dark:bg-neutral-800">/api/v1</code> дор,
-        Swagger нь
-        <code class="rounded bg-neutral-200 px-1 dark:bg-neutral-800">/api/docs</code> дор ажиллана.
+      <span class="gks-eyebrow">GKS EDU GROUP</span>
+      <h1 class="gks-page__title">GKS Edu boilerplate</h1>
+      <p class="gks-page__lede">
+        Full-stack эхлэлийн төсөл. API нь <code class="gks-code">/api/v1</code> дор,
+        Swagger нь <code class="gks-code">/api/docs</code> дор ажиллана.
       </p>
     </div>
 
-    <ul class="grid gap-3 sm:grid-cols-2">
-      <li
-        v-for="item in stack"
-        :key="item.name"
-        class="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <p class="font-medium">{{ item.name }}</p>
-        <p class="mt-1 text-sm text-neutral-500">{{ item.detail }}</p>
+    <ul class="gks-stack-grid">
+      <li v-for="item in stack" :key="item.name">
+        <DsCard :title="item.name">
+          <p class="gks-stack-grid__detail">{{ item.detail }}</p>
+        </DsCard>
       </li>
     </ul>
 
-    <div v-if="!auth.isAuthenticated" class="rounded-lg bg-brand-50 p-4 text-sm dark:bg-brand-900/30">
-      Seed хэрэглэгч: <strong>admin@gks.edu</strong> / <strong>password123</strong> —
-      <NuxtLink to="/login" class="font-medium text-brand-700 underline dark:text-brand-300">
-        нэвтрэх
-      </NuxtLink>
-    </div>
+    <DsCard v-if="!auth.isAuthenticated" accent>
+      <div class="gks-seed">
+        <p class="gks-seed__text">
+          Seed хэрэглэгч: <strong class="gks-tnum">admin@gks.edu</strong> /
+          <strong class="gks-tnum">password123</strong>
+        </p>
+        <DsButton variant="primary" icon-right="arrow-right" @click="navigateTo('/login')">Нэвтрэх</DsButton>
+      </div>
+    </DsCard>
   </section>
 </template>
+
+<style scoped>
+.gks-page { display: flex; flex-direction: column; gap: var(--sp-8); }
+.gks-page__title {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-heading);
+}
+.gks-page__lede { margin-top: var(--sp-3); color: var(--text-muted); max-width: var(--container-prose); }
+.gks-code {
+  border-radius: var(--radius-1);
+  background: var(--n-100);
+  padding: 2px var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: .9em;
+}
+
+.gks-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--sp-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gks-stack-grid__detail { font-size: var(--fs-body-sm); color: var(--text-muted); }
+
+.gks-seed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+.gks-seed__text { font-size: var(--fs-body-sm); color: var(--text-body); }
+</style>

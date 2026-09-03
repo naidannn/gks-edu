@@ -39,57 +39,65 @@ async function search() {
 </script>
 
 <template>
-  <section class="space-y-6">
+  <section class="gks-page">
     <div>
-      <h1 class="text-2xl font-bold">Векторын хайлт</h1>
-      <p class="mt-1 text-sm text-neutral-500">
-        pgvector-ийн cosine зайгаар (<code>&lt;=&gt;</code>) хамгийн ойр chunk-уудыг олно.
+      <h1 class="gks-page__title">Векторын хайлт</h1>
+      <p class="gks-page__lede">
+        pgvector-ийн cosine зайгаар (<code class="gks-code">&lt;=&gt;</code>) хамгийн ойр chunk-уудыг олно.
       </p>
     </div>
 
-    <form class="flex gap-2" @submit.prevent="search">
-      <input
-        v-model="query"
-        type="search"
-        placeholder="Асуултаа бичнэ үү…"
-        class="flex-1 rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-      >
-      <button
-        type="submit"
-        :disabled="pending"
-        class="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-      >
-        {{ pending ? '…' : 'Хайх' }}
-      </button>
+    <form class="gks-search-form" @submit.prevent="search">
+      <DsInput v-model="query" type="search" icon-left="search" placeholder="Асуултаа бичнэ үү…" style="flex: 1" />
+      <DsButton type="submit" :disabled="pending" :loading="pending">{{ pending ? '…' : 'Хайх' }}</DsButton>
     </form>
 
-    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+    <p v-if="error" class="gks-search-error">{{ error }}</p>
 
-    <ul v-if="hits.length" class="space-y-2">
-      <li
-        v-for="hit in hits"
-        :key="hit.chunkId"
-        class="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <div class="flex items-baseline justify-between gap-4">
-          <p class="text-sm font-medium text-brand-700 dark:text-brand-300">
-            {{ hit.documentTitle }} #{{ hit.chunkIndex }}
-          </p>
-          <span class="shrink-0 text-xs tabular-nums text-neutral-500">
-            {{ hit.similarity.toFixed(4) }}
-          </span>
-        </div>
-        <p class="mt-2 text-sm">{{ hit.content }}</p>
+    <ul v-if="hits.length" class="gks-hit-list">
+      <li v-for="hit in hits" :key="hit.chunkId">
+        <DsCard>
+          <div class="gks-hit">
+            <p class="gks-hit__title">{{ hit.documentTitle }} #{{ hit.chunkIndex }}</p>
+            <span class="gks-hit__score gks-tnum">{{ hit.similarity.toFixed(4) }}</span>
+          </div>
+          <p class="gks-hit__content">{{ hit.content }}</p>
+        </DsCard>
       </li>
     </ul>
 
-    <p v-else-if="searched && !pending" class="text-sm text-neutral-500">
-      Илэрц олдсонгүй.
-    </p>
+    <p v-else-if="searched && !pending" class="gks-page__lede">Илэрц олдсонгүй.</p>
 
-    <p class="rounded-md bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-      Анхаар: default embedding нь тест зориулалтын deterministic stub. Утга учиртай илэрц авахын тулд
-      <code>apps/api/src/modules/vector/embedding.service.ts</code>-д жинхэнэ embedding модель холбоно уу.
-    </p>
+    <DsCard padding="var(--sp-4)" style="background: var(--warning-bg); border-color: var(--warning-line);">
+      <p class="gks-search-note">
+        Анхаар: default embedding нь тест зориулалтын deterministic stub. Утга учиртай илэрц авахын тулд
+        <code class="gks-code">apps/api/src/modules/vector/embedding.service.ts</code>-д жинхэнэ embedding
+        модель холбоно уу.
+      </p>
+    </DsCard>
   </section>
 </template>
+
+<style scoped>
+.gks-page { display: flex; flex-direction: column; gap: var(--sp-6); }
+.gks-page__title { font-size: var(--fs-h1); font-weight: var(--fw-bold); }
+.gks-page__lede { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-muted); }
+.gks-code {
+  border-radius: var(--radius-1);
+  background: var(--n-100);
+  padding: 2px var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: .9em;
+}
+
+.gks-search-form { display: flex; gap: var(--sp-2); }
+.gks-search-error { font-size: var(--fs-body-sm); color: var(--red-800); }
+
+.gks-hit-list { display: flex; flex-direction: column; gap: var(--sp-2); list-style: none; margin: 0; padding: 0; }
+.gks-hit { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); }
+.gks-hit__title { font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--red-700); }
+.gks-hit__score { flex-shrink: 0; font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-hit__content { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); }
+
+.gks-search-note { font-size: var(--fs-caption); color: var(--warning-fg); }
+</style>

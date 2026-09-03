@@ -43,66 +43,74 @@ async function submit() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-sm">
-    <h1 class="text-2xl font-bold">
-      {{ mode === 'login' ? 'Нэвтрэх' : 'Бүртгүүлэх' }}
-    </h1>
+  <section class="gks-auth">
+    <img src="~/assets/img/gks-logo-mark.png" alt="" class="gks-auth__mark">
+    <h1 class="gks-auth__title">{{ mode === 'login' ? 'Нэвтрэх' : 'Бүртгүүлэх' }}</h1>
 
-    <form class="mt-6 space-y-4" @submit.prevent="submit">
-      <div v-if="mode === 'register'">
-        <label for="name" class="block text-sm font-medium">Нэр</label>
-        <input
-          id="name"
-          v-model="name"
-          type="text"
-          autocomplete="name"
-          class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        >
-      </div>
+    <form class="gks-auth__form" @submit.prevent="submit">
+      <DsInput v-if="mode === 'register'" v-model="name" label="Нэр" autocomplete="name" />
+      <DsInput v-model="email" type="email" label="И-мэйл" required autocomplete="email" />
+      <DsInput
+        v-model="password"
+        type="password"
+        label="Нууц үг"
+        required
+        :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+      />
 
-      <div>
-        <label for="email" class="block text-sm font-medium">И-мэйл</label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          required
-          autocomplete="email"
-          class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        >
-      </div>
+      <p v-if="error" class="gks-auth__error">{{ error }}</p>
 
-      <div>
-        <label for="password" class="block text-sm font-medium">Нууц үг</label>
-        <input
-          id="password"
-          v-model="password"
-          type="password"
-          required
-          :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
-          class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        >
-      </div>
-
-      <p v-if="error" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-        {{ error }}
-      </p>
-
-      <button
-        type="submit"
-        :disabled="pending"
-        class="w-full rounded-md bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-      >
+      <DsButton type="submit" block :disabled="pending" :loading="pending">
         {{ pending ? 'Түр хүлээнэ үү…' : mode === 'login' ? 'Нэвтрэх' : 'Бүртгүүлэх' }}
-      </button>
+      </DsButton>
     </form>
 
-    <button
-      type="button"
-      class="mt-4 text-sm text-neutral-500 underline"
-      @click="mode = mode === 'login' ? 'register' : 'login'"
-    >
+    <button type="button" class="gks-auth__switch" @click="mode = mode === 'login' ? 'register' : 'login'">
       {{ mode === 'login' ? 'Шинэ бүртгэл үүсгэх' : 'Аль хэдийн бүртгэлтэй юу?' }}
     </button>
   </section>
 </template>
+
+<style scoped>
+.gks-auth {
+  max-width: var(--container-narrow);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.gks-auth__mark { height: 40px; width: auto; margin-bottom: var(--sp-6); }
+.gks-auth__title { font-size: var(--fs-h2); font-weight: var(--fw-bold); }
+
+.gks-auth__form {
+  margin-top: var(--sp-6);
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  text-align: left;
+}
+
+.gks-auth__error {
+  border: var(--border-hair) solid var(--danger-line);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border-radius: var(--radius-1);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-body-sm);
+}
+
+.gks-auth__switch {
+  margin-top: var(--sp-4);
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+</style>
