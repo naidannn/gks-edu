@@ -5,6 +5,11 @@ import { useAuthStore } from '~/stores/auth';
  * Client cabinet shell (1G-15). Every `/app/*` screen lives here: a fixed
  * sidebar with the four things a client ever needs, and nothing from the
  * marketing site or the CRM.
+ *
+ * ≤900px the same four entries become a bottom tab bar instead of a drawer —
+ * four is exactly the count a tab bar carries well, and it costs no tap to
+ * open. `short` is the tab-bar wording: the sidebar can afford "Хяналтын
+ * самбар", a 25%-wide tab cannot.
  */
 const auth = useAuthStore();
 const route = useRoute();
@@ -13,14 +18,11 @@ const { overview, load, needsProfile } = usePortal();
 onMounted(() => load());
 
 const NAV = [
-  { to: '/app', label: 'Хяналтын самбар', icon: 'layout-dashboard' },
-  { to: '/app/cases', label: 'Миний хэрэг', icon: 'folder-open' },
-  { to: '/app/profile', label: 'Миний мэдээлэл', icon: 'user-round' },
-  { to: '/account/saved', label: 'Хадгалсан сургууль', icon: 'bookmark' },
+  { to: '/app', label: 'Хяналтын самбар', short: 'Самбар', icon: 'layout-dashboard' },
+  { to: '/app/cases', label: 'Миний хэрэг', short: 'Хэрэг', icon: 'folder-open' },
+  { to: '/app/profile', label: 'Миний мэдээлэл', short: 'Мэдээлэл', icon: 'user-round' },
+  { to: '/account/saved', label: 'Хадгалсан сургууль', short: 'Хадгалсан', icon: 'bookmark' },
 ];
-
-const sidebarOpen = ref(false);
-watch(() => route.fullPath, () => { sidebarOpen.value = false; });
 
 function isActive(to: string): boolean {
   if (to === '/app') return route.path === '/app';
@@ -38,16 +40,13 @@ async function onLogout() {
 </script>
 
 <template>
-  <div class="gks-portal" :class="{ 'gks-portal--sidebar-open': sidebarOpen }">
+  <div class="gks-portal">
     <aside class="gks-portal__sidebar">
       <div class="gks-portal__brand">
         <NuxtLink to="/app" class="gks-portal__brand-link">
           <img src="~/assets/img/gks-logo-mark.png" alt="" class="gks-portal__logo">
           <span class="gks-portal__brand-text">Миний булан</span>
         </NuxtLink>
-        <button type="button" class="gks-portal__icon-btn gks-portal__close" aria-label="Цэс хаах" @click="sidebarOpen = false">
-          <DsIcon name="x" :size="20" />
-        </button>
       </div>
 
       <nav class="gks-portal__nav" aria-label="Хэрэглэгчийн цэс">
@@ -89,24 +88,50 @@ async function onLogout() {
       </div>
     </aside>
 
-    <button type="button" class="gks-portal__scrim" aria-label="Цэс хаах" tabindex="-1" @click="sidebarOpen = false" />
-
     <div class="gks-portal__body">
       <header class="gks-portal__topbar">
-        <button type="button" class="gks-portal__icon-btn gks-portal__menu-btn" aria-label="Цэс нээх" @click="sidebarOpen = true">
-          <DsIcon name="menu" :size="20" />
-        </button>
+        <!-- ≤900px the sidebar is gone, so its two non-navigation affordances
+             (back to the site, sign out) move up here beside the bell. -->
+        <NuxtLink to="/" class="gks-portal__icon-btn gks-portal__mobile-only" aria-label="Вебсайт руу буцах" title="Вебсайт руу буцах">
+          <DsIcon name="arrow-left" :size="20" />
+        </NuxtLink>
         <span class="gks-portal__topbar-title">{{ currentSection }}</span>
         <ClientOnly>
           <NotificationsBell class="gks-portal__bell" />
         </ClientOnly>
         <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-portal__crm-link">CRM</NuxtLink>
+        <button
+          type="button"
+          class="gks-portal__icon-btn gks-portal__mobile-only"
+          aria-label="Гарах"
+          title="Гарах"
+          @click="onLogout"
+        >
+          <DsIcon name="log-out" :size="20" />
+        </button>
       </header>
 
       <main class="gks-portal__main">
         <slot />
       </main>
     </div>
+
+    <nav class="gks-portal__tabbar" aria-label="Хэрэглэгчийн цэс">
+      <NuxtLink
+        v-for="item in NAV"
+        :key="item.to"
+        :to="item.to"
+        class="gks-portal__tab"
+        :class="{ 'gks-portal__tab--active': isActive(item.to) }"
+        :aria-current="isActive(item.to) ? 'page' : undefined"
+      >
+        <span class="gks-portal__tab-icon">
+          <DsIcon :name="item.icon" :size="21" />
+          <span v-if="item.to === '/app/profile' && needsProfile" class="gks-portal__tab-dot" aria-label="Дутуу мэдээлэл" />
+        </span>
+        <span class="gks-portal__tab-label">{{ item.short }}</span>
+      </NuxtLink>
+    </nav>
   </div>
 </template>
 
@@ -122,7 +147,6 @@ async function onLogout() {
   flex-direction: column;
   background: var(--surface-card);
   border-right: var(--border-hair) solid var(--line-hairline);
-  transition: transform var(--dur-base) var(--ease-standard);
 }
 
 .gks-portal__brand {
@@ -143,8 +167,6 @@ async function onLogout() {
   text-transform: uppercase;
   color: var(--text-subtle);
 }
-.gks-portal__close { display: none; }
-
 .gks-portal__nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: var(--sp-4); }
 .gks-portal__nav-link {
   display: flex;
@@ -212,17 +234,6 @@ async function onLogout() {
 }
 .gks-portal__icon-btn:hover { background: var(--surface-hover); color: var(--text-strong); }
 
-.gks-portal__scrim {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  border: 0;
-  padding: 0;
-  background: var(--scrim);
-  cursor: default;
-}
-
 .gks-portal__body { margin-left: 256px; min-height: 100vh; display: flex; flex-direction: column; }
 
 .gks-portal__topbar {
@@ -238,7 +249,7 @@ async function onLogout() {
   backdrop-filter: blur(8px);
   border-bottom: var(--border-hair) solid var(--line-hairline);
 }
-.gks-portal__menu-btn { display: none; }
+.gks-portal__mobile-only { display: none; }
 .gks-portal__topbar-title {
   font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);
@@ -258,15 +269,69 @@ async function onLogout() {
   padding: var(--sp-6);
 }
 
+/* ---- Mobile bottom tabs (≤900px) ---- */
+.gks-portal__tabbar {
+  display: none;
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 40;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(12px);
+  border-top: var(--border-hair) solid var(--line-hairline);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.gks-portal__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 58px;
+  padding: var(--sp-2) 2px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition-control);
+}
+.gks-portal__tab-icon {
+  position: relative;
+  display: inline-flex;
+  padding: 2px var(--sp-4);
+  border-radius: var(--radius-pill);
+  transition: var(--transition-control);
+}
+.gks-portal__tab-label {
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+}
+.gks-portal__tab--active { color: var(--brand-700); }
+.gks-portal__tab--active .gks-portal__tab-icon { background: var(--surface-selected); }
+.gks-portal__tab--active .gks-portal__tab-label { font-weight: var(--fw-semibold); }
+.gks-portal__tab-dot {
+  position: absolute;
+  top: -1px;
+  right: var(--sp-2);
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--red-700);
+  box-shadow: 0 0 0 2px var(--surface-card);
+}
+
 @media (max-width: 900px) {
-  .gks-portal__sidebar { width: 280px; transform: translateX(-100%); box-shadow: var(--shadow-dialog); }
-  .gks-portal--sidebar-open .gks-portal__sidebar { transform: translateX(0); }
-  .gks-portal--sidebar-open .gks-portal__scrim { display: block; }
-  .gks-portal__close { display: inline-flex; }
+  .gks-portal__sidebar { display: none; }
+  .gks-portal__tabbar { display: grid; }
 
   .gks-portal__body { margin-left: 0; }
-  .gks-portal__menu-btn { display: inline-flex; }
+  .gks-portal__mobile-only { display: inline-flex; }
   .gks-portal__topbar { padding: 0 var(--gutter-mobile); }
-  .gks-portal__main { padding: var(--sp-5) var(--gutter-mobile) var(--sp-8); }
+
+  /* Clear the fixed tab bar so the last card is never trapped under it. */
+  .gks-portal__main {
+    padding: var(--sp-5) var(--gutter-mobile)
+      calc(var(--sp-8) + 58px + env(safe-area-inset-bottom, 0px));
+  }
 }
 </style>

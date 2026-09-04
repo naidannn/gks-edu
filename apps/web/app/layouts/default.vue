@@ -33,21 +33,27 @@ const NAV: NavItem[] = [
   { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
 ];
 
-const FOOTER_PLATFORM = [
-  { to: '/universities', label: 'Их сургуулиуд' },
-  { to: '/#planner', label: 'Сурах замын төлөвлөгч' },
-  { to: '/consultation', label: 'Зөвлөгөө авах' },
-  { to: '/blog', label: 'Мэдээ' },
-  { to: '/faq', label: 'Түгээмэл асуулт' },
-  { to: '/register', label: 'Бүртгүүлэх' },
-  { to: '/login', label: 'Нэвтрэх' },
-];
-
+/** The appbar's "Үйлчилгээ" group, plus the scholarship page it sits beside. */
 const FOOTER_SERVICES = [
   { to: '/services/language-prep', label: 'Хэлний бэлтгэл' },
   { to: '/services/bachelor', label: 'Бакалавр' },
   { to: '/services/graduate', label: 'Магистр, доктор' },
   { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
+];
+
+/**
+ * Everything the three-item appbar no longer carries. This column is now the
+ * only site-wide route to the planner, the blog and the FAQ, so it has to stay
+ * complete — check it whenever a public page is added.
+ *
+ * Зөвлөгөө is deliberately absent: it is the accent button below, and one
+ * strong call to action beats a link that repeats it two rows up.
+ */
+const FOOTER_EXPLORE = [
+  { to: '/universities', label: 'Их сургуулиуд' },
+  { to: '/#planner', label: 'Сурах замын төлөвлөгч' },
+  { to: '/blog', label: 'Мэдээ' },
+  { to: '/faq', label: 'Түгээмэл асуулт' },
 ];
 
 const year = new Date().getFullYear();
@@ -236,13 +242,6 @@ async function onLogout() {
           </p>
         </div>
 
-        <nav class="gks-footer__col" aria-label="Платформ">
-          <h2 class="gks-footer__col-title">Платформ</h2>
-          <NuxtLink v-for="item in FOOTER_PLATFORM" :key="item.to" :to="item.to" class="gks-footer__link">
-            {{ item.label }}
-          </NuxtLink>
-        </nav>
-
         <nav class="gks-footer__col" aria-label="Үйлчилгээ">
           <h2 class="gks-footer__col-title">Үйлчилгээ</h2>
           <NuxtLink v-for="item in FOOTER_SERVICES" :key="item.to" :to="item.to" class="gks-footer__link">
@@ -250,11 +249,23 @@ async function onLogout() {
           </NuxtLink>
         </nav>
 
+        <nav class="gks-footer__col" aria-label="Мэдээлэл">
+          <h2 class="gks-footer__col-title">Мэдээлэл</h2>
+          <NuxtLink v-for="item in FOOTER_EXPLORE" :key="item.to" :to="item.to" class="gks-footer__link">
+            {{ item.label }}
+          </NuxtLink>
+        </nav>
+
         <div class="gks-footer__col">
           <h2 class="gks-footer__col-title">Холбоо барих</h2>
-          <p class="gks-footer__text">«Жи Кэй Эс Эдү Групп» ХХК</p>
-          <p class="gks-footer__text">Eco International Tower, 17 давхар, 1707 тоот</p>
-          <a href="tel:+97677109000" class="gks-footer__link gks-tnum">7710-9000</a>
+          <address class="gks-footer__address">
+            <span class="gks-footer__text">«Жи Кэй Эс Эдү Групп» ХХК</span>
+            <span class="gks-footer__text">
+              Улаанбаатар, Төв шуудангийн урд талд,<br>
+              Eco International Tower, 17 давхар, 1707 тоот
+            </span>
+            <a href="tel:+97677109000" class="gks-footer__link gks-tnum">7710-9000</a>
+          </address>
           <DsButton
             variant="accent"
             size="sm"
@@ -268,7 +279,18 @@ async function onLogout() {
       </div>
 
       <div class="gks-footer__bottom">
-        <p class="gks-tnum">© {{ year }} GKS EDU GROUP. Бүх эрх хуулиар хамгаалагдсан.</p>
+        <div class="gks-footer__bottom-inner">
+          <p class="gks-tnum">© {{ year }} GKS EDU GROUP. Бүх эрх хуулиар хамгаалагдсан.</p>
+          <nav class="gks-footer__bottom-links" aria-label="Хэрэглэгчийн хэсэг">
+            <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-footer__bottom-link">
+              Миний булан
+            </NuxtLink>
+            <template v-else>
+              <NuxtLink to="/login" class="gks-footer__bottom-link">Нэвтрэх</NuxtLink>
+              <NuxtLink to="/register" class="gks-footer__bottom-link">Бүртгүүлэх</NuxtLink>
+            </template>
+          </nav>
+        </div>
       </div>
     </footer>
   </div>
@@ -457,7 +479,14 @@ async function onLogout() {
   text-transform: uppercase;
   color: var(--brand-300);
 }
-.gks-footer__text { font-size: var(--fs-body-sm); color: var(--n-400); }
+.gks-footer__text { font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--n-400); }
+.gks-footer__address {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-style: normal;
+}
 .gks-footer__link {
   font-size: var(--fs-body-sm);
   color: var(--n-300);
@@ -470,13 +499,26 @@ async function onLogout() {
 .gks-footer__bottom {
   border-top: var(--border-hair) solid rgba(255, 255, 255, .10);
 }
-.gks-footer__bottom p {
+.gks-footer__bottom-inner {
   max-width: var(--container-page);
   margin: 0 auto;
   padding: var(--sp-5) var(--gutter-desktop);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-5);
   font-size: var(--fs-caption);
   color: var(--n-500);
 }
+.gks-footer__bottom-links { display: flex; gap: var(--sp-5); }
+.gks-footer__bottom-link {
+  font-size: var(--fs-caption);
+  color: var(--n-400);
+  text-decoration: none;
+  transition: var(--transition-control);
+}
+.gks-footer__bottom-link:hover { color: var(--n-000); }
 
 @media (max-width: 1024px) {
   .gks-appbar__nav { gap: var(--sp-4); }
@@ -501,7 +543,7 @@ async function onLogout() {
   .gks-appbar__panel { padding: 0 var(--gutter-mobile) var(--sp-4); }
   .gks-main { padding: var(--sp-6) var(--gutter-mobile) var(--sp-9); }
   .gks-footer__inner { grid-template-columns: 1fr; padding: var(--sp-8) var(--gutter-mobile) var(--sp-6); }
-  .gks-footer__bottom p { padding: var(--sp-4) var(--gutter-mobile); }
+  .gks-footer__bottom-inner { padding: var(--sp-4) var(--gutter-mobile); }
   .gks-appbar__user { display: none; }
 }
 </style>
