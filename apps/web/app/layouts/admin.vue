@@ -17,8 +17,8 @@ interface AdminNavItem {
 // Only sections with a working page belong here — no links to screens that don't exist yet.
 const NAV: AdminNavItem[] = [
   { to: '/admin', label: 'Хяналтын самбар', icon: 'layout-dashboard' },
-  { to: '/admin/leads', label: 'Сэжим', icon: 'users' },
-  { to: '/admin/cases', label: 'Хэрэг', icon: 'folder' },
+  { to: '/admin/leads', label: 'Сэжим', icon: 'user-search' },
+  { to: '/admin/clients', label: 'Хэрэглэгч', icon: 'users' },
   { to: '/admin/contracts', label: 'Гэрээ', icon: 'file-text' },
   { to: '/admin/payments', label: 'Төлбөр', icon: 'credit-card' },
   { to: '/admin/settings/pricing', label: 'Үнийн тохиргоо', icon: 'settings' },

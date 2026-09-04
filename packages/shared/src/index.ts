@@ -7,3 +7,4 @@ export * from './types/api';
 export * from './types/content';
 export * from './types/lead-crm';
 export * from './types/case-contract-payment';
+export * from './types/client';

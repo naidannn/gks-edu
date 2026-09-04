@@ -34,7 +34,7 @@ export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'REFUNDE
 export interface PersonRef {
   id: string;
   name: string | null;
-  email: string;
+  email: string | null;
 }
 
 export interface ServicePricing {
@@ -92,6 +92,12 @@ export interface ContractDetail {
 export interface ContractListItem extends ContractDetail {
   user: PersonRef;
   case: { id: string; code: string; serviceType: ServiceType };
+}
+
+/** Compact operational summary for the staff contracts workspace. */
+export interface ContractStats {
+  total: number;
+  byStatus: Partial<Record<ContractStatus, number>>;
 }
 
 export interface PaymentItem {

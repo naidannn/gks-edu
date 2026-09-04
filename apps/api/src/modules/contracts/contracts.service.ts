@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { ContractPdfService } from './contract-pdf.service.js';
+import { ADULT_AGE, ageOn } from '../clients/dto/client-fields.js';
 import { formatAmount, renderContractBody } from './contract-template.util.js';
 import type { AcceptContractDto } from './dto/accept-contract.dto.js';
 import type { CreateContractDto } from './dto/create-contract.dto.js';
@@ -64,7 +65,7 @@ export class ContractsService {
   async createForCase(dto: CreateContractDto) {
     const gksCase = await this.prisma.case.findUnique({
       where: { id: dto.caseId },
-      include: { user: true, university: true, contract: true },
+      include: { user: { include: { client: true } }, university: true, contract: true },
     });
     if (!gksCase) throw new NotFoundException(`Case ${dto.caseId} not found`);
     if (gksCase.contract) throw new BadRequestException('Энэ хэрэгт аль хэдийн гэрээ үүссэн байна');
@@ -81,11 +82,25 @@ export class ContractsService {
     ]);
     if (!template) throw new NotFoundException(`${gksCase.serviceType} үйлчилгээнд идэвхтэй гэрээний загвар алга байна`);
 
+    // The client record is where the contract's legal identity lives (1B-14):
+    // full name, register number, and the guardian who signs for a minor.
+    const client = gksCase.user.client;
+    const signedForByGuardian = Boolean(client && ageOn(client.birthDate) < ADULT_AGE);
+
     const { prepayment, balance } = PricingService.amounts(pricing);
     const bodyMn = renderContractBody(template.bodyMn, {
       contractDate: new Date().toLocaleDateString('en-CA'),
-      userName: gksCase.user.name ?? gksCase.user.email,
-      userRegister: '—',
+      userName: client ? `${client.lastName} ${client.firstName}` : (gksCase.user.name ?? gksCase.user.email ?? '—'),
+      userRegister: client?.registerNumber ?? '—',
+      userBirthDate: client ? client.birthDate.toLocaleDateString('en-CA') : '—',
+      userPhone: client?.phone ?? gksCase.user.phone ?? '—',
+      userAddress: client?.address ?? '—',
+      guardianName:
+        signedForByGuardian && client?.guardianLastName
+          ? `${client.guardianLastName} ${client.guardianFirstName ?? ''}`.trim()
+          : '—',
+      guardianRegister: signedForByGuardian ? (client?.guardianRegisterNumber ?? '—') : '—',
+      guardianRelation: signedForByGuardian ? (client?.guardianRelation ?? '—') : '—',
       universityName: gksCase.university?.nameMn ?? 'Тодорхойгүй (сургууль сонголт хийгдээгүй)',
       totalAmount: formatAmount(pricing.totalAmount),
       prepaymentAmount: formatAmount(prepayment),
@@ -135,6 +150,17 @@ export class ContractsService {
       this.prisma.contract.count({ where }),
     ]);
     return paginate(items, total, query.page, query.limit);
+  }
+
+  async stats() {
+    const [total, groups] = await this.prisma.$transaction([
+      this.prisma.contract.count(),
+      this.prisma.contract.groupBy({ by: ['status'], _count: { _all: true } }),
+    ]);
+    return {
+      total,
+      byStatus: Object.fromEntries(groups.map((group) => [group.status, group._count._all])),
+    };
   }
 
   async findOne(id: string, user: AuthenticatedUser) {

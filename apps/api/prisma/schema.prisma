@@ -33,8 +33,10 @@ enum Role {
 
 model User {
   id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  password  String
+  /// Null for a staff-created client who has not claimed a portal login yet (1B-14).
+  email     String?  @unique
+  /// Null until the account is claimed — such a row cannot pass `login`.
+  password  String?
   name      String?
   /// Needed for SMS-OTP contract signing (1C-08) — collected at accept-contract time if unset.
   phone     String?
@@ -50,6 +52,10 @@ model User {
   leadActivities    LeadActivity[]
   posts             Post[]
   savedUniversities SavedUniversity[]
+
+  client          Client?
+  assignedClients Client[] @relation("ClientConsultant")
+  createdClients  Client[] @relation("ClientCreatedBy")
 
   cases                     Case[]
   assignedCasesAsConsultant Case[]           @relation("CaseConsultant")
@@ -216,6 +222,7 @@ model University {
   intakes  IntakeTerm[]
   savedBy  SavedUniversity[]
   cases    Case[]
+  clients  Client[]
 
   @@index([isPublished])
   @@index([regionEn])
@@ -271,7 +278,8 @@ model IntakeTerm {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cases Case[]
+  cases   Case[]
+  clients Client[]
 
   @@unique([universityId, level, year, month])
   @@index([universityId])
@@ -365,6 +373,8 @@ model Lead {
   updatedAt DateTime @updatedAt
 
   activities LeadActivity[]
+  /// Set once staff convert this lead into a client (1B-10) — the lead row stays as history.
+  client     Client?
 
   @@index([stage])
   @@index([assignedToId])
@@ -392,6 +402,105 @@ model LeadActivity {
 
   @@index([leadId, occurredAt])
   @@map("lead_activities")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Client (гэрээт харилцагч) — 1B-14.
+//
+// A `Lead` is a pre-contract enquiry; a `Client` is a person the office has
+// taken on. The two are deliberately separate tables: converting a lead copies
+// what is still true into a client row and leaves the lead as sales history.
+//
+// A client is always backed by a `User` row, because `Case`, `Contract` and
+// `Payment` all hang off `userId`. That row carries no email/password until the
+// client claims a portal login — staff-created clients never get a fake account.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ClientStatus {
+  /// In an active service cycle, or waiting to start one.
+  ACTIVE
+  /// No live case; kept for history and repeat business.
+  INACTIVE
+  ARCHIVED
+}
+
+model Client {
+  id     String  @id @default(uuid()) @db.Uuid
+  /// Human-readable, e.g. KH-2026-0042.
+  code   String  @unique
+  /// The account rows Case/Contract/Payment point at — created together with the client.
+  userId String  @unique @db.Uuid
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// The enquiry this client was converted from, if any (1B-10).
+  leadId String? @unique @db.Uuid
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  // ── Identity — what the brokerage contract is written against (§6.2).
+  lastName       String
+  firstName      String
+  birthDate      DateTime @db.Date
+  /// Регистрийн дугаар — 2 Cyrillic letters + 8 digits, validated in the DTO.
+  registerNumber String   @unique
+  gender         Gender?
+  phone          String
+  phoneAlt       String?
+  email          String?
+  address        String?
+
+  // ── Guardian (төлөөлөн гэрээ байгуулагч) — required while the client is a
+  //    minor on the contract date; kept afterwards as the signed record.
+  guardianLastName       String?
+  guardianFirstName      String?
+  guardianRegisterNumber String?
+  guardianPhone          String?
+  /// Free text: "Эх", "Эцэг", "Асран хамгаалагч" …
+  guardianRelation       String?
+
+  // ── Academic background carried over from the lead, kept editable here.
+  educationLevel EducationLevel?
+  schoolName     String?
+  gpa            Float?
+  /// gksedu.md §24 question 1 — the GPA scale in use is still undecided.
+  gpaScale       String?
+  koreanLevel    String?
+  englishLevel   String?
+  passportNumber String?
+  passportExpiry DateTime?
+
+  // ── What the client signed up for. The authoritative per-service state lives
+  //    on `Case`; these are the choice made at registration time.
+  primaryServiceType ServiceType
+  targetUniversityId String?     @db.Uuid
+  targetUniversity   University? @relation(fields: [targetUniversityId], references: [id], onDelete: SetNull)
+  targetMajor        String?
+  plannedIntakeId    String?     @db.Uuid
+  plannedIntake      IntakeTerm? @relation(fields: [plannedIntakeId], references: [id], onDelete: SetNull)
+
+  source LeadSource   @default(OFFICE)
+  status ClientStatus @default(ACTIVE)
+  note   String?
+
+  assignedConsultantId String? @db.Uuid
+  assignedConsultant   User?   @relation("ClientConsultant", fields: [assignedConsultantId], references: [id], onDelete: SetNull)
+  createdById          String? @db.Uuid
+  createdBy            User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([assignedConsultantId])
+  @@index([primaryServiceType])
+  @@index([createdAt])
+  @@index([phone])
+  @@index([lastName, firstName])
+  @@map("clients")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

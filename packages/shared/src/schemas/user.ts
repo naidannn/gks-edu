@@ -5,7 +5,8 @@ export type UserRole = z.infer<typeof userRoleSchema>;
 
 export const userSchema = z.object({
   id: z.string(),
-  email: z.email(),
+  /** Null on a staff-created client's account until they claim a login (1B-14). */
+  email: z.email().nullable(),
   name: z.string().nullable(),
   role: userRoleSchema,
   createdAt: z.iso.datetime(),

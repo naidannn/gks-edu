@@ -8,9 +8,11 @@
 import type {
   BalanceTrigger,
   CaseStage,
+  ClientStatus,
   ContractStatus,
   ContractType,
   EducationLevel,
+  Gender,
   IntakeStatus,
   LeadActivityType,
   LeadSource,
@@ -131,6 +133,18 @@ export const CASE_STAGE_LABELS: Record<CaseStage, string> = {
   ON_HOLD: 'Түр зогссон',
   CANCELLED: 'Цуцлагдсан',
   REJECTED: 'Татгалзсан',
+};
+
+export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
+  ACTIVE: 'Идэвхтэй',
+  INACTIVE: 'Идэвхгүй',
+  ARCHIVED: 'Архивласан',
+};
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  MALE: 'Эрэгтэй',
+  FEMALE: 'Эмэгтэй',
+  OTHER: 'Бусад',
 };
 
 export const CONTRACT_TYPE_LABELS: Record<ContractType, string> = {

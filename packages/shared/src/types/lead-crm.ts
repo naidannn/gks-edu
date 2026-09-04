@@ -37,7 +37,7 @@ export const LEAD_STAGE_TRANSITIONS: Record<LeadStage, LeadStage[]> = {
 export interface StaffRef {
   id: string;
   name: string | null;
-  email: string;
+  email: string | null;
 }
 
 export interface LeadListItem {
@@ -52,6 +52,8 @@ export interface LeadListItem {
   assignedTo: StaffRef | null;
   nextContactAt: string | null;
   winProbability: number | null;
+  /** Set once the lead was converted into a client (1B-10). */
+  client: { id: string; code: string } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -92,6 +94,8 @@ export interface LeadDetail {
   winProbability: number | null;
   lostReason: string | null;
   note: string | null;
+  /** Set once the lead was converted into a client (1B-10). */
+  client: { id: string; code: string; createdAt: string } | null;
   createdAt: string;
   updatedAt: string;
   activities: LeadActivityItem[];

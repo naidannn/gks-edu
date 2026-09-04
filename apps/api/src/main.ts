@@ -30,7 +30,10 @@ async function bootstrap(): Promise<void> {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: { enableImplicitConversion: true },
+      // No `enableImplicitConversion`: it coerces by the reflected design type,
+      // which turns the query string "false" into `Boolean('false') === true`
+      // and overrides a DTO's own @Transform. Query DTOs state their
+      // conversions explicitly with @Type / @Transform instead.
     }),
   );
 

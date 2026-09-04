@@ -24,7 +24,9 @@ export function useApi() {
   const auth = useAuthStore();
 
   const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
-    const send = (token: string | null) =>
+    // `$fetch` widens the result to `TypedInternalResponse`, which TS cannot
+    // prove equals the caller's `T`; the API's own types are the contract here.
+    const send = (token: string | null): Promise<T> =>
       $fetch<T>(path, {
         baseURL: config.public.apiBase,
         ...options,
@@ -32,7 +34,7 @@ export function useApi() {
           ...(options?.headers as Record<string, string> | undefined),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-      });
+      }) as Promise<T>;
 
     try {
       return await send(auth.accessToken);

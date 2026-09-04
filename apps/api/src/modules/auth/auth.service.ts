@@ -49,7 +49,7 @@ export class AuthService {
 
     // Compare unconditionally so a missing account and a wrong password take
     // roughly the same time, and neither is distinguishable from the response.
-    const passwordMatches = user
+    const passwordMatches = user?.password
       ? await compare(dto.password, user.password)
       : await compare(dto.password, '$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidin');
 

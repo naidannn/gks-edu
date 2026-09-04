@@ -47,6 +47,7 @@ const STAFF_LIST_FIELDS = {
   winProbability: true,
   createdAt: true,
   updatedAt: true,
+  client: { select: { id: true, code: true } },
 } satisfies Prisma.LeadSelect;
 
 @Injectable()
@@ -173,6 +174,9 @@ export class LeadsService {
       where: { id },
       include: {
         assignedTo: { select: { id: true, name: true, email: true } },
+        // Present once the lead has been converted (1B-10) — the detail page
+        // links to the client instead of offering the conversion again.
+        client: { select: { id: true, code: true, createdAt: true } },
         activities: {
           orderBy: { occurredAt: 'desc' },
           take: 10,
@@ -296,7 +300,7 @@ export class LeadsService {
           data: {
             leadId: id,
             type: LeadActivityType.NOTE,
-            body: `${assignee.name ?? assignee.email} ажилтанд оноогдлоо`,
+            body: `${assignee.name ?? assignee.email ?? 'Ажилтан'} ажилтанд оноогдлоо`,
             meta: { assignedToId: assignee.id } satisfies Prisma.InputJsonObject,
             actorId,
           },

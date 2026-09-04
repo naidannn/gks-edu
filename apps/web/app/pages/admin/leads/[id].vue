@@ -188,9 +188,28 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
             <DsBadge tone="neutral">{{ LEAD_SOURCE_LABELS[lead.source] }}</DsBadge>
           </div>
         </div>
-        <div class="gks-lead__contact">
-          <a :href="`tel:${lead.phone}`" class="gks-lead__contact-link gks-tnum"><DsIcon name="phone" :size="16" /> {{ lead.phone }}</a>
-          <a v-if="lead.email" :href="`mailto:${lead.email}`" class="gks-lead__contact-link"><DsIcon name="mail" :size="16" /> {{ lead.email }}</a>
+        <div class="gks-lead__head-side">
+          <div class="gks-lead__contact">
+            <a :href="`tel:${lead.phone}`" class="gks-lead__contact-link gks-tnum"><DsIcon name="phone" :size="16" /> {{ lead.phone }}</a>
+            <a v-if="lead.email" :href="`mailto:${lead.email}`" class="gks-lead__contact-link"><DsIcon name="mail" :size="16" /> {{ lead.email }}</a>
+          </div>
+          <!-- Conversion is the point of the funnel; it is offered once, here (1B-10). -->
+          <DsButton
+            v-if="lead.client"
+            variant="secondary"
+            icon-right="arrow-right"
+            @click="navigateTo(`/admin/clients/${lead.client.id}`)"
+          >
+            {{ lead.client.code }} хэрэглэгч рүү
+          </DsButton>
+          <DsButton
+            v-else
+            variant="accent"
+            icon-left="user-plus"
+            @click="navigateTo(`/admin/clients/new?leadId=${lead.id}`)"
+          >
+            Хэрэглэгч болгох
+          </DsButton>
         </div>
       </header>
 
@@ -301,6 +320,7 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 .gks-lead__head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--sp-4); }
 .gks-lead__title { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .gks-lead__tags { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+.gks-lead__head-side { display: flex; flex-direction: column; gap: var(--sp-3); align-items: flex-end; }
 .gks-lead__contact { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-end; }
 .gks-lead__contact-link { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); text-decoration: none; }
 .gks-lead__contact-link:hover { color: var(--brand-600); }

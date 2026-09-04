@@ -137,7 +137,10 @@ useHead({ title: 'Сэжимүүд · CRM' });
         </thead>
         <tbody>
           <tr v-for="lead in data.items" :key="lead.id" class="gks-crm__row" @click="navigateTo(`/admin/leads/${lead.id}`)">
-            <td>{{ lead.lastName }} {{ lead.firstName }}</td>
+            <td>
+              {{ lead.lastName }} {{ lead.firstName }}
+              <DsBadge v-if="lead.client" tone="success" icon="user-check">Хэрэглэгч</DsBadge>
+            </td>
             <td class="gks-tnum">{{ lead.phone }}</td>
             <td>{{ LEAD_SOURCE_LABELS[lead.source] }}</td>
             <td><DsBadge :tone="stageTone(lead.stage)">{{ LEAD_STAGE_LABELS[lead.stage] }}</DsBadge></td>

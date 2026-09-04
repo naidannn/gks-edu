@@ -119,15 +119,21 @@ useHead({ title: 'Хяналтын самбар · CRM' });
         </DsCard>
       </div>
 
-      <DsButton variant="secondary" icon-right="arrow-right" @click="navigateTo('/admin/leads')">
-        Бүх сэжим рүү очих
-      </DsButton>
+      <div class="gks-dash__cta">
+        <DsButton variant="secondary" icon-right="arrow-right" @click="navigateTo('/admin/leads')">
+          Бүх сэжим рүү очих
+        </DsButton>
+        <DsButton variant="secondary" icon-right="arrow-right" @click="navigateTo('/admin/clients')">
+          Хэрэглэгчид рүү очих
+        </DsButton>
+      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
 .gks-dash { display: flex; flex-direction: column; gap: var(--sp-6); }
+.gks-dash__cta { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
 .gks-dash__title {
   margin-top: var(--sp-2);
   font-family: var(--font-display);

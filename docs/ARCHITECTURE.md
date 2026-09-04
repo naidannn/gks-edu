@@ -167,8 +167,68 @@ NEW → CONTACTED → CONSULTED → PROPOSAL_SENT → CONTRACT_PENDING → WON
                                     └──────────────────────────→ LOST
 ```
 
-`WON` болоход систем `Case`-ийг үүсгэнэ (§5). `LeadActivity` нь дуудлага, уулзалт,
-чат, тэмдэглэл, даалгаврыг нэг цаг хугацааны хэлхээнд хадгална (§15.1).
+`WON` болох нь `Client` үүсгэх үйлдлээр хийгддэг (§4a, 1B-10): ажилтан сэжмийг
+хэрэглэгч болгон бүртгэхэд `Client` + `Case` үүсч, сэжим `WON` болж, тэр шилжилт
+`LeadActivity`-д бичигдэнэ. `LeadActivity` нь дуудлага, уулзалт, чат, тэмдэглэл,
+даалгаврыг нэг цаг хугацааны хэлхээнд хадгална (§15.1).
+
+---
+
+## 4a. `Client` — гэрээт харилцагч (1B-14)
+
+`Lead` бол **гэрээний өмнөх сонирхогч**, `Client` бол **оффис хүлээж авсан хүн**. Энэ хоёр нь
+зориудаар **тусдаа хүснэгт** бөгөөд админ талд ч тусдаа хуудастай (`/admin/leads`,
+`/admin/clients`). Сэжмээс хэрэглэгч үүсгэхэд өгөгдөл **хуулагдана**, сэжим өөрөө
+борлуулалтын түүх болж үлдэнэ (`Lead.client` холбоос).
+
+**Хэрэглэгчийг сэжимгүйгээр шууд үүсгэж болно** — оффисоор ирсэн хүнийг эхлээд сэжим
+болгож бүртгэх шаардлагагүй (`POST /clients`).
+
+```prisma
+model Client {
+  id     String  @id @default(uuid()) @db.Uuid
+  code   String  @unique                       // KH-2026-0042
+  userId String  @unique @db.Uuid              // Case/Contract/Payment-ийн заадаг account
+  leadId String? @unique @db.Uuid              // хөрвүүлсэн сэжим (1B-10)
+
+  lastName String;  firstName String
+  birthDate DateTime @db.Date
+  registerNumber String @unique                // регистрийн дугаар — гэрээнд бичигдэнэ
+  gender Gender?;  phone String;  phoneAlt String?
+  email String?;   address String?
+
+  // Төлөөлөн гэрээ байгуулагч — 18 нас хүрээгүй үед заавал (§6.2)
+  guardianLastName String?;  guardianFirstName String?
+  guardianRegisterNumber String?;  guardianPhone String?;  guardianRelation String?
+
+  educationLevel EducationLevel?;  schoolName String?
+  gpa Float?;  gpaScale String?;  koreanLevel String?;  englishLevel String?
+  passportNumber String?;  passportExpiry DateTime?
+
+  primaryServiceType ServiceType                // бүртгэх үед сонгосон үйлчилгээ
+  targetUniversityId String? @db.Uuid
+  targetMajor String?;  plannedIntakeId String? @db.Uuid
+
+  source LeadSource;  status ClientStatus @default(ACTIVE);  note String?
+  assignedConsultantId String? @db.Uuid
+  createdById String? @db.Uuid
+}
+```
+
+**Яагаад `User` мөр заавал үүсдэг вэ.** `Case`, `Contract`, `Payment` гурав нь `userId`
+дээр тогтдог тул хэрэглэгч бүр `User` мөртэй. Ажилтны бүртгэсэн хүний тэр мөрөнд **нууц
+үг байхгүй** (`User.password` nullable) тул нэвтрэх боломжгүй — хожим өөрөө бүртгэлээ
+эзэмших үед л нууц үг тавигдана. Имэйлгүй хүн бас байж болно (`User.email` nullable),
+хуурамч имэйл огт үүсгэхгүй.
+
+**Нас ба төлөөлөгч.** 18 нас хүрээгүй бол гэрээг асран хамгаалагч байгуулна. Насыг
+клиентээс ирсэн туг биш, `birthDate`-аас сервер тал тооцож шалгана
+(`ClientsService.assertGuardianPresent`).
+
+**Жагсаалтын харагдац.** `/admin/clients` мөр бүр дээр овог нэр, утас, үйлчилгээ,
+сургууль, **зуучлалын үе шат** (идэвхтэй `Case`-ийн `stage`), гэрээний төлөв ба огноо
+харагдана; нэр/утас/регистр/код/имэйлээр хайж, үйлчилгээ, үе шат, төлөв, суваг,
+гэрээтэй эсэх, хариуцагчаар шүүнэ.
 
 ---
 

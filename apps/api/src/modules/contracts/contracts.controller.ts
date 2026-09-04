@@ -67,6 +67,13 @@ export class ContractsController {
     return this.contracts.findAllStaff(query);
   }
 
+  @Get('stats')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Contract counts by status for the staff workspace' })
+  stats() {
+    return this.contracts.stats();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'One contract (staff, or the owning user)' })
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {

@@ -11,6 +11,7 @@ import { validateEnv } from './config/env.validation.js';
 import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CasesModule } from './modules/cases/cases.module.js';
+import { ClientsModule } from './modules/clients/clients.module.js';
 import { ContractsModule } from './modules/contracts/contracts.module.js';
 import { FaqModule } from './modules/faq/faq.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
@@ -50,6 +51,7 @@ import { StorageModule } from './storage/storage.module.js';
     LeadsModule,
     PricingModule,
     CasesModule,
+    ClientsModule,
     ContractsModule,
     PaymentsModule,
     PostsModule,

@@ -18,10 +18,17 @@ export class CasesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateCaseDto) {
-    const code = await this.generateCode();
-    return this.prisma.case.create({
+    return this.createWithin(this.prisma, dto);
+  }
+
+  /**
+   * Same as `create`, but inside a caller's transaction — registering a client
+   * opens their first case in one atomic step (1B-14).
+   */
+  async createWithin(db: Db, dto: CreateCaseDto) {
+    return db.case.create({
       data: {
-        code,
+        code: await this.generateCode(db),
         userId: dto.userId,
         serviceType: dto.serviceType,
         universityId: dto.universityId,
@@ -189,10 +196,10 @@ export class CasesService {
   }
 
   /** `GKS-{year}-{seq}` (§5) — sequence resets each calendar year. */
-  private async generateCode(): Promise<string> {
+  private async generateCode(db: Db): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `GKS-${year}-`;
-    const count = await this.prisma.case.count({ where: { code: { startsWith: prefix } } });
+    const count = await db.case.count({ where: { code: { startsWith: prefix } } });
     return `${prefix}${(count + 1).toString().padStart(4, '0')}`;
   }
 }
