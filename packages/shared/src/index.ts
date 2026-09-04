@@ -8,3 +8,6 @@ export * from './types/content';
 export * from './types/lead-crm';
 export * from './types/case-contract-payment';
 export * from './types/client';
+export * from './types/documents';
+export * from './types/applications';
+export * from './types/visa-departure';

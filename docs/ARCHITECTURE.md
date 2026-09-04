@@ -368,15 +368,21 @@ model DocumentTemplate {
 model RequirementRule {
   templateId     String @db.Uuid
   stage          DocStage        // ADMISSION | VISA          (§6, §10)
-  serviceTypes   ServiceType[]   // хоосон = бүгд
-  educationLevels EducationLevel[]
+  serviceTypes   ServiceType[]   @default([])   // хоосон = бүгд
+  educationLevels EducationLevel[] @default([])
   universityId   String? @db.Uuid // null = бүх сургууль
-  guarantorTypes GuarantorType[] // EMPLOYEE | COMPANY_DIRECTOR | SELF_EMPLOYED | NONE
+  guarantorTypes GuarantorType[] @default([])  // EMPLOYEE | COMPANY_DIRECTOR | SELF_EMPLOYED | NONE
+  // Батлан даагч эцэг эх биш үед төрөл садангийн лавлагаа нэмэгддэг (§6.1 III).
+  guarantorRelations GuarantorRelation[] @default([]) // PARENT | SIBLING | UNCLE_AUNT | OTHER
   necessity      Necessity       // REQUIRED | CONDITIONAL | OPTIONAL
   conditionNote  String?         // "байгаа тохиолдолд", "манай байгууллагаас шаардсан үед"
   sortOrder      Int
 }
 ```
+
+> **`@default([])` нь заавал.** Массив баганыг орхивол Postgres-д `NULL` бичигдэж,
+> Prisma-гийн `isEmpty` шүүлтүүрт таарахаа болино — "хоосон = бүгдэд хамаарна" гэсэн
+> дүрмийн бүхий л суурь ажиллахгүй болно (migration `20260904220000`).
 
 `Burduuleh_materialiin_jagsaalt_negdsen.docx`-д байгаа бодит дүрмүүд яг энэ загварт буудаг:
 
@@ -389,11 +395,18 @@ model RequirementRule {
 | `guarantorType = SELF_EMPLOYED` | түрээсийн гэрээ + тодорхойлолт + дансны хуулга |
 | батлан даагч нь ах/эгч/авга/нагац | + төрөл садангийн лавлагаа |
 
+**Хэрэглэгчийн нөхцөл (`CaseConditions`)** — боловсролын түвшин, батлан даагчийн ажил
+эрхлэлт, батлан даагчийн хамаарал. `Client`-ээс тусдаа: нэг хүн өөр өөр батлан даагчтай
+хоёр хэрэг явуулж болно. Анкет бөглөөгүй бол хөдөлгүүр `Client.educationLevel`-ийг
+нөөцөөр авна.
+
 **Шийдэлт (resolution):** `Case` нь `DOCUMENTS` шатанд орох үед хөдөлгүүр
-`(stage, serviceType, educationLevel, universityId, guarantorType)`-аар дүрмүүдийг шүүж
-`CaseDocument` мөрүүдийг үүсгэнэ. Хэрэглэгчийн нөхцөл өөрчлөгдвөл (жишээ нь батлан даагчаа
-солих) жагсаалт **дахин тооцоологдоно** — аль хэдийн илгээгдсэн материалыг устгахгүй,
-шинээр нэмэгдсэнийг л оруулна.
+`(stage, serviceType, educationLevel, universityId, guarantorType, guarantorRelation)`-аар
+дүрмүүдийг шүүж `CaseDocument` мөрүүдийг үүсгэнэ. Хэрэглэгчийн нөхцөл өөрчлөгдвөл (жишээ
+нь батлан даагчаа солих) жагсаалт **дахин тооцоологдоно** — аль хэдийн илгээгдсэн
+материалыг устгахгүй, гар хүрээгүй (`NOT_STARTED`) мөрийг л soft-delete хийнэ. Нэг загварыг
+хоёр дүрэм нэрлэвэл эрэмбээр эхнийх нь ялна, тул сургуулийн тусгай дүрэм (1D-18)
+ерөнхий дүрмийг дардаг.
 
 ### 7.2. Материалын төлөв (§6.2 — 12 төлөв)
 
@@ -414,6 +427,15 @@ NOT_STARTED → IN_PROGRESS → SUBMITTED → UNDER_REVIEW ─┬→ NEEDS_FIX �
 Орчуулга, анкет бөглөх, эсээ боловсруулах зэрэг нь `WorkTask` (§6.4) — гүйцэтгэгч,
 эцсийн хугацаа, төлөвтэй. Ажилтны ачааллын тайлан эндээс гарна (§15.6).
 
+### 7.4. Оффист ирэх ба эцсийн хугацаа
+
+- **`OfficeAppointment`** (1D-11) — `needsPhysicalOriginal` тэмдэгтэй бүх материалыг нэг
+  удаа авчирна. Хэрэг дээр нэг л `SCHEDULED` товлолт зэрэг байж болно (§17.5).
+- **`DocumentReminder`** (1D-12) — өдөр тутмын BullMQ ажил `dueAt`-аас D-7/D-3/D-1-д
+  сануулга үүсгэнэ. `@@unique([caseDocumentId, offsetDays])` нь идемпотентын түлхүүр:
+  ажил өдөрт хэдэн ч удаа ажиллахад D-7 нэг л удаа гарна. Имэйл/SMS хүргэлт нь §10-ийн
+  dispatcher (1G-02) дээр залгагдана.
+
 ---
 
 ## 8. Мэдүүлэг → урилга → виз
@@ -425,7 +447,11 @@ GKS-ийн хувьд шийдвэр **хоёр шаттай** — `ApplicationR
 (1, 2); энгийн зуучлалд ганц мөр (`round = 1`).
 
 **`SchoolInvoice` + `Invitation`** (§8) — воны дүн, ханш, шимтгэл, эцсийн хугацаа, төлсөн
-баримт, сургууль хүлээн авсан эсэх. Урилга ирснээр визний шат нээгдэнэ.
+баримт, сургууль хүлээн авсан эсэх. Төгрөгийн дүн нэхэмжлэх үүсэх мөчид тухайн өдрийн
+ханшаар **тогтоогдож хадгалагдана** (`FxRate` хүснэгттэй join хийхгүй): маргааш ханш
+хөдөлсөнөөс хэрэглэгчид хэлсэн дүн өөрчлөгдөж болохгүй. Урилга бүртгэгдснээр `Case` нь
+`INVITATION_RECEIVED` болж, `VisaCase` үүсэн визний материалын жагсаалт §7-гийн хөдөлгүүрээр
+шийдэгдэнэ.
 
 **`VisaCase`** (§10) — төлөв:
 `COLLECTING → REVIEWING → READY → SUBMITTED → ADDITIONAL_DOCS_REQUESTED → APPROVED | REJECTED | REAPPLY`
@@ -577,3 +603,9 @@ CI: `pnpm typecheck && pnpm lint && pnpm test` + `prisma migrate deploy` release
 9. **Файлын хадгалалтын хугацаа** — гэрээ дууссаны дараа хувийн бичиг баримтыг хэдэн жил
    хадгалах вэ (хууль зүйн шаардлага)?
 10. **SMS үйлчилгээ үзүүлэгч** — Монголын аль gateway (шимтгэл, дамжуулах хурд)?
+11. **Валютын ханшийн албан ёсны эх сурвалж** — Монголбанк нийтийн JSON API нийтлээгүй.
+    Одоогоор `FX_RATES_URL` тохиргоогоор нийтийн толин эх сурвалжийг уншиж байна; албан
+    ёсны feed эсвэл банктай гэрээт эх сурвалж хэрэгтэй юу? (1E-07)
+12. **Визний санхүүгийн нотлох баримтын доод дүн** — визний төрөл, сургуулиас хамаарна
+    гэж заасан ч тодорхой дүн бидэнд алга. Дүрмийн `conditionNote`-д бичих үү, эсвэл
+    сургууль тус бүрээр тохируулах уу? (1F-03)

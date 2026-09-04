@@ -9,10 +9,14 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
 import { configuration } from './config/configuration.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthModule } from './health/health.module.js';
+import { ApplicationsModule } from './modules/applications/applications.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CasesModule } from './modules/cases/cases.module.js';
 import { ClientsModule } from './modules/clients/clients.module.js';
 import { ContractsModule } from './modules/contracts/contracts.module.js';
+import { DepartureModule } from './modules/departure/departure.module.js';
+import { DocumentsModule } from './modules/documents/documents.module.js';
+import { FxModule } from './modules/fx/fx.module.js';
 import { FaqModule } from './modules/faq/faq.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
@@ -21,6 +25,7 @@ import { PricingModule } from './modules/pricing/pricing.module.js';
 import { SavedUniversitiesModule } from './modules/saved-universities/saved-universities.module.js';
 import { UniversitiesModule } from './modules/universities/universities.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { VisaModule } from './modules/visa/visa.module.js';
 import { VectorModule } from './modules/vector/vector.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QueueModule } from './queue/queue.module.js';
@@ -54,6 +59,11 @@ import { StorageModule } from './storage/storage.module.js';
     ClientsModule,
     ContractsModule,
     PaymentsModule,
+    DocumentsModule,
+    FxModule,
+    DepartureModule,
+    VisaModule,
+    ApplicationsModule,
     PostsModule,
     FaqModule,
     VectorModule,

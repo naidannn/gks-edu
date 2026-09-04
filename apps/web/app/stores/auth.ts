@@ -15,6 +15,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => user.value?.role === 'ADMIN');
   /** CRM access: admins and consultants (0-07, 1B). */
   const isStaff = computed(() => user.value?.role === 'ADMIN' || user.value?.role === 'CONSULTANT');
+  /** Paperwork access: the document officer works materials but not the CRM (ARCHITECTURE.md §11). */
+  const isDocStaff = computed(() => isStaff.value || user.value?.role === 'DOC_OFFICER');
 
   /** Tokens live in localStorage, so this is a no-op during SSR. */
   function persist(): void {
@@ -121,6 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isAdmin,
     isStaff,
+    isDocStaff,
     login,
     register,
     refresh,

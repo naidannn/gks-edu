@@ -26,6 +26,17 @@ export interface AppConfig {
     /** §18 question 10 — the real Mongolian gateway is not chosen yet; `console` logs instead of sending. */
     provider: 'console';
   };
+  fx: {
+    /**
+     * Daily reference-rate feed (1E-07). Mongolbank publishes the rate on its
+     * website but exposes no documented JSON API, so the default is the
+     * long-standing public mirror of it; point `FX_RATES_URL` at an official
+     * feed once the business names one.
+     */
+    ratesUrl: string;
+    /** Used when the feed is unreachable and the table is still empty. */
+    fallbackKrwRate: number;
+  };
   storage: {
     /** `local` writes to disk; `supabase` needs SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (0-08). */
     driver: 'local' | 'supabase';
@@ -65,6 +76,10 @@ export const configuration = (): AppConfig => ({
   },
   sms: {
     provider: 'console',
+  },
+  fx: {
+    ratesUrl: process.env.FX_RATES_URL ?? 'https://monxansh.appspot.com/xansh.json?currency=KRW',
+    fallbackKrwRate: Number.parseFloat(process.env.FX_FALLBACK_KRW_RATE ?? '2.65'),
   },
   storage: {
     driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CaseDetail, CaseStage } from '@gks/shared';
 
-/** Shell for a user's case: stage header + tabs (гэрээ/төлбөр) (1C-17). */
+/** Shell for a user's case: stage header + tabs across the whole journey (1C-17 … 1F-09). */
 definePageMeta({ middleware: 'auth' });
 
 const route = useRoute();
@@ -26,6 +26,10 @@ const TABS = [
   { to: (i: string) => `/app/cases/${i}`, label: 'Явц', exact: true },
   { to: (i: string) => `/app/cases/${i}/contract`, label: 'Гэрээ' },
   { to: (i: string) => `/app/cases/${i}/payment`, label: 'Төлбөр' },
+  { to: (i: string) => `/app/cases/${i}/documents`, label: 'Материал' },
+  { to: (i: string) => `/app/cases/${i}/application`, label: 'Мэдүүлэг' },
+  { to: (i: string) => `/app/cases/${i}/visa`, label: 'Виз' },
+  { to: (i: string) => `/app/cases/${i}/departure`, label: 'Бэлтгэл' },
 ];
 
 function stageTone(s: CaseStage): 'neutral' | 'info' | 'success' | 'danger' | 'warning' {
@@ -81,7 +85,7 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний хэр�
 .gks-mycase__title { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .gks-mycase__service { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
 
-.gks-mycase__tabs { display: flex; gap: var(--sp-1); border-bottom: var(--border-hair) solid var(--line-hairline); }
+.gks-mycase__tabs { display: flex; gap: var(--sp-1); border-bottom: var(--border-hair) solid var(--line-hairline); overflow-x: auto; }
 .gks-mycase__tab { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--text-muted); text-decoration: none; border-bottom: 2px solid transparent; }
 .gks-mycase__tab:hover { color: var(--text-strong); }
 .gks-mycase__tab--active { color: var(--brand-700); border-bottom-color: var(--brand-600); font-weight: var(--fw-semibold); }

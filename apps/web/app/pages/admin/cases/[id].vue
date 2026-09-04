@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { CaseDetail, CaseStage, ContractType, PaymentKind } from '@gks/shared';
+import type { CaseDetail, CaseStage, ContractType, PaymentKind, StageProgress } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
-/** Staff case detail: contract issuance/signing, payments, transitions (1C-18). */
+/** Staff case detail: contract issuance/signing, payments, transitions (1C-18), material progress (1D-19). */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
 const route = useRoute();
@@ -13,10 +13,18 @@ const gksCase = ref<CaseDetail | null>(null);
 const pending = ref(true);
 const errorMsg = ref<string | null>(null);
 
+/** 1D-19 — how far the paperwork has got, per stage, on the case itself. */
+const docProgress = ref<{ admission: StageProgress; visa: StageProgress } | null>(null);
+
 async function load() {
   pending.value = true;
   try {
     gksCase.value = await api.get<CaseDetail>(`/cases/${id.value}`);
+    const [admission, visa] = await Promise.all([
+      api.get<StageProgress>(`/cases/${id.value}/documents/progress?stage=ADMISSION`),
+      api.get<StageProgress>(`/cases/${id.value}/documents/progress?stage=VISA`),
+    ]);
+    docProgress.value = { admission, visa };
   } catch {
     errorMsg.value = 'Хэргийг ачаалж чадсангүй';
   } finally {
@@ -224,6 +232,17 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Хэрэг') });
 
       <div class="gks-case__grid">
         <div class="gks-case__main">
+          <!-- Material progress (1D-19) -->
+          <DsCard v-if="docProgress" title="Материалын бүрдэлт">
+            <template #action>
+              <NuxtLink :to="`/admin/documents?caseId=${gksCase.id}`" class="gks-case__link">Шалгах дараалал →</NuxtLink>
+            </template>
+            <div class="gks-case__progress">
+              <DocumentsProgressBar :progress="docProgress.admission" label="Элсэлтийн материал" />
+              <DocumentsProgressBar v-if="docProgress.visa.requiredTotal > 0" :progress="docProgress.visa" label="Визний материал" />
+            </div>
+          </DsCard>
+
           <!-- Stage transition -->
           <DsCard title="Үе шат шилжүүлэх">
             <div class="gks-case__transition">
@@ -363,6 +382,8 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Хэрэг') });
 .gks-case__side { display: flex; flex-direction: column; gap: var(--sp-5); }
 
 .gks-case__transition { display: flex; flex-direction: column; gap: var(--sp-3); align-items: flex-start; }
+.gks-case__progress { display: flex; flex-direction: column; gap: var(--sp-4); }
+.gks-case__link { font-size: var(--fs-caption); color: var(--brand-700); text-decoration: none; }
 .gks-case__hint { font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-case__contract-actions { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .gks-case__facts { display: flex; flex-direction: column; gap: var(--sp-1); margin-bottom: var(--sp-3); }

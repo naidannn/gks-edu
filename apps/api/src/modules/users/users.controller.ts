@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../prisma/client.js';
+import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -33,6 +34,13 @@ export class UsersController {
   @ApiOperation({ summary: 'Profile of the authenticated user' })
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.users.findOne(user.id);
+  }
+
+  @Get('staff')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Active staff for assignment dropdowns (1B-04, 1D-10)' })
+  staff() {
+    return this.users.findStaff();
   }
 
   @Get()

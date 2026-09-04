@@ -39,6 +39,14 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  FX_RATES_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  FX_FALLBACK_KRW_RATE?: string;
+
+  @IsString()
+  @IsOptional()
   QPAY_BASE_URL?: string;
 
   @IsString()

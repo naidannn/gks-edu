@@ -1,0 +1,32 @@
+import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+import { DOCUMENT_REMINDER_QUEUE } from '../../queue/queue.constants.js';
+import { CaseDocumentsController, DocumentActionsController } from './case-documents.controller.js';
+import { CaseDocumentsService } from './case-documents.service.js';
+import { DocumentFilesService } from './document-files.service.js';
+import { DocumentRemindersProcessor } from './document-reminders.processor.js';
+import { DocumentRemindersService } from './document-reminders.service.js';
+import { DocumentTemplatesController } from './document-templates.controller.js';
+import { DocumentTemplatesService } from './document-templates.service.js';
+import { OfficeAppointmentsService } from './office-appointments.service.js';
+import { RequirementsService } from './requirements.service.js';
+import { WorkTasksController } from './work-tasks.controller.js';
+import { WorkTasksService } from './work-tasks.service.js';
+
+/** 1D — the material requirement engine and everything built on it. */
+@Module({
+  imports: [BullModule.registerQueue({ name: DOCUMENT_REMINDER_QUEUE })],
+  controllers: [CaseDocumentsController, DocumentActionsController, DocumentTemplatesController, WorkTasksController],
+  providers: [
+    RequirementsService,
+    CaseDocumentsService,
+    DocumentFilesService,
+    DocumentTemplatesService,
+    DocumentRemindersService,
+    DocumentRemindersProcessor,
+    OfficeAppointmentsService,
+    WorkTasksService,
+  ],
+  exports: [RequirementsService, CaseDocumentsService],
+})
+export class DocumentsModule {}

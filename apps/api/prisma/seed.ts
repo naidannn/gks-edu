@@ -5,6 +5,11 @@ import { createHash } from 'node:crypto';
 import {
   BalanceTrigger,
   CaseStage,
+  DocStage,
+  EducationLevel,
+  GuarantorRelation,
+  GuarantorType,
+  Necessity,
   type Prisma,
   PrepaymentMode,
   PrismaClient,
@@ -207,6 +212,329 @@ async function seedContractTemplates(): Promise<void> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 1D-05 — the real requirement base, transcribed from
+// `docs/Burduuleh_materialiin_jagsaalt_negdsen.docx`: the two education tracks
+// (ЕБС / их сургууль төгссөн) × three guarantor occupations, plus the kinship
+// reference. 1F-03 adds the visa-stage rules on the same engine.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const E_MONGOLIA = 'E-Mongolia-аас';
+const UNI_LEVELS: EducationLevel[] = [EducationLevel.BACHELOR, EducationLevel.MASTER, EducationLevel.PHD];
+
+type TemplateSeed = Omit<Prisma.DocumentTemplateCreateInput, 'rules' | 'caseDocuments'>;
+
+const DOCUMENT_TEMPLATES: TemplateSeed[] = [
+  // ── Identity, needed by everyone.
+  {
+    code: 'PASSPORT',
+    nameMn: 'Гадаад паспорт',
+    descriptionMn: 'Хүчинтэй хугацаа нь суралцах хугацааг бүрэн хамарсан байх шаардлагатай.',
+    tipsMn: 'Мэдээллийн хуудсыг өнгөт, тод сканнердана.',
+    needsPhysicalOriginal: true,
+  },
+  {
+    code: 'ID_REF_EN',
+    nameMn: 'Иргэний үнэмлэхийн англи лавлагаа',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'PARENT_ID_REF_EN',
+    nameMn: 'Эцэг, эхийн иргэний үнэмлэхийн англи лавлагаа',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'BIRTH_CERT_REF_EN',
+    nameMn: 'Төрсний бүртгэлийн англи лавлагаа',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+
+  // ── Education — the ЕБС track.
+  {
+    code: 'HS_GRADUATION_REF',
+    nameMn: 'Бүрэн дунд боловсрол эзэмшсэн тухай сургуулийн тодорхойлолт',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'HS_TRANSCRIPT',
+    nameMn: 'Ахлах сургуулийн дүнгийн тодорхойлолт (10–12 дугаар анги)',
+    issuerHint: 'Төгссөн сургууль',
+    needsTranslation: true,
+    needsNotary: true,
+  },
+  {
+    code: 'HS_DIPLOMA',
+    nameMn: 'Бүрэн дунд боловсролын гэрчилгээ / аттестат',
+    descriptionMn: 'Эх хувиар авчирч, оффис дээр хуулбарыг баталгаажуулна.',
+    needsPhysicalOriginal: true,
+    needsTranslation: true,
+    needsNotary: true,
+  },
+
+  // ── Education — the university track.
+  {
+    code: 'UNI_GRADUATION_REF',
+    nameMn: 'Их, дээд сургууль төгссөн тухай сургуулийн тодорхойлолт',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'UNI_TRANSCRIPT',
+    nameMn: 'Их сургуулийн дүнгийн тодорхойлолт (1–4 дүгээр курс)',
+    issuerHint: 'Төгссөн их сургууль',
+    needsTranslation: true,
+    needsNotary: true,
+  },
+  {
+    code: 'UNI_DIPLOMA',
+    nameMn: 'Их сургуулийн диплом',
+    needsPhysicalOriginal: true,
+    needsTranslation: true,
+    needsNotary: true,
+  },
+
+  // ── Money and merit.
+  {
+    code: 'BANK_REF',
+    nameMn: 'Банкны тодорхойлолт',
+    descriptionMn: 'Манай байгууллагаас шаардсан үед авна.',
+    issuerHint: 'Арилжааны банк',
+    validityDays: 30,
+  },
+  {
+    code: 'AWARDS',
+    nameMn: 'Шагнал, урамшуулал, өргөмжлөл',
+    descriptionMn: 'Байгаа тохиолдолд мэдүүлгийг дэмжинэ.',
+  },
+
+  // ── Guarantor: employee.
+  {
+    code: 'SOCIAL_INSURANCE_REF_EN',
+    nameMn: 'Нийгмийн даатгалын лавлагаа (англи хэлээр)',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'EMPLOYER_REF',
+    nameMn: 'Ажлын газрын тодорхойлолт',
+    issuerHint: 'Ажил олгогч байгууллага',
+    needsTranslation: true,
+    validityDays: 30,
+  },
+
+  // ── Guarantor: company director.
+  {
+    code: 'COMPANY_REF',
+    nameMn: 'Хуулийн этгээдийн дэлгэрэнгүй лавлагаа',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'TAX_REF_EN',
+    nameMn: 'Татварын тодорхойлолт (англи хэлээр)',
+    issuerHint: 'Татварын алба',
+    validityDays: 30,
+  },
+  {
+    code: 'BANK_STATEMENT',
+    nameMn: 'Хураангуй дансны хуулга',
+    issuerHint: 'Арилжааны банк',
+    validityDays: 30,
+  },
+
+  // ── Guarantor: self-employed.
+  { code: 'LEASE_CONTRACT', nameMn: 'Түрээсийн гэрээ', needsTranslation: true },
+  { code: 'LEASE_REF', nameMn: 'Түрээсийн тодорхойлолт', needsTranslation: true, validityDays: 30 },
+
+  // ── Guarantor who is not a parent.
+  {
+    code: 'KINSHIP_REF',
+    nameMn: 'Төрөл садангийн лавлагаа',
+    descriptionMn: 'Ах, эгч, авга, нагац зэрэг хүн батлан даагчаар орж байгаа тохиолдолд.',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+
+  // ── Visa stage (1F-03).
+  {
+    code: 'VISA_FORM',
+    nameMn: 'Визний анкет',
+    descriptionMn: 'БНСУ-ын Элчин сайдын яамны маягтын дагуу бөглөнө.',
+    tipsMn: 'Анкетыг ажилтан хамт бөглөж, шалгаж өгнө.',
+  },
+  {
+    code: 'VISA_PHOTO',
+    nameMn: 'Цээж зураг (3.5 × 4.5 см)',
+    descriptionMn: 'Сүүлийн 6 сард авахуулсан, цагаан дэвсгэртэй.',
+    needsPhysicalOriginal: true,
+  },
+  {
+    code: 'ADMISSION_LETTER',
+    nameMn: 'Сургуулийн элсэлтийн батламж / урилга',
+    issuerHint: 'Элсэх сургууль',
+  },
+  {
+    code: 'TUITION_RECEIPT',
+    nameMn: 'Сургалтын төлбөр төлсөн баримт',
+    descriptionMn: 'Банкны шилжүүлгийн баримт, сургуулийн баталгаажуулалттай.',
+  },
+  {
+    code: 'BANK_BALANCE_CERT',
+    nameMn: 'Дансны үлдэгдлийн баталгаа (санхүүгийн нотлох баримт)',
+    descriptionMn: 'Шаардагдах дүн нь визний төрөл, сургуулиас хамаарна.',
+    issuerHint: 'Арилжааны банк',
+    validityDays: 30,
+  },
+  {
+    code: 'FAMILY_REF_EN',
+    nameMn: 'Гэр бүлийн лавлагаа (англи хэлээр)',
+    sourceHint: E_MONGOLIA,
+    validityDays: 30,
+  },
+  {
+    code: 'TB_TEST',
+    nameMn: 'Сүрьеэгийн шинжилгээний бичиг',
+    descriptionMn: 'БНСУ-ын Элчин сайдын яамнаас зөвшөөрсөн эмнэлгээс авна.',
+    needsPhysicalOriginal: true,
+  },
+  {
+    code: 'VISA_FEE_RECEIPT',
+    nameMn: 'Визний хураамжийн баримт',
+  },
+];
+
+/** `[templateCode, rule]` — the rule's `templateId` is filled in after upsert. */
+type RuleSeed = [string, Omit<Prisma.RequirementRuleUncheckedCreateInput, 'templateId'>];
+
+function admissionRules(): RuleSeed[] {
+  const rules: RuleSeed[] = [];
+  let order = 0;
+  const add = (code: string, rule: Partial<Omit<Prisma.RequirementRuleUncheckedCreateInput, 'templateId'>> = {}) => {
+    rules.push([code, { stage: DocStage.ADMISSION, necessity: Necessity.REQUIRED, sortOrder: (order += 10), ...rule }]);
+  };
+
+  // I. Үндсэн материал — identical on both tracks.
+  add('PASSPORT');
+  add('ID_REF_EN');
+  add('PARENT_ID_REF_EN');
+  add('BIRTH_CERT_REF_EN');
+
+  // The education papers are the only thing the two tracks disagree on.
+  add('HS_GRADUATION_REF', { educationLevels: [EducationLevel.SECONDARY_SCHOOL] });
+  add('HS_TRANSCRIPT', { educationLevels: [EducationLevel.SECONDARY_SCHOOL] });
+  add('UNI_GRADUATION_REF', { educationLevels: UNI_LEVELS });
+  add('UNI_TRANSCRIPT', { educationLevels: UNI_LEVELS });
+  add('HS_DIPLOMA');
+  add('UNI_DIPLOMA', { educationLevels: UNI_LEVELS });
+
+  add('BANK_REF', { necessity: Necessity.CONDITIONAL, conditionNote: 'Манай байгууллагаас шаардсан үед' });
+  add('AWARDS', { necessity: Necessity.OPTIONAL, conditionNote: 'Байгаа тохиолдолд' });
+
+  // II. Батлан даагчийн материал — one branch per occupation.
+  add('SOCIAL_INSURANCE_REF_EN', { guarantorTypes: [GuarantorType.EMPLOYEE] });
+  add('EMPLOYER_REF', { guarantorTypes: [GuarantorType.EMPLOYEE] });
+  add('COMPANY_REF', { guarantorTypes: [GuarantorType.COMPANY_DIRECTOR] });
+  add('TAX_REF_EN', { guarantorTypes: [GuarantorType.COMPANY_DIRECTOR] });
+  add('LEASE_CONTRACT', { guarantorTypes: [GuarantorType.SELF_EMPLOYED] });
+  add('LEASE_REF', { guarantorTypes: [GuarantorType.SELF_EMPLOYED] });
+  add('BANK_STATEMENT', { guarantorTypes: [GuarantorType.COMPANY_DIRECTOR, GuarantorType.SELF_EMPLOYED] });
+
+  // III. Нэмэлт материал — only when the sponsor is not a parent.
+  add('KINSHIP_REF', {
+    guarantorRelations: [GuarantorRelation.SIBLING, GuarantorRelation.UNCLE_AUNT, GuarantorRelation.OTHER],
+  });
+
+  return rules;
+}
+
+function visaRules(): RuleSeed[] {
+  const rules: RuleSeed[] = [];
+  let order = 0;
+  const add = (code: string, rule: Partial<Omit<Prisma.RequirementRuleUncheckedCreateInput, 'templateId'>> = {}) => {
+    rules.push([code, { stage: DocStage.VISA, necessity: Necessity.REQUIRED, sortOrder: (order += 10), ...rule }]);
+  };
+
+  add('VISA_FORM');
+  add('VISA_PHOTO');
+  add('PASSPORT');
+  add('ADMISSION_LETTER');
+  add('TUITION_RECEIPT');
+  add('BANK_BALANCE_CERT');
+  add('FAMILY_REF_EN');
+  // D-4 language training is the visa the tuberculosis certificate is asked for.
+  add('TB_TEST', { serviceTypes: [ServiceType.LANGUAGE_PREP] });
+  add('VISA_FEE_RECEIPT', { necessity: Necessity.CONDITIONAL, conditionNote: 'Виз мэдүүлсний дараа' });
+
+  return rules;
+}
+
+async function seedDocumentTemplates(): Promise<Map<string, string>> {
+  const ids = new Map<string, string>();
+  for (const template of DOCUMENT_TEMPLATES) {
+    // Update, so a wording fix in this file reaches an existing database — but
+    // never touch `isActive`, which an admin may have deliberately turned off.
+    const row = await prisma.documentTemplate.upsert({
+      where: { code: template.code },
+      update: { ...template, isActive: undefined },
+      create: template,
+    });
+    ids.set(template.code, row.id);
+  }
+  return ids;
+}
+
+async function seedRequirementRules(templateIds: Map<string, string>): Promise<void> {
+  // Rules carry no natural key, so the seed owns exactly the rows it created:
+  // re-seeding replaces the universal (non-school-specific) rule base and leaves
+  // any rule an admin attached to one university (1D-18) alone.
+  const seeded = [...admissionRules(), ...visaRules()];
+  const codes = new Set(seeded.map(([code]) => code));
+
+  await prisma.requirementRule.deleteMany({
+    where: { universityId: null, template: { code: { in: [...codes] } } },
+  });
+
+  await prisma.requirementRule.createMany({
+    data: seeded.map(([code, rule]) => ({ ...rule, templateId: templateIds.get(code)! })),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1F-07 — pre-departure checklist (gksedu.md §11), cloned into every plan.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DEPARTURE_CHECKLIST: Prisma.DepartureChecklistTemplateCreateInput[] = [
+  { code: 'FLIGHT_TICKET', titleMn: 'Онгоцны билет захиалах', descriptionMn: 'Хичээл эхлэхээс 3–5 хоногийн өмнө буух өдрөөр сонгоно.', offsetDays: 30, sortOrder: 10 },
+  { code: 'INSURANCE', titleMn: 'Аялал, эрүүл мэндийн даатгал', descriptionMn: 'Суралцах хугацааг бүтэн хамарсан даатгал.', offsetDays: 21, sortOrder: 20 },
+  { code: 'PICKUP', titleMn: 'Сургуулийн тосох үйлчилгээ', descriptionMn: 'Онгоцны буудлаас тосох хүсэлтийг урьдчилан илгээнэ.', offsetDays: 14, sortOrder: 30 },
+  { code: 'HOUSING', titleMn: 'Байр, дотуур байрны мэдээлэл', descriptionMn: 'Дотуур байрны захиалга эсвэл түрээсийн гэрээ.', offsetDays: 30, sortOrder: 40 },
+  { code: 'PRE_DEPARTURE_TRAINING', titleMn: 'Явахын өмнөх сургалт', descriptionMn: 'Оффис дээр буюу онлайнаар зохион байгуулна.', offsetDays: 14, sortOrder: 50 },
+  { code: 'LUGGAGE', titleMn: 'Ачаа тээшний зөвлөгөө', descriptionMn: 'Жингийн хязгаар, авч болохгүй зүйлс.', offsetDays: 7, sortOrder: 60 },
+  { code: 'BORDER', titleMn: 'Хилээр нэвтрэх зөвлөгөө', descriptionMn: 'Гаалийн мэдүүлэг, шаардлагатай бичиг баримт гар тээшинд.', offsetDays: 3, sortOrder: 70 },
+  { code: 'KOREA_REGISTRATION', titleMn: 'Солонгост бүртгүүлэх заавар', descriptionMn: 'Ирсэн даруйд сургуулийн бүртгэл, оршин суух бүртгэл.', offsetDays: null, sortOrder: 80 },
+  { code: 'ARC', titleMn: 'Гадаадын иргэний үнэмлэх (ARC)', descriptionMn: 'Ирснээс хойш 90 хоногийн дотор мэдүүлнэ.', offsetDays: null, sortOrder: 90 },
+  { code: 'BANK_ACCOUNT', titleMn: 'Банкны данс нээлгэх', descriptionMn: 'ARC гарсны дараа нээлгэх боломжтой.', offsetDays: null, sortOrder: 100 },
+  { code: 'SIM', titleMn: 'Гар утас, SIM карт', descriptionMn: 'Эхний өдрүүдэд урьдчилсан төлбөрт SIM хамгийн хялбар.', offsetDays: null, sortOrder: 110 },
+  { code: 'TRANSPORT', titleMn: 'Нийтийн тээвэр (T-money)', descriptionMn: 'Метро, автобусны карт нэн даруй авна.', offsetDays: null, sortOrder: 120 },
+  { code: 'LIVING_COST', titleMn: 'Амьдрах зардлын төлөвлөгөө', descriptionMn: 'Сарын хоол, байр, тээврийн зардлын тооцоо.', offsetDays: 7, sortOrder: 130 },
+  { code: 'ROUTE', titleMn: 'Сургуулийн байршил, маршрут', descriptionMn: 'Буудлаас сургууль хүртэлх зам, ойролцоох буудал.', offsetDays: 3, sortOrder: 140 },
+  { code: 'EMERGENCY', titleMn: 'Яаралтай үед холбогдох мэдээлэл', descriptionMn: 'Элчин сайдын яам, сургууль, GKS-ийн жижүүрийн дугаар.', offsetDays: 3, sortOrder: 150 },
+];
+
+async function seedDepartureChecklist(): Promise<void> {
+  for (const item of DEPARTURE_CHECKLIST) {
+    await prisma.departureChecklistTemplate.upsert({
+      where: { code: item.code },
+      update: { ...item, isActive: undefined },
+      create: item,
+    });
+  }
+}
+
 async function main(): Promise<void> {
   const password = await hash('password123', 12);
 
@@ -258,6 +586,8 @@ async function main(): Promise<void> {
   await seedServicePricing();
   await seedCaseFlowDefinitions();
   await seedContractTemplates();
+  await seedRequirementRules(await seedDocumentTemplates());
+  await seedDepartureChecklist();
 
   console.log(
     'Seed complete: admin@gks.edu / consultant@gks.edu / student@gks.edu (password: password123)',

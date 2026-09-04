@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { type CaseStage, Prisma, Role } from '../../prisma/client.js';
@@ -15,6 +15,8 @@ const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
 
 @Injectable()
 export class CasesService {
+  private readonly logger = new Logger(CasesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateCaseDto) {
@@ -150,6 +152,35 @@ export class CasesService {
     }
 
     await this.writeTransition(db, caseId, found.stage, toStage, null, null);
+  }
+
+  /**
+   * Moves the case as a *consequence* of a downstream aggregate's own event —
+   * an application submitted, an invitation received, a visa approved (1E/1F).
+   *
+   * The edge must exist in `CaseFlowDefinition`, but the actor's role is not
+   * checked: the authority here is the event, not a staff click, and a document
+   * officer recording a school's decision must not be blocked by the CRM roles
+   * on that edge. Returns false (and logs) when the case is somewhere the edge
+   * does not start from, so recording the fact never fails on the stage graph.
+   */
+  async applyDomainTransition(caseId: string, toStage: CaseStage, actorId: string | null, reason: string): Promise<boolean> {
+    const found = await this.prisma.case.findUnique({ where: { id: caseId } });
+    if (!found) throw new NotFoundException(`Case ${caseId} not found`);
+    if (found.stage === toStage) return false;
+
+    const rule = await this.prisma.caseFlowDefinition.findUnique({
+      where: {
+        serviceType_fromStage_toStage: { serviceType: found.serviceType, fromStage: found.stage, toStage },
+      },
+    });
+    if (!rule) {
+      this.logger.warn(`${found.code}: ${found.stage} -> ${toStage} шилжилт урсгалд алга — үе шат хөдөлгөөгүй үлдлээ`);
+      return false;
+    }
+
+    await this.writeTransition(this.prisma, caseId, found.stage, toStage, actorId, reason);
+    return true;
   }
 
   private async writeTransition(

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '../../prisma/client.js';
+import { Prisma, Role } from '../../prisma/client.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
@@ -46,6 +46,19 @@ export class UsersService {
     ]);
 
     return paginate(items, total, page, limit);
+  }
+
+  /**
+   * Active staff, for the assignment dropdowns (1B-04, 1D-10). Deliberately
+   * narrow — name and role only — so it can be readable by every staff member
+   * without exposing the full user list `findAll` returns.
+   */
+  async findStaff() {
+    return this.prisma.user.findMany({
+      where: { isActive: true, role: { in: [Role.ADMIN, Role.CONSULTANT, Role.DOC_OFFICER] } },
+      select: { id: true, name: true, email: true, role: true },
+      orderBy: { name: 'asc' },
+    });
   }
 
   async findOne(id: string) {

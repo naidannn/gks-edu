@@ -1,0 +1,349 @@
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { paginate } from '../../common/dto/pagination.dto.js';
+import { isStaff } from '../../common/constants/roles.js';
+import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { type DocStage, DocumentStatus, Necessity, type Prisma } from '../../prisma/client.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { assertTransition, isClientTransition, SETTLED_STATUSES } from './document-status.js';
+import type { UpsertCaseConditionsDto } from './dto/case-conditions.dto.js';
+import {
+  type AddDocumentNoteDto,
+  type CreateCaseDocumentDto,
+  type QueryCaseDocumentsDto,
+  ReviewAction,
+  type ReviewDocumentDto,
+  type TransitionDocumentDto,
+  type UpdateCaseDocumentDto,
+} from './dto/case-document.dto.js';
+import { RequirementsService } from './requirements.service.js';
+
+/** What each review verdict does to the document (gksedu.md §6.3). */
+const REVIEW_TARGET: Record<ReviewAction, DocumentStatus> = {
+  [ReviewAction.ACCEPT]: DocumentStatus.ACCEPTED,
+  [ReviewAction.REQUEST_FIX]: DocumentStatus.NEEDS_FIX,
+  [ReviewAction.RETURN]: DocumentStatus.RESUBMIT_REQUIRED,
+};
+
+const CHECKLIST_INCLUDE = {
+  template: true,
+  files: { where: { deletedAt: null }, orderBy: { version: 'desc' } },
+  workTasks: { orderBy: { createdAt: 'desc' } },
+} satisfies Prisma.CaseDocumentInclude;
+
+export interface StageProgress {
+  stage: DocStage;
+  requiredTotal: number;
+  requiredDone: number;
+  /** 0–100, rounded. 100 when nothing is required yet. */
+  percent: number;
+  awaitingReview: number;
+  needsFix: number;
+}
+
+/**
+ * Everything a case's paperwork does after the rule engine has produced it:
+ * the client's checklist, the 12-state machine (1D-07), staff review (1D-09)
+ * and the progress figure shown on the case (1D-19).
+ */
+@Injectable()
+export class CaseDocumentsService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly requirements: RequirementsService,
+  ) {}
+
+  // ─── Conditions questionnaire (1D-06) ───────────────────────────────────────
+
+  async getConditions(caseId: string, actor: AuthenticatedUser) {
+    await this.assertCaseAccess(caseId, actor);
+    return this.prisma.caseConditions.findUnique({ where: { caseId } });
+  }
+
+  /**
+   * Saving an answer immediately re-resolves the checklist — swapping a sponsor
+   * is exactly the case ARCHITECTURE.md §7.1 asks the engine to handle.
+   */
+  async upsertConditions(caseId: string, dto: UpsertCaseConditionsDto, actor: AuthenticatedUser, stage: DocStage) {
+    await this.assertCaseAccess(caseId, actor);
+
+    const conditions = await this.prisma.caseConditions.upsert({
+      where: { caseId },
+      create: { caseId, ...dto, answeredById: actor.id },
+      update: { ...dto, answeredById: actor.id },
+    });
+    const resolution = await this.requirements.resolveForCase(caseId, stage);
+    return { conditions, resolution };
+  }
+
+  // ─── Reading ────────────────────────────────────────────────────────────────
+
+  /** The client-facing checklist (1D-13) — internal notes are filtered out. */
+  async checklist(caseId: string, stage: DocStage, actor: AuthenticatedUser) {
+    await this.assertCaseAccess(caseId, actor);
+    const staff = isStaff(actor.role);
+
+    const documents = await this.prisma.caseDocument.findMany({
+      where: { caseId, stage, deletedAt: null },
+      include: {
+        ...CHECKLIST_INCLUDE,
+        notes: {
+          where: staff ? {} : { isInternal: false },
+          orderBy: { createdAt: 'desc' },
+          include: { author: { select: { id: true, name: true } } },
+        },
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    return { documents, progress: summarise(stage, documents) };
+  }
+
+  async progress(caseId: string, stage: DocStage): Promise<StageProgress> {
+    const documents = await this.prisma.caseDocument.findMany({
+      where: { caseId, stage, deletedAt: null },
+      select: { necessity: true, status: true },
+    });
+    return summarise(stage, documents);
+  }
+
+  async findOne(id: string, actor: AuthenticatedUser) {
+    const doc = await this.prisma.caseDocument.findUnique({
+      where: { id },
+      include: {
+        ...CHECKLIST_INCLUDE,
+        notes: {
+          where: isStaff(actor.role) ? {} : { isInternal: false },
+          orderBy: { createdAt: 'desc' },
+          include: { author: { select: { id: true, name: true } } },
+        },
+        case: { select: { id: true, code: true, userId: true, serviceType: true } },
+      },
+    });
+    if (!doc || doc.deletedAt) throw new NotFoundException(`Материал ${id} олдсонгүй`);
+    this.assertOwnership(doc.case.userId, actor);
+    return doc;
+  }
+
+  /** The staff review queue (1D-16) — oldest submission first, so nobody waits. */
+  async reviewQueue(query: QueryCaseDocumentsDto) {
+    const where: Prisma.CaseDocumentWhereInput = { deletedAt: null };
+    if (query.stage) where.stage = query.stage;
+    if (query.caseId) where.caseId = query.caseId;
+    where.status = query.status ?? { in: [DocumentStatus.SUBMITTED, DocumentStatus.UNDER_REVIEW] };
+    if (query.assignedDocOfficerId || query.q) {
+      where.case = {
+        ...(query.assignedDocOfficerId ? { assignedDocOfficerId: query.assignedDocOfficerId } : {}),
+        ...(query.q
+          ? {
+              OR: [
+                { code: { contains: query.q, mode: 'insensitive' } },
+                { user: { name: { contains: query.q, mode: 'insensitive' } } },
+              ],
+            }
+          : {}),
+      };
+    }
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.caseDocument.findMany({
+        where,
+        include: {
+          template: { select: { id: true, code: true, nameMn: true, needsTranslation: true, needsPhysicalOriginal: true } },
+          files: { where: { deletedAt: null }, orderBy: { version: 'desc' }, take: 1 },
+          case: {
+            select: {
+              id: true,
+              code: true,
+              serviceType: true,
+              user: { select: { id: true, name: true, email: true } },
+              assignedDocOfficer: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: [{ submittedAt: 'asc' }, { createdAt: 'asc' }],
+        skip: query.skip,
+        take: query.limit,
+      }),
+      this.prisma.caseDocument.count({ where }),
+    ]);
+    return paginate(items, total, query.page, query.limit);
+  }
+
+  /** Documents that can only be closed at the office (1D-11). */
+  async physicalOriginals(caseId: string, actor: AuthenticatedUser) {
+    await this.assertCaseAccess(caseId, actor);
+    return this.prisma.caseDocument.findMany({
+      where: { caseId, deletedAt: null, template: { needsPhysicalOriginal: true } },
+      include: { template: { select: { id: true, code: true, nameMn: true } } },
+      orderBy: { sortOrder: 'asc' },
+    });
+  }
+
+  // ─── Writing ────────────────────────────────────────────────────────────────
+
+  /** Manual addition — a school asks for something no rule covers (1E-04). */
+  async createManual(caseId: string, dto: CreateCaseDocumentDto) {
+    const existing = await this.prisma.caseDocument.findUnique({
+      where: { caseId_templateId_stage: { caseId, templateId: dto.templateId, stage: dto.stage } },
+    });
+    if (existing) {
+      return this.prisma.caseDocument.update({
+        where: { id: existing.id },
+        data: { deletedAt: null, necessity: dto.necessity ?? existing.necessity, dueAt: dto.dueAt ? new Date(dto.dueAt) : existing.dueAt },
+      });
+    }
+
+    const last = await this.prisma.caseDocument.findFirst({
+      where: { caseId, stage: dto.stage },
+      orderBy: { sortOrder: 'desc' },
+      select: { sortOrder: true },
+    });
+
+    return this.prisma.caseDocument.create({
+      data: {
+        caseId,
+        templateId: dto.templateId,
+        stage: dto.stage,
+        necessity: dto.necessity ?? Necessity.REQUIRED,
+        conditionNote: dto.conditionNote,
+        dueAt: dto.dueAt ? new Date(dto.dueAt) : null,
+        sortOrder: (last?.sortOrder ?? 0) + 1,
+      },
+    });
+  }
+
+  async update(id: string, dto: UpdateCaseDocumentDto) {
+    await this.getOrThrow(id);
+    return this.prisma.caseDocument.update({
+      where: { id },
+      data: {
+        necessity: dto.necessity,
+        conditionNote: dto.conditionNote,
+        dueAt: dto.dueAt === undefined ? undefined : dto.dueAt ? new Date(dto.dueAt) : null,
+      },
+    });
+  }
+
+  /** Soft delete (§9) — the file history survives. */
+  async remove(id: string) {
+    await this.getOrThrow(id);
+    return this.prisma.caseDocument.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  async transition(id: string, dto: TransitionDocumentDto, actor: AuthenticatedUser) {
+    const doc = await this.getOrThrow(id, { case: { select: { userId: true } }, template: true });
+    this.assertOwnership(doc.case.userId, actor);
+
+    assertTransition(doc.status, dto.toStatus);
+    if (!isStaff(actor.role) && !isClientTransition(doc.status, dto.toStatus)) {
+      throw new ForbiddenException('Энэ шилжилтийг зөвхөн ажилтан хийнэ');
+    }
+    if (dto.toStatus === DocumentStatus.READY && doc.template.needsTranslation && doc.status === DocumentStatus.ACCEPTED) {
+      throw new BadRequestException('Энэ материал орчуулга шаарддаг тул шууд "Бэлэн" болгож болохгүй');
+    }
+
+    return this.applyStatus(id, doc.status, dto.toStatus, actor.id, dto.note ?? null);
+  }
+
+  /** Staff verdict on a submitted document (1D-09). */
+  async review(id: string, dto: ReviewDocumentDto, actor: AuthenticatedUser) {
+    const doc = await this.getOrThrow(id);
+
+    if (dto.action !== ReviewAction.ACCEPT && !dto.note?.trim()) {
+      throw new BadRequestException('Засвар хүсэх/буцаах үед тайлбар заавал бичнэ');
+    }
+
+    // Reviewing implies picking the document up: SUBMITTED → UNDER_REVIEW first.
+    let status = doc.status;
+    if (status === DocumentStatus.SUBMITTED) {
+      await this.applyStatus(id, status, DocumentStatus.UNDER_REVIEW, actor.id, null);
+      status = DocumentStatus.UNDER_REVIEW;
+    }
+
+    const target = REVIEW_TARGET[dto.action];
+    if (dto.action === ReviewAction.RETURN && status === DocumentStatus.UNDER_REVIEW) {
+      // RESUBMIT_REQUIRED is only reachable through NEEDS_FIX (§7.2).
+      await this.applyStatus(id, status, DocumentStatus.NEEDS_FIX, actor.id, dto.note ?? null);
+      return this.applyStatus(id, DocumentStatus.NEEDS_FIX, target, actor.id, null);
+    }
+
+    assertTransition(status, target);
+    return this.applyStatus(id, status, target, actor.id, dto.note ?? null);
+  }
+
+  async addNote(id: string, dto: AddDocumentNoteDto, actor: AuthenticatedUser) {
+    const doc = await this.getOrThrow(id, { case: { select: { userId: true } } });
+    this.assertOwnership(doc.case.userId, actor);
+    const isInternal = Boolean(dto.isInternal) && isStaff(actor.role);
+
+    return this.prisma.documentReviewNote.create({
+      data: { caseDocumentId: id, authorId: actor.id, body: dto.body, isInternal },
+      include: { author: { select: { id: true, name: true } } },
+    });
+  }
+
+  /**
+   * Writes the new status plus its timestamp, and records the staff comment as
+   * a `DocumentReviewNote` so the client sees *why* something moved (§6.3).
+   */
+  async applyStatus(id: string, from: DocumentStatus, to: DocumentStatus, actorId: string | null, note: string | null) {
+    const now = new Date();
+    const stamps: Partial<Record<DocumentStatus, Prisma.CaseDocumentUpdateInput>> = {
+      [DocumentStatus.SUBMITTED]: { submittedAt: now },
+      [DocumentStatus.ACCEPTED]: { acceptedAt: now },
+      [DocumentStatus.READY]: { readyAt: now },
+      [DocumentStatus.SENT_TO_UNIVERSITY]: { sentToUniversityAt: now },
+    };
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.caseDocument.update({ where: { id }, data: { status: to, ...(stamps[to] ?? {}) } }),
+      ...(note
+        ? [
+            this.prisma.documentReviewNote.create({
+              data: { caseDocumentId: id, authorId: actorId, body: note, fromStatus: from, toStatus: to },
+            }),
+          ]
+        : []),
+    ]);
+    return updated;
+  }
+
+  // ─── Access ─────────────────────────────────────────────────────────────────
+
+  /** Staff see every case; a client only their own (ARCHITECTURE.md §11). */
+  async assertCaseAccess(caseId: string, actor: AuthenticatedUser): Promise<void> {
+    const found = await this.prisma.case.findUnique({ where: { id: caseId }, select: { userId: true } });
+    if (!found) throw new NotFoundException(`Case ${caseId} not found`);
+    this.assertOwnership(found.userId, actor);
+  }
+
+  private assertOwnership(ownerId: string, actor: AuthenticatedUser): void {
+    if (!isStaff(actor.role) && ownerId !== actor.id) {
+      throw new ForbiddenException('Энэ хэргийн материалд хандах эрхгүй байна');
+    }
+  }
+
+  private async getOrThrow<T extends Prisma.CaseDocumentInclude>(id: string, include?: T) {
+    const doc = await this.prisma.caseDocument.findUnique({
+      where: { id },
+      include: { template: true, case: { select: { userId: true } }, ...(include ?? {}) },
+    });
+    if (!doc || doc.deletedAt) throw new NotFoundException(`Материал ${id} олдсонгүй`);
+    return doc;
+  }
+}
+
+/** Only `REQUIRED` documents count toward completion; optional ones never block (§7.1). */
+export function summarise(stage: DocStage, documents: { necessity: Necessity; status: DocumentStatus }[]): StageProgress {
+  const required = documents.filter((doc) => doc.necessity === Necessity.REQUIRED);
+  const requiredDone = required.filter((doc) => SETTLED_STATUSES.includes(doc.status)).length;
+
+  return {
+    stage,
+    requiredTotal: required.length,
+    requiredDone,
+    percent: required.length === 0 ? 100 : Math.round((requiredDone / required.length) * 100),
+    awaitingReview: documents.filter((doc) => doc.status === DocumentStatus.SUBMITTED || doc.status === DocumentStatus.UNDER_REVIEW).length,
+    needsFix: documents.filter((doc) => doc.status === DocumentStatus.NEEDS_FIX || doc.status === DocumentStatus.RESUBMIT_REQUIRED).length,
+  };
+}

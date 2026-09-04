@@ -21,8 +21,13 @@ const NAV: AdminNavItem[] = [
   { to: '/admin/clients', label: 'Хэрэглэгч', icon: 'users' },
   { to: '/admin/contracts', label: 'Гэрээ', icon: 'file-text' },
   { to: '/admin/payments', label: 'Төлбөр', icon: 'credit-card' },
+  { to: '/admin/documents', label: 'Материал шалгах', icon: 'file-check-2' },
+  { to: '/admin/work-tasks', label: 'Материалын ажил', icon: 'list-checks' },
+  { to: '/admin/applications', label: 'Мэдүүлэг', icon: 'graduation-cap' },
+  { to: '/admin/visa', label: 'Виз', icon: 'plane' },
   { to: '/admin/settings/pricing', label: 'Үнийн тохиргоо', icon: 'settings' },
   { to: '/admin/settings/contract-templates', label: 'Гэрээний загвар', icon: 'file-cog' },
+  { to: '/admin/settings/document-templates', label: 'Материалын загвар', icon: 'folder-cog' },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
