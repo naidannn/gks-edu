@@ -3,14 +3,20 @@ import { paginate } from '../../common/dto/pagination.dto.js';
 import {
   CaseStage,
   ClientStatus,
+  DocumentStatus,
   LeadActivityType,
   LeadSource,
   LeadStage,
+  Necessity,
+  PaymentStatus,
   Prisma,
   Role,
+  type ServiceType,
+  WorkTaskStatus,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
+import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
 import type { ConvertLeadDto } from './dto/convert-lead.dto.js';
 import type { CreateClientDto } from './dto/create-client.dto.js';
@@ -21,11 +27,46 @@ import type { UpdateClientDto } from './dto/update-client.dto.js';
 type Db = PrismaService | Prisma.TransactionClient;
 
 /**
+ * What a client may fill in about themselves (1B-18) — the staff-only columns
+ * (`status`, `assignedConsultantId`, `source`, `note`) are not part of it.
+ */
+export type SelfServiceClientInput = Omit<
+  CreateClientDto,
+  'source' | 'status' | 'assignedConsultantId' | 'note' | 'openCase'
+>;
+
+/**
  * The client's live service cycle, as shown in the list. One client may run
  * several cases over time (§20 — a language-prep client coming back for a
  * bachelor's); the newest non-terminal one is the one staff are working on.
  */
 const TERMINAL_STAGES: CaseStage[] = [CaseStage.COMPLETED, CaseStage.CANCELLED, CaseStage.REJECTED];
+
+/** Back-office work that is still someone's problem. */
+const OPEN_TASK_STATUSES: WorkTaskStatus[] = [WorkTaskStatus.TODO, WorkTaskStatus.IN_PROGRESS];
+
+/** A deadline this close is worth a row-level warning on the list. */
+const DEADLINE_WARNING_DAYS = 7;
+
+/** Per-row operational state, so the list answers "who needs me today" (1G-17). */
+interface ClientAttention {
+  /** Required documents not yet collected on the live case. */
+  missingDocuments: number;
+  pendingPayments: number;
+  overdueTasks: number;
+  /** Earliest unmet document/payment deadline, or null. */
+  nextDeadline: Date | null;
+  /** True once that deadline is in the past. */
+  overdue: boolean;
+}
+
+const NO_ATTENTION: ClientAttention = {
+  missingDocuments: 0,
+  pendingPayments: 0,
+  overdueTasks: 0,
+  nextDeadline: null,
+  overdue: false,
+};
 
 const CASE_SUMMARY_SELECT = {
   id: true,
@@ -220,7 +261,125 @@ export class ClientsService {
       this.prisma.client.count({ where }),
     ]);
 
-    return paginate(rows.map((row) => this.toListItem(row)), total, query.page, query.limit);
+    // Progress and the attention flags are read for the page only — four
+    // grouped queries for up to `limit` rows, never one query per client.
+    const items = rows.map((row) => this.toListItem(row));
+    const [journeys, attention] = await Promise.all([
+      this.journeys(),
+      this.attentionFor(items.map((item) => item.activeCase?.id).filter((id): id is string => Boolean(id))),
+    ]);
+
+    return paginate(
+      items.map((item) => ({
+        ...item,
+        progressPercent: this.progressPercent(journeys, item.activeCase),
+        attention: (item.activeCase && attention.get(item.activeCase.id)) ?? NO_ATTENTION,
+      })),
+      total,
+      query.page,
+      query.limit,
+    );
+  }
+
+  /**
+   * Every service's stage sequence in one read, so a page of clients can be
+   * placed on its own flow without a query per row.
+   */
+  private async journeys(): Promise<Map<ServiceType, CaseStage[]>> {
+    const rows = await this.prisma.caseFlowDefinition.findMany({
+      where: { sortOrder: { lt: 900 } },
+      orderBy: [{ serviceType: 'asc' }, { sortOrder: 'asc' }],
+      select: { serviceType: true, fromStage: true, toStage: true },
+    });
+
+    const byService = new Map<ServiceType, CaseStage[]>();
+    for (const row of rows) {
+      const stages = byService.get(row.serviceType);
+      if (!stages) byService.set(row.serviceType, [row.fromStage, row.toStage]);
+      else stages.push(row.toStage);
+    }
+    return byService;
+  }
+
+  /** Where the live case sits on its own flow, as a percentage. */
+  private progressPercent(
+    journeys: Map<ServiceType, CaseStage[]>,
+    activeCase: { stage: CaseStage; serviceType: ServiceType } | null,
+  ): number {
+    if (!activeCase) return 0;
+    const journey = journeys.get(activeCase.serviceType) ?? [];
+    const index = journey.indexOf(activeCase.stage);
+    if (index < 0) return 0;
+    return Math.round((index / Math.max(1, journey.length - 1)) * 100);
+  }
+
+  /**
+   * Missing paperwork, unpaid invoices, overdue back-office work and the next
+   * deadline — grouped across the whole page in one pass each.
+   */
+  private async attentionFor(caseIds: string[]): Promise<Map<string, ClientAttention>> {
+    const result = new Map<string, ClientAttention>();
+    if (caseIds.length === 0) return result;
+
+    const now = new Date();
+    const [missing, payments, tasks, deadlines] = await Promise.all([
+      this.prisma.caseDocument.groupBy({
+        by: ['caseId'],
+        where: {
+          caseId: { in: caseIds },
+          deletedAt: null,
+          necessity: Necessity.REQUIRED,
+          status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
+        },
+        _count: { _all: true },
+      }),
+      this.prisma.payment.groupBy({
+        by: ['caseId'],
+        where: { caseId: { in: caseIds }, status: PaymentStatus.PENDING },
+        _count: { _all: true },
+        _min: { dueAt: true },
+      }),
+      this.prisma.workTask.groupBy({
+        by: ['caseId'],
+        where: { caseId: { in: caseIds }, status: { in: OPEN_TASK_STATUSES }, dueAt: { lt: now } },
+        _count: { _all: true },
+      }),
+      this.prisma.caseDocument.groupBy({
+        by: ['caseId'],
+        where: {
+          caseId: { in: caseIds },
+          deletedAt: null,
+          status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
+          dueAt: { not: null },
+        },
+        _min: { dueAt: true },
+      }),
+    ]);
+
+    const read = (caseId: string): ClientAttention => {
+      const existing = result.get(caseId);
+      if (existing) return existing;
+      const fresh: ClientAttention = { ...NO_ATTENTION };
+      result.set(caseId, fresh);
+      return fresh;
+    };
+
+    for (const row of missing) read(row.caseId).missingDocuments = row._count._all;
+    for (const row of tasks) read(row.caseId).overdueTasks = row._count._all;
+    for (const row of payments) {
+      const entry = read(row.caseId);
+      entry.pendingPayments = row._count._all;
+      entry.nextDeadline = earliest(entry.nextDeadline, row._min.dueAt);
+    }
+    for (const row of deadlines) {
+      const entry = read(row.caseId);
+      entry.nextDeadline = earliest(entry.nextDeadline, row._min.dueAt);
+    }
+    for (const entry of result.values()) {
+      entry.overdue = Boolean(entry.overdueTasks) || Boolean(entry.nextDeadline && entry.nextDeadline < now);
+    }
+
+    return result;
   }
 
   /** Counters for the list header: total, by status, and how many are already under contract. */
@@ -241,6 +400,62 @@ export class ClientsService {
       withContract,
       unassigned,
     };
+  }
+
+  /** The caller's own client record, or null while they have only an account (1B-18). */
+  async findByUserId(userId: string) {
+    const client = await this.prisma.client.findUnique({ where: { userId }, select: { id: true } });
+    return client ? this.findOne(client.id) : null;
+  }
+
+  /**
+   * The client filling in their own record from the portal (1B-18).
+   *
+   * Same invariants as the staff form — guardian below 18, register number
+   * unique — but the office's own columns (status, assigned consultant,
+   * internal note) are untouchable from here, and `source` is stamped
+   * `WEBSITE` on creation and never rewritten afterwards.
+   */
+  async upsertOwn(userId: string, dto: SelfServiceClientInput) {
+    const existing = await this.prisma.client.findUnique({ where: { userId } });
+
+    const birthDate = dto.birthDate ? new Date(dto.birthDate) : existing?.birthDate;
+    if (!birthDate) throw new BadRequestException('Төрсөн огноог бөглөнө үү');
+    this.assertGuardianPresent(birthDate, dto);
+
+    if (dto.registerNumber !== existing?.registerNumber) {
+      await this.assertRegisterFree(dto.registerNumber, existing?.id);
+    }
+    if (dto.email && dto.email !== existing?.email) await this.assertEmailFree(dto.email, userId);
+
+    // `undefined` keys are skipped by Prisma, which is exactly what the two
+    // office-owned columns need: the client never sets or resets them.
+    const columns = { ...this.toClientData(dto), source: undefined, status: undefined };
+
+    await this.prisma.$transaction(async (tx) => {
+      if (existing) {
+        await tx.client.update({ where: { id: existing.id }, data: columns });
+      } else {
+        await tx.client.create({
+          data: {
+            ...columns,
+            ...this.toRequiredClientData(dto),
+            code: await this.generateCode(tx),
+            userId,
+            source: LeadSource.WEBSITE,
+          },
+        });
+      }
+
+      // The account mirrors the name and phone the client just entered, so
+      // staff screens that read `case.user` show the same person.
+      await tx.user.update({
+        where: { id: userId },
+        data: { name: `${dto.lastName.trim()} ${dto.firstName.trim()}`, phone: dto.phone },
+      });
+    });
+
+    return this.findByUserId(userId);
   }
 
   async findOne(id: string) {
@@ -410,12 +625,16 @@ export class ClientsService {
     }
   }
 
-  private async assertRegisterFree(registerNumber: string): Promise<void> {
+  private async assertRegisterFree(registerNumber: string, ownClientId?: string): Promise<void> {
     const clash = await this.prisma.client.findUnique({
       where: { registerNumber },
-      select: { code: true },
+      select: { id: true, code: true },
     });
-    if (clash) throw new ConflictException(`Энэ регистрийн дугаартай хэрэглэгч бүртгэлтэй байна (${clash.code})`);
+    // `ownClientId` is only set when a client is editing their own record; on
+    // create there is nothing to excuse, so any hit is a clash.
+    if (clash && (!ownClientId || clash.id !== ownClientId)) {
+      throw new ConflictException(`Энэ регистрийн дугаартай хэрэглэгч бүртгэлтэй байна (${clash.code})`);
+    }
   }
 
   private async assertEmailFree(email: string | undefined, ownUserId?: string): Promise<void> {
@@ -462,6 +681,8 @@ export class ClientsService {
     if (query.stage) caseFilter.some = { stage: query.stage };
     if (query.hasContract === true) caseFilter.some = { ...caseFilter.some, contract: { isNot: null } };
     if (query.hasContract === false) caseFilter.every = { contract: { is: null } };
+    const attentionFilter = this.attentionCaseFilter(query);
+    if (attentionFilter) caseFilter.some = { ...caseFilter.some, ...attentionFilter };
     if (Object.keys(caseFilter).length > 0) where.user = { cases: caseFilter };
     if (query.createdFrom || query.createdTo) {
       where.createdAt = {
@@ -471,6 +692,35 @@ export class ClientsService {
     }
 
     return where;
+  }
+
+  /** One `Case` clause per attention filter — the list and the flags agree. */
+  private attentionCaseFilter(query: QueryClientsDto): Prisma.CaseWhereInput | null {
+    const now = new Date();
+    switch (query.attention) {
+      case 'MISSING_DOCS':
+        return {
+          documents: {
+            some: { deletedAt: null, necessity: Necessity.REQUIRED, status: { notIn: SETTLED_STATUSES as DocumentStatus[] } },
+          },
+        };
+      case 'PENDING_PAYMENT':
+        return { payments: { some: { status: PaymentStatus.PENDING } } };
+      case 'OVERDUE_TASK':
+        return { workTasks: { some: { status: { in: OPEN_TASK_STATUSES }, dueAt: { lt: now } } } };
+      case 'DEADLINE_SOON':
+        return {
+          documents: {
+            some: {
+              deletedAt: null,
+              status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
+              dueAt: { lte: new Date(now.getTime() + DEADLINE_WARNING_DAYS * 86_400_000) },
+            },
+          },
+        };
+      default:
+        return null;
+    }
   }
 
   private buildOrderBy(query: QueryClientsDto): Prisma.ClientOrderByWithRelationInput {
@@ -512,4 +762,11 @@ export class ClientsService {
     const count = await db.client.count({ where: { code: { startsWith: prefix } } });
     return `${prefix}${(count + 1).toString().padStart(4, '0')}`;
   }
+}
+
+/** The earlier of two possibly-absent dates. */
+function earliest(current: Date | null, candidate: Date | null | undefined): Date | null {
+  if (!candidate) return current;
+  if (!current) return candidate;
+  return candidate < current ? candidate : current;
 }

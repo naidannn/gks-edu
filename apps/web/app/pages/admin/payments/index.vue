@@ -57,12 +57,6 @@ watch(q, () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { pag
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-function statusTone(s: PaymentStatus): 'neutral' | 'info' | 'success' | 'danger' | 'warning' {
-  if (s === 'PAID' || s === 'REFUNDED') return 'success';
-  if (s === 'PENDING') return 'warning';
-  if (s === 'FAILED' || s === 'EXPIRED') return 'danger';
-  return 'neutral';
-}
 function mnt(value: string | number): string { return formatMnt(Number(value)) ?? '—'; }
 function formatDateTime(value: string | null): string {
   if (!value) return '—';
@@ -118,7 +112,7 @@ useHead({ title: 'Төлбөр · CRM' });
             <td>{{ p.case.user.name ?? p.case.user.email }}</td>
             <td>{{ PAYMENT_KIND_LABELS[p.kind] }}</td>
             <td class="gks-tnum">{{ mnt(p.amountMnt) }}</td>
-            <td><DsBadge :tone="statusTone(p.status)">{{ PAYMENT_STATUS_LABELS[p.status] }}</DsBadge></td>
+            <td><DsBadge :tone="PAYMENT_STATUS_TONE[p.status]">{{ PAYMENT_STATUS_LABELS[p.status] }}</DsBadge></td>
             <td class="gks-tnum">{{ formatDateTime(p.paidAt ?? p.createdAt) }}</td>
           </tr>
         </tbody>

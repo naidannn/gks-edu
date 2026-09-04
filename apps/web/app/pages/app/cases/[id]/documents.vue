@@ -6,7 +6,7 @@ import type { CaseConditions, DocumentStatus, OfficeAppointmentView } from '@gks
  * still missing, and the single office visit that closes out the originals
  * that cannot be sent online (1D-11).
  */
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
 const route = useRoute();
 const caseId = computed(() => String(route.params.id));

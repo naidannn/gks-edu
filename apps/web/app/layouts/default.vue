@@ -24,6 +24,7 @@ const FOOTER_PLATFORM = [
   { to: '/universities', label: 'Их сургуулиуд' },
   { to: '/#planner', label: 'Сурах замын төлөвлөгч' },
   { to: '/consultation', label: 'Зөвлөгөө авах' },
+  { to: '/register', label: 'Бүртгүүлэх' },
   { to: '/login', label: 'Нэвтрэх' },
 ];
 
@@ -75,11 +76,7 @@ async function onLogout() {
           >
             {{ item.label }}
           </NuxtLink>
-          <template v-if="auth.isAuthenticated">
-            <NuxtLink to="/documents" class="gks-appbar__link">Баримт</NuxtLink>
-            <NuxtLink to="/search" class="gks-appbar__link">Хайлт</NuxtLink>
-            <NuxtLink to="/account/saved" class="gks-appbar__link">Хадгалсан</NuxtLink>
-          </template>
+          <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-appbar__link">Миний булан</NuxtLink>
           <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__link">CRM</NuxtLink>
         </div>
 
@@ -90,7 +87,7 @@ async function onLogout() {
           </template>
           <template v-else>
             <NuxtLink to="/login" class="gks-appbar__login">Нэвтрэх</NuxtLink>
-            <DsButton variant="accent" size="sm" @click="navigateTo('/consultation')">Зөвлөгөө авах</DsButton>
+            <DsButton variant="accent" size="sm" @click="navigateTo('/register')">Бүртгүүлэх</DsButton>
           </template>
         </div>
       </nav>

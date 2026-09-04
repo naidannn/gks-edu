@@ -10,12 +10,21 @@ import { clientAge, isMinorForm } from '~/utils/client-form';
 /** Two-way bound: the parent owns the object, this component writes its fields. */
 const form = defineModel<ClientForm>({ required: true });
 
-const props = defineProps<{
-  errors: Record<string, string>;
-  universities: UniversityCard[];
-  /** Disables the university select while the catalogue is still loading. */
-  loadingUniversities?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    errors: Record<string, string>;
+    universities: UniversityCard[];
+    /** Disables the university select while the catalogue is still loading. */
+    loadingUniversities?: boolean;
+    /**
+     * `self` is the client filling the same form from their own portal (1B-18):
+     * the office's own fields — lead source and the internal note — are not
+     * theirs to set, so they are left out rather than shown disabled.
+     */
+    variant?: 'staff' | 'self';
+  }>(),
+  { variant: 'staff' },
+);
 
 const GENDER_OPTIONS = [
   { value: '', label: 'Сонгоогүй' },
@@ -114,9 +123,15 @@ const isMinor = computed(() => isMinorForm(form.value));
         :disabled="loadingUniversities"
       />
       <DsInput v-model="form.targetMajor" label="Зорьж буй мэргэжил" />
-      <DsSelect v-model="form.source" label="Хаанаас ирсэн" :options="SOURCE_OPTIONS" />
+      <DsSelect v-if="variant === 'staff'" v-model="form.source" label="Хаанаас ирсэн" :options="SOURCE_OPTIONS" />
     </div>
-    <DsTextarea v-model="form.note" label="Тэмдэглэл" :rows="3" class="gks-client-form__note-field" />
+    <DsTextarea
+      v-if="variant === 'staff'"
+      v-model="form.note"
+      label="Тэмдэглэл"
+      :rows="3"
+      class="gks-client-form__note-field"
+    />
     <slot name="service-extra" />
   </DsCard>
 </template>

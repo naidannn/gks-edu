@@ -71,12 +71,6 @@ watch(q, () => {
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-function statusTone(s: ContractStatus): 'neutral' | 'info' | 'success' | 'danger' {
-  if (s === 'ACTIVE' || s === 'COMPLETED') return 'success';
-  if (s === 'TERMINATED') return 'danger';
-  if (s === 'SIGNED' || s === 'SENT') return 'info';
-  return 'neutral';
-}
 function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; }
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -118,7 +112,7 @@ useHead({ title: 'Гэрээ · CRM' });
         v-for="item in STATUS_SUMMARY"
         :key="item"
         class="contracts-summary__item"
-        :class="[`contracts-summary__item--${statusTone(item)}`, { 'contracts-summary__item--active': status === item }]"
+        :class="[`contracts-summary__item--${CONTRACT_STATUS_TONE[item]}`, { 'contracts-summary__item--active': status === item }]"
         type="button"
         @click="selectStatus(item)"
       >
@@ -165,7 +159,7 @@ useHead({ title: 'Гэрээ · CRM' });
                 </div>
               </td>
               <td>{{ SERVICE_LABELS[c.case.serviceType] }}</td>
-              <td><DsBadge :tone="statusTone(c.status)">{{ CONTRACT_STATUS_LABELS[c.status] }}</DsBadge></td>
+              <td><DsBadge :tone="CONTRACT_STATUS_TONE[c.status]">{{ CONTRACT_STATUS_LABELS[c.status] }}</DsBadge></td>
               <td>
                 <div class="contracts-table__detail">
                   <span>{{ CONTRACT_TYPE_LABELS[c.type] }}</span>

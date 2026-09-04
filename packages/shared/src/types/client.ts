@@ -1,5 +1,6 @@
 import type { EducationLevel, ServiceType } from '../schemas/lead';
 import type { CaseStage, ContractStatus } from './case-contract-payment';
+import type { ClientAttention } from './client-workspace';
 import type { LeadSource } from './lead-crm';
 
 /**
@@ -54,6 +55,10 @@ export interface ClientListItem {
   /** Signature date once signed, the draft date before that, null with no contract. */
   contractDate: string | null;
   caseCount: number;
+  /** Where the live case sits on its service's flow, 0–100 (1G-17). */
+  progressPercent: number;
+  /** Missing paperwork, unpaid invoices, overdue work and the next deadline. */
+  attention: ClientAttention;
   createdAt: string;
   updatedAt: string;
 }

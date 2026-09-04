@@ -7,6 +7,13 @@ import { CaseStage, ClientStatus, LeadSource, ServiceType } from '../../../prism
 export const CLIENT_SORTS = ['createdAt', 'updatedAt', 'lastName'] as const;
 export type ClientSort = (typeof CLIENT_SORTS)[number];
 
+/**
+ * The "who needs me today" filters (1G-17). Each one is a fact another module
+ * already stores, read one join away from the client row.
+ */
+export const CLIENT_ATTENTION_FILTERS = ['MISSING_DOCS', 'PENDING_PAYMENT', 'OVERDUE_TASK', 'DEADLINE_SOON'] as const;
+export type ClientAttentionFilter = (typeof CLIENT_ATTENTION_FILTERS)[number];
+
 /** Staff-side client search/filter (1B-14). */
 export class QueryClientsDto extends PaginationQueryDto {
   @ApiPropertyOptional({ description: 'Нэр, утас, регистр, код эсвэл имэйлийн хэсэг' })
@@ -45,6 +52,11 @@ export class QueryClientsDto extends PaginationQueryDto {
   @IsBoolean()
   @IsOptional()
   hasContract?: boolean;
+
+  @ApiPropertyOptional({ enum: CLIENT_ATTENTION_FILTERS, description: 'Анхаарал шаардсан хэрэглэгчээр шүүх' })
+  @IsIn(CLIENT_ATTENTION_FILTERS)
+  @IsOptional()
+  attention?: ClientAttentionFilter;
 
   @ApiPropertyOptional()
   @IsDateString()

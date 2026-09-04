@@ -1,21 +1,34 @@
 <script setup lang="ts">
-import type { CaseDetail } from '@gks/shared';
+import type { PortalCaseDetail } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
-/** View → accept → SMS OTP → signed, or a physical-contract status view (1C-17). */
-definePageMeta({ middleware: 'auth' });
+/**
+ * The client's own contract screen (1C-08, 1C-23): read the terms → agree →
+ * confirm the SMS code → the signed PDF. A physical contract is read-only
+ * here; the office registers it after it is signed on paper (1C-09).
+ */
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
-const { gksCase, reload } = inject('caseDetail') as { gksCase: Ref<CaseDetail | null>; reload: () => Promise<void> };
+const { gksCase, reload } = inject('caseDetail') as { gksCase: Ref<PortalCaseDetail | null>; reload: () => Promise<void> };
 const api = useApi();
+const config = useRuntimeConfig();
+const { overview, refresh } = usePortal();
 const errorMsg = ref<string | null>(null);
 
 const contract = computed(() => gksCase.value?.contract ?? null);
+const isSigned = computed(() => Boolean(contract.value && ['SIGNED', 'ACTIVE', 'COMPLETED'].includes(contract.value.status)));
 
-// --- Accept + OTP ---
+// ── Step 1: agree, which sends the OTP ─────────────────────────────────────
 const phone = ref('');
+const agreed = ref(false);
 const accepting = ref(false);
+
+watchEffect(() => {
+  if (!phone.value && overview.value?.account.phone) phone.value = overview.value.account.phone;
+});
+
 async function accept() {
-  if (!contract.value || !phone.value.trim()) return;
+  if (!contract.value || !phone.value.trim() || !agreed.value) return;
   errorMsg.value = null;
   accepting.value = true;
   try {
@@ -28,8 +41,10 @@ async function accept() {
   }
 }
 
+// ── Step 2: the six-digit code ──────────────────────────────────────────────
 const otpCode = ref('');
 const verifying = ref(false);
+
 async function verify() {
   if (!contract.value || otpCode.value.length !== 6) return;
   errorMsg.value = null;
@@ -38,10 +53,24 @@ async function verify() {
     await api.post(`/contracts/${contract.value.id}/verify-otp`, { code: otpCode.value });
     otpCode.value = '';
     await reload();
+    await refresh();
   } catch (err) {
     errorMsg.value = err instanceof ApiError ? err.message : 'Код буруу байна';
   } finally {
     verifying.value = false;
+  }
+}
+
+async function resend() {
+  if (!contract.value) return;
+  errorMsg.value = null;
+  accepting.value = true;
+  try {
+    await api.post(`/contracts/${contract.value.id}/accept`, { phone: phone.value.trim() });
+  } catch (err) {
+    errorMsg.value = err instanceof ApiError ? err.message : 'Код дахин илгээж чадсангүй';
+  } finally {
+    accepting.value = false;
   }
 }
 
@@ -51,9 +80,8 @@ async function downloadPdf() {
   downloading.value = true;
   try {
     const { downloadUrl } = await api.get<{ downloadUrl: string }>(`/contracts/${contract.value.id}/pdf`);
-    const config = useRuntimeConfig();
     const base = String(config.public.apiBase).replace(/\/api\/v1$/, '');
-    window.open(`${base}${downloadUrl}`, '_blank');
+    window.open(`${base}${downloadUrl}`, '_blank', 'noopener');
   } catch (err) {
     errorMsg.value = err instanceof ApiError ? err.message : 'PDF татаж чадсангүй';
   } finally {
@@ -61,7 +89,9 @@ async function downloadPdf() {
   }
 }
 
-const isSigned = computed(() => contract.value && ['SIGNED', 'ACTIVE', 'COMPLETED'].includes(contract.value.status));
+function formatDate(value: string | null): string {
+  return value ? new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+}
 </script>
 
 <template>
@@ -69,36 +99,82 @@ const isSigned = computed(() => contract.value && ['SIGNED', 'ACTIVE', 'COMPLETE
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>
 
     <DsCard v-if="!contract" title="Гэрээ">
-      <p class="gks-contract__unknown">Танд одоогоор гэрээ үүсээгүй байна — зөвлөхтэйгээ холбогдоно уу.</p>
+      <p class="gks-contract__unknown">
+        Энэ хэрэгт гэрээ хараахан үүсээгүй байна. Шинээр үйлчилгээ эхлүүлэх бол доорх товчийг дарна уу.
+      </p>
+      <DsButton variant="accent" class="gks-contract__action" @click="navigateTo('/app/start')">
+        Үйлчилгээ эхлүүлэх
+      </DsButton>
     </DsCard>
 
     <template v-else>
-      <DsCard title="Гэрээний нөхцөл">
+      <DsCard title="Гэрээний үндсэн нөхцөл">
+        <dl class="gks-contract__terms">
+          <div><dt>Гэрээний төрөл</dt><dd>{{ CONTRACT_TYPE_LABELS[contract.type] }}</dd></div>
+          <div><dt>Төлөв</dt><dd>{{ CONTRACT_STATUS_LABELS[contract.status] }}</dd></div>
+          <div><dt>Нийт төлбөр</dt><dd class="gks-tnum">{{ formatMntAmount(contract.totalAmountSnapshot) }}</dd></div>
+          <div>
+            <dt>Үлдэгдлийн нөхцөл</dt>
+            <dd>{{ BALANCE_TRIGGER_LABELS[contract.balanceTriggerSnapshot] }}</dd>
+          </div>
+          <div v-if="contract.signedAt"><dt>Гарын үсэг зурсан</dt><dd>{{ formatDate(contract.signedAt) }}</dd></div>
+        </dl>
+      </DsCard>
+
+      <DsCard title="Гэрээний бүрэн эх">
         <pre class="gks-contract__body">{{ contract.bodyMn }}</pre>
       </DsCard>
 
-      <DsCard v-if="isSigned" title="Гарын үсэг зурагдсан">
-        <p class="gks-contract__signed">Гэрээ баталгаажсан.</p>
-        <DsButton v-if="contract.pdfPath" size="sm" variant="secondary" :loading="downloading" @click="downloadPdf">PDF татах</DsButton>
+      <DsCard v-if="isSigned" title="Гэрээ баталгаажсан">
+        <p class="gks-contract__signed">
+          <DsIcon name="circle-check" :size="18" /> Таны зуучлалын гэрээ хүчин төгөлдөр болсон.
+        </p>
+        <div class="gks-contract__row">
+          <DsButton v-if="contract.pdfPath" size="sm" variant="secondary" icon-left="download" :loading="downloading" @click="downloadPdf">
+            PDF татах
+          </DsButton>
+          <DsButton size="sm" variant="accent" icon-right="arrow-right" @click="navigateTo(`/app/cases/${gksCase?.id}/payment`)">
+            Урьдчилгаа төлбөр рүү
+          </DsButton>
+        </div>
       </DsCard>
 
-      <DsCard v-else-if="contract.type === 'ELECTRONIC' && !contract.acceptedAt" title="Зөвшөөрөх">
-        <DsInput v-model="phone" label="Утасны дугаар" placeholder="99112233" />
-        <DsButton class="gks-contract__action" :disabled="!phone.trim()" :loading="accepting" @click="accept">
+      <DsCard v-else-if="contract.type === 'ELECTRONIC' && !contract.acceptedAt" title="Зөвшөөрөх" accent>
+        <p class="gks-contract__hint">
+          Дээрх нөхцөлийг уншиж танилцсаны дараа зөвшөөрнө үү. Утсанд тань 6 оронтой баталгаажуулах код очно.
+        </p>
+        <DsInput v-model="phone" label="Утасны дугаар" placeholder="99112233" hint="Код энэ дугаарт очно" />
+        <DsCheckbox
+          v-model="agreed"
+          class="gks-contract__agree"
+          label="Би гэрээний нөхцөлийг уншиж танилцсан бөгөөд зөвшөөрч байна."
+        />
+        <DsButton
+          class="gks-contract__action"
+          variant="accent"
+          :disabled="!phone.trim() || !agreed"
+          :loading="accepting"
+          @click="accept"
+        >
           Зөвшөөрч, баталгаажуулах код авах
         </DsButton>
       </DsCard>
 
-      <DsCard v-else-if="contract.type === 'ELECTRONIC'" title="Баталгаажуулах">
+      <DsCard v-else-if="contract.type === 'ELECTRONIC'" title="Баталгаажуулах" accent>
         <p class="gks-contract__hint">Таны утсанд илгээсэн 6 оронтой кодыг оруулна уу.</p>
-        <DsInput v-model="otpCode" label="Баталгаажуулах код" maxlength="6" />
-        <DsButton class="gks-contract__action" :disabled="otpCode.length !== 6" :loading="verifying" @click="verify">
-          Баталгаажуулах
-        </DsButton>
+        <DsInput v-model="otpCode" label="Баталгаажуулах код" maxlength="6" inputmode="numeric" />
+        <div class="gks-contract__row">
+          <DsButton variant="accent" :disabled="otpCode.length !== 6" :loading="verifying" @click="verify">
+            Баталгаажуулах
+          </DsButton>
+          <DsButton variant="ghost" size="sm" :loading="accepting" @click="resend">Код дахин илгээх</DsButton>
+        </div>
       </DsCard>
 
       <DsCard v-else title="Биет гэрээ">
-        <p class="gks-contract__unknown">Ажилтан таны биет гэрээг бүртгэх хүртэл хүлээнэ үү.</p>
+        <p class="gks-contract__unknown">
+          Гэрээг оффист гарын үсэг зурсны дараа ажилтан бүртгэнэ. Бүртгэгдмэгц энд харагдана.
+        </p>
       </DsCard>
     </template>
   </div>
@@ -106,9 +182,27 @@ const isSigned = computed(() => contract.value && ['SIGNED', 'ACTIVE', 'COMPLETE
 
 <style scoped>
 .gks-contract { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-contract__body { white-space: pre-wrap; font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--text-body); }
+.gks-contract__terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.gks-contract__terms dt { font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-contract__terms dd { margin-top: 2px; font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--text-strong); }
+
+.gks-contract__body {
+  max-height: 460px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-body);
+}
 .gks-contract__unknown { color: var(--text-subtle); font-style: italic; }
-.gks-contract__signed { color: var(--text-strong); font-weight: var(--fw-medium); margin-bottom: var(--sp-3); }
-.gks-contract__hint { font-size: var(--fs-body-sm); color: var(--text-muted); margin-bottom: var(--sp-3); }
-.gks-contract__action { margin-top: var(--sp-3); }
+.gks-contract__signed { display: flex; align-items: center; gap: var(--sp-2); color: var(--success-fg); font-weight: var(--fw-medium); margin-bottom: var(--sp-4); }
+.gks-contract__hint { font-size: var(--fs-body-sm); color: var(--text-muted); margin-bottom: var(--sp-4); line-height: var(--lh-body); }
+.gks-contract__agree { margin-top: var(--sp-4); }
+.gks-contract__action { margin-top: var(--sp-4); }
+.gks-contract__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  .gks-contract__terms { grid-template-columns: 1fr; }
+}
 </style>

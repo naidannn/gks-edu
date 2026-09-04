@@ -6,6 +6,7 @@
  * its label from here so a wording change lands in one place (CLAUDE.md).
  */
 import type {
+  AgentContractStatus,
   ApplicationDecision,
   ApplicationStatus,
   AppointmentStatus,
@@ -52,6 +53,21 @@ export const UNIVERSITY_TYPE_LABELS: Record<UniversityType, string> = {
   NATIONAL: 'Үндэсний',
   PUBLIC: 'Улсын',
   PRIVATE: 'Хувийн',
+};
+
+/** Whether GKS holds an agency agreement with the school (staff-only field). */
+export const AGENT_CONTRACT_STATUS_LABELS: Record<AgentContractStatus, string> = {
+  NONE: 'Гэрээгүй',
+  IN_TALKS: 'Яриа хэлцэлд',
+  SIGNED: 'Гэрээтэй',
+  EXPIRED: 'Хугацаа дууссан',
+};
+
+export const AGENT_CONTRACT_STATUS_TONES: Record<AgentContractStatus, BadgeTone> = {
+  NONE: 'neutral',
+  IN_TALKS: 'info',
+  SIGNED: 'success',
+  EXPIRED: 'warning',
 };
 
 export const PROGRAM_LEVEL_LABELS: Record<ProgramLevel, string> = {
@@ -150,6 +166,67 @@ export const CASE_STAGE_LABELS: Record<CaseStage, string> = {
   ON_HOLD: 'Түр зогссон',
   CANCELLED: 'Цуцлагдсан',
   REJECTED: 'Татгалзсан',
+};
+
+/**
+ * Badge tone per case stage. Every screen that shows a stage reads this map —
+ * the same colour must mean the same thing on the list, the workspace and the
+ * dashboard (UX: consistent status badges).
+ */
+export const CASE_STAGE_TONE: Record<CaseStage, BadgeTone> = {
+  CONTRACT_DRAFT: 'neutral',
+  CONTRACT_SIGNED: 'info',
+  PREPAYMENT_PAID: 'info',
+  DOCUMENTS: 'info',
+  APPLICATION_SUBMITTED: 'info',
+  ADMITTED: 'info',
+  TUITION_INVOICED: 'info',
+  INVITATION_RECEIVED: 'info',
+  GKS_ROUND1_PASSED: 'info',
+  GKS_ROUND2_PASSED: 'info',
+  VISA: 'info',
+  VISA_APPROVED: 'info',
+  BALANCE_PAID: 'info',
+  COLLATERAL_CONTRACT: 'info',
+  PRE_DEPARTURE: 'info',
+  DEPARTED: 'success',
+  COMPLETED: 'success',
+  ON_HOLD: 'warning',
+  CANCELLED: 'danger',
+  REJECTED: 'danger',
+};
+
+export const LEAD_STAGE_TONE: Record<LeadStage, BadgeTone> = {
+  NEW: 'neutral',
+  CONTACTED: 'info',
+  CONSULTED: 'info',
+  PROPOSAL_SENT: 'info',
+  CONTRACT_PENDING: 'info',
+  WON: 'success',
+  LOST: 'danger',
+};
+
+export const CONTRACT_STATUS_TONE: Record<ContractStatus, BadgeTone> = {
+  DRAFT: 'neutral',
+  SENT: 'info',
+  SIGNED: 'info',
+  ACTIVE: 'success',
+  COMPLETED: 'success',
+  TERMINATED: 'danger',
+};
+
+export const PAYMENT_STATUS_TONE: Record<PaymentStatus, BadgeTone> = {
+  PENDING: 'warning',
+  PAID: 'success',
+  FAILED: 'danger',
+  EXPIRED: 'danger',
+  REFUNDED: 'success',
+};
+
+export const CLIENT_STATUS_TONE: Record<ClientStatus, BadgeTone> = {
+  ACTIVE: 'success',
+  INACTIVE: 'neutral',
+  ARCHIVED: 'neutral',
 };
 
 export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {

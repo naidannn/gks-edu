@@ -2,7 +2,7 @@
 import type { ApplicationView, Invitation, SchoolInvoice, SignedFile } from '@gks/shared';
 
 /** 1E-10 — what the client sees of the school stage: progress, the school's bill, the invitation. */
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
 const route = useRoute();
 const api = useApi();

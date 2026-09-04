@@ -187,3 +187,22 @@ export function clientPayload(form: ClientForm): Record<string, unknown> {
     note: text(form.note),
   };
 }
+
+/**
+ * The same payload minus everything the office owns (1B-18). `PUT /me/profile`
+ * runs under `forbidNonWhitelisted`, so a stray `source` or `note` would be a
+ * 400 rather than a silently ignored field.
+ */
+export function myProfilePayload(form: ClientForm): Record<string, unknown> {
+  const payload = clientPayload(form);
+  delete payload.source;
+  delete payload.note;
+  return payload;
+}
+
+/** The portal also needs the address the contract prints (§6.2). */
+export function validateMyProfileForm(form: ClientForm, errors: Record<string, string>): boolean {
+  const valid = validateClientForm(form, errors);
+  if (!form.address.trim()) errors.address = 'Гэрийн хаягаа бөглөнө үү — гэрээнд бичигдэнэ';
+  return valid && Object.keys(errors).length === 0;
+}

@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import type {
   CaseStage,
+  ClientAttentionFilter,
   ClientListItem,
   ClientStats,
   ClientStatus,
-  ContractStatus,
   LeadSource,
   ServiceType,
 } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 
 /**
- * Client register (1B-14) — the people the office has taken on, as opposed to
- * the enquiries on `/admin/leads`. The brokerage stage of each client's live
- * case is part of the row, because "where is this person now" is the question
- * this screen exists to answer.
+ * The client register (1B-14, reshaped in 1G-17) — the people the office has
+ * taken on, as opposed to the enquiries on `/admin/consultations`.
+ *
+ * One row answers "where is this person, and does anything need me": the stage
+ * of their live case, how far along it is, and the flags for missing paperwork,
+ * unpaid invoices and overdue work. Clicking it opens their workspace.
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
@@ -36,6 +38,12 @@ const SOURCE_OPTIONS: { value: LeadSource | ''; label: string }[] = [
   { value: '', label: 'Бүх суваг' },
   ...(Object.entries(LEAD_SOURCE_LABELS) as [LeadSource, string][]).map(([value, label]) => ({ value, label })),
 ];
+const ATTENTION_FILTERS: { value: ClientAttentionFilter; label: string }[] = [
+  { value: 'MISSING_DOCS', label: 'Материал дутуу' },
+  { value: 'PENDING_PAYMENT', label: 'Төлбөр хүлээгдэж буй' },
+  { value: 'OVERDUE_TASK', label: 'Хугацаа хэтэрсэн ажил' },
+  { value: 'DEADLINE_SOON', label: 'Хугацаа дөхсөн' },
+];
 const SORT_OPTIONS = [
   { value: 'createdAt', label: 'Бүртгүүлсэн огноогоор' },
   { value: 'lastName', label: 'Овгоор (А–Я)' },
@@ -44,6 +52,7 @@ const SORT_OPTIONS = [
 
 const auth = useAuthStore();
 const api = useApi();
+const route = useRoute();
 
 const q = ref('');
 const serviceType = ref<ServiceType | ''>('');
@@ -51,6 +60,10 @@ const stage = ref<CaseStage | ''>('');
 const status = ref<ClientStatus | ''>('');
 const source = ref<LeadSource | ''>('');
 const contractFilter = ref<'all' | 'with' | 'without'>('all');
+/** Seeded from the URL so a dashboard tile opens the queue it counted. */
+const attention = ref<ClientAttentionFilter | ''>(
+  ATTENTION_FILTERS.find((filter) => filter.value === route.query.attention)?.value ?? '',
+);
 const assignedFilter = ref<'all' | 'mine' | 'unassigned'>('all');
 const sort = ref('createdAt');
 const page = ref(1);
@@ -66,6 +79,7 @@ const query = computed(() => ({
   ...(status.value ? { status: status.value } : {}),
   ...(source.value ? { source: source.value } : {}),
   ...(contractFilter.value === 'all' ? {} : { hasContract: contractFilter.value === 'with' }),
+  ...(attention.value ? { attention: attention.value } : {}),
   ...(assignedFilter.value === 'mine' ? { assignedConsultantId: auth.user?.id } : {}),
   ...(assignedFilter.value === 'unassigned' ? { assignedConsultantId: 'unassigned' } : {}),
 }));
@@ -100,9 +114,10 @@ function clearFilters() {
   source.value = '';
   contractFilter.value = 'all';
   assignedFilter.value = 'all';
+  attention.value = '';
 }
 
-watch([serviceType, stage, status, source, contractFilter, assignedFilter, sort], () => {
+watch([serviceType, stage, status, source, contractFilter, assignedFilter, attention, sort], () => {
   page.value = 1;
   load();
 });
@@ -116,32 +131,27 @@ watch(q, () => {
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-function stageTone(s: CaseStage): 'neutral' | 'info' | 'success' | 'danger' | 'warning' {
-  if (s === 'COMPLETED' || s === 'DEPARTED') return 'success';
-  if (s === 'CANCELLED' || s === 'REJECTED') return 'danger';
-  if (s === 'ON_HOLD') return 'warning';
-  if (s === 'CONTRACT_DRAFT') return 'neutral';
-  return 'info';
-}
-function contractTone(s: ContractStatus): 'neutral' | 'info' | 'success' | 'danger' {
-  if (s === 'ACTIVE' || s === 'COMPLETED') return 'success';
-  if (s === 'TERMINATED') return 'danger';
-  if (s === 'SIGNED' || s === 'SENT') return 'info';
-  return 'neutral';
-}
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
+/** The row's warning chips — at most two, worst first, so the table stays readable. */
+function attentionChips(client: ClientListItem) {
+  const chips: { key: string; tone: 'danger' | 'warning'; label: string }[] = [];
+  const flags = client.attention;
+  if (flags.overdueTasks > 0) chips.push({ key: 'task', tone: 'danger', label: 'Ажил хэтэрсэн' });
+  if (flags.overdue && flags.nextDeadline) chips.push({ key: 'due', tone: 'danger', label: 'Хугацаа хэтэрсэн' });
+  if (flags.missingDocuments > 0) {
+    chips.push({ key: 'docs', tone: 'warning', label: `${flags.missingDocuments} материал дутуу` });
+  }
+  if (flags.pendingPayments > 0) chips.push({ key: 'pay', tone: 'warning', label: 'Төлбөр хүлээгдэж буй' });
+  return chips.slice(0, 2);
 }
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 const hasFilters = computed(() =>
-  Boolean(q.value || serviceType.value || stage.value || status.value || source.value)
+  Boolean(q.value || serviceType.value || stage.value || status.value || source.value || attention.value)
   || contractFilter.value !== 'all'
   || assignedFilter.value !== 'all',
 );
 
-useHead({ title: 'Хэрэглэгч · CRM' });
+useHead({ title: 'Үйлчлүүлэгч · CRM' });
 </script>
 
 <template>
@@ -149,15 +159,12 @@ useHead({ title: 'Хэрэглэгч · CRM' });
     <header class="gks-crm__head">
       <div>
         <span class="gks-eyebrow">CRM</span>
-        <h1 class="gks-crm__title">Хэрэглэгч</h1>
-        <p class="gks-crm__hint">Гэрээ байгуулсан болон бүртгэгдсэн харилцагчид, зуучлалын үе шаттайгаа.</p>
+        <h1 class="gks-crm__title">Үйлчлүүлэгч</h1>
+        <p class="gks-crm__hint">Хүн бүрийн үе шат, явц, анхаарал шаардсан зүйл — нэг мөрөнд.</p>
       </div>
       <div class="gks-crm__head-actions">
-        <NuxtLink to="/admin/cases" class="gks-crm__cases-link">
-          <DsIcon name="folder" :size="16" /> Хэргүүдийг үе шатаар нь харах
-        </NuxtLink>
         <DsButton variant="accent" icon-left="user-plus" @click="navigateTo('/admin/clients/new')">
-          Шинэ хэрэглэгч үүсгэх
+          Шинэ үйлчлүүлэгч
         </DsButton>
       </div>
     </header>
@@ -185,11 +192,21 @@ useHead({ title: 'Хэрэглэгч · CRM' });
         <span class="gks-crm__toggle-sep" aria-hidden="true" />
         <DsTag :selected="contractFilter === 'with'" clickable @click="contractFilter = contractFilter === 'with' ? 'all' : 'with'">Гэрээтэй</DsTag>
         <DsTag :selected="contractFilter === 'without'" clickable @click="contractFilter = contractFilter === 'without' ? 'all' : 'without'">Гэрээгүй</DsTag>
+        <span class="gks-crm__toggle-sep" aria-hidden="true" />
+        <DsTag
+          v-for="filter in ATTENTION_FILTERS"
+          :key="filter.value"
+          :selected="attention === filter.value"
+          clickable
+          @click="attention = attention === filter.value ? '' : filter.value"
+        >
+          {{ filter.label }}
+        </DsTag>
         <DsButton v-if="hasFilters" variant="ghost" size="sm" icon-left="x" @click="clearFilters">Шүүлтүүр цэвэрлэх</DsButton>
       </div>
     </DsCard>
 
-    <DsCard v-if="error" accent><p>Хэрэглэгчийн жагсаалтыг ачаалж чадсангүй.</p></DsCard>
+    <DsCard v-if="error" accent><p>Үйлчлүүлэгчийн жагсаалтыг ачаалж чадсангүй.</p></DsCard>
 
     <div v-else-if="pending && !data" class="gks-crm__skeleton">
       <div v-for="n in 6" :key="n" class="gks-crm__skeleton-row" />
@@ -197,7 +214,7 @@ useHead({ title: 'Хэрэглэгч · CRM' });
 
     <DsCard v-else-if="!data?.items.length" padding="var(--sp-8)">
       <p class="gks-crm__empty">
-        {{ hasFilters ? 'Тохирох хэрэглэгч олдсонгүй.' : 'Одоогоор бүртгэгдсэн хэрэглэгч алга байна.' }}
+        {{ hasFilters ? 'Тохирох үйлчлүүлэгч олдсонгүй.' : 'Одоогоор бүртгэгдсэн үйлчлүүлэгч алга байна.' }}
       </p>
     </DsCard>
 
@@ -205,40 +222,50 @@ useHead({ title: 'Хэрэглэгч · CRM' });
       <table class="gks-table">
         <thead>
           <tr>
-            <th>Код</th>
             <th>Овог нэр</th>
             <th>Утас</th>
-            <th>Үйлчилгээ</th>
-            <th>Сургууль</th>
-            <th>Зуучлалын үе шат</th>
-            <th>Гэрээ</th>
-            <th>Гэрээний огноо</th>
+            <th>Үйлчилгээ · сургууль</th>
+            <th>Үе шат</th>
+            <th>Явц</th>
+            <th>Анхаарах</th>
             <th>Хариуцагч</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="c in data.items" :key="c.id" class="gks-crm__row" @click="navigateTo(`/admin/clients/${c.id}`)">
-            <td class="gks-tnum">{{ c.code }}</td>
             <td>
               <span class="gks-crm__name">{{ c.lastName }} {{ c.firstName }}</span>
-              <span v-if="c.caseCount > 1" class="gks-crm__sub">{{ c.caseCount }} хэрэг</span>
+              <span class="gks-crm__sub gks-tnum">
+                {{ c.code }}<template v-if="c.caseCount > 1"> · {{ c.caseCount }} хэрэг</template>
+              </span>
             </td>
             <td class="gks-tnum">{{ c.phone }}</td>
-            <td>{{ SERVICE_LABELS[c.activeCase?.serviceType ?? c.primaryServiceType] }}</td>
-            <td>{{ c.activeCase?.university?.nameMn ?? c.targetUniversity?.nameMn ?? '—' }}</td>
             <td>
-              <DsBadge v-if="c.activeCase" :tone="stageTone(c.activeCase.stage)">
+              <span>{{ SERVICE_LABELS[c.activeCase?.serviceType ?? c.primaryServiceType] }}</span>
+              <span class="gks-crm__sub">
+                {{ c.activeCase?.university?.nameMn ?? c.targetUniversity?.nameMn ?? '—' }}
+              </span>
+            </td>
+            <td>
+              <DsBadge v-if="c.activeCase" :tone="CASE_STAGE_TONE[c.activeCase.stage]">
                 {{ CASE_STAGE_LABELS[c.activeCase.stage] }}
               </DsBadge>
               <span v-else class="gks-crm__muted">Хэрэг нээгээгүй</span>
             </td>
             <td>
-              <DsBadge v-if="c.contractStatus" :tone="contractTone(c.contractStatus)">
-                {{ CONTRACT_STATUS_LABELS[c.contractStatus] }}
-              </DsBadge>
+              <div class="gks-crm__progress">
+                <span class="gks-crm__track">
+                  <span class="gks-crm__fill" :style="{ width: `${c.progressPercent}%` }" />
+                </span>
+                <span class="gks-crm__percent gks-tnum">{{ c.progressPercent }}%</span>
+              </div>
+            </td>
+            <td>
+              <div v-if="attentionChips(c).length" class="gks-crm__chips">
+                <DsBadge v-for="chip in attentionChips(c)" :key="chip.key" :tone="chip.tone">{{ chip.label }}</DsBadge>
+              </div>
               <span v-else class="gks-crm__muted">—</span>
             </td>
-            <td class="gks-tnum">{{ formatDate(c.contractDate) }}</td>
             <td>{{ c.assignedConsultant?.name ?? c.assignedConsultant?.email ?? '—' }}</td>
           </tr>
         </tbody>
@@ -254,6 +281,12 @@ useHead({ title: 'Хэрэглэгч · CRM' });
 </template>
 
 <style scoped>
+.gks-crm__progress { display: flex; align-items: center; gap: var(--sp-2); min-width: 110px; }
+.gks-crm__track { flex: 1; height: 5px; border-radius: var(--radius-pill); background: var(--n-100); overflow: hidden; }
+.gks-crm__fill { display: block; height: 100%; background: var(--brand-600); }
+.gks-crm__percent { font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-crm__chips { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+
 .gks-crm { display: flex; flex-direction: column; gap: var(--sp-5); }
 .gks-crm__head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
 .gks-crm__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }

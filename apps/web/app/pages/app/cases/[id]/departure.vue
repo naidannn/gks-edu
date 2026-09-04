@@ -2,7 +2,7 @@
 import type { DeparturePlan } from '@gks/shared';
 
 /** 1F-09 — the pre-departure checklist, guides and flight details (§11). */
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
 const route = useRoute();
 const api = useApi();

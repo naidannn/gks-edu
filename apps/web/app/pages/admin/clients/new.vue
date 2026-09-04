@@ -71,7 +71,7 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
   <div class="gks-form-page">
     <header>
       <NuxtLink to="/admin/clients" class="gks-form-page__back">
-        <DsIcon name="arrow-left" :size="16" /> Хэрэглэгчийн жагсаалт
+        <DsIcon name="arrow-left" :size="16" /> Үйлчлүүлэгчийн жагсаалт
       </NuxtLink>
       <h1 class="gks-form-page__title">{{ leadId ? 'Сэжмээс хэрэглэгч бүртгэх' : 'Шинэ хэрэглэгч бүртгэх' }}</h1>
       <p v-if="lead" class="gks-form-page__hint">
@@ -105,11 +105,11 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
       <DsCard v-if="submitError" accent><p class="gks-form-page__error">{{ submitError }}</p></DsCard>
 
       <div class="gks-form-page__actions">
-        <DsButton variant="secondary" @click="navigateTo(leadId ? `/admin/leads/${leadId}` : '/admin/clients')">
+        <DsButton variant="secondary" @click="navigateTo(leadId ? `/admin/consultations/${leadId}` : '/admin/clients')">
           Болих
         </DsButton>
         <DsButton type="submit" variant="accent" icon-left="user-plus" :loading="submitting">
-          {{ leadId ? 'Хэрэглэгч болгож бүртгэх' : 'Хэрэглэгч бүртгэх' }}
+          {{ leadId ? 'Үйлчлүүлэгч болгож бүртгэх' : 'Үйлчлүүлэгч бүртгэх' }}
         </DsButton>
       </div>
     </form>

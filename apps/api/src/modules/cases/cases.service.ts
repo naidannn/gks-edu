@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { type CaseStage, Prisma, Role } from '../../prisma/client.js';
+import { type CaseStage, Prisma, Role, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { AssignCaseDto } from './dto/assign-case.dto.js';
 import type { CreateCaseDto } from './dto/create-case.dto.js';
@@ -12,6 +12,9 @@ import type { TransitionCaseDto } from './dto/transition-case.dto.js';
 type Db = PrismaService | Prisma.TransactionClient;
 
 const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
+
+/** Ordering of the flow rows that make up the main line; escapes sit at 900+. */
+const MAIN_LINE_MAX_SORT = 900;
 
 @Injectable()
 export class CasesService {
@@ -67,9 +70,29 @@ export class CasesService {
     return paginate(items, total, query.page, query.limit);
   }
 
+  /**
+   * The stage sequence for a service, read from `CaseFlowDefinition` rather
+   * than a hardcoded list — the two families order `BALANCE_PAID` differently
+   * around the visa step (§9), and that ordering is data.
+   *
+   * The client portal and the CRM client workspace both draw their stepper
+   * from this, so "where is this person" reads the same on both sides.
+   */
+  async journey(serviceType: ServiceType): Promise<CaseStage[]> {
+    const rows = await this.prisma.caseFlowDefinition.findMany({
+      where: { serviceType, sortOrder: { lt: MAIN_LINE_MAX_SORT } },
+      orderBy: { sortOrder: 'asc' },
+      select: { fromStage: true, toStage: true },
+    });
+    if (rows.length === 0) return [];
+    return [rows[0]!.fromStage, ...rows.map((row) => row.toStage)];
+  }
+
   async findOne(id: string, user: AuthenticatedUser) {
     const found = await this.getOrThrow(id, {
-      user: { select: { id: true, name: true, email: true } },
+      // `client` lets a case-scoped URL resolve to the client workspace that
+      // now owns these screens.
+      user: { select: { id: true, name: true, email: true, client: { select: { id: true, code: true } } } },
       university: { select: { id: true, nameMn: true } },
       assignedConsultant: { select: { id: true, name: true } },
       assignedDocOfficer: { select: { id: true, name: true } },

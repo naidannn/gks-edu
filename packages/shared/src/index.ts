@@ -11,3 +11,5 @@ export * from './types/client';
 export * from './types/documents';
 export * from './types/applications';
 export * from './types/visa-departure';
+export * from './types/portal';
+export * from './types/client-workspace';

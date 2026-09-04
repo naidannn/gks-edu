@@ -19,6 +19,7 @@ import { DocumentsModule } from './modules/documents/documents.module.js';
 import { FxModule } from './modules/fx/fx.module.js';
 import { FaqModule } from './modules/faq/faq.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
+import { MeModule } from './modules/me/me.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { PostsModule } from './modules/posts/posts.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
@@ -59,6 +60,7 @@ import { StorageModule } from './storage/storage.module.js';
     ClientsModule,
     ContractsModule,
     PaymentsModule,
+    MeModule,
     DocumentsModule,
     FxModule,
     DepartureModule,

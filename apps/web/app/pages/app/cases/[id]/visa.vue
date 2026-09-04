@@ -5,7 +5,7 @@ import type { DocumentStatus, VisaView } from '@gks/shared';
  * 1F-08 — the client's visa page: where the case stands, the visa document
  * checklist, and the standing guidance for applying in person (§10).
  */
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
 const route = useRoute();
 const api = useApi();

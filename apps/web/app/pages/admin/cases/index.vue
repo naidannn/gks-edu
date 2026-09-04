@@ -56,14 +56,6 @@ watch(q, () => {
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-function stageTone(s: CaseStage): 'neutral' | 'info' | 'success' | 'danger' | 'warning' {
-  if (['COMPLETED'].includes(s)) return 'success';
-  if (['CANCELLED', 'REJECTED'].includes(s)) return 'danger';
-  if (s === 'ON_HOLD') return 'warning';
-  if (s === 'CONTRACT_DRAFT') return 'neutral';
-  return 'info';
-}
-
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -115,7 +107,7 @@ useHead({ title: 'Хэрэг · CRM' });
             <td>{{ c.user.name ?? c.user.email }}</td>
             <td>{{ SERVICE_LABELS[c.serviceType] }}</td>
             <td>{{ c.university?.nameMn ?? '—' }}</td>
-            <td><DsBadge :tone="stageTone(c.stage)">{{ CASE_STAGE_LABELS[c.stage] }}</DsBadge></td>
+            <td><DsBadge :tone="CASE_STAGE_TONE[c.stage]">{{ CASE_STAGE_LABELS[c.stage] }}</DsBadge></td>
             <td class="gks-tnum">{{ formatDate(c.createdAt) }}</td>
           </tr>
         </tbody>

@@ -2,25 +2,33 @@
 import type { StageProgress } from '@gks/shared';
 
 /** 1D-19 — "хэдэн % бүрдсэн" as one compact bar. */
-defineProps<{ progress: StageProgress; label?: string }>();
+const props = defineProps<{ progress: StageProgress; label?: string }>();
+
+/**
+ * The resolver reports 100% while nothing is required yet (an unanswered
+ * questionnaire), which reads as "finished" to a client who has done nothing.
+ * Until there is a list, the bar says so instead.
+ */
+const hasList = computed(() => props.progress.requiredTotal > 0);
 </script>
 
 <template>
   <div class="gks-progress">
     <div class="gks-progress__head">
       <span class="gks-progress__label">{{ label ?? 'Материалын бүрдэлт' }}</span>
-      <span class="gks-progress__value gks-tnum">
+      <span v-if="hasList" class="gks-progress__value gks-tnum">
         {{ progress.requiredDone }}/{{ progress.requiredTotal }} · {{ progress.percent }}%
       </span>
+      <span v-else class="gks-progress__value">Жагсаалт үүсээгүй</span>
     </div>
     <div
       class="gks-progress__track"
       role="progressbar"
-      :aria-valuenow="progress.percent"
+      :aria-valuenow="hasList ? progress.percent : 0"
       aria-valuemin="0"
       aria-valuemax="100"
     >
-      <div class="gks-progress__fill" :style="{ width: `${progress.percent}%` }" />
+      <div class="gks-progress__fill" :style="{ width: `${hasList ? progress.percent : 0}%` }" />
     </div>
     <p v-if="progress.awaitingReview || progress.needsFix" class="gks-progress__note">
       <span v-if="progress.awaitingReview">{{ progress.awaitingReview }} шалгагдаж байна</span>

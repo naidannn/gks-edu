@@ -2,7 +2,7 @@
 import type { SavedUniversityEntry } from '@gks/shared';
 
 /** A logged-in visitor's saved-university shortlist (1A-18). */
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
 const api = useApi();
 const entries = ref<SavedUniversityEntry[]>([]);

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import type { CaseDetail, PaymentItem, PaymentKind } from '@gks/shared';
+import type { PaymentItem, PaymentKind, PortalCaseDetail } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
 /** Prepayment/balance invoice creation + QPay QR + status polling (1C-17). */
-definePageMeta({ middleware: 'auth' });
+definePageMeta({ middleware: 'auth', layout: 'portal' });
 
-const { gksCase, reload } = inject('caseDetail') as { gksCase: Ref<CaseDetail | null>; reload: () => Promise<void> };
+const { gksCase, reload } = inject('caseDetail') as { gksCase: Ref<PortalCaseDetail | null>; reload: () => Promise<void> };
 const api = useApi();
+const { refresh } = usePortal();
 const errorMsg = ref<string | null>(null);
 
 const payments = computed(() => gksCase.value?.payments ?? []);
@@ -14,6 +15,9 @@ function latest(kind: PaymentKind): PaymentItem | undefined {
   return payments.value.filter((p) => p.kind === kind).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 const prepayment = computed(() => latest('PREPAYMENT'));
+/** QPay invoices only exist once the contract is signed (1C-12 guards this too). */
+const contractSigned = computed(() =>
+  Boolean(gksCase.value?.contract && ['SIGNED', 'ACTIVE', 'COMPLETED'].includes(gksCase.value.contract.status)));
 const balance = computed(() => latest('BALANCE'));
 const pendingPayment = computed(() => payments.value.find((p) => p.status === 'PENDING'));
 
@@ -39,7 +43,12 @@ watch(pendingPayment, (payment) => {
   if (!payment) return;
   pollTimer = setInterval(async () => {
     const fresh = await api.get<{ status: string }>(`/payments/${payment.id}`);
-    if (fresh.status !== 'PENDING') await reload();
+    if (fresh.status !== 'PENDING') {
+      await reload();
+      // A confirmed payment moves the case on (1C-15), so the portal's own
+      // "what next" answer is stale until it is re-read.
+      await refresh();
+    }
   }, 3000);
 }, { immediate: true });
 onBeforeUnmount(() => clearInterval(pollTimer));
@@ -51,8 +60,20 @@ function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; 
   <div class="gks-payment">
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>
 
-    <DsCard v-if="!gksCase?.contract" title="Төлбөр">
-      <p class="gks-payment__unknown">Гэрээ байгуулагдсаны дараа төлбөр төлөх боломжтой болно.</p>
+    <DsCard v-if="!contractSigned" title="Төлбөр">
+      <p class="gks-payment__unknown">
+        {{ gksCase?.contract
+          ? 'Гэрээгээ баталгаажуулсны дараа урьдчилгаа төлбөрийн нэхэмжлэх үүснэ.'
+          : 'Гэрээ байгуулагдсаны дараа төлбөр төлөх боломжтой болно.' }}
+      </p>
+      <DsButton
+        variant="secondary"
+        size="sm"
+        class="gks-payment__link"
+        @click="navigateTo(`/app/cases/${gksCase?.id}/contract`)"
+      >
+        Гэрээ рүү очих
+      </DsButton>
     </DsCard>
 
     <template v-else>
@@ -93,4 +114,5 @@ function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; 
 .gks-payment__qr-img { width: 220px; height: 220px; }
 .gks-payment__qr-text { padding: var(--sp-3); background: var(--surface-sunken); word-break: break-all; }
 .gks-payment__hint { font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-payment__link { margin-top: var(--sp-4); }
 </style>

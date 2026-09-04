@@ -5,6 +5,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { ClientWorkspaceService } from './client-workspace.service.js';
 import { ClientsService } from './clients.service.js';
 import { ConvertLeadDto } from './dto/convert-lead.dto.js';
 import { CreateClientDto } from './dto/create-client.dto.js';
@@ -17,7 +18,10 @@ import { UpdateClientDto } from './dto/update-client.dto.js';
 @Roles(...STAFF_ROLES)
 @Controller('clients')
 export class ClientsController {
-  constructor(private readonly clients: ClientsService) {}
+  constructor(
+    private readonly clients: ClientsService,
+    private readonly workspace: ClientWorkspaceService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Register a client directly, without a lead (1B-14)' })
@@ -51,6 +55,18 @@ export class ClientsController {
   @ApiOperation({ summary: 'One client with every case, contract and origin lead' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.clients.findOne(id);
+  }
+
+  @Get(':id/workspace')
+  @ApiOperation({ summary: 'The client workspace: cases with journey, progress, next action and alerts (1G-17)' })
+  workspaceOf(@Param('id', ParseUUIDPipe) id: string) {
+    return this.workspace.workspace(id);
+  }
+
+  @Get(':id/activity')
+  @ApiOperation({ summary: 'One merged timeline: lead history, stages, documents, payments, tasks (1G-17)' })
+  activityOf(@Param('id', ParseUUIDPipe) id: string) {
+    return this.workspace.activity(id);
   }
 
   @Patch(':id')
