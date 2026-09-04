@@ -30,7 +30,9 @@ async function submit() {
     } else {
       await auth.register(parsed.data.email, parsed.data.password, name.value || undefined);
     }
-    await navigateTo((route.query.redirect as string) || '/documents');
+    // An explicit redirect (staff bounced off a guarded /admin/* page) wins;
+    // otherwise staff land on the CRM dashboard, everyone else on /documents.
+    await navigateTo((route.query.redirect as string) || (auth.isStaff ? '/admin' : '/documents'));
   } catch (err) {
     const data = (err as { data?: { message?: string | string[] } }).data;
     error.value = Array.isArray(data?.message)

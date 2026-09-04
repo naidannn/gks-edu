@@ -13,6 +13,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => Boolean(accessToken.value && user.value));
   const isAdmin = computed(() => user.value?.role === 'ADMIN');
+  /** CRM access: admins and consultants (0-07, 1B). */
+  const isStaff = computed(() => user.value?.role === 'ADMIN' || user.value?.role === 'CONSULTANT');
 
   /** Tokens live in localStorage, so this is a no-op during SSR. */
   function persist(): void {
@@ -118,6 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     isAuthenticated,
     isAdmin,
+    isStaff,
     login,
     register,
     refresh,

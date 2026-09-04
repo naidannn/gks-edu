@@ -8,6 +8,9 @@
 import type {
   EducationLevel,
   IntakeStatus,
+  LeadActivityType,
+  LeadSource,
+  LeadStage,
   ProgramLevel,
   ServiceType,
   UniversityType,
@@ -52,6 +55,52 @@ export const INTAKE_STATUS_LABELS: Record<IntakeStatus, string> = {
   PLANNED: 'Төлөвлөгдсөн',
   OPEN: 'Нээлттэй',
   CLOSED: 'Хаагдсан',
+};
+
+export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
+  NEW: 'Шинэ',
+  CONTACTED: 'Холбогдсон',
+  CONSULTED: 'Зөвлөгөө өгсөн',
+  PROPOSAL_SENT: 'Санал илгээсэн',
+  CONTRACT_PENDING: 'Гэрээ хүлээгдэж буй',
+  WON: 'Гэрээ болсон',
+  LOST: 'Алдсан',
+};
+
+export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
+  WEBSITE: 'Вебсайт',
+  AI_CHAT: 'AI чат',
+  PHONE: 'Утас',
+  SOCIAL: 'Сошиал медиа',
+  OFFICE: 'Оффис',
+  LANGUAGE_CENTER: 'Хэлний сургалтын төв',
+  REFERRAL: 'Танилын зөвлөмж',
+  OTHER: 'Бусад',
+};
+
+/**
+ * Dashboard funnel-bar fill per stage (1B-08). The five active stages read as a
+ * sequential brand ramp (deeper into the pipeline = darker); the two outcomes
+ * get the app's status colors since they're a result, not a depth.
+ */
+export const LEAD_STAGE_BAR_COLOR: Record<LeadStage, string> = {
+  NEW: 'var(--brand-200)',
+  CONTACTED: 'var(--brand-300)',
+  CONSULTED: 'var(--brand-400)',
+  PROPOSAL_SENT: 'var(--brand-500)',
+  CONTRACT_PENDING: 'var(--brand-600)',
+  WON: 'var(--green-600)',
+  LOST: 'var(--red-700)',
+};
+
+export const LEAD_ACTIVITY_TYPE_LABELS: Record<LeadActivityType, string> = {
+  NOTE: 'Тэмдэглэл',
+  CALL: 'Дуудлага',
+  MEETING: 'Уулзалт',
+  MESSAGE: 'Мессеж',
+  EMAIL: 'И-мэйл',
+  CHAT: 'Чат',
+  STAGE_CHANGE: 'Үе шат өөрчлөгдсөн',
 };
 
 /** Korean academic intakes: March, June, September, December. */

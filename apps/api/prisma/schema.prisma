@@ -25,6 +25,10 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  /// CRM staff: leads, contracts, cases (0-07).
+  CONSULTANT
+  /// Document/material review staff (0-07) — no CRM access by default.
+  DOC_OFFICER
 }
 
 model User {
@@ -37,11 +41,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens  RefreshToken[]
-  documents      Document[]
-  leads          Lead[]
-  assignedLeads  Lead[]         @relation("LeadAssignee")
-  leadActivities LeadActivity[]
+  refreshTokens     RefreshToken[]
+  documents         Document[]
+  leads             Lead[]
+  assignedLeads     Lead[]            @relation("LeadAssignee")
+  leadActivities    LeadActivity[]
+  posts             Post[]
+  savedUniversities SavedUniversity[]
 
   @@index([createdAt])
   @@map("users")
@@ -199,6 +205,7 @@ model University {
 
   programs UniversityProgram[]
   intakes  IntakeTerm[]
+  savedBy  SavedUniversity[]
 
   @@index([isPublished])
   @@index([regionEn])
@@ -371,4 +378,85 @@ model LeadActivity {
 
   @@index([leadId, occurredAt])
   @@map("lead_activities")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Saved universities (1A-18) — a logged-in visitor's shortlist.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SavedUniversity {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  universityId String     @db.Uuid
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, universityId])
+  @@index([userId])
+  @@map("saved_universities")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Content — blog/news and FAQ (1A-11, gksedu.md marketing site scope).
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Post {
+  id      String  @id @default(uuid()) @db.Uuid
+  slug    String  @unique
+  title   String
+  /// Short teaser shown on the list page and used as the OG/meta description fallback.
+  excerpt String?
+  /// Rendered as sanitized HTML on the frontend (ARCHITECTURE.md content pipeline).
+  content String
+
+  coverImagePath String?
+  status         PostStatus @default(DRAFT)
+  publishedAt    DateTime?
+
+  authorId String? @db.Uuid
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  seoTitle       String?
+  seoDescription String?
+  tags           String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@map("posts")
+}
+
+/// Content bucket a FAQ entry belongs to — labels live on the frontend (CLAUDE.md).
+enum FaqCategory {
+  GENERAL
+  SERVICES
+  PRICING
+  DOCUMENTS
+  VISA
+  LANGUAGE_CENTER
+}
+
+model FaqItem {
+  id       String      @id @default(uuid()) @db.Uuid
+  category FaqCategory
+  question String
+  answer   String
+
+  /// Manual sort order within a category; lower shows first.
+  order       Int     @default(0)
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, order])
+  @@map("faq_items")
 }

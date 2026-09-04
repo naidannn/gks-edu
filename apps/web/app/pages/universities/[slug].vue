@@ -16,6 +16,19 @@ if (error.value || !university.value) {
 const uni = computed(() => university.value!);
 const quality = computed(() => uni.value.quality ?? {});
 
+// 1A-18 — save to shortlist.
+const { ensureLoaded, isSaved, toggle: toggleSaved } = useSavedUniversities();
+onMounted(ensureLoaded);
+const savePending = ref(false);
+async function onToggleSaved() {
+  savePending.value = true;
+  try {
+    await toggleSaved(uni.value.id);
+  } finally {
+    savePending.value = false;
+  }
+}
+
 const cost = computed(() => uni.value.livingCost);
 const costRows = computed(() => {
   const c = cost.value;
@@ -43,7 +56,30 @@ const intakesByLevel = computed<[ProgramLevel, IntakeTerm[]][]>(() => {
   return [...groups.entries()];
 });
 
-useHead({ title: () => uni.value.nameMn });
+useHead({
+  title: () => uni.value.nameMn,
+  // JSON-LD (1A-19) — one university per page, so a static computed script is enough.
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: () =>
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'EducationalOrganization',
+          name: uni.value.nameMn,
+          alternateName: [uni.value.nameEn, uni.value.nameKo],
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: uni.value.cityEn,
+            addressRegion: uni.value.regionEn,
+            addressCountry: 'KR',
+          },
+          url: uni.value.links?.officialWebsite ?? undefined,
+          logo: uni.value.logoPath ?? undefined,
+        }),
+    },
+  ],
+});
 useSeoMeta({
   description: () =>
     uni.value.shortIntroMn ??
@@ -87,6 +123,14 @@ useSeoMeta({
           @click="navigateTo(`/consultation?university=${uni.slug}`)"
         >
           Энэ сургуулиар зөвлөгөө авах
+        </DsButton>
+        <DsButton
+          variant="secondary"
+          :icon-left="isSaved(uni.id) ? 'bookmark-check' : 'bookmark'"
+          :loading="savePending"
+          @click="onToggleSaved"
+        >
+          {{ isSaved(uni.id) ? 'Хадгалсан' : 'Хадгалах' }}
         </DsButton>
         <a
           v-if="uni.links?.officialWebsite"

@@ -18,6 +18,10 @@ export default defineNuxtConfig({
     public: {
       // NUXT_PUBLIC_API_BASE
       apiBase: 'http://localhost:3001/api/v1',
+      // NUXT_PUBLIC_SITE_URL — canonical origin for sitemap.xml/robots.txt (1A-19).
+      siteUrl: 'https://gksedu.mn',
+      // NUXT_PUBLIC_GA_ID — GA4 measurement id ("G-XXXXXXX"). Unset = no analytics script loads (1A-21).
+      gaId: '',
     },
   },
 

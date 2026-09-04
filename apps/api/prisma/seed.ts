@@ -36,6 +36,13 @@ async function main(): Promise<void> {
     create: { email: 'admin@gks.edu', password, name: 'Admin', role: Role.ADMIN },
   });
 
+  // CRM staff account (0-07) — for exercising 1B's Lead/CRM endpoints.
+  await prisma.user.upsert({
+    where: { email: 'consultant@gks.edu' },
+    update: {},
+    create: { email: 'consultant@gks.edu', password, name: 'Consultant', role: Role.CONSULTANT },
+  });
+
   await prisma.user.upsert({
     where: { email: 'student@gks.edu' },
     update: {},
@@ -68,7 +75,9 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log('Seed complete: admin@gks.edu / student@gks.edu (password: password123)');
+  console.log(
+    'Seed complete: admin@gks.edu / consultant@gks.edu / student@gks.edu (password: password123)',
+  );
 }
 
 main()

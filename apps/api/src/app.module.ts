@@ -10,7 +10,10 @@ import { configuration } from './config/configuration.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { FaqModule } from './modules/faq/faq.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
+import { PostsModule } from './modules/posts/posts.module.js';
+import { SavedUniversitiesModule } from './modules/saved-universities/saved-universities.module.js';
 import { UniversitiesModule } from './modules/universities/universities.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { VectorModule } from './modules/vector/vector.module.js';
@@ -33,7 +36,10 @@ import { RedisModule } from './redis/redis.module.js';
     AuthModule,
     UsersModule,
     UniversitiesModule,
+    SavedUniversitiesModule,
     LeadsModule,
+    PostsModule,
+    FaqModule,
     VectorModule,
   ],
   providers: [

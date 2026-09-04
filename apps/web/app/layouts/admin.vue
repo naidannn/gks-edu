@@ -1,0 +1,294 @@
+<script setup lang="ts">
+import { useAuthStore } from '~/stores/auth';
+
+/**
+ * CRM shell: fixed sidebar + slim topbar. Every `/admin/*` page uses this
+ * instead of the public `default` layout — no marketing header/footer here.
+ */
+const auth = useAuthStore();
+const route = useRoute();
+
+interface AdminNavItem {
+  to: string;
+  label: string;
+  icon: string;
+}
+
+// Only sections with a working page belong here — no links to screens that don't exist yet.
+const NAV: AdminNavItem[] = [
+  { to: '/admin', label: 'Хяналтын самбар', icon: 'layout-dashboard' },
+  { to: '/admin/leads', label: 'Сэжим', icon: 'users' },
+];
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Админ',
+  CONSULTANT: 'Зөвлөх',
+  DOC_OFFICER: 'Баримт хариуцагч',
+  USER: 'Хэрэглэгч',
+};
+
+const sidebarOpen = ref(false);
+watch(() => route.fullPath, () => { sidebarOpen.value = false; });
+
+function isActive(to: string): boolean {
+  // '/admin' itself must not light up for every '/admin/*' sub-route.
+  if (to === '/admin') return route.path === '/admin';
+  return route.path === to || route.path.startsWith(`${to}/`);
+}
+
+const currentSection = computed(() => NAV.find((item) => isActive(item.to))?.label ?? 'CRM');
+
+async function onLogout() {
+  await auth.logout();
+  await navigateTo('/login');
+}
+</script>
+
+<template>
+  <div class="gks-admin" :class="{ 'gks-admin--sidebar-open': sidebarOpen }">
+    <aside class="gks-admin__sidebar">
+      <div class="gks-admin__brand">
+        <NuxtLink to="/admin" class="gks-admin__brand-link">
+          <img src="~/assets/img/gks-logo-mark.png" alt="" class="gks-admin__logo">
+          <span class="gks-admin__brand-text">CRM</span>
+        </NuxtLink>
+        <button type="button" class="gks-admin__icon-btn gks-admin__close" aria-label="Цэс хаах" @click="sidebarOpen = false">
+          <DsIcon name="x" :size="20" />
+        </button>
+      </div>
+
+      <nav class="gks-admin__nav" aria-label="Админ цэс">
+        <NuxtLink
+          v-for="item in NAV"
+          :key="item.to"
+          :to="item.to"
+          class="gks-admin__nav-link"
+          :class="{ 'gks-admin__nav-link--active': isActive(item.to) }"
+        >
+          <DsIcon :name="item.icon" :size="18" />
+          <span>{{ item.label }}</span>
+        </NuxtLink>
+      </nav>
+
+      <div class="gks-admin__sidebar-foot">
+        <NuxtLink to="/" class="gks-admin__site-link">
+          <DsIcon name="arrow-left" :size="16" />
+          <span>Вебсайт руу буцах</span>
+        </NuxtLink>
+
+        <div class="gks-admin__user">
+          <div class="gks-admin__user-avatar" aria-hidden="true">
+            {{ (auth.user?.name ?? auth.user?.email ?? '?').slice(0, 1).toUpperCase() }}
+          </div>
+          <div class="gks-admin__user-info">
+            <p class="gks-admin__user-name">{{ auth.user?.name ?? auth.user?.email }}</p>
+            <p class="gks-admin__user-role">{{ ROLE_LABELS[auth.user?.role ?? ''] ?? auth.user?.role }}</p>
+          </div>
+          <button type="button" class="gks-admin__icon-btn" aria-label="Гарах" title="Гарах" @click="onLogout">
+            <DsIcon name="log-out" :size="18" />
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <button
+      type="button"
+      class="gks-admin__scrim"
+      aria-label="Цэс хаах"
+      tabindex="-1"
+      @click="sidebarOpen = false"
+    />
+
+    <div class="gks-admin__body">
+      <header class="gks-admin__topbar">
+        <button type="button" class="gks-admin__icon-btn gks-admin__menu-btn" aria-label="Цэс нээх" @click="sidebarOpen = true">
+          <DsIcon name="menu" :size="20" />
+        </button>
+        <span class="gks-admin__topbar-title">{{ currentSection }}</span>
+      </header>
+
+      <main class="gks-admin__main">
+        <slot />
+      </main>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.gks-admin {
+  min-height: 100vh;
+  background: var(--surface-page);
+}
+
+/* ---- Sidebar ---- */
+.gks-admin__sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border-right: var(--border-hair) solid var(--line-hairline);
+  transition: transform var(--dur-base) var(--ease-standard);
+}
+
+.gks-admin__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 68px;
+  padding: 0 var(--sp-5);
+  border-bottom: var(--border-hair) solid var(--line-hairline);
+}
+.gks-admin__brand-link { display: flex; align-items: center; gap: var(--sp-3); text-decoration: none; }
+.gks-admin__logo { height: 24px; width: auto; display: block; }
+.gks-admin__brand-text {
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+.gks-admin__close { display: none; }
+
+.gks-admin__nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: var(--sp-4); }
+.gks-admin__nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3);
+  border-radius: var(--radius-2);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition-control);
+}
+.gks-admin__nav-link:hover { background: var(--surface-hover); color: var(--text-strong); }
+.gks-admin__nav-link--active {
+  background: var(--surface-selected);
+  color: var(--brand-700);
+  font-weight: var(--fw-semibold);
+}
+
+.gks-admin__sidebar-foot {
+  padding: var(--sp-4);
+  border-top: var(--border-hair) solid var(--line-hairline);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.gks-admin__site-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+  text-decoration: none;
+}
+.gks-admin__site-link:hover { color: var(--brand-600); }
+
+.gks-admin__user { display: flex; align-items: center; gap: var(--sp-3); }
+.gks-admin__user-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.gks-admin__user-info { min-width: 0; flex: 1; }
+.gks-admin__user-name {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gks-admin__user-role { font-size: var(--fs-micro); color: var(--text-subtle); }
+
+.gks-admin__icon-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-2);
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-admin__icon-btn:hover { background: var(--surface-hover); color: var(--text-strong); }
+
+/* ---- Off-canvas scrim (mobile only) ---- */
+.gks-admin__scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: 0;
+  padding: 0;
+  background: var(--scrim);
+  cursor: default;
+}
+
+/* ---- Body: topbar + main ---- */
+.gks-admin__body { margin-left: 256px; min-height: 100vh; display: flex; flex-direction: column; }
+
+.gks-admin__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 56px;
+  padding: 0 var(--sp-6);
+  background: rgba(246, 248, 252, .9);
+  backdrop-filter: blur(8px);
+  border-bottom: var(--border-hair) solid var(--line-hairline);
+}
+.gks-admin__menu-btn { display: none; }
+.gks-admin__topbar-title {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps-tight);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.gks-admin__main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--container-content);
+  margin: 0 auto;
+  padding: var(--sp-6);
+}
+
+/* ---- Mobile: sidebar becomes an off-canvas drawer ---- */
+@media (max-width: 900px) {
+  .gks-admin__sidebar {
+    width: 280px;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-dialog);
+  }
+  .gks-admin--sidebar-open .gks-admin__sidebar { transform: translateX(0); }
+  .gks-admin--sidebar-open .gks-admin__scrim { display: block; }
+  .gks-admin__close { display: inline-flex; }
+
+  .gks-admin__body { margin-left: 0; }
+  .gks-admin__menu-btn { display: inline-flex; }
+  .gks-admin__topbar { padding: 0 var(--gutter-mobile); }
+  .gks-admin__main { padding: var(--sp-5) var(--gutter-mobile) var(--sp-8); }
+}
+</style>

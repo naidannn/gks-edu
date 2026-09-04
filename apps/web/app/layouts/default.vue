@@ -15,6 +15,8 @@ const NAV = [
   { to: '/universities', label: 'Их сургуулиуд' },
   { to: '/gks-scholarship', label: 'GKS тэтгэлэг' },
   { to: '/#planner', label: 'Төлөвлөгч' },
+  { to: '/blog', label: 'Мэдээ' },
+  { to: '/faq', label: 'Түгээмэл асуулт' },
   { to: '/consultation', label: 'Зөвлөгөө' },
 ];
 
@@ -76,7 +78,9 @@ async function onLogout() {
           <template v-if="auth.isAuthenticated">
             <NuxtLink to="/documents" class="gks-appbar__link">Баримт</NuxtLink>
             <NuxtLink to="/search" class="gks-appbar__link">Хайлт</NuxtLink>
+            <NuxtLink to="/account/saved" class="gks-appbar__link">Хадгалсан</NuxtLink>
           </template>
+          <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__link">CRM</NuxtLink>
         </div>
 
         <div class="gks-appbar__actions">

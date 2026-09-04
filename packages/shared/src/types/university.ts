@@ -118,3 +118,9 @@ export interface UniversityFacets {
   languagePrep: number;
   gks: number;
 }
+
+/** One row of a logged-in visitor's shortlist (1A-18). */
+export interface SavedUniversityEntry {
+  savedAt: string;
+  university: UniversityCard;
+}
