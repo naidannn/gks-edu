@@ -1,0 +1,59 @@
+# 0-14 — install → generate → typecheck → lint → test → prisma validate.
+#
+# The API needs a generated Prisma client to typecheck at all (the client is
+# emitted into `apps/api/src/generated/prisma`, not node_modules), so
+# `prisma generate` runs before anything that reads types. It needs no
+# database: generation reads the schema file only.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # `validateEnv` refuses to boot without these; they are never connected to in
+  # CI (no test here opens a socket), but the config module is imported.
+  DATABASE_URL: postgresql://gks:gks@localhost:5432/gks_edu?schema=public
+  DIRECT_URL: postgresql://gks:gks@localhost:5432/gks_edu?schema=public
+  JWT_SECRET: ci-only-secret-that-is-long-enough-32
+  JWT_REFRESH_SECRET: ci-only-refresh-secret-long-enough-32
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # `postinstall` already runs `prisma generate`; --frozen-lockfile makes a
+      # stale lockfile a failure rather than a silent resolution.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma schema validate
+        run: pnpm --filter @gks/api exec prisma validate
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # The repo's lint script runs eslint --fix; in CI that only means a
+      # fixable finding is applied in the runner's copy and never committed —
+      # anything eslint cannot fix still fails the step.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test

@@ -86,6 +86,7 @@ pnpm db:up:local            # postgres 17 + pgvector + redis
 | `pnpm db:up` / `db:up:local` / `db:down` / `db:reset` | docker compose |
 | `pnpm prisma:generate` / `migrate` / `deploy` / `studio` / `seed` | Prisma |
 | `pnpm universities:import` | import the Korean university dataset (`--publish`, `--no-assets`) |
+| `pnpm clients:import <file.csv>` | import an existing client list; add `--commit` to write (1B-12) |
 | `pnpm tasks [epic]` | roadmap progress from `docs/TASKS.md` |
 
 ## API
@@ -117,9 +118,51 @@ GET    /api/v1/universities/facets public — filter counts by region and type
 GET    /api/v1/universities/:slug public — detail + programmes + intake terms
 
 POST   /api/v1/leads/public       public, 5 req/hour — website consultation request
+GET    /api/v1/pricing/public     public — the prices the service pages quote
+GET    /api/v1/banners            public — live promo banners
+
+GET    /api/v1/notifications              the caller's in-app notifications (1G-05)
+GET    /api/v1/notifications/unread-count badge count for the bell
+POST   /api/v1/notifications/:id/read     mark one read
+PATCH  /api/v1/notifications/preferences  switch email/SMS on or off
+GET    /api/v1/notifications/templates    admin — the §16 catalogue (1G-06)
+POST   /api/v1/notifications/sweeps/run   admin — run the scheduled reminders now
+
+GET    /api/v1/reports/dashboard          staff — the 21 figures of §19 (1G-09)
+GET    /api/v1/reports/sales-funnel       staff — channel results, conversion (1B-11)
+GET    /api/v1/reports/finance            admin — revenue, receivables, refunds (1G-10)
+GET    /api/v1/reports/staff-performance  admin — per-staff performance (1G-11)
+POST   /api/v1/reports/refresh            admin — refresh the materialized views
+
+GET    /api/v1/users/staff/manage  admin — staff register (1G-12)
+POST   /api/v1/users/:id/claim-invite  invite a client/staff to set a password (1B-17)
+POST   /api/v1/users/claim         public — redeem the invitation token
+
+GET    /api/v1/audit               admin — the audit trail (0-11)
 
 GET    /api/v1/health             public
 ```
+
+### Notifications and reports
+
+An event (`ContractsService.finalizeSigning`, `PaymentsService.confirmPayment`, …) calls
+`NotificationsService.dispatch()` **outside** its transaction: a queue hiccup must never
+roll back a signed contract. The dispatcher writes one `Notification` row per active
+template for that event and hands the id to BullMQ.
+
+Two background jobs run daily:
+
+| Queue | Job | What it does |
+|---|---|---|
+| `reminder-sweeps` | `sweep-all` | material/payment/visa/departure deadlines + lead follow-ups (1G-07) |
+| `report-refresh` | `refresh-views` | `REFRESH MATERIALIZED VIEW CONCURRENTLY` on the four report views (1G-08) |
+
+Both are safe to run repeatedly: every scheduled notification carries a unique
+`dedupeKey`, so the same reminder is never sent twice.
+
+With `RESEND_API_KEY` unset, email is logged rather than sent; the SMS gateway is still
+undecided (`ARCHITECTURE.md` §18 question 10), so SMS is logged too — but the per-user and
+platform daily ceilings (`SMS_DAILY_LIMIT_*`) already apply.
 
 Errors always come back in one shape (`AllExceptionsFilter`), including a `requestId`
 that matches the `x-request-id` response header:

@@ -6,6 +6,7 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user.js
 import { CaseStage, ContractStatus, PaymentKind, PaymentStatus, Role, ServiceType } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { CasesService } from '../cases/cases.service.js';
+import type { NotificationsService } from '../notifications/notifications.service.js';
 import { PaymentsService } from './payments.service.js';
 import type { QpayClientService } from './qpay-client.service.js';
 
@@ -65,8 +66,10 @@ function buildHarness(options: {
     removeJobScheduler: vi.fn().mockResolvedValue(true),
   } as unknown as Queue;
 
-  const service = new PaymentsService(prismaTyped, cases, qpay, config, pollQueue);
-  return { service, prisma: prismaTyped, cases, qpay, pollQueue };
+  const notifications = { dispatch: vi.fn().mockResolvedValue(undefined) } as unknown as NotificationsService;
+
+  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, pollQueue);
+  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications };
 }
 
 const student: AuthenticatedUser = { id: 'student-1', email: 's@gks.edu', role: Role.USER };

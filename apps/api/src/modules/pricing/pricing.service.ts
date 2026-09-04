@@ -33,6 +33,36 @@ export class PricingService {
   }
 
   /**
+   * What the public service pages quote (1A-10). Prices are published
+   * commercial information, so this is readable without a login — but only the
+   * *current* row and only the four figures a visitor needs; history and
+   * `balanceTrigger` stay behind the staff endpoints.
+   */
+  async publicPricing() {
+    const now = new Date();
+    const rows = await this.prisma.servicePricing.findMany({
+      where: { effectiveFrom: { lte: now }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }] },
+      orderBy: { effectiveFrom: 'desc' },
+    });
+
+    // One row per service — the newest effective row wins if two overlap.
+    const bySer = new Map<ServiceType, (typeof rows)[number]>();
+    for (const row of rows) if (!bySer.has(row.serviceType)) bySer.set(row.serviceType, row);
+
+    return [...bySer.values()].map((row) => ({
+      serviceType: row.serviceType,
+      totalAmount: toNumber(row.totalAmount as DecimalLike),
+      prepaymentMode: row.prepaymentMode,
+      prepaymentValue: toNumber(row.prepaymentValue as DecimalLike),
+      /** Convenience for the page: the actual first payment in ₮. */
+      prepaymentAmount:
+        row.prepaymentMode === PrepaymentMode.PERCENT
+          ? Math.round((toNumber(row.totalAmount as DecimalLike) * toNumber(row.prepaymentValue as DecimalLike)) / 100)
+          : toNumber(row.prepaymentValue as DecimalLike),
+    }));
+  }
+
+  /**
    * Closes out the currently active row (if any) and opens a new one — pricing
    * is versioned, never edited in place (§6.1), so an existing `Contract`
    * snapshot never drifts when the price changes later.

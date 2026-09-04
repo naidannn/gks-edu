@@ -6,6 +6,7 @@ import {
   CaseStage,
   DocStage,
   Necessity,
+  NotificationEvent,
   type Prisma,
   ServiceType,
   VisaStatus,
@@ -17,6 +18,8 @@ import { CaseDocumentsService } from '../documents/case-documents.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { RequirementsService } from '../documents/requirements.service.js';
 import { DepartureService } from '../departure/departure.service.js';
+import { VISA_STATUS_LABELS } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import type { OpenVisaCaseDto, QueryVisaCasesDto, RecordVisaDecisionDto, TransitionVisaDto, UpdateVisaCaseDto } from './dto/visa.dto.js';
 import { assertVisaTransition } from './visa-status.js';
 
@@ -57,6 +60,7 @@ export class VisaService {
     private readonly documents: CaseDocumentsService,
     private readonly requirements: RequirementsService,
     private readonly departure: DepartureService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Reading ────────────────────────────────────────────────────────────────
@@ -192,6 +196,19 @@ export class VisaService {
         rejectionReason: dto.rejectionReason,
       },
       include: VISA_INCLUDE,
+    });
+
+    // §16 "Визний хариу бүртгэгдсэн" — sent for both verdicts.
+    await this.notifications.dispatch({
+      event: NotificationEvent.VISA_RESULT,
+      userIds: [updated.case.userId],
+      caseId,
+      context: {
+        caseId,
+        caseCode: updated.case.code,
+        visaStatusName: VISA_STATUS_LABELS[dto.decision],
+        resultNote: dto.decision === VisaStatus.REJECTED ? (dto.rejectionReason ?? '') : (dto.visaNumber ?? ''),
+      },
     });
 
     if (dto.decision === VisaStatus.APPROVED) {

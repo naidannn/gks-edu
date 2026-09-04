@@ -8,6 +8,7 @@ import type {
   ServiceType,
 } from '@gks/shared';
 import { LEAD_STAGE_TRANSITIONS } from '@gks/shared';
+import { ApiError } from '~/composables/useApi';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -63,6 +64,7 @@ async function loadActivities(page = 1) {
   }
 }
 onMounted(() => loadActivities(1));
+onMounted(loadDuplicates);
 
 const ACTIVITY_TYPES: LeadActivityType[] = ['NOTE', 'CALL', 'MEETING', 'MESSAGE', 'EMAIL', 'CHAT'];
 const newActivityType = ref<LeadActivityType>('NOTE');
@@ -162,6 +164,52 @@ async function saveFacts() {
   } finally {
     savingFacts.value = false;
   }
+}
+
+// --- Duplicate detection (1B-09) ---
+interface DuplicateLead {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  stage: LeadStage;
+  createdAt: string;
+  matchedOn: string[];
+}
+
+const duplicates = ref<DuplicateLead[]>([]);
+const merging = ref<string | null>(null);
+const mergeError = ref<string | null>(null);
+
+async function loadDuplicates() {
+  try {
+    duplicates.value = await api.get<DuplicateLead[]>(`/leads/${id.value}/duplicates`);
+  } catch {
+    duplicates.value = [];
+  }
+}
+
+/**
+ * Merging folds the *other* record into this one: this page is the survivor,
+ * so the consultant merges from the record they decided to keep.
+ */
+async function mergeInto(source: DuplicateLead) {
+  merging.value = source.id;
+  mergeError.value = null;
+  try {
+    await api.post(`/leads/${id.value}/merge`, { sourceId: source.id });
+    await Promise.all([loadLead(), loadActivities(1), loadDuplicates()]);
+  } catch (error) {
+    mergeError.value = error instanceof ApiError ? error.message : 'Нэгтгэж чадсангүй';
+  } finally {
+    merging.value = null;
+  }
+}
+
+function matchLabel(matchedOn: string[]): string {
+  const parts = matchedOn.map((field) => (field === 'phone' ? 'утас' : 'имэйл'));
+  return parts.join(', ');
 }
 
 function formatDateTime(value: string | null): string {
@@ -291,6 +339,32 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
             </div>
           </DsCard>
 
+          <DsCard v-if="duplicates.length" title="Давхардсан байж болзошгүй" accent>
+            <p class="gks-lead__dup-note">
+              Ижил утас/имэйлтэй бичлэг олдлоо. Нэгтгэвэл тэдгээрийн түүх энэ бичлэг рүү шилжинэ.
+            </p>
+            <p v-if="mergeError" class="gks-lead__dup-error">{{ mergeError }}</p>
+            <ul class="gks-lead__dup-list">
+              <li v-for="dup in duplicates" :key="dup.id" class="gks-lead__dup">
+                <NuxtLink :to="`/admin/consultations/${dup.id}`" class="gks-lead__dup-name">
+                  {{ dup.lastName }} {{ dup.firstName }}
+                </NuxtLink>
+                <span class="gks-lead__dup-meta gks-tnum">
+                  {{ dup.phone }} · {{ matchLabel(dup.matchedOn) }} таарсан
+                </span>
+                <DsButton
+                  size="sm"
+                  variant="secondary"
+                  icon-left="merge"
+                  :loading="merging === dup.id"
+                  @click="mergeInto(dup)"
+                >
+                  Энэ рүү нэгтгэх
+                </DsButton>
+              </li>
+            </ul>
+          </DsCard>
+
           <DsCard title="Дараагийн алхам">
             <DsInput v-model="nextContactDraft" type="date" label="Дараагийн холбогдох огноо" />
             <DsInput v-model="winProbabilityDraft" type="number" min="0" max="100" label="Гэрээ болох магадлал (%)" />
@@ -328,6 +402,14 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 .gks-lead__grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--sp-5); align-items: start; }
 .gks-lead__main { display: flex; flex-direction: column; gap: var(--sp-5); min-width: 0; }
 .gks-lead__side { display: flex; flex-direction: column; gap: var(--sp-5); }
+
+.gks-lead__dup-note { font-size: var(--fs-micro); color: var(--text-subtle); }
+.gks-lead__dup-error { font-size: var(--fs-micro); color: var(--danger-600, #b00020); }
+.gks-lead__dup-list { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.gks-lead__dup { display: flex; flex-direction: column; gap: var(--sp-1); align-items: flex-start; }
+.gks-lead__dup-name { font-size: var(--fs-small); font-weight: var(--fw-semibold); color: var(--text-body); text-decoration: none; }
+.gks-lead__dup-name:hover { color: var(--brand-600); }
+.gks-lead__dup-meta { font-size: 11px; color: var(--text-subtle); }
 
 .gks-lead__transition { display: flex; flex-direction: column; gap: var(--sp-3); align-items: flex-start; }
 .gks-lead__unknown { color: var(--text-subtle); font-style: italic; }

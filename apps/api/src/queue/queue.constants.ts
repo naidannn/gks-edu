@@ -15,3 +15,17 @@ export const REMINDER_OFFSET_DAYS = [7, 3, 1] as const;
 export const FX_RATE_QUEUE = 'fx-rates';
 export const FX_RATE_JOB = 'fetch-daily-rate';
 export const FX_RATE_INTERVAL_MS = 12 * 60 * 60 * 1000;
+
+/** Notification delivery (1G-02) — one job per pending `Notification` row. */
+export const NOTIFICATION_QUEUE = 'notifications';
+export const NOTIFICATION_DELIVER_JOB = 'deliver';
+
+/** Scheduled reminder sweeps (1G-07) — payments, visa, departure, follow-ups. */
+export const REMINDER_SWEEP_QUEUE = 'reminder-sweeps';
+export const REMINDER_SWEEP_JOB = 'sweep-all';
+export const REMINDER_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/** Nightly refresh of the report materialized views (1G-08). */
+export const REPORT_REFRESH_QUEUE = 'report-refresh';
+export const REPORT_REFRESH_JOB = 'refresh-views';
+export const REPORT_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;

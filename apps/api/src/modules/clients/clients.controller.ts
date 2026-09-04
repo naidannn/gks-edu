@@ -51,6 +51,17 @@ export class ClientsController {
     return this.clients.stats();
   }
 
+  @Get('check-duplicates')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Регистр/утсаар давхардал шалгах — утас нь зөвхөн анхааруулга (1B-16)' })
+  checkDuplicates(
+    @Query('phone') phone?: string,
+    @Query('registerNumber') registerNumber?: string,
+    @Query('excludeClientId') excludeClientId?: string,
+  ) {
+    return this.clients.checkDuplicates({ phone, registerNumber, excludeClientId });
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'One client with every case, contract and origin lead' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {

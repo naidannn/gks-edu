@@ -36,3 +36,21 @@ export interface FaqEntry {
   answer: string;
   order: number;
 }
+
+/** 1G-14 — the dated promo strip on the public site. */
+export type BannerPlacement = 'SITE_TOP' | 'HOME_HERO';
+
+export interface BannerItem {
+  id: string;
+  placement: BannerPlacement;
+  titleMn: string;
+  bodyMn: string | null;
+  linkUrl: string | null;
+  linkLabel: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  isPublished: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}

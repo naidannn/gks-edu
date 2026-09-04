@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { CaseStage, type Prisma, SchoolInvoiceStatus } from '../../prisma/client.js';
+import { CaseStage, NotificationEvent, type Prisma, SchoolInvoiceStatus } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { StorageService } from '../../storage/storage.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { CaseDocumentsService } from '../documents/case-documents.service.js';
 import { FxService } from '../fx/fx.service.js';
+import { VISA_TYPE_LABELS } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { VisaService } from '../visa/visa.service.js';
 import type { CreateInvitationDto, CreateSchoolInvoiceDto, UpdateSchoolInvoiceDto } from './dto/school-invoice.dto.js';
 
@@ -30,6 +32,7 @@ export class SchoolInvoicesService {
     private readonly documents: CaseDocumentsService,
     private readonly visa: VisaService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Invoices ───────────────────────────────────────────────────────────────
@@ -152,6 +155,33 @@ export class SchoolInvoicesService {
 
     await this.cases.applyDomainTransition(caseId, CaseStage.INVITATION_RECEIVED, actor.id, 'Сургуулийн урилга ирсэн');
     const visa = await this.visa.openForCase(caseId);
+
+    // §16 "Урилга ирсэн" + "Визний үе шат эхэлсэн" — one action, two events,
+    // because the visa checklist has just appeared in the client's cabinet.
+    const gksCase = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      select: { id: true, code: true, userId: true, university: { select: { nameMn: true } } },
+    });
+    if (gksCase) {
+      const context = {
+        caseId: gksCase.id,
+        caseCode: gksCase.code,
+        universityName: gksCase.university?.nameMn ?? 'Сургууль',
+        invitationNumber: invitation.number,
+      };
+      await this.notifications.dispatch({
+        event: NotificationEvent.INVITATION_RECEIVED,
+        userIds: [gksCase.userId],
+        caseId: gksCase.id,
+        context,
+      });
+      await this.notifications.dispatch({
+        event: NotificationEvent.VISA_STAGE_STARTED,
+        userIds: [gksCase.userId],
+        caseId: gksCase.id,
+        context: { ...context, visaTypeName: VISA_TYPE_LABELS[visa.visaCase.visaType] },
+      });
+    }
 
     return { invitation, visa };
   }

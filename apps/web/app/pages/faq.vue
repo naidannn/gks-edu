@@ -3,15 +3,6 @@ import type { FaqCategory, FaqEntry } from '@gks/shared';
 
 /** FAQ accordion, grouped by category (1A-13). */
 
-const FAQ_CATEGORY_LABELS: Record<FaqCategory, string> = {
-  GENERAL: 'Ерөнхий',
-  SERVICES: 'Үйлчилгээ',
-  PRICING: 'Үнэ, төлбөр',
-  DOCUMENTS: 'Материал, бичиг баримт',
-  VISA: 'Виз',
-  LANGUAGE_CENTER: 'Хэлний сургалтын төв',
-};
-const CATEGORY_ORDER: FaqCategory[] = ['GENERAL', 'SERVICES', 'PRICING', 'DOCUMENTS', 'VISA', 'LANGUAGE_CENTER'];
 
 const { data, status } = await useApiFetch<FaqEntry[]>('/faqs');
 
@@ -22,7 +13,7 @@ const grouped = computed(() => {
     list.push(item);
     byCategory.set(item.category, list);
   }
-  return CATEGORY_ORDER.filter((category) => byCategory.has(category)).map((category) => ({
+  return FAQ_CATEGORY_ORDER.filter((category) => byCategory.has(category)).map((category) => ({
     category,
     label: FAQ_CATEGORY_LABELS[category],
     items: byCategory.get(category)!,

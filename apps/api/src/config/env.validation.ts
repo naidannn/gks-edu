@@ -71,6 +71,30 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  RESEND_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  NOTIFICATION_FROM_EMAIL?: string;
+
+  @IsString()
+  @IsOptional()
+  NOTIFICATION_STAFF_EMAIL?: string;
+
+  @IsString()
+  @IsOptional()
+  APP_PUBLIC_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  SMS_DAILY_LIMIT_PER_USER?: string;
+
+  @IsString()
+  @IsOptional()
+  SMS_DAILY_LIMIT_GLOBAL?: string;
+
+  @IsString()
+  @IsOptional()
   STORAGE_DRIVER?: string;
 
   @IsString()

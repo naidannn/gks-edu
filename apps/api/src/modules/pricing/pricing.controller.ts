@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../common/decorators/public.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Role, type ServiceType } from '../../prisma/client.js';
@@ -12,6 +13,13 @@ import { PricingService } from './pricing.service.js';
 @Controller('pricing')
 export class PricingController {
   constructor(private readonly pricing: PricingService) {}
+
+  @Get('public')
+  @Public()
+  @ApiOperation({ summary: 'Одоо мөрдөж буй үнэ — нийтийн үйлчилгээний хуудсанд (1A-10)' })
+  publicPricing() {
+    return this.pricing.publicPricing();
+  }
 
   @Get()
   @Roles(Role.ADMIN, Role.CONSULTANT)

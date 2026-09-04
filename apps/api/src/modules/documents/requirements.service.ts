@@ -10,6 +10,7 @@ import {
   type ServiceType,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { restorePatch, softDeletePatch } from '../../prisma/soft-delete.js';
 
 /** The case facts a rule is matched against (ARCHITECTURE.md §7.1). */
 export interface ResolutionContext {
@@ -97,7 +98,7 @@ export class RequirementsService {
           where: { id: current.id },
           // A row that had been dropped and is required again comes back with
           // whatever the client had already uploaded to it.
-          data: { ...data, deletedAt: null },
+          data: { ...data, ...restorePatch() },
         });
         summary.updated += 1;
       }
@@ -106,7 +107,7 @@ export class RequirementsService {
     for (const doc of existing) {
       if (matchedTemplateIds.has(doc.templateId) || doc.deletedAt) continue;
       if (doc.status === DocumentStatus.NOT_STARTED) {
-        await this.prisma.caseDocument.update({ where: { id: doc.id }, data: { deletedAt: new Date() } });
+        await this.prisma.caseDocument.update({ where: { id: doc.id }, data: softDeletePatch() });
         summary.removed += 1;
       } else {
         summary.keptDespiteUnmatched += 1;

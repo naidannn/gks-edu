@@ -23,6 +23,7 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user.js
 import { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
 import { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
+import { MergeLeadDto } from './dto/merge-lead.dto.js';
 import { TransitionLeadDto } from './dto/transition-lead.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
 import { LeadsService } from './leads.service.js';
@@ -57,6 +58,13 @@ export class LeadsController {
   @ApiOperation({ summary: 'Dashboard counters: funnel breakdown, unassigned, own open leads, recent (1B-08)' })
   stats(@CurrentUser() user: AuthenticatedUser) {
     return this.leads.stats(user.id);
+  }
+
+  @Get('duplicates')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Нэг утсаар давхардсан сэжмийн бүлгүүд (1B-09)' })
+  duplicateClusters() {
+    return this.leads.duplicateClusters();
   }
 
   @Get(':id')
@@ -111,6 +119,24 @@ export class LeadsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.leads.assign(id, dto, user.id);
+  }
+
+  @Get(':id/duplicates')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Энэ сэжимтэй давхардаж болзошгүй бичлэгүүд (1B-09)' })
+  duplicates(@Param('id', ParseUUIDPipe) id: string) {
+    return this.leads.findDuplicates(id);
+  }
+
+  @Post(':id/merge')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Давхардсан сэжмийг энэ бичлэг рүү нэгтгэх (1B-09)' })
+  merge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: MergeLeadDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.leads.merge(id, dto.sourceId, user.id);
   }
 
   @Post(':id/assign/auto')

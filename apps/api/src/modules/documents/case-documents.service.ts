@@ -2,8 +2,9 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { isStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { type DocStage, DocumentStatus, Necessity, type Prisma } from '../../prisma/client.js';
+import { type DocStage, DocumentStatus, Necessity, NotificationEvent, type Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { restorePatch, softDeletePatch } from '../../prisma/soft-delete.js';
 import { assertTransition, isClientTransition, SETTLED_STATUSES } from './document-status.js';
 import type { UpsertCaseConditionsDto } from './dto/case-conditions.dto.js';
 import {
@@ -15,6 +16,7 @@ import {
   type TransitionDocumentDto,
   type UpdateCaseDocumentDto,
 } from './dto/case-document.dto.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { RequirementsService } from './requirements.service.js';
 
 /** What each review verdict does to the document (gksedu.md §6.3). */
@@ -50,6 +52,7 @@ export class CaseDocumentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly requirements: RequirementsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Conditions questionnaire (1D-06) ───────────────────────────────────────
@@ -189,7 +192,7 @@ export class CaseDocumentsService {
     if (existing) {
       return this.prisma.caseDocument.update({
         where: { id: existing.id },
-        data: { deletedAt: null, necessity: dto.necessity ?? existing.necessity, dueAt: dto.dueAt ? new Date(dto.dueAt) : existing.dueAt },
+        data: { ...restorePatch(), necessity: dto.necessity ?? existing.necessity, dueAt: dto.dueAt ? new Date(dto.dueAt) : existing.dueAt },
       });
     }
 
@@ -227,7 +230,7 @@ export class CaseDocumentsService {
   /** Soft delete (§9) — the file history survives. */
   async remove(id: string) {
     await this.getOrThrow(id);
-    return this.prisma.caseDocument.update({ where: { id }, data: { deletedAt: new Date() } });
+    return this.prisma.caseDocument.update({ where: { id }, data: softDeletePatch() });
   }
 
   async transition(id: string, dto: TransitionDocumentDto, actor: AuthenticatedUser) {
@@ -247,7 +250,7 @@ export class CaseDocumentsService {
 
   /** Staff verdict on a submitted document (1D-09). */
   async review(id: string, dto: ReviewDocumentDto, actor: AuthenticatedUser) {
-    const doc = await this.getOrThrow(id);
+    const doc = await this.getOrThrow(id, { case: { select: { id: true, code: true, userId: true } } });
 
     if (dto.action !== ReviewAction.ACCEPT && !dto.note?.trim()) {
       throw new BadRequestException('Засвар хүсэх/буцаах үед тайлбар заавал бичнэ');
@@ -264,11 +267,41 @@ export class CaseDocumentsService {
     if (dto.action === ReviewAction.RETURN && status === DocumentStatus.UNDER_REVIEW) {
       // RESUBMIT_REQUIRED is only reachable through NEEDS_FIX (§7.2).
       await this.applyStatus(id, status, DocumentStatus.NEEDS_FIX, actor.id, dto.note ?? null);
-      return this.applyStatus(id, DocumentStatus.NEEDS_FIX, target, actor.id, null);
+      const returned = await this.applyStatus(id, DocumentStatus.NEEDS_FIX, target, actor.id, null);
+      await this.notifyReview(doc, dto);
+      return returned;
     }
 
     assertTransition(status, target);
-    return this.applyStatus(id, status, target, actor.id, dto.note ?? null);
+    const updated = await this.applyStatus(id, status, target, actor.id, dto.note ?? null);
+    await this.notifyReview(doc, dto);
+    return updated;
+  }
+
+  /**
+   * §16 "Материал буцаагдсан" / "Засвар шаардлагатай" (1G-02). A `RETURN`
+   * verdict is the rejection; `REQUEST_FIX` is the softer one.
+   */
+  private async notifyReview(
+    doc: { id: string; case: { id: string; code: string; userId: string }; template: { nameMn: string } },
+    dto: ReviewDocumentDto,
+  ): Promise<void> {
+    if (dto.action === ReviewAction.ACCEPT) return;
+
+    await this.notifications.dispatch({
+      event:
+        dto.action === ReviewAction.RETURN
+          ? NotificationEvent.DOCUMENT_REJECTED
+          : NotificationEvent.DOCUMENT_FIX_REQUIRED,
+      userIds: [doc.case.userId],
+      caseId: doc.case.id,
+      context: {
+        caseId: doc.case.id,
+        caseCode: doc.case.code,
+        documentName: doc.template.nameMn,
+        reason: dto.note ?? '',
+      },
+    });
   }
 
   async addNote(id: string, dto: AddDocumentNoteDto, actor: AuthenticatedUser) {

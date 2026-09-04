@@ -4,10 +4,20 @@ import { ConfigService } from '@nestjs/config';
 import type { Queue } from 'bullmq';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { CaseStage, ContractStatus, PaymentKind, PaymentStatus, type Prisma, Role } from '../../prisma/client.js';
+import {
+  CaseStage,
+  ContractStatus,
+  NotificationEvent,
+  PaymentKind,
+  PaymentStatus,
+  type Prisma,
+  Role,
+} from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { QPAY_POLL_INTERVAL_MS, QPAY_POLL_LIMIT, QPAY_POLL_QUEUE } from '../../queue/queue.constants.js';
 import { CasesService } from '../cases/cases.service.js';
+import { PAYMENT_KIND_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreatePaymentDto } from './dto/create-payment.dto.js';
 import type { QueryPaymentsDto } from './dto/query-payments.dto.js';
@@ -30,6 +40,7 @@ export class PaymentsService {
     private readonly cases: CasesService,
     private readonly qpay: QpayClientService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
     @InjectQueue(QPAY_POLL_QUEUE) private readonly pollQueue: Queue,
   ) {}
 
@@ -171,10 +182,15 @@ export class PaymentsService {
    * shortcut.
    */
   async confirmPayment(paymentId: string, qpayPaymentId?: string) {
+    let alreadyPaid = false;
+
     const confirmed = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({ where: { id: paymentId }, include: { case: { include: { contract: true } } } });
       if (!payment) throw new NotFoundException(`Payment ${paymentId} not found`);
-      if (payment.status === PaymentStatus.PAID) return payment;
+      if (payment.status === PaymentStatus.PAID) {
+        alreadyPaid = true;
+        return payment;
+      }
       if (payment.status !== PaymentStatus.PENDING) {
         throw new BadRequestException(`${payment.status} төлөвт байгаа төлбөрийг баталгаажуулах боломжгүй`);
       }
@@ -196,6 +212,30 @@ export class PaymentsService {
     });
 
     await this.pollQueue.removeJobScheduler(paymentId).catch(() => undefined);
+
+    // §16 "Төлбөр баталгаажсан". Idempotent callers (webhook + polling both
+    // fire) must not notify twice, hence the `alreadyPaid` short-circuit.
+    if (!alreadyPaid) {
+      const withCase = await this.prisma.payment.findUnique({
+        where: { id: paymentId },
+        select: { kind: true, amountMnt: true, paidAt: true, case: { select: { id: true, code: true, userId: true } } },
+      });
+      if (withCase) {
+        await this.notifications.dispatch({
+          event: NotificationEvent.PAYMENT_CONFIRMED,
+          userIds: [withCase.case.userId],
+          caseId: withCase.case.id,
+          context: {
+            caseId: withCase.case.id,
+            caseCode: withCase.case.code,
+            paymentKindName: PAYMENT_KIND_LABELS[withCase.kind],
+            amount: formatAmountMn(withCase.amountMnt),
+            paidAt: formatDateMn(withCase.paidAt),
+          },
+        });
+      }
+    }
+
     return confirmed;
   }
 

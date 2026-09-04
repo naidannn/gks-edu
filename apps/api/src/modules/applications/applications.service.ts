@@ -7,6 +7,7 @@ import {
   CaseStage,
   DocStage,
   Necessity,
+  NotificationEvent,
   type Prisma,
   ServiceType,
 } from '../../prisma/client.js';
@@ -14,6 +15,8 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { CaseDocumentsService } from '../documents/case-documents.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
+import { APPLICATION_DECISION_LABELS, formatDateMn } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { assertApplicationTransition } from './application-status.js';
 import type {
   CreateApplicationDto,
@@ -45,6 +48,7 @@ export class ApplicationsService {
     private readonly prisma: PrismaService,
     private readonly cases: CasesService,
     private readonly documents: CaseDocumentsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Reading ────────────────────────────────────────────────────────────────
@@ -239,6 +243,27 @@ export class ApplicationsService {
       data: { status: ApplicationStatus.ADDITIONAL_DOCS_REQUESTED, note: dto.note ?? undefined },
       include: APPLICATION_INCLUDE,
     });
+
+    // §16 "Нэмэлт материал шаардсан". `createManual` returns bare rows, so the
+    // human-readable names come from the templates the caller named.
+    const templates = await this.prisma.documentTemplate.findMany({
+      where: { id: { in: dto.templateIds } },
+      select: { id: true, nameMn: true },
+    });
+
+    await this.notifications.dispatch({
+      event: NotificationEvent.APPLICATION_EXTRA_DOCS,
+      userIds: [updated.case.userId],
+      caseId: updated.caseId,
+      context: {
+        caseId: updated.caseId,
+        caseCode: updated.case.code,
+        universityName: updated.university?.nameMn ?? 'Сургууль',
+        requestedDocs: templates.map((template) => `• ${template.nameMn}`).join('\n'),
+        dueDate: formatDateMn(dto.dueAt),
+      },
+    });
+
     return { application: updated, documents: created };
   }
 
@@ -282,6 +307,21 @@ export class ApplicationsService {
     if (stage) {
       await this.cases.applyDomainTransition(application.caseId, stage, actor.id, `Мэдүүлгийн ${round}-р шатны хариу: ${dto.decision}`);
     }
+
+    // §16 "Сургуулийн хариу ирсэн".
+    await this.notifications.dispatch({
+      event: NotificationEvent.APPLICATION_RESULT,
+      userIds: [updated.case.userId],
+      caseId: updated.caseId,
+      context: {
+        caseId: updated.caseId,
+        caseCode: updated.case.code,
+        universityName: updated.university?.nameMn ?? 'Сургууль',
+        decisionName: APPLICATION_DECISION_LABELS[dto.decision],
+        roundName: isGks ? `${round}-р` : 'Элсэлтийн',
+        resultNote: dto.note ?? '',
+      },
+    });
 
     return updated;
   }

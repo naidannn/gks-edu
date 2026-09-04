@@ -365,7 +365,11 @@ export class ClientsService {
     };
 
     for (const row of missing) read(row.caseId).missingDocuments = row._count._all;
-    for (const row of tasks) read(row.caseId).overdueTasks = row._count._all;
+    // `WorkTask.caseId` is nullable since 1B-05 (lead follow-ups); the query
+    // above filters to these cases, so the null branch is unreachable.
+    for (const row of tasks) {
+      if (row.caseId) read(row.caseId).overdueTasks = row._count._all;
+    }
     for (const row of payments) {
       const entry = read(row.caseId);
       entry.pendingPayments = row._count._all;
@@ -623,6 +627,46 @@ export class ClientsService {
         '18 нас хүрээгүй тул төлөөлөн гэрээ байгуулах хүний овог, нэр, регистрийн дугаарыг заавал бөглөнө',
       );
     }
+  }
+
+  /**
+   * 1B-16 — a soft duplicate check the register-number unique index cannot do.
+   *
+   * Two siblings legitimately share a phone, so a phone match is a *warning*
+   * the consultant reads before saving, never a rejection. The register number
+   * is the hard rule and stays a 409 in {@link assertRegisterFree}.
+   */
+  async checkDuplicates(params: { phone?: string; registerNumber?: string; excludeClientId?: string }) {
+    const phone = params.phone?.replace(/\D/g, '').slice(-8);
+
+    const [byRegister, byPhone] = await Promise.all([
+      params.registerNumber
+        ? this.prisma.client.findUnique({
+            where: { registerNumber: params.registerNumber },
+            select: { id: true, code: true, lastName: true, firstName: true, phone: true },
+          })
+        : Promise.resolve(null),
+      phone
+        ? this.prisma.client.findMany({
+            where: {
+              OR: [{ phone: { endsWith: phone } }, { phoneAlt: { endsWith: phone } }],
+              ...(params.excludeClientId ? { id: { not: params.excludeClientId } } : {}),
+            },
+            select: { id: true, code: true, lastName: true, firstName: true, phone: true, status: true },
+            take: 5,
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const registerClash =
+      byRegister && byRegister.id !== params.excludeClientId ? byRegister : null;
+
+    return {
+      registerClash,
+      phoneMatches: byPhone.filter((row) => row.id !== registerClash?.id),
+      /** True when saving would be refused outright. */
+      blocked: Boolean(registerClash),
+    };
   }
 
   private async assertRegisterFree(registerNumber: string, ownClientId?: string): Promise<void> {

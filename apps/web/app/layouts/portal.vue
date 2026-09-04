@@ -97,6 +97,9 @@ async function onLogout() {
           <DsIcon name="menu" :size="20" />
         </button>
         <span class="gks-portal__topbar-title">{{ currentSection }}</span>
+        <ClientOnly>
+          <NotificationsBell class="gks-portal__bell" />
+        </ClientOnly>
         <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-portal__crm-link">CRM</NuxtLink>
       </header>
 
@@ -243,7 +246,8 @@ async function onLogout() {
   text-transform: uppercase;
   color: var(--text-subtle);
 }
-.gks-portal__crm-link { margin-left: auto; font-size: var(--fs-caption); color: var(--text-muted); text-decoration: none; }
+.gks-portal__bell { margin-left: auto; }
+.gks-portal__crm-link { font-size: var(--fs-caption); color: var(--text-muted); text-decoration: none; }
 .gks-portal__crm-link:hover { color: var(--brand-600); }
 
 .gks-portal__main {

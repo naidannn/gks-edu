@@ -7,6 +7,7 @@
  */
 import type {
   AgentContractStatus,
+  BannerPlacement,
   ApplicationDecision,
   ApplicationStatus,
   AppointmentStatus,
@@ -18,6 +19,7 @@ import type {
   DocStage,
   DocumentStatus,
   EducationLevel,
+  FaqCategory,
   Gender,
   GuarantorRelation,
   GuarantorType,
@@ -29,11 +31,13 @@ import type {
   Necessity,
   PaymentKind,
   PaymentStatus,
+  PostStatus,
   PrepaymentMode,
   ProgramLevel,
   SchoolInvoiceStatus,
   ServiceType,
   UniversityType,
+  UserRole,
   VisaStatus,
   VisaType,
   WorkTaskStatus,
@@ -83,6 +87,43 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   MASTER: 'Магистр',
   PHD: 'Доктор',
   GKS_SCHOLARSHIP: 'GKS тэтгэлэг',
+};
+
+export const FAQ_CATEGORY_LABELS: Record<FaqCategory, string> = {
+  GENERAL: 'Ерөнхий',
+  SERVICES: 'Үйлчилгээ',
+  PRICING: 'Үнэ, төлбөр',
+  DOCUMENTS: 'Материал, бичиг баримт',
+  VISA: 'Виз',
+  LANGUAGE_CENTER: 'Хэлний сургалтын төв',
+};
+
+/** The order the FAQ page and its admin screen list categories in. */
+export const FAQ_CATEGORY_ORDER: FaqCategory[] = [
+  'GENERAL',
+  'SERVICES',
+  'PRICING',
+  'DOCUMENTS',
+  'VISA',
+  'LANGUAGE_CENTER',
+];
+
+export const POST_STATUS_LABELS: Record<PostStatus, string> = {
+  DRAFT: 'Ноорог',
+  PUBLISHED: 'Нийтлэгдсэн',
+};
+
+export const BANNER_PLACEMENT_LABELS: Record<BannerPlacement, string> = {
+  SITE_TOP: 'Сайтын дээд туузан зурвас',
+  HOME_HERO: 'Нүүр хуудасны карт',
+};
+
+/** Staff-facing role names (1G-12); shared by the admin shell and the reports. */
+export const ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN: 'Админ',
+  CONSULTANT: 'Зөвлөх',
+  DOC_OFFICER: 'Баримт хариуцагч',
+  USER: 'Хэрэглэгч',
 };
 
 export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {

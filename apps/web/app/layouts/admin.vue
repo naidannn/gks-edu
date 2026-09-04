@@ -12,6 +12,11 @@ interface AdminNavItem {
   to: string;
   label: string;
   icon: string;
+  /**
+   * Highlight on this exact path only. Needed where a sibling route lives
+   * under the same prefix — `/admin/consultations` vs `.../board`.
+   */
+  exact?: boolean;
 }
 
 interface AdminNavGroup {
@@ -36,7 +41,8 @@ const NAV: AdminNavGroup[] = [
     title: null,
     items: [
       { to: '/admin', label: 'Хяналтын самбар', icon: 'layout-dashboard' },
-      { to: '/admin/consultations', label: 'Зөвлөгөө хүсэлт', icon: 'message-square' },
+      { to: '/admin/consultations', label: 'Зөвлөгөө хүсэлт', icon: 'message-square', exact: true },
+      { to: '/admin/consultations/board', label: 'Борлуулалтын самбар', icon: 'kanban' },
       { to: '/admin/clients', label: 'Үйлчлүүлэгч', icon: 'users' },
       { to: '/admin/work-tasks', label: 'Ажил & хуваарь', icon: 'list-checks' },
     ],
@@ -58,34 +64,37 @@ const NAV: AdminNavGroup[] = [
     ],
   },
   {
+    title: 'Тайлан',
+    collapsible: true,
+    items: [{ to: '/admin/reports', label: 'Удирдлагын тайлан', icon: 'chart-column' }],
+  },
+  {
     title: 'Тохиргоо',
     collapsible: true,
     items: [
       { to: '/admin/settings/pricing', label: 'Үнийн тохиргоо', icon: 'settings' },
       { to: '/admin/settings/contract-templates', label: 'Гэрээний загвар', icon: 'file-cog' },
       { to: '/admin/settings/document-templates', label: 'Материалын загвар', icon: 'folder-cog' },
+      { to: '/admin/settings/notifications', label: 'Мэдэгдлийн загвар', icon: 'bell-ring' },
+      { to: '/admin/content', label: 'Контент', icon: 'newspaper' },
+      { to: '/admin/settings/staff', label: 'Ажилтан', icon: 'user-cog' },
     ],
   },
 ];
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Админ',
-  CONSULTANT: 'Зөвлөх',
-  DOC_OFFICER: 'Баримт хариуцагч',
-  USER: 'Хэрэглэгч',
-};
-
 const sidebarOpen = ref(false);
 watch(() => route.fullPath, () => { sidebarOpen.value = false; });
 
-function isActive(to: string): boolean {
+function isActive(to: string, exact = false): boolean {
   // '/admin' itself must not light up for every '/admin/*' sub-route.
-  if (to === '/admin') return route.path === '/admin';
+  if (exact || to === '/admin') return route.path === to;
   return route.path === to || route.path.startsWith(`${to}/`);
 }
 
 const allItems = computed(() => NAV.flatMap((group) => group.items));
-const currentSection = computed(() => allItems.value.find((item) => isActive(item.to))?.label ?? 'CRM');
+const currentSection = computed(
+  () => allItems.value.find((item) => isActive(item.to, item.exact))?.label ?? 'CRM',
+);
 
 /**
  * A folded group opens itself when the page inside it is the one on screen,
@@ -96,7 +105,7 @@ watch(
   () => route.path,
   () => {
     for (const group of NAV) {
-      if (group.title && group.items.some((item) => isActive(item.to))) openGroups.value.add(group.title);
+      if (group.title && group.items.some((item) => isActive(item.to, item.exact))) openGroups.value.add(group.title);
     }
   },
   { immediate: true },
@@ -152,7 +161,7 @@ async function onLogout() {
               :key="item.to"
               :to="item.to"
               class="gks-admin__nav-link"
-              :class="{ 'gks-admin__nav-link--active': isActive(item.to) }"
+              :class="{ 'gks-admin__nav-link--active': isActive(item.to, item.exact) }"
             >
               <DsIcon :name="item.icon" :size="18" />
               <span>{{ item.label }}</span>
@@ -176,7 +185,7 @@ async function onLogout() {
             </div>
             <div class="gks-admin__user-info">
               <p class="gks-admin__user-name">{{ auth.user?.name ?? auth.user?.email }}</p>
-              <p class="gks-admin__user-role">{{ ROLE_LABELS[auth.user?.role ?? ''] ?? auth.user?.role }}</p>
+              <p class="gks-admin__user-role">{{ auth.user?.role ? ROLE_LABELS[auth.user.role] : '' }}</p>
             </div>
             <button type="button" class="gks-admin__icon-btn" aria-label="Гарах" title="Гарах" @click="onLogout">
               <DsIcon name="log-out" :size="18" />
@@ -203,6 +212,9 @@ async function onLogout() {
           <DsIcon name="menu" :size="20" />
         </button>
         <span class="gks-admin__topbar-title">{{ currentSection }}</span>
+        <ClientOnly>
+          <NotificationsBell class="gks-admin__bell" />
+        </ClientOnly>
       </header>
 
       <main class="gks-admin__main">
@@ -378,6 +390,7 @@ async function onLogout() {
   border-bottom: var(--border-hair) solid var(--line-hairline);
 }
 .gks-admin__menu-btn { display: none; }
+.gks-admin__bell { margin-left: auto; }
 .gks-admin__topbar-title {
   font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);

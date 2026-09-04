@@ -3,6 +3,7 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user.js
 import { isStaff } from '../../common/constants/roles.js';
 import { DocumentStatus } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { softDeletePatch } from '../../prisma/soft-delete.js';
 import { StorageService } from '../../storage/storage.service.js';
 import { CaseDocumentsService } from './case-documents.service.js';
 
@@ -106,7 +107,7 @@ export class DocumentFilesService {
     if (!isStaff(actor.role) && file.caseDocument.status !== DocumentStatus.SUBMITTED) {
       throw new BadRequestException('Шалгагдаж эхэлсэн материалын файлыг устгах боломжгүй');
     }
-    return this.prisma.documentFile.update({ where: { id: fileId }, data: { deletedAt: new Date() } });
+    return this.prisma.documentFile.update({ where: { id: fileId }, data: softDeletePatch() });
   }
 }
 

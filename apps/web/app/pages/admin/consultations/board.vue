@@ -1,0 +1,207 @@
+<script setup lang="ts">
+import type { LeadListItem, LeadStage } from '@gks/shared';
+import { ApiError } from '~/composables/useApi';
+import { useAuthStore } from '~/stores/auth';
+
+/**
+ * 1B-06 — the sales board. One column per `LeadStage`, cards dragged between
+ * them.
+ *
+ * A drop calls `POST /leads/:id/transitions`, which is the same guarded move
+ * the detail page makes: the allowed-transition graph lives on the server
+ * (1B-02), so an illegal drag is refused and the card snaps back rather than
+ * the board inventing a shortcut through the funnel.
+ */
+definePageMeta({ middleware: 'staff', layout: 'admin' });
+useHead({ title: 'Борлуулалтын самбар · CRM' });
+
+/** `WON` and `LOST` close the funnel; they are shown, but at the end. */
+const COLUMNS: LeadStage[] = ['NEW', 'CONTACTED', 'CONSULTED', 'PROPOSAL_SENT', 'CONTRACT_PENDING', 'WON', 'LOST'];
+
+const api = useApi();
+const auth = useAuthStore();
+
+const leads = ref<LeadListItem[]>([]);
+const pending = ref(true);
+const errorMsg = ref<string | null>(null);
+const mineOnly = ref(false);
+const dragging = ref<string | null>(null);
+const dropTarget = ref<LeadStage | null>(null);
+
+async function load() {
+  pending.value = true;
+  errorMsg.value = null;
+  try {
+    // The board is a whole-funnel view; 200 covers the office's live pipeline
+    // without paging, and the list endpoint already excludes merged rows.
+    const response = await api.get<{ items: LeadListItem[] }>('/leads', {
+      query: { limit: 200, sort: 'updatedAt', order: 'desc' },
+    });
+    leads.value = response.items;
+  } catch {
+    errorMsg.value = 'Самбарыг ачаалж чадсангүй';
+  } finally {
+    pending.value = false;
+  }
+}
+onMounted(load);
+
+const visible = computed(() =>
+  mineOnly.value ? leads.value.filter((lead) => lead.assignedToId === auth.user?.id) : leads.value,
+);
+
+function column(stage: LeadStage): LeadListItem[] {
+  return visible.value.filter((lead) => lead.stage === stage);
+}
+
+function onDragStart(lead: LeadListItem) {
+  dragging.value = lead.id;
+}
+
+function onDragEnd() {
+  dragging.value = null;
+  dropTarget.value = null;
+}
+
+async function onDrop(stage: LeadStage) {
+  const id = dragging.value;
+  dropTarget.value = null;
+  dragging.value = null;
+  if (!id) return;
+
+  const lead = leads.value.find((row) => row.id === id);
+  if (!lead || lead.stage === stage) return;
+
+  const previous = lead.stage;
+  // Optimistic: the card follows the cursor, and reverts if the server
+  // refuses the transition.
+  lead.stage = stage;
+  try {
+    await api.post(`/leads/${id}/transitions`, { stage });
+  } catch (error) {
+    lead.stage = previous;
+    errorMsg.value = error instanceof ApiError ? error.message : 'Үе шатыг өөрчилж чадсангүй';
+  }
+}
+
+function isOverdue(lead: LeadListItem): boolean {
+  return Boolean(lead.nextContactAt && new Date(lead.nextContactAt) <= new Date());
+}
+
+function formatDate(value: string | null): string {
+  return value ? new Date(value).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) : '—';
+}
+</script>
+
+<template>
+  <div class="gks-board">
+    <header class="gks-board__head">
+      <div>
+        <span class="gks-eyebrow">CRM</span>
+        <h1 class="gks-board__title">Борлуулалтын самбар</h1>
+      </div>
+      <div class="gks-board__actions">
+        <DsTag :selected="!mineOnly" clickable @click="mineOnly = false">Бүгд</DsTag>
+        <DsTag :selected="mineOnly" clickable @click="mineOnly = true">Надад оноогдсон</DsTag>
+        <DsButton variant="secondary" size="sm" icon-left="list" @click="navigateTo('/admin/consultations')">
+          Жагсаалт
+        </DsButton>
+      </div>
+    </header>
+
+    <p v-if="errorMsg" class="gks-board__error">{{ errorMsg }}</p>
+    <p v-if="pending" class="gks-board__note">Уншиж байна…</p>
+
+    <div v-else class="gks-board__columns">
+      <section
+        v-for="stage in COLUMNS"
+        :key="stage"
+        class="gks-board__col"
+        :class="{ 'gks-board__col--over': dropTarget === stage }"
+        @dragover.prevent="dropTarget = stage"
+        @dragleave="dropTarget === stage && (dropTarget = null)"
+        @drop.prevent="onDrop(stage)"
+      >
+        <header class="gks-board__col-head">
+          <span class="gks-board__col-title">{{ LEAD_STAGE_LABELS[stage] }}</span>
+          <span class="gks-board__col-count gks-tnum">{{ column(stage).length }}</span>
+        </header>
+
+        <p v-if="!column(stage).length" class="gks-board__col-empty">—</p>
+
+        <article
+          v-for="lead in column(stage)"
+          :key="lead.id"
+          class="gks-board__card"
+          :class="{ 'gks-board__card--dragging': dragging === lead.id }"
+          draggable="true"
+          @dragstart="onDragStart(lead)"
+          @dragend="onDragEnd"
+          @click="navigateTo(`/admin/consultations/${lead.id}`)"
+        >
+          <p class="gks-board__card-name">{{ lead.lastName }} {{ lead.firstName }}</p>
+          <p class="gks-board__card-meta gks-tnum">{{ lead.phone }}</p>
+          <div class="gks-board__card-foot">
+            <span class="gks-board__card-owner">{{ lead.assignedTo?.name ?? 'Хариуцагчгүй' }}</span>
+            <span
+              v-if="lead.nextContactAt"
+              class="gks-board__card-due gks-tnum"
+              :class="{ 'gks-board__card-due--overdue': isOverdue(lead) }"
+            >
+              {{ formatDate(lead.nextContactAt) }}
+            </span>
+          </div>
+        </article>
+      </section>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.gks-board { display: flex; flex-direction: column; gap: var(--sp-4); }
+.gks-board__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
+.gks-board__title { font-size: var(--fs-h3); font-weight: var(--fw-bold); margin-top: var(--sp-1); }
+.gks-board__actions { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.gks-board__error { color: var(--danger-600, #b00020); font-size: var(--fs-small); }
+.gks-board__note { color: var(--text-subtle); font-size: var(--fs-small); }
+
+.gks-board__columns {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 1fr);
+  gap: var(--sp-3);
+  overflow-x: auto;
+  padding-bottom: var(--sp-3);
+}
+
+.gks-board__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-page);
+  min-height: 220px;
+}
+.gks-board__col--over { border-color: var(--brand-600, #1f4e9c); background: color-mix(in oklab, var(--brand-600, #1f4e9c) 6%, var(--surface-page)); }
+
+.gks-board__col-head { display: flex; align-items: center; justify-content: space-between; }
+.gks-board__col-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-caps); color: var(--text-subtle); }
+.gks-board__col-count { font-size: var(--fs-micro); color: var(--text-subtle); }
+.gks-board__col-empty { color: var(--text-subtle); font-size: var(--fs-micro); text-align: center; padding: var(--sp-4) 0; }
+
+.gks-board__card {
+  padding: var(--sp-3);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  cursor: grab;
+}
+.gks-board__card:active { cursor: grabbing; }
+.gks-board__card--dragging { opacity: 0.4; }
+.gks-board__card-name { font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.gks-board__card-meta { font-size: var(--fs-micro); color: var(--text-subtle); }
+.gks-board__card-foot { display: flex; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 11px; color: var(--text-subtle); }
+.gks-board__card-due--overdue { color: var(--danger-600, #b00020); font-weight: var(--fw-semibold); }
+</style>

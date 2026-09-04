@@ -154,3 +154,13 @@ export interface CaseDetail extends CaseListItem {
   payments: PaymentItem[];
   transitions: CaseTransitionItem[];
 }
+
+/** 1A-10 — what the public service pages quote (`GET /pricing/public`). */
+export interface PublicServicePricing {
+  serviceType: ServiceType;
+  totalAmount: number;
+  prepaymentMode: PrepaymentMode;
+  prepaymentValue: number;
+  /** The first payment in ₮, with PERCENT modes already resolved. */
+  prepaymentAmount: number;
+}

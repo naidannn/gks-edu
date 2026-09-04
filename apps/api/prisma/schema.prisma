@@ -32,18 +32,24 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
+  id       String  @id @default(uuid()) @db.Uuid
   /// Null for a staff-created client who has not claimed a portal login yet (1B-14).
-  email     String?  @unique
+  email    String? @unique
   /// Null until the account is claimed — such a row cannot pass `login`.
-  password  String?
-  name      String?
+  password String?
+  name     String?
   /// Needed for SMS-OTP contract signing (1C-08) — collected at accept-contract time if unset.
-  phone     String?
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  phone    String?
+  role     Role    @default(USER)
+  isActive Boolean @default(true)
+
+  /// 1B-17 — invitation to claim a staff-created account. SHA-256 of the
+  /// emailed token; the raw value only ever exists in the invite link.
+  claimTokenHash      String?   @unique
+  claimTokenExpiresAt DateTime?
+  claimedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   refreshTokens     RefreshToken[]
   documents         Document[]
@@ -72,6 +78,10 @@ model User {
   officeAppointments  OfficeAppointment[]
   applicationResults  ApplicationResult[]
   invitations         Invitation[]
+
+  auditLogs               AuditLog[]
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
 
   @@index([createdAt])
   @@map("users")
@@ -386,15 +396,25 @@ model Lead {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  activities LeadActivity[]
+  activities    LeadActivity[]
+  workTasks     WorkTask[]
+  notifications Notification[]
   /// Set once staff convert this lead into a client (1B-10) — the lead row stays as history.
-  client     Client?
+  client        Client?
+
+  /// 1B-09 — set when this row was merged into another lead; kept as history.
+  mergedIntoId String?   @db.Uuid
+  mergedInto   Lead?     @relation("LeadMerge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
+  mergedFrom   Lead[]    @relation("LeadMerge")
+  mergedAt     DateTime?
 
   @@index([stage])
   @@index([assignedToId])
   @@index([source])
   @@index([createdAt])
   @@index([phone])
+  @@index([email])
+  @@index([assignedToId, nextContactAt])
   @@map("leads")
 }
 
@@ -731,6 +751,7 @@ model Case {
   invitation     Invitation?
   visaCase       VisaCase?
   departurePlan  DeparturePlan?
+  notifications  Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1125,6 +1146,8 @@ model DocumentReviewNote {
 
 /// Back-office work on a case (§6.4): translation, form filling, essays …
 enum WorkTaskType {
+  /// 1B-05 — a lead follow-up (call back, meeting, send an offer).
+  FOLLOW_UP
   TRANSLATION
   NOTARISATION
   FORM_FILLING
@@ -1144,10 +1167,14 @@ enum WorkTaskStatus {
   CANCELLED
 }
 
+/// Staff work item. Originally case-scoped (1D-10); 1B-05 added the
+/// lead-scoped follow-up, so exactly one of `caseId` / `leadId` is set.
 model WorkTask {
   id             String        @id @default(uuid()) @db.Uuid
-  caseId         String        @db.Uuid
-  case           Case          @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  caseId         String?       @db.Uuid
+  case           Case?         @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  leadId         String?       @db.Uuid
+  lead           Lead?         @relation(fields: [leadId], references: [id], onDelete: Cascade)
   /// Set when the work is about one document (a translation, typically).
   caseDocumentId String?       @db.Uuid
   caseDocument   CaseDocument? @relation(fields: [caseDocumentId], references: [id], onDelete: Cascade)
@@ -1169,6 +1196,7 @@ model WorkTask {
   updatedAt DateTime @updatedAt
 
   @@index([caseId])
+  @@index([leadId])
   @@index([assigneeId, status])
   @@index([status, dueAt])
   @@map("work_tasks")
@@ -1522,4 +1550,215 @@ model DepartureChecklistItem {
   @@unique([planId, templateCode])
   @@index([planId])
   @@map("departure_checklist_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Audit trail — 0-11 (ARCHITECTURE.md §11: "Бүх мэдрэмтгий үйлдэл AuditLog-д").
+//
+// One row per sensitive write: who, what, when, before/after. Written by
+// `AuditInterceptor` from the `@Audit()` decorator, so a route opts in rather
+// than every read flooding the table.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Null for system-generated actions (scheduled jobs, QPay callbacks).
+  actorId    String? @db.Uuid
+  actor      User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  /// Snapshot — the log must still read correctly after the user row is gone.
+  actorLabel String? @db.VarChar(160)
+
+  /// Dotted action name, e.g. `case.transition`, `contract.confirm`.
+  action   String  @db.VarChar(80)
+  /// Prisma model name the action targets, e.g. `Case`.
+  entity   String  @db.VarChar(60)
+  entityId String? @db.Uuid
+
+  before Json?
+  after  Json?
+
+  ip        String? @db.VarChar(64)
+  requestId String? @db.VarChar(64)
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1G — Notifications (gksedu.md §16, ARCHITECTURE.md §10).
+//
+// An event fires → the dispatcher looks up every active template for that
+// event → one `Notification` row per channel → the queue delivers it.
+// In-app is always produced; email/SMS only exist when a template for that
+// channel exists *and* the recipient has not switched the channel off.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The 16 automatic notifications of gksedu.md §16, plus the two staff-side
+/// triggers the office needs (`LEAD_CREATED` completes 1A-17).
+enum NotificationEvent {
+  // Materials (§6)
+  DOCUMENT_DEADLINE_NEAR
+  DOCUMENT_MISSING
+  DOCUMENT_REJECTED
+  DOCUMENT_FIX_REQUIRED
+  // Contract & payment (§5)
+  CONTRACT_CONFIRMED
+  PAYMENT_DUE
+  PAYMENT_CONFIRMED
+  // Application (§7)
+  APPLICATION_RESULT
+  APPLICATION_EXTRA_DOCS
+  INVITATION_RECEIVED
+  // Visa (§8)
+  VISA_STAGE_STARTED
+  VISA_APPOINTMENT_DUE
+  VISA_RESULT
+  VISA_RENEWAL_NEAR
+  // Departure (§10)
+  DEPARTURE_NEAR
+  FLIGHT_INFO_UPDATED
+  // Staff-side
+  LEAD_CREATED
+  LEAD_FOLLOW_UP_DUE
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  /// Reserved — no provider wired yet (ARCHITECTURE.md §10 "дараа нь push").
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  /// Recipient turned the channel off, or has no address for it.
+  SKIPPED
+}
+
+/// Mongolian body text per event × channel. Editable by ADMIN (1G-06).
+model NotificationTemplate {
+  id String @id @default(uuid()) @db.Uuid
+
+  event   NotificationEvent
+  channel NotificationChannel
+
+  /// `{{placeholder}}` interpolation against the dispatcher's context.
+  titleMn String  @db.VarChar(200)
+  bodyMn  String
+  /// In-app/email deep link, e.g. `/app/cases/{{caseId}}/documents`.
+  linkMn  String? @db.VarChar(300)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notifications Notification[]
+
+  @@unique([event, channel])
+  @@map("notification_templates")
+}
+
+/// One delivery of one event to one recipient over one channel.
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  event   NotificationEvent
+  channel NotificationChannel
+
+  templateId String?               @db.Uuid
+  template   NotificationTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  /// Rendered at dispatch time — editing a template never rewrites history.
+  title String  @db.VarChar(200)
+  body  String
+  link  String? @db.VarChar(300)
+
+  /// Context the templates interpolated; also what the UI groups by.
+  caseId String? @db.Uuid
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  leadId String? @db.Uuid
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  meta   Json    @default("{}")
+
+  status       NotificationStatus @default(PENDING)
+  sentAt       DateTime?
+  readAt       DateTime?
+  failedReason String?
+  attempts     Int                @default(0)
+
+  /// Idempotency for scheduled sweeps: `event:channel:userId:subject`.
+  /// A daily job may run many times and still notify once.
+  dedupeKey String? @unique @db.VarChar(200)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, readAt, createdAt])
+  @@index([status, channel])
+  @@index([event, createdAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+/// Per-user channel switches. A missing row means "on"; in-app can never be
+/// switched off, so it is never stored.
+model NotificationPreference {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  channel NotificationChannel
+  enabled Boolean             @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, channel])
+  @@map("notification_preferences")
+}
+
+/// 1G-14 — a dated promo strip on the public site (an intake deadline, a new
+/// scholarship round). Deliberately minimal: one line of text, one link, a
+/// window. Anything longer is a `Post`.
+enum BannerPlacement {
+  /// Full-width strip above the site header.
+  SITE_TOP
+  /// Card slot on the landing page, under the hero.
+  HOME_HERO
+}
+
+model Banner {
+  id String @id @default(uuid()) @db.Uuid
+
+  placement BannerPlacement @default(SITE_TOP)
+  titleMn   String          @db.VarChar(160)
+  bodyMn    String?         @db.VarChar(400)
+  linkUrl   String?         @db.VarChar(300)
+  linkLabel String?         @db.VarChar(60)
+
+  /// Null on either side means "open-ended".
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  isPublished Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([placement, isPublished, sortOrder])
+  @@map("banners")
 }

@@ -3,9 +3,19 @@ import { paginate } from '../../common/dto/pagination.dto.js';
 import { OtpService } from '../../sms/otp.service.js';
 import { StorageService } from '../../storage/storage.service.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { CaseStage, ContractStatus, ContractType, type Prisma, Role, type ServiceType } from '../../prisma/client.js';
+import {
+  CaseStage,
+  ContractStatus,
+  ContractType,
+  NotificationEvent,
+  type Prisma,
+  Role,
+  type ServiceType,
+} from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
+import { SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { ContractPdfService } from './contract-pdf.service.js';
 import { ADULT_AGE, ageOn } from '../clients/dto/client-fields.js';
@@ -35,6 +45,7 @@ export class ContractsService {
     private readonly pdf: ContractPdfService,
     private readonly storage: StorageService,
     private readonly otp: OtpService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Templates (1C-06) ────────────────────────────────────────────────────
@@ -267,8 +278,8 @@ export class ContractsService {
     });
     const { path: pdfPath } = await this.storage.upload({ caseId: contract.caseId, docCode: 'CONTRACT_PDF', buffer: pdfBuffer });
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.contract.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.contract.update({
         where: { id: contract.id },
         data: {
           status: ContractStatus.SIGNED,
@@ -279,8 +290,25 @@ export class ContractsService {
         },
       });
       await this.cases.applySystemTransition(tx, contract.caseId, CaseStage.CONTRACT_SIGNED);
-      return updated;
+      return row;
     });
+
+    // §16 "Гэрээ баталгаажсан" — outside the transaction so a queue hiccup
+    // cannot roll back a signed contract (1G-02).
+    await this.notifications.dispatch({
+      event: NotificationEvent.CONTRACT_CONFIRMED,
+      userIds: [full.case.userId],
+      caseId: full.caseId,
+      context: {
+        caseId: full.caseId,
+        caseCode: full.case.code,
+        // There is no separate contract number — the case code identifies it (§5.4).
+        contractNumber: full.case.code,
+        serviceName: SERVICE_TYPE_LABELS[full.case.serviceType],
+      },
+    });
+
+    return updated;
   }
 
   private assertElectronicSendable(contract: { type: ContractType; status: ContractStatus }): void {

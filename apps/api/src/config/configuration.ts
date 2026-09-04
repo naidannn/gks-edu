@@ -25,6 +25,10 @@ export interface AppConfig {
   sms: {
     /** §18 question 10 — the real Mongolian gateway is not chosen yet; `console` logs instead of sending. */
     provider: 'console';
+    /** 1G-04 cost control: how many notification SMS one recipient may get per day. */
+    dailyLimitPerUser: number;
+    /** 1G-04 cost control: the whole platform's daily ceiling. */
+    dailyLimitGlobal: number;
   };
   fx: {
     /**
@@ -36,6 +40,16 @@ export interface AppConfig {
     ratesUrl: string;
     /** Used when the feed is unreachable and the table is still empty. */
     fallbackKrwRate: number;
+  };
+  notifications: {
+    /** 1G-03 — Resend API key. Empty means "log the email instead of sending". */
+    resendApiKey: string;
+    /** From-address on every outgoing mail. */
+    fromEmail: string;
+    /** Base URL the `{{link}}` placeholders resolve against. */
+    appUrl: string;
+    /** Where staff-facing notifications (`LEAD_CREATED`) go when nobody is assigned. */
+    staffFallbackEmail?: string;
   };
   storage: {
     /** `local` writes to disk; `supabase` needs SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (0-08). */
@@ -76,10 +90,18 @@ export const configuration = (): AppConfig => ({
   },
   sms: {
     provider: 'console',
+    dailyLimitPerUser: Number.parseInt(process.env.SMS_DAILY_LIMIT_PER_USER ?? '3', 10),
+    dailyLimitGlobal: Number.parseInt(process.env.SMS_DAILY_LIMIT_GLOBAL ?? '500', 10),
   },
   fx: {
     ratesUrl: process.env.FX_RATES_URL ?? 'https://monxansh.appspot.com/xansh.json?currency=KRW',
     fallbackKrwRate: Number.parseFloat(process.env.FX_FALLBACK_KRW_RATE ?? '2.65'),
+  },
+  notifications: {
+    resendApiKey: process.env.RESEND_API_KEY ?? '',
+    fromEmail: process.env.NOTIFICATION_FROM_EMAIL ?? 'GKSedu <noreply@gksedu.mn>',
+    appUrl: process.env.APP_PUBLIC_URL ?? 'http://localhost:3000',
+    staffFallbackEmail: process.env.NOTIFICATION_STAFF_EMAIL,
   },
   storage: {
     driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',

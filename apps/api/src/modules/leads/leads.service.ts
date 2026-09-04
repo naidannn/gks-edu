@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
-import { LeadActivityType, LeadSource, LeadStage, Prisma } from '../../prisma/client.js';
+import { LeadActivityType, LeadSource, LeadStage, NotificationEvent, Prisma, type Role, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { LEAD_SOURCE_LABELS, SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import type { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
 import type { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
@@ -54,7 +56,10 @@ const STAFF_LIST_FIELDS = {
 export class LeadsService {
   private readonly logger = new Logger(LeadsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /**
    * Consultation request from the public website (1A-15).
@@ -114,11 +119,55 @@ export class LeadsService {
           },
         },
       },
-      select: { id: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        email: true,
+        source: true,
+        interestedServices: true,
+      },
     });
 
-    // 1A-17 will hang the staff notification off this point once the queue exists.
+    await this.notifyStaffOfNewLead(lead);
     return { id: lead.id, merged: false };
+  }
+
+  /**
+   * 1A-17 — every consultant hears about a new enquiry. There is no assignee
+   * yet at this point (round-robin runs later), so the whole desk is notified;
+   * that is also what the office asked for: first to call, wins.
+   */
+  private async notifyStaffOfNewLead(lead: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string | null;
+    source: LeadSource;
+    interestedServices: ServiceType[];
+  }): Promise<void> {
+    const staff = await this.prisma.user.findMany({
+      where: { isActive: true, role: { in: STAFF_ROLES as unknown as Role[] } },
+      select: { id: true },
+    });
+    if (!staff.length) return;
+
+    await this.notifications.dispatch({
+      event: NotificationEvent.LEAD_CREATED,
+      userIds: staff.map((member) => member.id),
+      leadId: lead.id,
+      context: {
+        leadId: lead.id,
+        leadName: `${lead.lastName} ${lead.firstName}`.trim(),
+        leadPhone: lead.phone,
+        leadEmail: lead.email,
+        sourceName: LEAD_SOURCE_LABELS[lead.source],
+        interestedServices:
+          lead.interestedServices.map((service) => SERVICE_TYPE_LABELS[service]).join(', ') || 'Тодорхойгүй',
+      },
+    });
   }
 
   // ─── Staff CRM (1B-01) ────────────────────────────────────────────────────
@@ -148,12 +197,13 @@ export class LeadsService {
     );
 
     const [byStageRaw, total, unassigned, mineOpen, newLast7Days, recent] = await this.prisma.$transaction([
-      this.prisma.lead.groupBy({ by: ['stage'], _count: { _all: true } }),
-      this.prisma.lead.count(),
-      this.prisma.lead.count({ where: { assignedToId: null } }),
-      this.prisma.lead.count({ where: { assignedToId: actorId, stage: { in: openStages } } }),
-      this.prisma.lead.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.prisma.lead.groupBy({ by: ['stage'], where: { mergedIntoId: null }, _count: { _all: true } }),
+      this.prisma.lead.count({ where: { mergedIntoId: null } }),
+      this.prisma.lead.count({ where: { assignedToId: null, mergedIntoId: null } }),
+      this.prisma.lead.count({ where: { assignedToId: actorId, stage: { in: openStages }, mergedIntoId: null } }),
+      this.prisma.lead.count({ where: { createdAt: { gte: sevenDaysAgo }, mergedIntoId: null } }),
       this.prisma.lead.findMany({
+        where: { mergedIntoId: null },
         select: STAFF_LIST_FIELDS,
         orderBy: { createdAt: 'desc' },
         take: 5,
@@ -199,6 +249,134 @@ export class LeadsService {
         ...(dto.email ? { email: dto.email.trim().toLowerCase() } : {}),
         ...(dto.nextContactAt ? { nextContactAt: new Date(dto.nextContactAt) } : {}),
       },
+    });
+  }
+
+  // ─── Duplicate detection and merge (1B-09) ────────────────────────────────
+
+  /**
+   * Leads that look like the same person as `id`: same normalised phone, or
+   * same email. Name similarity is deliberately not used — Mongolian given
+   * names repeat often enough that it would flag strangers as duplicates.
+   */
+  async findDuplicates(id: string) {
+    const lead = await this.getOrThrow(id);
+
+    const matches = await this.prisma.lead.findMany({
+      where: {
+        id: { not: id },
+        mergedIntoId: null,
+        OR: [{ phone: lead.phone }, ...(lead.email ? [{ email: lead.email }] : [])],
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        email: true,
+        stage: true,
+        source: true,
+        createdAt: true,
+        assignedTo: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return matches.map((match) => ({
+      ...match,
+      matchedOn: [
+        ...(match.phone === lead.phone ? ['phone'] : []),
+        ...(lead.email && match.email === lead.email ? ['email'] : []),
+      ],
+    }));
+  }
+
+  /** Every open duplicate cluster, for the CRM's "давхардал" screen. */
+  async duplicateClusters() {
+    const rows = await this.prisma.lead.groupBy({
+      by: ['phone'],
+      where: { mergedIntoId: null },
+      _count: { _all: true },
+      having: { phone: { _count: { gt: 1 } } },
+    });
+    if (!rows.length) return [];
+
+    const leads = await this.prisma.lead.findMany({
+      where: { phone: { in: rows.map((row) => row.phone) }, mergedIntoId: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        email: true,
+        stage: true,
+        source: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const byPhone = new Map<string, typeof leads>();
+    for (const lead of leads) {
+      const bucket = byPhone.get(lead.phone) ?? [];
+      bucket.push(lead);
+      byPhone.set(lead.phone, bucket);
+    }
+
+    return [...byPhone.entries()].map(([phone, items]) => ({ phone, count: items.length, leads: items }));
+  }
+
+  /**
+   * Folds `sourceId` into `targetId`. The source row is kept — a merged lead
+   * still explains where a client came from — but it is marked and drops out
+   * of every list, and its activities move to the surviving lead so the
+   * timeline stays whole.
+   *
+   * Fields are only copied where the target is empty: the newest submission is
+   * not automatically the most accurate, and the consultant chose the target.
+   */
+  async merge(targetId: string, sourceId: string, actorId: string) {
+    if (targetId === sourceId) throw new BadRequestException('Сэжмийг өөрт нь нэгтгэх боломжгүй');
+
+    const [target, source] = await Promise.all([this.getOrThrow(targetId), this.getOrThrow(sourceId)]);
+    if (source.mergedIntoId) throw new BadRequestException('Энэ сэжим аль хэдийн нэгтгэгдсэн байна');
+    if (target.mergedIntoId) throw new BadRequestException('Хүлээн авагч сэжим өөрөө нэгтгэгдсэн байна');
+
+    const fill: Prisma.LeadUpdateInput = {
+      ...(target.email ? {} : { email: source.email }),
+      ...(target.age ? {} : { age: source.age }),
+      ...(target.educationLevel ? {} : { educationLevel: source.educationLevel }),
+      ...(target.gpa ? {} : { gpa: source.gpa }),
+      ...(target.koreanLevel ? {} : { koreanLevel: source.koreanLevel }),
+      ...(target.englishLevel ? {} : { englishLevel: source.englishLevel }),
+      ...(target.interestedMajor ? {} : { interestedMajor: source.interestedMajor }),
+      ...(target.assignedToId ? {} : { assignedTo: source.assignedToId ? { connect: { id: source.assignedToId } } : undefined }),
+      interestedServices: [...new Set([...target.interestedServices, ...source.interestedServices])],
+      interestedUniversityIds: [...new Set([...target.interestedUniversityIds, ...source.interestedUniversityIds])],
+      note: [target.note, source.note].filter(Boolean).join('\n---\n') || null,
+    };
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } });
+
+      const merged = await tx.lead.update({ where: { id: targetId }, data: fill });
+
+      await tx.lead.update({
+        where: { id: sourceId },
+        data: { mergedIntoId: targetId, mergedAt: new Date(), stage: LeadStage.LOST, lostReason: 'Давхардсан — нэгтгэсэн' },
+      });
+
+      await tx.leadActivity.create({
+        data: {
+          leadId: targetId,
+          type: LeadActivityType.NOTE,
+          body: `Давхардсан сэжим нэгтгэлээ (${source.lastName} ${source.firstName}, ${source.phone})`,
+          meta: { mergedFromId: sourceId } satisfies Prisma.InputJsonObject,
+          actorId,
+        },
+      });
+
+      return merged;
     });
   }
 
@@ -353,7 +531,9 @@ export class LeadsService {
   }
 
   private buildStaffWhere(query: QueryLeadsDto): Prisma.LeadWhereInput {
-    const where: Prisma.LeadWhereInput = {};
+    // A lead folded into another (1B-09) stays in the database as history but
+    // never appears in a working list again.
+    const where: Prisma.LeadWhereInput = { mergedIntoId: null };
 
     if (query.q) {
       const contains = { contains: query.q, mode: 'insensitive' } as const;

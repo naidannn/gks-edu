@@ -4,7 +4,6 @@ import { hash } from 'bcryptjs';
 import { createHash } from 'node:crypto';
 import {
   BalanceTrigger,
-  CaseStage,
   DocStage,
   EducationLevel,
   GuarantorRelation,
@@ -16,6 +15,8 @@ import {
   Role,
   ServiceType,
 } from '../src/generated/prisma/client.js';
+import { buildCaseFlowDefinitions } from '../src/modules/cases/case-flow.js';
+import { NOTIFICATION_TEMPLATES } from '../src/modules/notifications/notification-templates.data.js';
 
 loadEnv({ path: ['.env', '../../.env'], quiet: true });
 
@@ -38,97 +39,6 @@ function pseudoEmbed(text: string): number[] {
 
   const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0)) || 1;
   return vector.map((value) => value / magnitude);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 1C-04 — per-service stage graph, stored as `CaseFlowDefinition` rows (data,
-// not a hardcoded map) because the regular-brokerage and GKS-scholarship
-// families order BALANCE_PAID differently around the visa step (§9).
-// ─────────────────────────────────────────────────────────────────────────────
-
-const REGULAR_BASE: CaseStage[] = [
-  CaseStage.CONTRACT_DRAFT,
-  CaseStage.CONTRACT_SIGNED,
-  CaseStage.PREPAYMENT_PAID,
-  CaseStage.DOCUMENTS,
-  CaseStage.APPLICATION_SUBMITTED,
-  CaseStage.ADMITTED,
-  CaseStage.TUITION_INVOICED,
-  CaseStage.INVITATION_RECEIVED,
-  CaseStage.VISA,
-  CaseStage.VISA_APPROVED,
-  CaseStage.BALANCE_PAID,
-];
-
-const TAIL = [CaseStage.PRE_DEPARTURE, CaseStage.DEPARTED, CaseStage.COMPLETED];
-
-/** Case-stage sequence per service (ARCHITECTURE.md §5). */
-const FLOWS: Record<ServiceType, CaseStage[]> = {
-  [ServiceType.LANGUAGE_PREP]: [...REGULAR_BASE, CaseStage.COLLATERAL_CONTRACT, ...TAIL],
-  [ServiceType.BACHELOR]: [...REGULAR_BASE, ...TAIL],
-  [ServiceType.MASTER]: [...REGULAR_BASE, ...TAIL],
-  [ServiceType.PHD]: [...REGULAR_BASE, ...TAIL],
-  [ServiceType.GKS_SCHOLARSHIP]: [
-    CaseStage.CONTRACT_DRAFT,
-    CaseStage.CONTRACT_SIGNED,
-    CaseStage.PREPAYMENT_PAID,
-    CaseStage.DOCUMENTS,
-    CaseStage.APPLICATION_SUBMITTED,
-    CaseStage.GKS_ROUND1_PASSED,
-    CaseStage.GKS_ROUND2_PASSED,
-    CaseStage.BALANCE_PAID,
-    CaseStage.VISA,
-    CaseStage.VISA_APPROVED,
-    ...TAIL,
-  ],
-};
-
-/** Only `PaymentsService.confirmPayment` / `ContractsService.sign` may make these — never a manual staff click. */
-const SYSTEM_ONLY_TARGETS = new Set<CaseStage>([CaseStage.CONTRACT_SIGNED, CaseStage.PREPAYMENT_PAID, CaseStage.BALANCE_PAID]);
-const ESCAPE_STAGES = [CaseStage.ON_HOLD, CaseStage.CANCELLED, CaseStage.REJECTED];
-const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT];
-
-function buildCaseFlowDefinitions(): Prisma.CaseFlowDefinitionCreateManyInput[] {
-  const rows: Prisma.CaseFlowDefinitionCreateManyInput[] = [];
-
-  for (const [serviceType, stages] of Object.entries(FLOWS) as [ServiceType, CaseStage[]][]) {
-    stages.forEach((fromStage, index) => {
-      const toStage = stages[index + 1];
-      const isLastStage = index === stages.length - 1;
-
-      if (toStage) {
-        const isSystemOnly = SYSTEM_ONLY_TARGETS.has(toStage);
-        rows.push({
-          serviceType,
-          fromStage,
-          toStage,
-          allowedRoles: isSystemOnly ? [] : STAFF_ROLES,
-          isSystemOnly,
-          sortOrder: index,
-        });
-      }
-
-      if (!isLastStage) {
-        for (const escape of ESCAPE_STAGES) {
-          rows.push({ serviceType, fromStage, toStage: escape, allowedRoles: STAFF_ROLES, isSystemOnly: false, sortOrder: 900 });
-        }
-      }
-    });
-
-    // A staff member decides where a paused case resumes.
-    for (const stage of stages) {
-      rows.push({
-        serviceType,
-        fromStage: CaseStage.ON_HOLD,
-        toStage: stage,
-        allowedRoles: STAFF_ROLES,
-        isSystemOnly: false,
-        sortOrder: 901,
-      });
-    }
-  }
-
-  return rows;
 }
 
 async function seedServicePricing(): Promise<void> {
@@ -588,10 +498,32 @@ async function main(): Promise<void> {
   await seedContractTemplates();
   await seedRequirementRules(await seedDocumentTemplates());
   await seedDepartureChecklist();
+  await seedNotificationTemplates();
 
   console.log(
     'Seed complete: admin@gks.edu / consultant@gks.edu / student@gks.edu (password: password123)',
   );
+}
+
+/**
+ * 1G-06 — the §16 notification bodies. `update: {}` means an admin's edited
+ * wording survives a re-seed; only missing rows are inserted.
+ */
+async function seedNotificationTemplates(): Promise<void> {
+  for (const template of NOTIFICATION_TEMPLATES) {
+    await prisma.notificationTemplate.upsert({
+      where: { event_channel: { event: template.event, channel: template.channel } },
+      create: {
+        event: template.event,
+        channel: template.channel,
+        titleMn: template.titleMn,
+        bodyMn: template.bodyMn,
+        linkMn: template.linkMn ?? null,
+      },
+      update: {},
+    });
+  }
+  console.log(`Seeded ${NOTIFICATION_TEMPLATES.length} notification templates`);
 }
 
 main()

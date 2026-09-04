@@ -45,6 +45,9 @@ export default defineEventHandler(async (event) => {
   const entries = [
     urlEntry(siteUrl, 'daily', '1.0'),
     urlEntry(`${siteUrl}/universities`, 'daily', '0.9'),
+    urlEntry(`${siteUrl}/services/language-prep`, 'weekly', '0.8'),
+    urlEntry(`${siteUrl}/services/bachelor`, 'weekly', '0.8'),
+    urlEntry(`${siteUrl}/services/graduate`, 'weekly', '0.8'),
     urlEntry(`${siteUrl}/gks-scholarship`, 'weekly', '0.8'),
     urlEntry(`${siteUrl}/consultation`, 'monthly', '0.6'),
     urlEntry(`${siteUrl}/blog`, 'daily', '0.7'),

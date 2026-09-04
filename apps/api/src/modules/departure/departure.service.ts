@@ -1,8 +1,10 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { isStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import type { Prisma } from '../../prisma/client.js';
+import { NotificationEvent, type Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { formatDateMn } from '../notifications/notification-labels.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import type { CreateChecklistItemDto, UpdateChecklistItemDto, UpdateDeparturePlanDto } from './dto/departure.dto.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -19,7 +21,10 @@ const PLAN_INCLUDE = {
  */
 @Injectable()
 export class DepartureService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /** Idempotent — the visa approval calls this, and staff may call it early. */
   async ensurePlan(caseId: string) {
@@ -80,6 +85,24 @@ export class DepartureService {
     });
 
     if (departureAt) await this.redateChecklist(updated.id, departureAt);
+
+    // §16 "Онгоцны билетийн мэдээлэл шинэчлэгдсэн" — only when the flight
+    // itself moved; editing a dormitory note is not news to the client.
+    if (departureAt || dto.flightNo || dto.arrivalAt) {
+      await this.notifications.dispatch({
+        event: NotificationEvent.FLIGHT_INFO_UPDATED,
+        userIds: [updated.case.userId],
+        caseId,
+        context: {
+          caseId,
+          caseCode: updated.case.code,
+          flightNumber: updated.flightNo,
+          departureDate: formatDateMn(updated.departureAt),
+          arrivalDate: formatDateMn(updated.arrivalAt),
+        },
+      });
+    }
+
     return this.findForCase(caseId, actor);
   }
 
