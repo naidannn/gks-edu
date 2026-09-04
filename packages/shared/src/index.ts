@@ -6,3 +6,4 @@ export * from './types/university';
 export * from './types/api';
 export * from './types/content';
 export * from './types/lead-crm';
+export * from './types/case-contract-payment';

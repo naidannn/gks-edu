@@ -18,6 +18,11 @@ interface AdminNavItem {
 const NAV: AdminNavItem[] = [
   { to: '/admin', label: 'Хяналтын самбар', icon: 'layout-dashboard' },
   { to: '/admin/leads', label: 'Сэжим', icon: 'users' },
+  { to: '/admin/cases', label: 'Хэрэг', icon: 'folder' },
+  { to: '/admin/contracts', label: 'Гэрээ', icon: 'file-text' },
+  { to: '/admin/payments', label: 'Төлбөр', icon: 'credit-card' },
+  { to: '/admin/settings/pricing', label: 'Үнийн тохиргоо', icon: 'settings' },
+  { to: '/admin/settings/contract-templates', label: 'Гэрээний загвар', icon: 'file-cog' },
 ];
 
 const ROLE_LABELS: Record<string, string> = {

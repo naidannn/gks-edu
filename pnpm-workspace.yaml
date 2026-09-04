@@ -12,6 +12,8 @@ allowBuilds:
   prisma: true
   unrs-resolver: true
   '@scarf/scarf': false
+  # Native binary for msgpackr (bullmq's Redis payload encoder) — optional perf boost.
+  msgpackr-extract: true
 
 peerDependencyRules:
   allowedVersions:

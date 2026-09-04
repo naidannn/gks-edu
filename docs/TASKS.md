@@ -32,9 +32,9 @@
 | `0-05` | Nuxt 4 суурь + GKS дизайн токен (`tokens.css`) + 12 DS компонент | done | L | 0-01 |
 | `0-06` | Redis: CacheService (read-through) + RedisService (raw, SCAN, lock) | done | M | 0-02 |
 | `0-07` | `Role` enum өргөтгөх: `CONSULTANT`, `DOC_OFFICER` нэмэх + seed шинэчлэх | done | S | 0-04 |
-| `0-08` | Файл хадгалалтын adapter: Supabase Storage private bucket, upload/signed URL/delete | todo | M | 0-02 |
-| `0-09` | Файл байршуулах хамгаалалт: MIME sniff, 20MB хязгаар, өргөтгөлийн цагаан жагсаалт | todo | S | 0-08 |
-| `0-10` | BullMQ дараалал + worker процесс + `docker-compose` шинэчлэл | todo | M | 0-06 |
+| `0-08` | Файл хадгалалтын adapter: Supabase Storage private bucket, upload/signed URL/delete | done | M | 0-02 |
+| `0-09` | Файл байршуулах хамгаалалт: MIME sniff, 20MB хязгаар, өргөтгөлийн цагаан жагсаалт | done | S | 0-08 |
+| `0-10` | BullMQ дараалал + worker процесс + `docker-compose` шинэчлэл | done | M | 0-06 |
 | `0-11` | `AuditLog` хүснэгт + interceptor (хэн/юуг/хэзээ/өмнөх/дараах) | todo | M | 0-03 |
 | `0-12` | Soft-delete конвенц (`deletedAt`) + Prisma middleware | todo | S | 0-03 |
 | `0-13` | `CaseAccessGuard` — роль + эзэмшлийн хосолсон шалгалт | todo | M | 0-07 |
@@ -97,26 +97,26 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 |---|---|---|---|---|
-| `1C-01` | Prisma схем: `ServicePricing` (хувилбартай), `PrepaymentMode`, `BalanceTrigger` | todo | M | 0-03 |
-| `1C-02` | Prisma схем: `Case`, `CaseTransition`, `CaseStage`, `CaseFlowDefinition` | todo | L | 1C-01 |
-| `1C-03` | `Case` төлөвийн машин: зөвшөөрөгдсөн шилжилт, `POST /cases/:id/transitions` | todo | L | 1C-02 |
-| `1C-04` | Үйлчилгээ бүрийн урсгалын тодорхойлолт (энгийн vs GKS — үлдэгдэл төлбөрийн байрлал өөр) | todo | M | 1C-03 |
-| `1C-05` | Prisma схем: `Contract`, `CollateralContract`, гэрээний төлөв | todo | M | 1C-02 |
-| `1C-06` | Гэрээний загварын систем (placeholder бүхий текст, админаас засварлах) | todo | M | 1C-05 |
-| `1C-07` | Гэрээний PDF үүсгэлт (сервер тал, монгол фонт, байгууллагын хэвлэмэл толгой) | todo | L | 1C-06 |
-| `1C-08` | Цахим гэрээ байгуулах урсгал: харах → зөвшөөрөх → SMS OTP → гарын үсгийн бүртгэл | todo | L | 1C-07 |
-| `1C-09` | Биет гэрээ бүртгэх урсгал (ажилтан скан хуулж, талбарыг гараар бөглөх) | todo | M | 1C-05 |
-| `1C-10` | Барьцааны гэрээний бүртгэл (зөвхөн хийгдсэн эсэх, хугацаа, файл) — хэлний бэлтгэлд | todo | S | 1C-05 |
-| `1C-11` | Prisma схем: `Payment`, `PaymentKind`, `PaymentStatus` | todo | M | 1C-02 |
-| `1C-12` | QPay v2 интеграц: merchant auth, нэхэмжлэл үүсгэх, QR/deeplink буцаах | todo | L | 1C-11 |
-| `1C-13` | QPay callback webhook (идемпотент, гарын үсэг шалгах) | todo | M | 1C-12 |
-| `1C-14` | QPay polling fallback (BullMQ давтагдах ажил, 15 мин) | todo | M | 1C-12, 0-10 |
-| `1C-15` | Төлбөр баталгаажихад `Case` үе шат урагшлах + мэдэгдэл + баримт үүсгэх | todo | M | 1C-13, 1C-03 |
-| `1C-16` | Буцаалтын урсгал (`REFUND`) + гэрээний буцаалтын нөхцөлийн бүртгэл | todo | M | 1C-15 |
-| `1C-17` | Frontend (хэрэглэгч): гэрээ харах/зөвшөөрөх, төлбөр төлөх, баримт татах | todo | L | 1C-08, 1C-12 |
-| `1C-18` | Admin frontend: гэрээний жагсаалт/дэлгэрэнгүй, төлбөрийн бүртгэл, авлагын харагдац | todo | L | 1C-11 |
-| `1C-19` | Admin: үйлчилгээний үнэ, урьдчилгааны тохиргоо (хувь/тогтмол) удирдах хуудас | todo | M | 1C-01 |
-| `1C-20` | Гэрээ, төлбөрийн интеграцийн тест (QPay sandbox) | todo | M | 1C-14 |
+| `1C-01` | Prisma схем: `ServicePricing` (хувилбартай), `PrepaymentMode`, `BalanceTrigger` | done | M | 0-03 |
+| `1C-02` | Prisma схем: `Case`, `CaseTransition`, `CaseStage`, `CaseFlowDefinition` | done | L | 1C-01 |
+| `1C-03` | `Case` төлөвийн машин: зөвшөөрөгдсөн шилжилт, `POST /cases/:id/transitions` | done | L | 1C-02 |
+| `1C-04` | Үйлчилгээ бүрийн урсгалын тодорхойлолт (энгийн vs GKS — үлдэгдэл төлбөрийн байрлал өөр) | done | M | 1C-03 |
+| `1C-05` | Prisma схем: `Contract`, `CollateralContract`, гэрээний төлөв | done | M | 1C-02 |
+| `1C-06` | Гэрээний загварын систем (placeholder бүхий текст, админаас засварлах) | done | M | 1C-05 |
+| `1C-07` | Гэрээний PDF үүсгэлт (сервер тал, монгол фонт, байгууллагын хэвлэмэл толгой) | done | L | 1C-06 |
+| `1C-08` | Цахим гэрээ байгуулах урсгал: харах → зөвшөөрөх → SMS OTP → гарын үсгийн бүртгэл | done | L | 1C-07 |
+| `1C-09` | Биет гэрээ бүртгэх урсгал (ажилтан скан хуулж, талбарыг гараар бөглөх) | done | M | 1C-05 |
+| `1C-10` | Барьцааны гэрээний бүртгэл (зөвхөн хийгдсэн эсэх, хугацаа, файл) — хэлний бэлтгэлд | done | S | 1C-05 |
+| `1C-11` | Prisma схем: `Payment`, `PaymentKind`, `PaymentStatus` | done | M | 1C-02 |
+| `1C-12` | QPay v2 интеграц: merchant auth, нэхэмжлэл үүсгэх, QR/deeplink буцаах | done | L | 1C-11 |
+| `1C-13` | QPay callback webhook (идемпотент, гарын үсэг шалгах) | done | M | 1C-12 |
+| `1C-14` | QPay polling fallback (BullMQ давтагдах ажил, 15 мин) | done | M | 1C-12, 0-10 |
+| `1C-15` | Төлбөр баталгаажихад `Case` үе шат урагшлах + мэдэгдэл + баримт үүсгэх | done | M | 1C-13, 1C-03 |
+| `1C-16` | Буцаалтын урсгал (`REFUND`) + гэрээний буцаалтын нөхцөлийн бүртгэл | done | M | 1C-15 |
+| `1C-17` | Frontend (хэрэглэгч): гэрээ харах/зөвшөөрөх, төлбөр төлөх, баримт татах | done | L | 1C-08, 1C-12 |
+| `1C-18` | Admin frontend: гэрээний жагсаалт/дэлгэрэнгүй, төлбөрийн бүртгэл, авлагын харагдац | done | L | 1C-11 |
+| `1C-19` | Admin: үйлчилгээний үнэ, урьдчилгааны тохиргоо (хувь/тогтмол) удирдах хуудас | done | M | 1C-01 |
+| `1C-20` | Гэрээ, төлбөрийн интеграцийн тест (QPay sandbox) | done | M | 1C-14 |
 
 ---
 

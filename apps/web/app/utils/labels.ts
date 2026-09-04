@@ -6,11 +6,18 @@
  * its label from here so a wording change lands in one place (CLAUDE.md).
  */
 import type {
+  BalanceTrigger,
+  CaseStage,
+  ContractStatus,
+  ContractType,
   EducationLevel,
   IntakeStatus,
   LeadActivityType,
   LeadSource,
   LeadStage,
+  PaymentKind,
+  PaymentStatus,
+  PrepaymentMode,
   ProgramLevel,
   ServiceType,
   UniversityType,
@@ -101,6 +108,70 @@ export const LEAD_ACTIVITY_TYPE_LABELS: Record<LeadActivityType, string> = {
   EMAIL: 'И-мэйл',
   CHAT: 'Чат',
   STAGE_CHANGE: 'Үе шат өөрчлөгдсөн',
+};
+
+export const CASE_STAGE_LABELS: Record<CaseStage, string> = {
+  CONTRACT_DRAFT: 'Гэрээ бэлтгэж буй',
+  CONTRACT_SIGNED: 'Гэрээ байгуулсан',
+  PREPAYMENT_PAID: 'Урьдчилгаа төлсөн',
+  DOCUMENTS: 'Материал бүрдүүлж буй',
+  APPLICATION_SUBMITTED: 'Мэдүүлэг илгээсэн',
+  ADMITTED: 'Элсэлт авсан',
+  TUITION_INVOICED: 'Сургалтын төлбөр нэхэмжилсэн',
+  INVITATION_RECEIVED: 'Урилга хүлээн авсан',
+  GKS_ROUND1_PASSED: 'Тэтгэлэг 1-р шат нэвтэрсэн',
+  GKS_ROUND2_PASSED: 'Тэтгэлэг 2-р шат нэвтэрсэн',
+  VISA: 'Виз хүсэлт гаргасан',
+  VISA_APPROVED: 'Виз гарсан',
+  BALANCE_PAID: 'Үлдэгдэл төлсөн',
+  COLLATERAL_CONTRACT: 'Барьцааны гэрээ',
+  PRE_DEPARTURE: 'Явахын өмнөх бэлтгэл',
+  DEPARTED: 'Явсан',
+  COMPLETED: 'Дууссан',
+  ON_HOLD: 'Түр зогссон',
+  CANCELLED: 'Цуцлагдсан',
+  REJECTED: 'Татгалзсан',
+};
+
+export const CONTRACT_TYPE_LABELS: Record<ContractType, string> = {
+  ELECTRONIC: 'Цахим гэрээ',
+  PHYSICAL: 'Биет гэрээ',
+};
+
+export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
+  DRAFT: 'Ноорог',
+  SENT: 'Илгээсэн',
+  SIGNED: 'Гарын үсэг зурсан',
+  ACTIVE: 'Хүчин төгөлдөр',
+  COMPLETED: 'Дууссан',
+  TERMINATED: 'Цуцлагдсан',
+};
+
+export const PAYMENT_KIND_LABELS: Record<PaymentKind, string> = {
+  PREPAYMENT: 'Урьдчилгаа',
+  BALANCE: 'Үлдэгдэл',
+  SCHOOL_TUITION: 'Сургалтын төлбөр',
+  TRANSFER_FEE: 'Шилжүүлгийн хураамж',
+  EXTRA_SERVICE: 'Нэмэлт үйлчилгээ',
+  REFUND: 'Буцаалт',
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: 'Хүлээгдэж буй',
+  PAID: 'Төлөгдсөн',
+  FAILED: 'Амжилтгүй',
+  EXPIRED: 'Хугацаа дууссан',
+  REFUNDED: 'Буцаагдсан',
+};
+
+export const PREPAYMENT_MODE_LABELS: Record<PrepaymentMode, string> = {
+  PERCENT: 'Хувиар',
+  FIXED: 'Тогтмол дүнгээр',
+};
+
+export const BALANCE_TRIGGER_LABELS: Record<BalanceTrigger, string> = {
+  AFTER_VISA_APPROVED: 'Виз гарсны дараа',
+  AFTER_SCHOLARSHIP_RESULT: 'Тэтгэлэгт тэнцсэний дараа',
 };
 
 /** Korean academic intakes: March, June, September, December. */

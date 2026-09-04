@@ -13,6 +13,28 @@ export interface AppConfig {
     refreshExpiresIn: string;
   };
   embeddingDimensions: number;
+  qpay: {
+    baseUrl: string;
+    username: string;
+    password: string;
+    invoiceCode: string;
+    callbackUrl: string;
+    /** Skips real QPay HTTP calls and fakes invoice/payment-check responses (dev/test only). */
+    mock: boolean;
+  };
+  sms: {
+    /** §18 question 10 — the real Mongolian gateway is not chosen yet; `console` logs instead of sending. */
+    provider: 'console';
+  };
+  storage: {
+    /** `local` writes to disk; `supabase` needs SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (0-08). */
+    driver: 'local' | 'supabase';
+    localDir: string;
+    signingSecret: string;
+    supabaseUrl?: string;
+    supabaseServiceRoleKey?: string;
+    supabaseBucket: string;
+  };
 }
 
 export const configuration = (): AppConfig => ({
@@ -33,4 +55,23 @@ export const configuration = (): AppConfig => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
   embeddingDimensions: Number.parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10),
+  qpay: {
+    baseUrl: process.env.QPAY_BASE_URL ?? 'https://merchant-sandbox.qpay.mn/v2',
+    username: process.env.QPAY_USERNAME ?? '',
+    password: process.env.QPAY_PASSWORD ?? '',
+    invoiceCode: process.env.QPAY_INVOICE_CODE ?? '',
+    callbackUrl: process.env.QPAY_CALLBACK_URL ?? 'http://localhost:3001/api/v1/payments/qpay/webhook',
+    mock: (process.env.QPAY_MOCK ?? 'true') === 'true',
+  },
+  sms: {
+    provider: 'console',
+  },
+  storage: {
+    driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',
+    localDir: process.env.STORAGE_LOCAL_DIR ?? 'storage',
+    signingSecret: process.env.STORAGE_SIGNING_SECRET ?? process.env.JWT_SECRET!,
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseBucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'gks-edu-files',
+  },
 });

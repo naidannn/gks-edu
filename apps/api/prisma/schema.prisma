@@ -36,6 +36,8 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  /// Needed for SMS-OTP contract signing (1C-08) — collected at accept-contract time if unset.
+  phone     String?
   role      Role     @default(USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -48,6 +50,13 @@ model User {
   leadActivities    LeadActivity[]
   posts             Post[]
   savedUniversities SavedUniversity[]
+
+  cases                     Case[]
+  assignedCasesAsConsultant Case[]           @relation("CaseConsultant")
+  assignedCasesAsDocOfficer Case[]           @relation("CaseDocOfficer")
+  caseTransitions           CaseTransition[]
+  contracts                 Contract[]
+  payments                  Payment[]
 
   @@index([createdAt])
   @@map("users")
@@ -206,6 +215,7 @@ model University {
   programs UniversityProgram[]
   intakes  IntakeTerm[]
   savedBy  SavedUniversity[]
+  cases    Case[]
 
   @@index([isPublished])
   @@index([regionEn])
@@ -236,6 +246,8 @@ model UniversityProgram {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  cases Case[]
+
   @@unique([universityId, level, nameMn])
   @@index([universityId])
   @@index([level])
@@ -258,6 +270,8 @@ model IntakeTerm {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  cases Case[]
 
   @@unique([universityId, level, year, month])
   @@index([universityId])
@@ -459,4 +473,280 @@ model FaqItem {
 
   @@index([category, order])
   @@map("faq_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1C — Contract & QPay payment (ARCHITECTURE.md §5, §6; gksedu.md §5.4, §5.5)
+//
+// `CaseFlowDefinition` carries the allowed stage graph as data (not a hardcoded
+// map like `LEAD_STAGE_TRANSITIONS`) because the two service families — regular
+// brokerage vs. GKS scholarship — order `BALANCE_PAID` differently around the
+// visa step (§9, ARCHITECTURE.md §18 question 6 is still open on which order is
+// authoritative; both are supported via `CaseFlowDefinition` rows per
+// `serviceType`).
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PrepaymentMode {
+  PERCENT
+  FIXED
+}
+
+enum BalanceTrigger {
+  AFTER_VISA_APPROVED
+  AFTER_SCHOLARSHIP_RESULT
+}
+
+/// Union of both service families' stages (§5) plus escapes reachable from anywhere.
+enum CaseStage {
+  CONTRACT_DRAFT
+  CONTRACT_SIGNED
+  PREPAYMENT_PAID
+  DOCUMENTS
+  APPLICATION_SUBMITTED
+  // Regular brokerage (language prep / BA / MA / PhD) only.
+  ADMITTED
+  TUITION_INVOICED
+  INVITATION_RECEIVED
+  // GKS scholarship only.
+  GKS_ROUND1_PASSED
+  GKS_ROUND2_PASSED
+  VISA
+  VISA_APPROVED
+  BALANCE_PAID
+  /// Regular brokerage language-prep only (gksedu.md §5.4 "Барьцааны гэрээ").
+  COLLATERAL_CONTRACT
+  PRE_DEPARTURE
+  DEPARTED
+  COMPLETED
+  // Reachable from any stage.
+  ON_HOLD
+  CANCELLED
+  REJECTED
+}
+
+enum ContractType {
+  ELECTRONIC
+  PHYSICAL
+}
+
+enum ContractStatus {
+  DRAFT
+  SENT
+  SIGNED
+  ACTIVE
+  COMPLETED
+  TERMINATED
+}
+
+enum PaymentKind {
+  PREPAYMENT
+  BALANCE
+  SCHOOL_TUITION
+  TRANSFER_FEE
+  EXTRA_SERVICE
+  REFUND
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+/// Versioned service pricing (gksedu.md §5.4) — admin-configurable, never a constant.
+model ServicePricing {
+  id              String         @id @default(uuid()) @db.Uuid
+  serviceType     ServiceType
+  totalAmount     Decimal        @db.Decimal(14, 2)
+  prepaymentMode  PrepaymentMode
+  prepaymentValue Decimal        @db.Decimal(14, 2)
+  balanceTrigger  BalanceTrigger
+  effectiveFrom   DateTime
+  /// Null = currently active.
+  effectiveTo     DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@index([serviceType, effectiveFrom])
+  @@map("service_pricing")
+}
+
+/// One user × one service × one target university × one intake (§5).
+model Case {
+  id     String @id @default(uuid()) @db.Uuid
+  /// Human-readable, e.g. GKS-2026-0417.
+  code   String @unique
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  serviceType  ServiceType
+  universityId String?            @db.Uuid
+  university   University?        @relation(fields: [universityId], references: [id], onDelete: SetNull)
+  programId    String?            @db.Uuid
+  program      UniversityProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  intakeId     String?            @db.Uuid
+  intake       IntakeTerm?        @relation(fields: [intakeId], references: [id], onDelete: SetNull)
+
+  stage CaseStage @default(CONTRACT_DRAFT)
+
+  assignedConsultantId String? @db.Uuid
+  assignedConsultant   User?   @relation("CaseConsultant", fields: [assignedConsultantId], references: [id], onDelete: SetNull)
+  assignedDocOfficerId String? @db.Uuid
+  assignedDocOfficer   User?   @relation("CaseDocOfficer", fields: [assignedDocOfficerId], references: [id], onDelete: SetNull)
+
+  contract    Contract?
+  payments    Payment[]
+  transitions CaseTransition[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stage])
+  @@index([assignedConsultantId])
+  @@index([assignedDocOfficerId])
+  @@map("cases")
+}
+
+model CaseTransition {
+  id        String    @id @default(uuid()) @db.Uuid
+  caseId    String    @db.Uuid
+  case      Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  fromStage CaseStage
+  toStage   CaseStage
+  reason    String?
+  /// Null for system-triggered transitions (e.g. payment confirmed).
+  actorId   String?   @db.Uuid
+  actor     User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+
+  @@index([caseId, createdAt])
+  @@map("case_transitions")
+}
+
+/// Allowed stage graph, per service type — data, not code (see file-header note).
+model CaseFlowDefinition {
+  id           String      @id @default(uuid()) @db.Uuid
+  serviceType  ServiceType
+  fromStage    CaseStage
+  toStage      CaseStage
+  /// Empty = no staff role may trigger this manually (system-only).
+  allowedRoles Role[]
+  /// True when only `confirmPayment`/other system logic makes this transition.
+  isSystemOnly Boolean     @default(false)
+  sortOrder    Int         @default(0)
+
+  @@unique([serviceType, fromStage, toStage])
+  @@index([serviceType, fromStage])
+  @@map("case_flow_definitions")
+}
+
+model Contract {
+  id     String @id @default(uuid()) @db.Uuid
+  caseId String @unique @db.Uuid
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  type   ContractType
+  status ContractStatus @default(DRAFT)
+
+  // Pricing snapshot taken when the contract is issued (§6.1) — a later price
+  // change never rewrites an existing contract.
+  totalAmountSnapshot     Decimal        @db.Decimal(14, 2)
+  prepaymentModeSnapshot  PrepaymentMode
+  prepaymentValueSnapshot Decimal        @db.Decimal(14, 2)
+  balanceTriggerSnapshot  BalanceTrigger
+  /// Refund conditions, visa-rejection terms, extra-service terms (§5.4) — free-form per template.
+  refundPolicy            Json
+
+  /// Fully rendered contract text (template placeholders already substituted).
+  bodyMn  String
+  pdfPath String?
+
+  sentAt           DateTime?
+  acceptedAt       DateTime?
+  otpVerifiedAt    DateTime?
+  signedAt         DateTime?
+  signedIp         String?
+  /// Staff-uploaded scan for a PHYSICAL contract (1C-09).
+  physicalScanPath String?
+
+  collateralContract CollateralContract?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("contracts")
+}
+
+/// Real-estate/asset collateral for language-prep visa-stage risk (gksedu.md §5.4) —
+/// deliberately thin: the appraisal and collateral terms live in the physical document.
+model CollateralContract {
+  id         String    @id @default(uuid()) @db.Uuid
+  contractId String    @unique @db.Uuid
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  isSigned   Boolean   @default(false)
+  startDate  DateTime?
+  endDate    DateTime?
+  filePath   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("collateral_contracts")
+}
+
+/// Admin-editable contract text with `{{placeholder}}` tokens (1C-06).
+model ContractTemplate {
+  id          String      @id @default(uuid()) @db.Uuid
+  serviceType ServiceType
+  version     Int         @default(1)
+  isActive    Boolean     @default(true)
+  bodyMn      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([serviceType, version])
+  @@index([serviceType, isActive])
+  @@map("contract_templates")
+}
+
+model Payment {
+  id     String @id @default(uuid()) @db.Uuid
+  caseId String @db.Uuid
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  kind      PaymentKind
+  amountMnt Decimal       @db.Decimal(14, 2)
+  /// Set for SCHOOL_TUITION payments (§8).
+  amountKrw Decimal?      @db.Decimal(14, 2)
+  fxRate    Decimal?      @db.Decimal(10, 4)
+  status    PaymentStatus @default(PENDING)
+
+  qpayInvoiceId String? @unique
+  qpayPaymentId String?
+  qrText        String?
+  qrImage       String?
+
+  paidAt      DateTime?
+  receiptPath String?
+  dueAt       DateTime?
+
+  /// Set on a REFUND row — the payment it refunds.
+  refundOfId String?   @db.Uuid
+  refundOf   Payment?  @relation("PaymentRefund", fields: [refundOfId], references: [id], onDelete: SetNull)
+  refunds    Payment[] @relation("PaymentRefund")
+
+  createdById String? @db.Uuid
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([caseId])
+  @@index([status])
+  @@map("payments")
 }
