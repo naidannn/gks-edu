@@ -67,7 +67,7 @@ export class ApplicationsService {
     }
     if (Object.keys(caseFilter).length > 0) where.case = caseFilter;
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.application.findMany({
         where,
         include: {

@@ -77,7 +77,7 @@ export class VisaService {
       };
     }
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.visaCase.findMany({
         where,
         include: VISA_INCLUDE,

@@ -38,7 +38,7 @@ export class PostsService {
       ...(query.tag ? { tags: { has: query.tag } } : {}),
     };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.post.findMany({
         where,
         select: CARD_FIELDS,
@@ -66,7 +66,7 @@ export class PostsService {
   async findAllAdmin(query: QueryPostsDto) {
     const where: Prisma.PostWhereInput = query.tag ? { tags: { has: query.tag } } : {};
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.post.findMany({
         where,
         select: DETAIL_FIELDS,

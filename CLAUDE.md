@@ -61,6 +61,10 @@ Do not restate that here; extend it when infrastructure changes.
 6. **One `.env` at the repo root** serves the whole workspace.
 7. **New native dependency?** add it to `allowBuilds` in `pnpm-workspace.yaml` or
    `pnpm install` fails.
+8. **Read-only queries run under `Promise.all`, never `$transaction`.** The database is a
+   Supabase pooler in `ap-southeast-1` — roughly 115 ms away. A `$transaction([...])` batch
+   pays `BEGIN` and `COMMIT` as extra round trips, so the usual `[findMany, count]` pair
+   costs ~500 ms instead of ~115 ms. Keep `$transaction` for writes that must be atomic.
 
 ## Domain glossary (Mongolian → code)
 

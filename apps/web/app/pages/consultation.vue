@@ -62,7 +62,7 @@ const universitySlug = computed(() => {
 
 const { data: university } = await useApiFetch<UniversityCard>(
   () => `/universities/${universitySlug.value}`,
-  { immediate: Boolean(universitySlug.value) },
+  { immediate: Boolean(universitySlug.value), lazy: true },
 );
 
 function toggleService(service: ServiceType, selected: boolean) {

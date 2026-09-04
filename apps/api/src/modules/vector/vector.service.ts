@@ -102,7 +102,7 @@ export class VectorService {
   }
 
   async listDocuments(page: number, limit: number) {
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.document.findMany({
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,

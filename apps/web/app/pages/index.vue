@@ -2,7 +2,7 @@
 import type { UniversityCard, UniversityFacets } from '@gks/shared';
 
 /** Public landing page: hero, planner, active admissions, services, trust wall, FAQ, CTA (1A-09). */
-const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets');
+const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets', { lazy: true });
 const selectedCity = ref('');
 const featuredQuery = computed(() => ({
   limit: 12,
@@ -14,9 +14,10 @@ const featuredQuery = computed(() => ({
 const { data: featuredUniversities, status: featuredStatus } = await useApiFetch<{
   items: UniversityCard[];
   meta: { total: number };
-}>('/universities', { query: featuredQuery });
+}>('/universities', { query: featuredQuery, lazy: true });
 const { data: partnerUniversities } = await useApiFetch<{ items: UniversityCard[] }>('/universities', {
   query: { limit: 30, sort: 'students', order: 'desc' },
+  lazy: true,
 });
 
 const featured = computed(() => featuredUniversities.value?.items ?? []);

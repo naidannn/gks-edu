@@ -61,6 +61,31 @@ const ORDER_BY: Record<UniversitySort, (order: Prisma.SortOrder) => Prisma.Unive
 
 const FACETS_CACHE_TTL_MS = 300_000;
 const DETAIL_CACHE_TTL_MS = 120_000;
+const LIST_CACHE_TTL_MS = 60_000;
+
+/** Every key the list cache writes, so an admin edit can drop them in one sweep. */
+export const LIST_CACHE_PATTERN = 'universities:list:*';
+
+/**
+ * A stable key for one page of the catalogue. Free-text searches are left out
+ * on purpose — their cardinality is unbounded and each one is typed once.
+ */
+function listCacheKey(query: QueryUniversitiesDto): string | null {
+  if (query.q) return null;
+
+  const parts = [
+    query.region ?? '',
+    query.type ?? '',
+    query.level ?? '',
+    query.languagePrep ? '1' : '',
+    query.gks ? '1' : '',
+    query.sort,
+    query.order,
+    query.page,
+    query.limit,
+  ];
+  return `universities:list:${parts.join('|')}`;
+}
 
 @Injectable()
 export class UniversitiesService {
@@ -72,18 +97,26 @@ export class UniversitiesService {
   async findAll(query: QueryUniversitiesDto) {
     const where = this.buildWhere(query);
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.university.findMany({
-        where,
-        select: CARD_FIELDS,
-        orderBy: ORDER_BY[query.sort](query.order),
-        skip: query.skip,
-        take: query.limit,
-      }),
-      this.prisma.university.count({ where }),
-    ]);
+    const run = async () => {
+      const [items, total] = await Promise.all([
+        this.prisma.university.findMany({
+          where,
+          select: CARD_FIELDS,
+          orderBy: ORDER_BY[query.sort](query.order),
+          skip: query.skip,
+          take: query.limit,
+        }),
+        this.prisma.university.count({ where }),
+      ]);
 
-    return paginate(items, total, query.page, query.limit);
+      return paginate(items, total, query.page, query.limit);
+    };
+
+    // The catalogue is read-heavy and only an admin edit changes it, so a whole
+    // page of cards is cached under its filters (the landing page alone asks
+    // for two of them on every visit).
+    const key = listCacheKey(query);
+    return key ? this.cache.wrap(key, run, LIST_CACHE_TTL_MS) : run();
   }
 
   async findBySlug(slug: string) {
@@ -142,7 +175,7 @@ export class UniversitiesService {
       async () => {
         const published = { isPublished: true } satisfies Prisma.UniversityWhereInput;
 
-        const [regions, types, languagePrep, gks, total] = await this.prisma.$transaction([
+        const [regions, types, languagePrep, gks, total] = await Promise.all([
           this.prisma.university.groupBy({
             by: ['regionEn', 'regionMn'],
             where: published,

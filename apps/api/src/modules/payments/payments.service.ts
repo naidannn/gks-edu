@@ -109,7 +109,7 @@ export class PaymentsService {
 
   async findAllStaff(query: QueryPaymentsDto) {
     const where = this.buildWhere(query);
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,
         include: { case: { select: { id: true, code: true, user: { select: { id: true, name: true, email: true } } } } },

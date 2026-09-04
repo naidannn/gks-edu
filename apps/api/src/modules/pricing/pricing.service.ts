@@ -2,11 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { type DecimalLike, toNumber } from '../../common/utils/decimal.js';
 import { PrepaymentMode, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { CacheService } from '../../redis/cache.service.js';
 import type { CreateServicePricingDto } from './dto/create-service-pricing.dto.js';
+
+/** Prices change a few times a year; the service pages ask on every visit. */
+const PUBLIC_CACHE_KEY = 'pricing:public';
+const PUBLIC_CACHE_TTL_MS = 300_000;
 
 @Injectable()
 export class PricingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   /** All price history for a service, most recent first (1C-19). */
   async list(serviceType?: ServiceType) {
@@ -39,6 +47,10 @@ export class PricingService {
    * `balanceTrigger` stay behind the staff endpoints.
    */
   async publicPricing() {
+    return this.cache.wrap(PUBLIC_CACHE_KEY, () => this.readPublicPricing(), PUBLIC_CACHE_TTL_MS);
+  }
+
+  private async readPublicPricing() {
     const now = new Date();
     const rows = await this.prisma.servicePricing.findMany({
       where: { effectiveFrom: { lte: now }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }] },
@@ -70,7 +82,7 @@ export class PricingService {
   async create(dto: CreateServicePricingDto) {
     const effectiveFrom = dto.effectiveFrom ? new Date(dto.effectiveFrom) : new Date();
 
-    return this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async (tx) => {
       const current = await tx.servicePricing.findFirst({
         where: { serviceType: dto.serviceType, effectiveTo: null },
         orderBy: { effectiveFrom: 'desc' },
@@ -90,6 +102,9 @@ export class PricingService {
         },
       });
     });
+
+    await this.cache.del(PUBLIC_CACHE_KEY);
+    return created;
   }
 
   /** Resolves a pricing snapshot's prepayment/balance MNT amounts (gksedu.md §5.4). */

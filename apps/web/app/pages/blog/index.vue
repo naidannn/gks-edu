@@ -14,6 +14,7 @@ const page = computed(() => {
 
 const { data, status } = await useApiFetch<Paginated>('/posts', {
   query: computed(() => ({ page: page.value, limit: 12 })),
+  lazy: true,
 });
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);

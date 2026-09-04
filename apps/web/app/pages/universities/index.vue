@@ -72,8 +72,8 @@ const query = computed(() => ({
   ...(filters.value.gks ? { gks: true } : {}),
 }));
 
-const { data, status, error } = await useApiFetch<Paginated>('/universities', { query });
-const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets');
+const { data, status, error } = await useApiFetch<Paginated>('/universities', { query, lazy: true });
+const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets', { lazy: true });
 
 const activeFilterCount = computed(() =>
   [filters.value.region, filters.value.type, filters.value.languagePrep, filters.value.gks].filter(

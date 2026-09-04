@@ -54,7 +54,7 @@ export class CasesService {
 
   async findAllStaff(query: QueryCasesDto) {
     const where = this.buildWhere(query);
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.case.findMany({
         where,
         include: {

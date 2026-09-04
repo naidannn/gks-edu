@@ -250,7 +250,7 @@ export class ClientsService {
   async findAllStaff(query: QueryClientsDto) {
     const where = this.buildWhere(query);
 
-    const [rows, total] = await this.prisma.$transaction([
+    const [rows, total] = await Promise.all([
       this.prisma.client.findMany({
         where,
         select: LIST_SELECT,
@@ -388,7 +388,7 @@ export class ClientsService {
 
   /** Counters for the list header: total, by status, and how many are already under contract. */
   async stats() {
-    const [total, byStatusRows, withContract, unassigned] = await this.prisma.$transaction([
+    const [total, byStatusRows, withContract, unassigned] = await Promise.all([
       this.prisma.client.count(),
       this.prisma.client.groupBy({ by: ['status'], _count: { _all: true } }),
       this.prisma.client.count({ where: { user: { cases: { some: { contract: { isNot: null } } } } } }),

@@ -4,7 +4,7 @@ import type { FaqCategory, FaqEntry } from '@gks/shared';
 /** FAQ accordion, grouped by category (1A-13). */
 
 
-const { data, status } = await useApiFetch<FaqEntry[]>('/faqs');
+const { data, status } = await useApiFetch<FaqEntry[]>('/faqs', { lazy: true });
 
 const grouped = computed(() => {
   const byCategory = new Map<FaqCategory, FaqEntry[]>();

@@ -64,7 +64,7 @@ export class WorkTasksService {
       where.status = { in: OPEN_STATUSES };
     }
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.workTask.findMany({
         where,
         include: TASK_INCLUDE,

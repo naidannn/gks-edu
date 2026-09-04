@@ -150,7 +150,7 @@ export class ContractsService {
       ];
     }
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.contract.findMany({
         where,
         include: { user: { select: { id: true, name: true, email: true } }, case: { select: { id: true, code: true, serviceType: true } } },
@@ -164,7 +164,7 @@ export class ContractsService {
   }
 
   async stats() {
-    const [total, groups] = await this.prisma.$transaction([
+    const [total, groups] = await Promise.all([
       this.prisma.contract.count(),
       this.prisma.contract.groupBy({ by: ['status'], _count: { _all: true } }),
     ]);

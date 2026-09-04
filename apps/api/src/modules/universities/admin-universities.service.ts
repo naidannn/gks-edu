@@ -3,6 +3,7 @@ import { Prisma } from '../../prisma/client.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { LIST_CACHE_PATTERN } from './universities.service.js';
 import type { CreateIntakeTermDto, UpdateIntakeTermDto } from './dto/intake-term.dto.js';
 import type { CreateUniversityDto } from './dto/create-university.dto.js';
 import type { AdminUniversitySort, QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
@@ -160,7 +161,7 @@ export class AdminUniversitiesService {
   async findAll(query: QueryAdminUniversitiesDto) {
     const where = this.buildWhere(query);
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.university.findMany({
         where,
         select: ROW_FIELDS,
@@ -177,7 +178,7 @@ export class AdminUniversitiesService {
   /** Counters for the list header — the catalogue's completeness at a glance. */
   async stats() {
     const [total, published, languagePrep, gks, agentSigned, missingIntro, byType] =
-      await this.prisma.$transaction([
+      await Promise.all([
         this.prisma.university.count(),
         this.prisma.university.count({ where: { isPublished: true } }),
         this.prisma.university.count({ where: { acceptsLanguagePrep: true } }),
@@ -315,7 +316,7 @@ export class AdminUniversitiesService {
 
     // Cases and applications point at a programme with `onDelete: SetNull`, so
     // deleting one quietly unsets it on live records — say so instead.
-    const [cases, applications] = await this.prisma.$transaction([
+    const [cases, applications] = await Promise.all([
       this.prisma.case.count({ where: { programId } }),
       this.prisma.application.count({ where: { programId } }),
     ]);
@@ -377,7 +378,7 @@ export class AdminUniversitiesService {
     const slug = await this.requireSlug(universityId);
     await this.requireIntake(universityId, intakeId);
 
-    const [cases, applications] = await this.prisma.$transaction([
+    const [cases, applications] = await Promise.all([
       this.prisma.case.count({ where: { intakeId } }),
       this.prisma.application.count({ where: { intakeId } }),
     ]);
@@ -482,6 +483,7 @@ export class AdminUniversitiesService {
     await Promise.all([
       ...[...new Set(slugs)].map((slug) => this.cache.del(`university:${slug}`)),
       this.cache.del('universities:facets'),
+      this.cache.delByPattern(LIST_CACHE_PATTERN),
     ]);
   }
 }

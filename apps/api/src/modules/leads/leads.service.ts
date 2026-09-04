@@ -175,7 +175,7 @@ export class LeadsService {
   async findAllStaff(query: QueryLeadsDto) {
     const where = this.buildStaffWhere(query);
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.lead.findMany({
         where,
         select: STAFF_LIST_FIELDS,
@@ -196,7 +196,7 @@ export class LeadsService {
       (stage) => stage !== LeadStage.WON && stage !== LeadStage.LOST,
     );
 
-    const [byStageRaw, total, unassigned, mineOpen, newLast7Days, recent] = await this.prisma.$transaction([
+    const [byStageRaw, total, unassigned, mineOpen, newLast7Days, recent] = await Promise.all([
       this.prisma.lead.groupBy({ by: ['stage'], where: { mergedIntoId: null }, _count: { _all: true } }),
       this.prisma.lead.count({ where: { mergedIntoId: null } }),
       this.prisma.lead.count({ where: { assignedToId: null, mergedIntoId: null } }),
@@ -427,7 +427,7 @@ export class LeadsService {
     await this.getOrThrow(leadId);
 
     const where = { leadId } satisfies Prisma.LeadActivityWhereInput;
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.leadActivity.findMany({
         where,
         orderBy: { occurredAt: 'desc' },
