@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   ServiceUnavailableException,
@@ -12,6 +13,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import type { ChangePasswordDto } from './dto/password-reset.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 
@@ -141,6 +143,46 @@ export class AuthService {
         },
       }),
     );
+  }
+
+  /**
+   * Changing your own password while signed in. Two things make it different
+   * from the emailed reset: the current password is the proof of identity
+   * (unless the account never had one — a Google sign-in, or a row an admin
+   * created), and the session doing the changing survives. Everything else is
+   * cut off: the old password can not keep a forgotten browser logged in, so
+   * every refresh token is revoked and this caller gets a fresh pair.
+   */
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<AuthSession> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Энэ бүртгэл идэвхгүй байна');
+    }
+
+    if (user.password) {
+      const matches = dto.currentPassword ? await compare(dto.currentPassword, user.password) : false;
+      if (!matches) {
+        throw new UnauthorizedException('Одоогийн нууц үг буруу байна');
+      }
+      if (await compare(dto.newPassword, user.password)) {
+        throw new BadRequestException('Шинэ нууц үг хуучнаасаа өөр байх ёстой');
+      }
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: await hash(dto.newPassword, BCRYPT_ROUNDS),
+        // Setting a password settles any outstanding invitation, exactly as
+        // claiming it would have (1B-17).
+        claimTokenHash: null,
+        claimTokenExpiresAt: null,
+        claimedAt: user.claimedAt ?? new Date(),
+      },
+    });
+
+    await this.logoutAll(userId);
+    return this.issueSession(updated);
   }
 
   async refresh(refreshToken: string): Promise<AuthSession> {

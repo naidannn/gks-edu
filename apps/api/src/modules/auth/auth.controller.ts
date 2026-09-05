@@ -6,7 +6,7 @@ import { Public } from '../../common/decorators/public.decorator.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { AuthService } from './auth.service.js';
 import { GoogleLoginDto } from './dto/google-login.dto.js';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
+import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -66,6 +66,20 @@ export class AuthController {
   @ApiOperation({ summary: 'Consume a reset token and set a new password' })
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     await this.passwordReset.reset(dto.token, dto.password);
+  }
+
+  @Post('password/change')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @ApiOperation({
+    summary: 'Нэвтэрсэн хэрэглэгч өөрийн нууц үгээ солих',
+    description:
+      'Одоогийн нууц үгээ баталгаажуулна (Google-ээр нэвтэрдэг, нууц үггүй бүртгэлээс шаардахгүй). '
+      + 'Бусад бүх сесс хаагдаж, дуудсан хэрэглэгчид шинэ токен буцаана.',
+  })
+  changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto) {
+    return this.auth.changePassword(user.id, dto);
   }
 
   @Public()

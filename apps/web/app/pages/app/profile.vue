@@ -110,6 +110,8 @@ const completeness = computed(() => profile.value?.completeness ?? null);
           <DsButton type="submit" variant="accent" :loading="saving">Хадгалах</DsButton>
         </footer>
       </form>
+
+      <AuthChangePassword />
     </template>
   </div>
 </template>

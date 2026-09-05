@@ -179,6 +179,14 @@ async function onLogout() {
               <p class="gks-admin__user-name">{{ auth.user?.name ?? auth.user?.email }}</p>
               <p class="gks-admin__user-role">{{ auth.user?.role ? ROLE_LABELS[auth.user.role] : '' }}</p>
             </div>
+            <NuxtLink
+              to="/admin/account"
+              class="gks-admin__icon-btn"
+              aria-label="Миний бүртгэл"
+              title="Миний бүртгэл — нууц үг солих"
+            >
+              <DsIcon name="key-round" :size="18" />
+            </NuxtLink>
             <button type="button" class="gks-admin__icon-btn" aria-label="Гарах" title="Гарах" @click="onLogout">
               <DsIcon name="log-out" :size="18" />
             </button>

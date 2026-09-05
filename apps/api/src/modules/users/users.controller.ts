@@ -17,13 +17,14 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../prisma/client.js';
 import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
+import { Audit } from '../../common/decorators/audit.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { AccountClaimService } from './account-claim.service.js';
-import { ClaimAccountDto, CreateStaffDto, UpdateStaffDto } from './dto/staff.dto.js';
+import { ClaimAccountDto, CreateStaffDto, SetStaffPasswordDto, UpdateStaffDto } from './dto/staff.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UsersService } from './users.service.js';
 
@@ -61,6 +62,7 @@ export class UsersController {
 
   @Post('staff')
   @Roles(Role.ADMIN)
+  @Audit({ action: 'staff.create', entity: 'User', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Ажилтан бүртгэх — нууц үггүй, урилгаар идэвхжинэ (1G-12)' })
   createStaff(@Body() dto: CreateStaffDto) {
     return this.users.createStaff(dto);
@@ -68,9 +70,42 @@ export class UsersController {
 
   @Patch('staff/:id')
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Ажилтны эрх, төлөв өөрчлөх (1G-12)' })
-  updateStaff(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateStaffDto) {
-    return this.users.updateStaff(id, dto);
+  @Audit({ action: 'staff.update', entity: 'User' })
+  @ApiOperation({ summary: 'Ажилтны мэдээлэл, эрх, төлөв өөрчлөх (1G-12)' })
+  updateStaff(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateStaffDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ) {
+    return this.users.updateStaff(id, dto, actor.id);
+  }
+
+  @Patch('staff/:id/password')
+  @Roles(Role.ADMIN)
+  @Audit({ action: 'staff.password.set', entity: 'User' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Ажилтны нууц үгийг шууд тохоох (1G-12)',
+    description: 'Тухайн хэрэглэгчийн нээлттэй бүх сесс хаагдана.',
+  })
+  async setStaffPassword(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SetStaffPasswordDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<void> {
+    await this.users.setStaffPassword(id, dto.password, actor.id);
+  }
+
+  @Delete('staff/:id')
+  @Roles(Role.ADMIN)
+  @Audit({ action: 'staff.delete', entity: 'User' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Мөр үлдээгээгүй ажилтны бүртгэлийг устгах (1G-12)' })
+  async deleteStaff(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<void> {
+    await this.users.deleteStaff(id, actor.id);
   }
 
   // ─── Account claim (1B-17) ────────────────────────────────────────────────

@@ -137,6 +137,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     isStaff,
     isDocStaff,
+    apply,
     login,
     register,
     loginWithGoogle,
