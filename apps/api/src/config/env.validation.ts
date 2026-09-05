@@ -50,6 +50,27 @@ class EnvironmentVariables {
   @IsOptional()
   FX_FALLBACK_KRW_RATE?: string;
 
+  /** 1H-10 — Gemini with Google Search grounding, for intake-date research. */
+  @IsString()
+  @IsOptional()
+  GEMINI_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_MODEL?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_BASE_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_TIMEOUT_MS?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_MOCK?: string;
+
   @IsString()
   @IsOptional()
   QPAY_BASE_URL?: string;
@@ -85,6 +106,10 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   NOTIFICATION_STAFF_EMAIL?: string;
+
+  @IsString()
+  @IsOptional()
+  NOTIFICATION_REPLY_TO?: string;
 
   @IsString()
   @IsOptional()

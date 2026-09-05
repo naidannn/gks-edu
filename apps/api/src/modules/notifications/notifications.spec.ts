@@ -24,7 +24,7 @@ describe('render (1G-02 placeholder interpolation)', () => {
 });
 
 describe('NOTIFICATION_TEMPLATES (1G-06)', () => {
-  it('covers all 18 events with an in-app template', () => {
+  it('covers every event with an in-app template', () => {
     const inApp = new Set(
       NOTIFICATION_TEMPLATES.filter((row) => row.channel === NotificationChannel.IN_APP).map((row) => row.event),
     );

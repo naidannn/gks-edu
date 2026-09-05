@@ -73,7 +73,8 @@ QPAY_CALLBACK_URL="https://$DOMAIN/api/v1/payments/qpay/webhook"
 # NUXT_PUBLIC_GOOGLE_CLIENT_ID=
 
 # --- Notifications ----------------------------------------------------------
-# With RESEND_API_KEY unset the API logs each email instead of sending it.
+# Resend. The from-address's domain must be a verified sending domain on the
+# account; without the key the API logs each email instead of sending it.
 # RESEND_API_KEY=
 NOTIFICATION_FROM_EMAIL="GKSedu <noreply@$DOMAIN>"
 # NOTIFICATION_STAFF_EMAIL=

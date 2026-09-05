@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { SmsService } from '../../sms/sms.service.js';
 import { NOTIFICATION_QUEUE } from '../../queue/queue.constants.js';
 import { EmailService } from './email.service.js';
+import { presentationFor } from './email/email-presentation.js';
 import { SmsBudgetService } from './sms-budget.service.js';
 
 /**
@@ -40,7 +41,18 @@ export class NotificationsProcessor extends WorkerHost {
       switch (notification.channel) {
         case NotificationChannel.EMAIL: {
           if (!notification.user.email) return void (await this.skip(notificationId, 'Имэйл хаяггүй'));
-          await this.email.send(notification.user.email, notification.title, notification.body);
+          const look = presentationFor(notification.event, toneOf(notification.meta));
+          await this.email.send(
+            notification.user.email,
+            {
+              subject: notification.title,
+              eyebrow: look.eyebrow,
+              tone: look.tone,
+              body: notification.body,
+              cta: notification.link ? { label: look.ctaLabel, url: notification.link } : null,
+            },
+            notification.event,
+          );
           break;
         }
         case NotificationChannel.SMS: {
@@ -82,4 +94,9 @@ export class NotificationsProcessor extends WorkerHost {
       data: { status: NotificationStatus.SKIPPED, failedReason: reason },
     });
   }
+}
+
+/** `meta` is a JSON column; a dispatcher may put a tone override in it. */
+function toneOf(meta: unknown): unknown {
+  return typeof meta === 'object' && meta !== null ? (meta as { tone?: unknown }).tone : undefined;
 }

@@ -4,6 +4,7 @@ import { hash } from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { EmailService } from '../notifications/email.service.js';
+import { accountClaimEmail } from '../notifications/email/transactional.js';
 
 /** How long an invitation link stays valid. */
 const CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -51,20 +52,8 @@ export class AccountClaimService {
 
     await this.email.send(
       target,
-      'GKSedu.mn — бүртгэлээ идэвхжүүлнэ үү',
-      [
-        `Сайн байна уу${user.name ? `, ${user.name}` : ''}.`,
-        '',
-        'GKS EDU GROUP таны нэр дээр үйлчилгээний бүртгэл үүсгэлээ.',
-        'Доорх холбоосоор орж нууц үгээ тохируулснаар кабинетдаа нэвтэрч, материалаа',
-        'онлайнаар илгээх, төлбөрөө төлөх боломжтой болно.',
-        '',
-        link,
-        '',
-        'Холбоос 7 хоногийн дараа хүчингүй болно.',
-        '',
-        'GKS EDU GROUP',
-      ].join('\n'),
+      accountClaimEmail({ name: user.name, email: target, link }),
+      'account_claim',
     );
 
     this.logger.log(`Бүртгэл эзэмших урилга илгээлээ: ${target}`);

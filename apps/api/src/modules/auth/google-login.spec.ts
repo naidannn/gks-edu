@@ -3,6 +3,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../prisma/prisma.service.js';
+import type { NotificationsService } from '../notifications/notifications.service.js';
 import { AuthService } from './auth.service.js';
 
 const { verifyIdToken } = vi.hoisted(() => ({ verifyIdToken: vi.fn() }));
@@ -59,10 +60,13 @@ function serviceStub(
     getOrThrow: vi.fn().mockImplementation((key: string) => (key.endsWith('ExpiresIn') ? '15m' : 'secret')),
   };
 
+  const notifications = { dispatch: vi.fn().mockResolvedValue(0) };
+
   const service = new AuthService(
     prisma as unknown as PrismaService,
     jwt as unknown as JwtService,
     config as unknown as ConfigService,
+    notifications as unknown as NotificationsService,
   );
 
   return { service, prisma };

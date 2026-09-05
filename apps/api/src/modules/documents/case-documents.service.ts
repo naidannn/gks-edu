@@ -286,7 +286,32 @@ export class CaseDocumentsService {
     doc: { id: string; case: { id: string; code: string; userId: string }; template: { nameMn: string } },
     dto: ReviewDocumentDto,
   ): Promise<void> {
-    if (dto.action === ReviewAction.ACCEPT) return;
+    if (dto.action === ReviewAction.ACCEPT) {
+      // "Yours is in" is worth an email on its own: without it the client only
+      // ever hears from us when something is wrong, and starts to assume
+      // silence means rejection.
+      const remaining = await this.prisma.caseDocument.count({
+        where: {
+          caseId: doc.case.id,
+          deletedAt: null,
+          necessity: { not: Necessity.OPTIONAL },
+          status: { notIn: [...SETTLED_STATUSES] },
+        },
+      });
+
+      await this.notifications.dispatch({
+        event: NotificationEvent.DOCUMENT_APPROVED,
+        userIds: [doc.case.userId],
+        caseId: doc.case.id,
+        context: {
+          caseId: doc.case.id,
+          caseCode: doc.case.code,
+          documentName: doc.template.nameMn,
+          remainingCount: remaining ? `${remaining} материал` : 'Бүрдэн дууссан',
+        },
+      });
+      return;
+    }
 
     await this.notifications.dispatch({
       event:

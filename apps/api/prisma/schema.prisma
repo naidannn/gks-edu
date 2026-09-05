@@ -52,8 +52,15 @@ model User {
   claimTokenHash      String?   @unique
   claimTokenExpiresAt DateTime?
   claimedAt           DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+
+  /// Password reset. Same shape as the claim token — SHA-256 of the value that
+  /// only ever exists inside the emailed link — but short-lived, and it never
+  /// signs anyone in on its own.
+  passwordResetTokenHash String?   @unique
+  passwordResetExpiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   refreshTokens     RefreshToken[]
   documents         Document[]
@@ -1658,11 +1665,14 @@ model AuditLog {
 /// The 16 automatic notifications of gksedu.md §16, plus the two staff-side
 /// triggers the office needs (`LEAD_CREATED` completes 1A-17).
 enum NotificationEvent {
+  // Account lifecycle
+  ACCOUNT_CREATED
   // Materials (§6)
   DOCUMENT_DEADLINE_NEAR
   DOCUMENT_MISSING
   DOCUMENT_REJECTED
   DOCUMENT_FIX_REQUIRED
+  DOCUMENT_APPROVED
   // Contract & payment (§5)
   CONTRACT_CONFIRMED
   PAYMENT_DUE

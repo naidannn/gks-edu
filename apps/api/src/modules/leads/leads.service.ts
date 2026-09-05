@@ -3,6 +3,8 @@ import { STAFF_ROLES } from '../../common/constants/roles.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { LeadActivityType, LeadSource, LeadStage, NotificationEvent, Prisma, type Role, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { EmailService } from '../notifications/email.service.js';
+import { leadReceivedEmail } from '../notifications/email/transactional.js';
 import { LEAD_SOURCE_LABELS, SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
@@ -59,6 +61,7 @@ export class LeadsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly email: EmailService,
   ) {}
 
   /**
@@ -131,6 +134,7 @@ export class LeadsService {
     });
 
     await this.notifyStaffOfNewLead(lead);
+    await this.acknowledgeLead(lead);
     return { id: lead.id, merged: false };
   }
 
@@ -168,6 +172,40 @@ export class LeadsService {
           lead.interestedServices.map((service) => SERVICE_TYPE_LABELS[service]).join(', ') || 'Тодорхойгүй',
       },
     });
+  }
+
+  /**
+   * The enquirer's own receipt. A lead has no `User` row yet, so this cannot go
+   * through the dispatcher — it is a direct send to the address on the form,
+   * and it is the only mail that person will get until they have an account.
+   */
+  private async acknowledgeLead(lead: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string | null;
+    interestedServices: ServiceType[];
+  }): Promise<void> {
+    if (!lead.email) return;
+
+    const services = lead.interestedServices.map((service) => SERVICE_TYPE_LABELS[service]);
+
+    try {
+      await this.email.send(
+        lead.email,
+        leadReceivedEmail({
+          name: `${lead.lastName} ${lead.firstName}`.trim(),
+          phone: lead.phone,
+          email: lead.email,
+          services,
+          universitiesUrl: this.email.link('/universities'),
+        }),
+        'lead_received',
+      );
+    } catch (error) {
+      // A receipt is a courtesy; the lead is already saved and the desk notified.
+      this.logger.warn(`Сэжимд баталгааны имэйл илгээгдсэнгүй: ${String(error)}`);
+    }
   }
 
   // ─── Staff CRM (1B-01) ────────────────────────────────────────────────────

@@ -57,6 +57,28 @@ export interface AppConfig {
     appUrl: string;
     /** Where staff-facing notifications (`LEAD_CREATED`) go when nobody is assigned. */
     staffFallbackEmail?: string;
+    /**
+     * `Reply-To` on every outgoing mail. The from-address is a no-reply, so
+     * without this a client who hits "Reply" writes into a void; set it to the
+     * office mailbox once GKS EDU names one.
+     */
+    replyToEmail?: string;
+  };
+  gemini: {
+    /**
+     * 1H-10 — the "research this school's intake dates online" button. Google
+     * is the only provider wired: Search grounding is what makes the answer a
+     * lookup rather than a recollection.
+     */
+    apiKey: string;
+    /** Overridden per run by `AdmissionConfig.researchModel`; this is the fallback. */
+    model: string;
+    baseUrl: string;
+    /** A grounded search takes 30-90s; the request must outlive it. */
+    timeoutMs: number;
+    /** Fakes the response instead of calling Google — the default, so the
+     *  feature is runnable without a key (same idea as `QPAY_MOCK`). */
+    mock: boolean;
   };
   storage: {
     /** `local` writes to disk; `supabase` needs SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (0-08). */
@@ -98,6 +120,14 @@ export const configuration = (): AppConfig => ({
     callbackUrl: process.env.QPAY_CALLBACK_URL ?? 'http://localhost:3001/api/v1/payments/qpay/webhook',
     mock: (process.env.QPAY_MOCK ?? 'true') === 'true',
   },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY ?? '',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-pro',
+    baseUrl: process.env.GEMINI_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta',
+    timeoutMs: Number.parseInt(process.env.GEMINI_TIMEOUT_MS ?? '120000', 10),
+    // Defaults to mock unless a key is present AND mocking is not forced on.
+    mock: (process.env.GEMINI_MOCK ?? (process.env.GEMINI_API_KEY ? 'false' : 'true')) === 'true',
+  },
   sms: {
     provider: 'console',
     dailyLimitPerUser: Number.parseInt(process.env.SMS_DAILY_LIMIT_PER_USER ?? '3', 10),
@@ -112,6 +142,7 @@ export const configuration = (): AppConfig => ({
     fromEmail: process.env.NOTIFICATION_FROM_EMAIL ?? 'GKSedu <noreply@gksedu.mn>',
     appUrl: process.env.APP_PUBLIC_URL ?? 'http://localhost:3000',
     staffFallbackEmail: process.env.NOTIFICATION_STAFF_EMAIL,
+    replyToEmail: process.env.NOTIFICATION_REPLY_TO,
   },
   storage: {
     driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',

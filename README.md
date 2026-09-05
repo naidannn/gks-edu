@@ -87,6 +87,7 @@ pnpm db:up:local            # postgres 17 + pgvector + redis
 | `pnpm prisma:generate` / `migrate` / `deploy` / `studio` / `seed` | Prisma |
 | `pnpm universities:import` | import the Korean university dataset (`--publish`, `--no-assets`) |
 | `pnpm clients:import <file.csv>` | import an existing client list; add `--commit` to write (1B-12) |
+| `pnpm email:preview [dir]` | render every outgoing email to HTML + text, no sending (1G-17) |
 | `pnpm tasks [epic]` | roadmap progress from `docs/TASKS.md` |
 
 ## API
@@ -181,6 +182,37 @@ Both are safe to run repeatedly: every scheduled notification carries a unique
 With `RESEND_API_KEY` unset, email is logged rather than sent; the SMS gateway is still
 undecided (`ARCHITECTURE.md` §18 question 10), so SMS is logged too — but the per-user and
 platform daily ceilings (`SMS_DAILY_LIMIT_*`) already apply.
+
+### Email
+
+Every message — notification or not — is rendered by one layout,
+`modules/notifications/email/email-template.ts`: a dark brand header, a tone-coloured
+accent stripe, a badge naming the stage, the body, a button, and the company footer. It is
+table-based with inline colours because Outlook renders with Word and Gmail strips
+`<style>`; the `<style>` block only carries the dark-mode and small-screen overrides.
+
+The body stays *plain text* in `NotificationTemplate.bodyMn` — the same string feeds SMS
+and the in-app centre, and admins edit it in a textarea. `email-content.ts` promotes the
+shapes staff already write:
+
+| In the template | In the email |
+|---|---|
+| `Гэрээний дугаар: GKS-C-1` (run of such lines) | a fact table |
+| `- Иргэний үнэмлэх` | a bulleted list |
+| a trailing `{{link}}` | the CTA button (label from `email-presentation.ts`) |
+| anything else | a paragraph |
+
+The badge, tone and button label per event live in `email-presentation.ts`, not in the
+database: an admin rewording a message must not be able to leave it without a button. A
+dispatcher can override the tone by putting `tone` in the notification context — that is
+how one `VISA_RESULT` template covers both a granted and a refused visa.
+
+Mails that carry a credential (account claim, password reset) bypass the dispatcher
+entirely — `email/transactional.ts` — because someone who switched email notifications off
+must still be able to get back into their account.
+
+`pnpm email:preview` renders all of them, plus a contact sheet, into `tmp/email-preview`.
+The from-address's domain has to be verified in Resend before anything sends.
 
 Errors always come back in one shape (`AllExceptionsFilter`), including a `requestId`
 that matches the `x-request-id` response header:

@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { renderEmail, type EmailMessage } from './email/email-template.js';
+
+export type { EmailMessage } from './email/email-template.js';
+
+/** Resend rejects tags whose value is not `[A-Za-z0-9_-]`. */
+const TAG_SAFE = /[^A-Za-z0-9_-]/g;
 
 /**
  * 1G-03 — email channel.
@@ -7,6 +13,9 @@ import { ConfigService } from '@nestjs/config';
  * Resend over plain HTTP: one endpoint, no SDK, no native dependency to add to
  * `allowBuilds`. With no `RESEND_API_KEY` the service logs the message instead
  * of sending, so development and tests never post real mail.
+ *
+ * Every message goes through `renderEmail`, so the layout is decided in one
+ * place — see `email/email-template.ts` for why it looks the way it does.
  */
 @Injectable()
 export class EmailService {
@@ -18,19 +27,35 @@ export class EmailService {
     return Boolean(this.config.get<string>('notifications.resendApiKey'));
   }
 
-  async send(to: string, subject: string, body: string): Promise<void> {
+  /**
+   * @param tag Groups the send in Resend's dashboard — the notification event,
+   *            or the name of the transactional mail (`password_reset`).
+   */
+  async send(to: string, message: EmailMessage, tag?: string): Promise<void> {
     const apiKey = this.config.get<string>('notifications.resendApiKey');
     const from = this.config.get<string>('notifications.fromEmail') ?? 'GKSedu <noreply@gksedu.mn>';
+    const replyTo = this.config.get<string>('notifications.replyToEmail');
+    const appUrl = this.config.get<string>('notifications.appUrl') ?? 'https://gksedu.mn';
+
+    const { html, text } = renderEmail(message, appUrl);
 
     if (!apiKey) {
-      this.logger.log(`[EMAIL→${to}] ${subject}`);
+      this.logger.log(`[EMAIL→${to}] ${message.subject}\n${text}`);
       return;
     }
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ from, to: [to], subject, text: body, html: toHtml(subject, body) }),
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject: message.subject,
+        html,
+        text,
+        ...(replyTo ? { reply_to: [replyTo] } : {}),
+        ...(tag ? { tags: [{ name: 'kind', value: tag.replace(TAG_SAFE, '_').slice(0, 60) }] } : {}),
+      }),
     });
 
     if (!response.ok) {
@@ -38,34 +63,11 @@ export class EmailService {
       throw new Error(`Resend ${response.status}: ${detail.slice(0, 300)}`);
     }
   }
-}
 
-/**
- * Minimal Mongolian-friendly HTML wrapper. Deliberately inline-styled and
- * table-free — mail clients that strip `<style>` still render it sanely.
- */
-function toHtml(subject: string, body: string): string {
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map((block) => `<p style="margin:0 0 16px;line-height:1.6">${escapeHtml(block).replace(/\n/g, '<br>')}</p>`)
-    .join('');
-
-  return [
-    '<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;',
-    'font-size:15px;color:#1c1c1e;max-width:560px;margin:0 auto;padding:24px">',
-    `<h1 style="font-size:18px;margin:0 0 20px">${escapeHtml(subject)}</h1>`,
-    paragraphs,
-    '<hr style="border:none;border-top:1px solid #e5e5ea;margin:24px 0">',
-    '<p style="font-size:12px;color:#8e8e93;margin:0">',
-    'Энэ мэдэгдлийг GKSedu.mn системээс автоматаар илгээв.',
-    '</p></div>',
-  ].join('');
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  /** Absolute URL for a link inside an email — `{{link}}` is already absolute. */
+  link(path: string): string {
+    if (/^https?:\/\//i.test(path)) return path;
+    const base = (this.config.get<string>('notifications.appUrl') ?? '').replace(/\/$/, '');
+    return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+  }
 }

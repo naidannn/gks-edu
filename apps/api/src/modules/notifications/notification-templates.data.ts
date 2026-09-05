@@ -1,9 +1,10 @@
 import { NotificationChannel, NotificationEvent } from '../../prisma/client.js';
 
 /**
- * The 16 notifications of gksedu.md §16 plus the two staff triggers, written
- * out in Mongolian (1G-06). These are *seed defaults*: admins edit the rows in
- * the database afterwards, and the seeder never overwrites an edited row.
+ * The notifications of gksedu.md §16, plus the two staff triggers and the
+ * account-lifecycle mails, written out in Mongolian (1G-06). These are *seed
+ * defaults*: admins edit the rows in the database afterwards, and the seeder
+ * never overwrites an edited row.
  *
  * Placeholders are `{{name}}` and resolve against the dispatcher's context —
  * see `NotificationsService.renderContext()` for what is always available
@@ -29,6 +30,33 @@ const CASE_DEPARTURE = '/app/cases/{{caseId}}/departure';
 const CASE_CONTRACT = '/app/cases/{{caseId}}/contract';
 
 export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
+  // ── Бүртгэл ──────────────────────────────────────────────────────────────
+  {
+    event: NotificationEvent.ACCOUNT_CREATED,
+    channel: NotificationChannel.IN_APP,
+    titleMn: 'GKSedu.mn-д тавтай морил',
+    bodyMn: 'Таны бүртгэл үүслээ. Хаанаас эхлэхээ мэдэхгүй бол хэрэгцээгээ хэдхэн алхмаар тодруулаарай.',
+    linkMn: '/app/start',
+  },
+  {
+    event: NotificationEvent.ACCOUNT_CREATED,
+    channel: NotificationChannel.EMAIL,
+    titleMn: 'GKSedu.mn-д тавтай морил',
+    bodyMn:
+      'Сайн байна уу, {{clientName}}.\n\n' +
+      'Таны бүртгэл амжилттай үүслээ. Одооноос Солонгост суралцах замын бүх алхмаа ' +
+      'нэг кабинетаас хөтлөх боломжтой боллоо.\n\n' +
+      'Кабинетаараа дараах зүйлийг хийнэ:\n' +
+      '- 135 сургуулийн мэдээллийг харьцуулж, сонирхсоноо хадгалах\n' +
+      '- Зуучлалын гэрээгээ онлайнаар байгуулах\n' +
+      '- Материалаа илгээж, хянагдаж буй явцыг хөтлөх\n' +
+      '- Төлбөрөө QPay-ээр төлж, түүхээ харах\n\n' +
+      'Бүртгэлтэй имэйл: {{userEmail}}\n\n' +
+      'Асуух зүйл гарвал 7710-9000 дугаараар бидэнтэй холбогдоорой.\n\n' +
+      'GKS EDU GROUP',
+    linkMn: '/app/start',
+  },
+
   // ── Материал (§6) ────────────────────────────────────────────────────────
   {
     event: NotificationEvent.DOCUMENT_DEADLINE_NEAR,
@@ -107,6 +135,27 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
       'Сайн байна уу, {{clientName}}.\n\n' +
       '"{{documentName}}" материалд дараах засвар хэрэгтэй байна:\n{{reason}}\n\n' +
       'Кабинет: {{link}}\n\n' +
+      'GKS EDU GROUP',
+    linkMn: CASE_DOCS,
+  },
+
+  {
+    event: NotificationEvent.DOCUMENT_APPROVED,
+    channel: NotificationChannel.IN_APP,
+    titleMn: 'Материал баталгаажлаа',
+    bodyMn: '"{{documentName}}" материалыг хүлээн авлаа.',
+    linkMn: CASE_DOCS,
+  },
+  {
+    event: NotificationEvent.DOCUMENT_APPROVED,
+    channel: NotificationChannel.EMAIL,
+    titleMn: 'Материал баталгаажлаа — {{documentName}}',
+    bodyMn:
+      'Сайн байна уу, {{clientName}}.\n\n' +
+      '"{{documentName}}" материалыг хянаж, хүлээн авлаа. Танд баярлалаа.\n\n' +
+      'Хэрэг: {{caseCode}}\n' +
+      'Үлдсэн материал: {{remainingCount}}\n\n' +
+      'Бүрдүүлэлтийн явцаа кабинетаасаа хараарай.\n\n' +
       'GKS EDU GROUP',
     linkMn: CASE_DOCS,
   },

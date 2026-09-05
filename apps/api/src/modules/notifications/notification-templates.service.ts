@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, type OnApplicationBootstrap } from '@nestjs/common';
 import type { NotificationChannel, NotificationEvent } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { NOTIFICATION_TEMPLATES } from './notification-templates.data.js';
@@ -10,10 +10,28 @@ import { NOTIFICATION_TEMPLATES } from './notification-templates.data.js';
  * admin's wording must survive a deploy.
  */
 @Injectable()
-export class NotificationTemplatesService {
+export class NotificationTemplatesService implements OnApplicationBootstrap {
   private readonly logger = new Logger(NotificationTemplatesService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Seeding on boot, not only from `prisma db seed`: a release that adds an
+   * event ships its templates with it. Without this the new event dispatches
+   * into nothing on the first deploy and the mail is silently never sent —
+   * `dispatch()` only warns. Failure is logged, never fatal: the API must come
+   * up even if this one write cannot.
+   */
+  async onApplicationBootstrap(): Promise<void> {
+    try {
+      await this.seedDefaults();
+    } catch (error) {
+      this.logger.error(
+        'Мэдэгдлийн загварыг ачаалах үед үүсгэж чадсангүй',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
 
   async list(filter: { event?: NotificationEvent; channel?: NotificationChannel } = {}) {
     return this.prisma.notificationTemplate.findMany({

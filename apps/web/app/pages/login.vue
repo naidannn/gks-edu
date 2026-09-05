@@ -64,6 +64,8 @@ async function submitGoogle(idToken: string) {
       <DsInput v-model="email" type="email" label="И-мэйл" required autocomplete="email" />
       <DsInput v-model="password" type="password" label="Нууц үг" required autocomplete="current-password" />
 
+      <NuxtLink to="/forgot-password" class="gks-auth__forgot">Нууц үгээ мартсан уу?</NuxtLink>
+
       <p v-if="error" class="gks-auth__error">{{ error }}</p>
 
       <DsButton type="submit" variant="accent" block :disabled="pending" :loading="pending">
@@ -105,6 +107,16 @@ async function submitGoogle(idToken: string) {
   gap: var(--sp-4);
   text-align: left;
 }
+
+.gks-auth__forgot {
+  margin-top: calc(var(--sp-2) * -1);
+  align-self: flex-end;
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gks-auth__forgot:hover { color: var(--brand-600); }
 
 .gks-auth__error {
   border: var(--border-hair) solid var(--danger-line);

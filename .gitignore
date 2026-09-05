@@ -27,3 +27,6 @@ deploy/.env.production
 
 # Local build staging produced by deploy/build.sh.
 .deploy-build/
+
+# Rendered email previews (pnpm email:preview).
+apps/api/tmp/

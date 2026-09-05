@@ -6,14 +6,19 @@ import { Public } from '../../common/decorators/public.decorator.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { AuthService } from './auth.service.js';
 import { GoogleLoginDto } from './dto/google-login.dto.js';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
+import { PasswordResetService } from './password-reset.service.js';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly passwordReset: PasswordResetService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -38,6 +43,29 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange a Google ID token for a token pair' })
   google(@Body() dto: GoogleLoginDto) {
     return this.auth.loginWithGoogle(dto.idToken);
+  }
+
+  @Public()
+  @Post('password/forgot')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
+  @ApiOperation({
+    summary: 'Email a password-reset link',
+    description:
+      'Always 202, whether or not the address is registered — the response must not reveal who has an account.',
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ ok: true }> {
+    await this.passwordReset.request(dto.email);
+    return { ok: true };
+  }
+
+  @Public()
+  @Post('password/reset')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @ApiOperation({ summary: 'Consume a reset token and set a new password' })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.passwordReset.reset(dto.token, dto.password);
   }
 
   @Public()

@@ -6,11 +6,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
-import type { Role, User } from '../../prisma/client.js';
+import { NotificationEvent, type Role, type User } from '../../prisma/client.js';
 import { compare, hash } from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 
@@ -34,6 +35,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthSession> {
@@ -50,6 +52,7 @@ export class AuthService {
       },
     });
 
+    await this.welcome(user);
     return this.issueSession(user);
   }
 
@@ -109,11 +112,11 @@ export class AuthService {
       }));
 
     if (!user) {
-      return this.issueSession(
-        await this.prisma.user.create({
-          data: { email: payload.email, googleId, name: payload.name ?? null },
-        }),
-      );
+      const created = await this.prisma.user.create({
+        data: { email: payload.email, googleId, name: payload.name ?? null },
+      });
+      await this.welcome(created);
+      return this.issueSession(created);
     }
 
     if (!user.isActive) {
@@ -179,6 +182,20 @@ export class AuthService {
     await this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
+    });
+  }
+
+  /**
+   * The first email of the journey (§16). It goes through the dispatcher like
+   * every other notification — so it lands in the in-app centre too, and an
+   * admin can reword it — and `dispatch` never throws, so a mail outage can
+   * not fail a registration.
+   */
+  private async welcome(user: Pick<User, 'id' | 'email' | 'name'>): Promise<void> {
+    await this.notifications.dispatch({
+      event: NotificationEvent.ACCOUNT_CREATED,
+      userIds: [user.id],
+      context: { clientName: user.name ?? 'Эрхэм харилцагч', userEmail: user.email },
     });
   }
 
