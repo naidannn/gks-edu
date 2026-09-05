@@ -265,7 +265,7 @@ useSeoMeta({
 
             <div v-if="university" class="gks-lead__university">
               <span class="gks-lead__legend">Сонирхож буй сургууль</span>
-              <DsTag selected>{{ university.nameMn }}</DsTag>
+              <DsTag selected>{{ university.nameEn }}</DsTag>
             </div>
 
             <DsInput v-model="form.interestedMajor" label="Сонирхож буй мэргэжил" placeholder="Жишээ: Компьютерийн ухаан" />

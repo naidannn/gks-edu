@@ -308,10 +308,10 @@ useSeoMeta({
         <div class="gks-trust__track">
           <ul class="gks-trust__group">
             <li v-for="university in trustWall" :key="university.id">
-              <NuxtLink :to="`/universities/${university.slug}`" class="gks-trust__item" :title="university.nameMn">
+              <NuxtLink :to="`/universities/${university.slug}`" class="gks-trust__item" :title="university.nameEn">
                 <img
                   :src="university.logoPath!"
-                  :alt="`${university.nameMn} лого`"
+                  :alt="`${university.nameEn} лого`"
                   loading="lazy"
                   width="80"
                   height="80"

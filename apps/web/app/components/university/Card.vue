@@ -4,16 +4,18 @@ import type { UniversityCard } from '@gks/shared';
 const props = withDefaults(
   defineProps<{
     university: UniversityCard;
-    nameLanguage?: 'mn' | 'en';
     showLivingCost?: boolean;
   }>(),
-  { nameLanguage: 'mn', showLivingCost: true },
+  { showLivingCost: true },
 );
 
 const students = computed(() => formatNumber(props.university.studentsTotal));
-const displayName = computed(() =>
-  props.nameLanguage === 'en' ? props.university.nameEn : props.university.nameMn,
-);
+/**
+ * Korean schools are named in English on every card. The Mongolian
+ * transliteration varies between sources, so the English name is what a
+ * visitor can actually match against the school's own site and paperwork.
+ */
+const displayName = computed(() => props.university.nameEn);
 const monthlyCost = computed(() =>
   formatKrwRange(
     props.university.livingCost?.monthlyTotalMin,
@@ -35,7 +37,7 @@ const theRank = computed(() => props.university.theKoreaRank);
       <img
         v-if="university.logoPath"
         :src="university.logoPath"
-        :alt="`${university.nameMn} лого`"
+        :alt="`${university.nameEn} лого`"
         class="gks-uni-card__logo"
         loading="lazy"
         width="72"
