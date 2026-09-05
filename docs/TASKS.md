@@ -42,7 +42,7 @@
 | `0-12` | Soft-delete конвенц (`deletedAt`) + `prisma/soft-delete.ts` туслах. *(Prisma 7-д `$use` middleware байхгүй; `CaseDocument`/`DocumentFile` дээр `NOT_DELETED` / `softDeletePatch()`-ийг тодорхой хэрэглэнэ)* | done  | S      | 0-03     |
 | `0-13` | `CaseAccessGuard` — роль + эзэмшлийн хосолсон шалгалт                                         | done  | M      | 0-07     |
 | `0-14` | CI: GitHub Actions — install/typecheck/lint/test/prisma validate                              | done  | M      | 0-01     |
-| `0-15` | Staging орчин: API + web deploy, `prisma migrate deploy` release дээр                         | todo  | L      | 0-14     |
+| `0-15` | Production орчин: API + web deploy, `prisma migrate deploy` release дээр. *(EC2 + nginx + PostgreSQL 17 + Redis, Let's Encrypt SSL, `deploy/*.sh` — `deploy/README.md`)* | done  | L      | 0-14     |
 | `0-16` | Алдаа хянах (Sentry эсвэл түүнтэй адил) API + web дээр                                        | todo  | S      | 0-15     |
 
 
@@ -84,6 +84,7 @@
 | `1A-29` | `GksRankingConfig` + жингийн API — 5 бүрэлдэхүүний жин, рэйтингд ороогүй сургуулийн саармаг суурь оноо                                                                                                                    | done    | M      | 1A-28       |
 | `1A-30` | GKS эрэмбийн хөдөлгүүр: `gksScore`/`gksRank` тооцоолол, шөнийн BullMQ ажил, засварын дараах дахин тооцоолол; каталог ба хайлтын анхдагч эрэмбэ                                                                            | done    | L      | 1A-29       |
 | `1A-31` | Admin: `/admin/universities/ranking` — жин тохируулах, урьдчилан харах, задаргаа, гар засвар (`gksRankBoost`)                                                                                                             | done    | M      | 1A-30       |
+| `1A-32` | Google-ээр нэвтрэх: `POST /auth/google` (ID token баталгаажуулалт), `User.googleId`, нэвтрэх/бүртгүүлэх хуудсан дээрх Google товч. Баталгаажсан и-мэйл ижил байвал бүртгэлийг автоматаар холбоно (урилга хүлээж байсан бол эзэмшүүлнэ) | done    | M      | 1A-18       |
 
 
 ---

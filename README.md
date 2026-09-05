@@ -97,6 +97,7 @@ Every route is authenticated by the global `JwtAuthGuard`; opt out with `@Public
 ```
 POST   /api/v1/auth/register      public
 POST   /api/v1/auth/login         public, 5 req/min
+POST   /api/v1/auth/google        public, 10 req/min — Google ID token → session
 POST   /api/v1/auth/refresh       public — rotates the refresh token
 POST   /api/v1/auth/logout        public — revokes one refresh token
 POST   /api/v1/auth/logout-all    revokes every session
@@ -142,6 +143,23 @@ GET    /api/v1/audit               admin — the audit trail (0-11)
 
 GET    /api/v1/health             public
 ```
+
+### Google sign-in
+
+`POST /auth/google` takes the ID token Google Identity Services hands the browser, verifies
+it against `GOOGLE_CLIENT_ID` with `google-auth-library`, and issues the same token pair the
+password flow does. There is no redirect leg and no client secret — the popup runs entirely
+in the browser, so the OAuth client only needs its **Authorised JavaScript origins** filled
+in (`http://localhost:3000` in development).
+
+Set the same client id twice: `GOOGLE_CLIENT_ID` for the API and
+`NUXT_PUBLIC_GOOGLE_CLIENT_ID` for the web app. Leave them unset and the feature disappears
+cleanly — the button does not render and the endpoint answers `503`.
+
+An account is matched by `User.googleId` first, then by email (case-insensitively, and only
+when Google reports `email_verified`). A match is linked rather than duplicated, which is
+also how a staff-created client with an outstanding claim invitation (1B-17) can walk in
+through Google instead of setting a password.
 
 ### Notifications and reports
 
@@ -220,6 +238,22 @@ docker build -f apps/web/Dockerfile -t gks-web .
 
 The API image ships `prisma/` and `prisma.config.ts` so `prisma migrate deploy` can run on
 release. The web image is the standalone Nitro output and carries no `node_modules`.
+
+## Deployment
+
+Production is **https://gksedu.mn** — one EC2 box in `ap-southeast-1` that also hosts ten
+other applications. Both apps are built locally and only compiled output is shipped; the
+server has 1.9 GB of RAM and cannot afford a Nuxt build.
+
+```bash
+./deploy/deploy.sh          # build, ship, migrate, reload PM2, health-check
+./deploy/status.sh          # PM2, services, memory, database, certificate
+./deploy/logs.sh api        # tail the production logs
+```
+
+`deploy/README.md` covers the layout, the first-time setup order, how migrations run over
+an SSH tunnel, and what every script does — read it before touching the server, because the
+box is shared.
 
 ## Notes
 

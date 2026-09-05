@@ -43,6 +43,10 @@ model User {
   role     Role    @default(USER)
   isActive Boolean @default(true)
 
+  /// Google account subject (`sub`) — set the first time the user signs in with
+  /// Google. A row can carry both this and `password`; either one logs them in.
+  googleId String? @unique
+
   /// 1B-17 — invitation to claim a staff-created account. SHA-256 of the
   /// emailed token; the raw value only ever exists in the invite link.
   claimTokenHash      String?   @unique

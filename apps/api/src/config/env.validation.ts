@@ -37,6 +37,11 @@ class EnvironmentVariables {
   @MinLength(32, { message: 'JWT_REFRESH_SECRET must be at least 32 characters long' })
   JWT_REFRESH_SECRET!: string;
 
+  /** OAuth 2.0 Web client id — the audience every Google ID token is verified against. */
+  @IsString()
+  @IsOptional()
+  GOOGLE_CLIENT_ID?: string;
+
   @IsString()
   @IsOptional()
   FX_RATES_URL?: string;

@@ -13,6 +13,9 @@ useHead({ title: 'Бүртгүүлэх' });
 const auth = useAuthStore();
 const route = useRoute();
 
+/** Without a client id there is no Google column at all — divider included. */
+const googleEnabled = Boolean(useRuntimeConfig().public.googleClientId);
+
 const name = ref('');
 const email = ref('');
 const password = ref('');
@@ -44,10 +47,24 @@ async function submit() {
     // Straight to the profile: nothing else can happen until it is filled in.
     await navigateTo((route.query.redirect as string) || '/app/profile');
   } catch (err) {
-    const data = (err as { data?: { message?: string | string[] } }).data;
-    error.value = Array.isArray(data?.message)
-      ? data.message.join(', ')
-      : (data?.message ?? 'Бүртгэл үүсгэхэд алдаа гарлаа');
+    error.value = apiErrorMessage(err, 'Бүртгэл үүсгэхэд алдаа гарлаа');
+  } finally {
+    pending.value = false;
+  }
+}
+
+/**
+ * Google covers registration too: an unknown address creates the account, a
+ * known one just signs in. Either way the profile still has to be filled in.
+ */
+async function submitGoogle(idToken: string) {
+  error.value = null;
+  pending.value = true;
+  try {
+    await auth.loginWithGoogle(idToken);
+    await navigateTo((route.query.redirect as string) || '/app/profile');
+  } catch (err) {
+    error.value = apiErrorMessage(err, 'Google-ээр бүртгүүлж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -92,6 +109,11 @@ const STEPS = [
         {{ pending ? 'Түр хүлээнэ үү…' : 'Бүртгүүлэх' }}
       </DsButton>
     </form>
+
+    <div v-if="googleEnabled" class="gks-auth__alt">
+      <p class="gks-auth__divider"><span>эсвэл</span></p>
+      <AuthGoogleButton text="signup_with" @credential="submitGoogle" />
+    </div>
 
     <p class="gks-auth__switch">
       Аль хэдийн бүртгэлтэй юу?
@@ -154,6 +176,28 @@ const STEPS = [
   border-radius: var(--radius-1);
   padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-body-sm);
+}
+
+.gks-auth__alt {
+  margin-top: var(--sp-5);
+  width: 100%;
+  max-width: 360px;
+}
+
+.gks-auth__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+.gks-auth__divider::before,
+.gks-auth__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-hairline);
 }
 
 .gks-auth__switch { margin-top: var(--sp-5); font-size: var(--fs-body-sm); color: var(--text-muted); }

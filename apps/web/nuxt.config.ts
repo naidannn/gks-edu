@@ -22,6 +22,9 @@ export default defineNuxtConfig({
       siteUrl: 'https://gksedu.mn',
       // NUXT_PUBLIC_GA_ID — GA4 measurement id ("G-XXXXXXX"). Unset = no analytics script loads (1A-21).
       gaId: '',
+      // NUXT_PUBLIC_GOOGLE_CLIENT_ID — OAuth 2.0 Web client id. Unset = no "Google-ээр
+      // нэвтрэх" button; it must match GOOGLE_CLIENT_ID on the API side.
+      googleClientId: '',
     },
   },
 

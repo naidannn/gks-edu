@@ -59,6 +59,19 @@ export const useAuthStore = defineStore('auth', () => {
     apply(session);
   }
 
+  /**
+   * `idToken` is the credential Google Identity Services hands the browser; the
+   * API verifies it and either links it to the matching account or creates one.
+   */
+  async function loginWithGoogle(idToken: string): Promise<void> {
+    const session = await $fetch<AuthSession>('/auth/google', {
+      baseURL: config.public.apiBase,
+      method: 'POST',
+      body: { idToken },
+    });
+    apply(session);
+  }
+
   /** Returns false when the refresh token is gone or rejected. */
   async function refresh(): Promise<boolean> {
     if (!refreshToken.value) return false;
@@ -126,6 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
     isDocStaff,
     login,
     register,
+    loginWithGoogle,
     refresh,
     logout,
     restore,

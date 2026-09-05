@@ -13,6 +13,13 @@ export interface AppConfig {
     refreshExpiresIn: string;
   };
   embeddingDimensions: number;
+  google: {
+    /**
+     * OAuth 2.0 Web client id. Empty disables "Google-ээр нэвтрэх" on both
+     * sides: the API rejects `POST /auth/google`, the web hides the button.
+     */
+    clientId: string;
+  };
   qpay: {
     baseUrl: string;
     username: string;
@@ -80,6 +87,9 @@ export const configuration = (): AppConfig => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
   embeddingDimensions: Number.parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10),
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+  },
   qpay: {
     baseUrl: process.env.QPAY_BASE_URL ?? 'https://merchant-sandbox.qpay.mn/v2',
     username: process.env.QPAY_USERNAME ?? '',

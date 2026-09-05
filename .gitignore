@@ -19,3 +19,11 @@ apps/api/storage/
 *.tsbuildinfo
 .vscode/*
 !.vscode/extensions.json
+
+# Deploy secrets — SSH keys and the generated production env live here.
+deploy/*.pem
+deploy/*.key
+deploy/.env.production
+
+# Local build staging produced by deploy/build.sh.
+.deploy-build/

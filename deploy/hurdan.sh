@@ -1,0 +1,1 @@
+ssh -i "hurdan.pem" ubuntu@ec2-13-214-22-1.ap-southeast-1.compute.amazonaws.com

@@ -9,6 +9,9 @@ useHead({ title: 'Нэвтрэх' });
 const auth = useAuthStore();
 const route = useRoute();
 
+/** Without a client id there is no Google column at all — divider included. */
+const googleEnabled = Boolean(useRuntimeConfig().public.googleClientId);
+
 const email = ref('');
 const password = ref('');
 const error = ref<string | null>(null);
@@ -30,10 +33,21 @@ async function submit() {
     // land in the CRM and clients in their own cabinet.
     await navigateTo((route.query.redirect as string) || (auth.isStaff ? '/admin' : '/app'));
   } catch (err) {
-    const data = (err as { data?: { message?: string | string[] } }).data;
-    error.value = Array.isArray(data?.message)
-      ? data.message.join(', ')
-      : (data?.message ?? 'И-мэйл эсвэл нууц үг буруу байна');
+    error.value = apiErrorMessage(err, 'И-мэйл эсвэл нууц үг буруу байна');
+  } finally {
+    pending.value = false;
+  }
+}
+
+/** The Google button hands us a verified ID token; the API turns it into a session. */
+async function submitGoogle(idToken: string) {
+  error.value = null;
+  pending.value = true;
+  try {
+    await auth.loginWithGoogle(idToken);
+    await navigateTo((route.query.redirect as string) || (auth.isStaff ? '/admin' : '/app'));
+  } catch (err) {
+    error.value = apiErrorMessage(err, 'Google-ээр нэвтэрч чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -56,6 +70,11 @@ async function submit() {
         {{ pending ? 'Түр хүлээнэ үү…' : 'Нэвтрэх' }}
       </DsButton>
     </form>
+
+    <div v-if="googleEnabled" class="gks-auth__alt">
+      <p class="gks-auth__divider"><span>эсвэл</span></p>
+      <AuthGoogleButton text="signin_with" @credential="submitGoogle" />
+    </div>
 
     <p class="gks-auth__switch">
       Бүртгэлгүй юу?
@@ -94,6 +113,28 @@ async function submit() {
   border-radius: var(--radius-1);
   padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-body-sm);
+}
+
+.gks-auth__alt {
+  margin-top: var(--sp-5);
+  width: 100%;
+  max-width: 360px;
+}
+
+.gks-auth__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+.gks-auth__divider::before,
+.gks-auth__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-hairline);
 }
 
 .gks-auth__switch { margin-top: var(--sp-5); font-size: var(--fs-body-sm); color: var(--text-muted); }

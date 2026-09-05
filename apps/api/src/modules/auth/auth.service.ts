@@ -1,9 +1,15 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import type { Role, User } from '../../prisma/client.js';
 import { compare, hash } from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
+import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
@@ -21,6 +27,9 @@ export interface AuthSession {
 
 @Injectable()
 export class AuthService {
+  /** Built on first use so a deployment without GOOGLE_CLIENT_ID still boots. */
+  private googleClient?: OAuth2Client;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
@@ -58,6 +67,77 @@ export class AuthService {
     }
 
     return this.issueSession(user);
+  }
+
+  /**
+   * Google Identity Services signs the user in on the browser and hands it an ID
+   * token; this verifies that token against our own client id and turns it into
+   * one of our sessions. There is no password involved either way — a row that
+   * only ever signs in with Google keeps `password: null`.
+   */
+  async loginWithGoogle(idToken: string): Promise<AuthSession> {
+    const clientId = this.config.get<string>('google.clientId');
+    if (!clientId) {
+      throw new ServiceUnavailableException('Google-ээр нэвтрэх тохиргоо хийгдээгүй байна');
+    }
+
+    this.googleClient ??= new OAuth2Client(clientId);
+
+    let payload: TokenPayload | undefined;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({ idToken, audience: clientId });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException('Google-ийн баталгаа хүчингүй байна');
+    }
+
+    // `email_verified` is what makes linking by address safe: without it a Google
+    // account could claim an inbox it never proved it owns, and walk into the
+    // matching client record.
+    if (!payload?.sub || !payload.email || !payload.email_verified) {
+      throw new UnauthorizedException('Google баталгаажсан и-мэйл хаяг буцаасангүй');
+    }
+
+    const googleId = payload.sub;
+    const user =
+      (await this.prisma.user.findUnique({ where: { googleId } })) ??
+      // Case-insensitive, because a staff-typed address ("Bat@Gmail.com") must
+      // still match the lower-cased one Google returns instead of forking a
+      // second account on the same inbox.
+      (await this.prisma.user.findFirst({
+        where: { email: { equals: payload.email, mode: 'insensitive' } },
+      }));
+
+    if (!user) {
+      return this.issueSession(
+        await this.prisma.user.create({
+          data: { email: payload.email, googleId, name: payload.name ?? null },
+        }),
+      );
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Энэ бүртгэл идэвхгүй байна');
+    }
+
+    if (user.googleId === googleId && user.name) {
+      return this.issueSession(user);
+    }
+
+    return this.issueSession(
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId,
+          name: user.name ?? payload.name ?? null,
+          // Signing in with Google settles an outstanding claim invitation the
+          // same way setting a password does (1B-17).
+          ...(user.claimTokenHash
+            ? { claimTokenHash: null, claimTokenExpiresAt: null, claimedAt: user.claimedAt ?? new Date() }
+            : {}),
+        },
+      }),
+    );
   }
 
   async refresh(refreshToken: string): Promise<AuthSession> {
