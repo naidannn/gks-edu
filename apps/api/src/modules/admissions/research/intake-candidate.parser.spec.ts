@@ -37,8 +37,41 @@ describe('extractJson', () => {
     expect(extractJson('Here is what I found:\n[{"level":"BACHELOR"}] ...')).toEqual([{ level: 'BACHELOR' }]);
   });
 
+  // The reported failure: a reply that is two JSON documents, which
+  // `JSON.parse` rejects with "Unexpected non-whitespace character after JSON".
+  it('reads a reply written as two documents', () => {
+    expect(extractJson('{"candidates":[{"month":3}]}\n{"candidates":[{"month":9}]}')).toEqual([
+      { candidates: [{ month: 3 }] },
+      { candidates: [{ month: 9 }] },
+    ]);
+  });
+
+  it('reads an object with a closing remark after it', () => {
+    expect(extractJson('{"candidates":[]}\n\nАлбан ёсны хуудсаас дахин шалгана уу.')).toEqual({
+      candidates: [],
+    });
+  });
+
+  it('reads both of two fenced documents', () => {
+    expect(extractJson('```json\n{"a":1}\n```\ntext\n```json\n{"b":2}\n```')).toEqual([
+      { a: 1 },
+      { b: 2 },
+    ]);
+  });
+
+  // A brace inside a note or a URL is text, not structure.
+  it('is not confused by a brace inside a string', () => {
+    expect(extractJson('{"note":"} { хаалт"}\nтайлбар')).toEqual({ note: '} { хаалт' });
+  });
+
   it('throws when there is no object at all', () => {
     expect(() => extractJson('I could not find anything.')).toThrow();
+  });
+
+  // Truncated output is a different failure, and it must stay a failure —
+  // half a candidate list is not a calendar.
+  it('throws on an unterminated object', () => {
+    expect(() => extractJson('{"candidates":[{"month":3}')).toThrow();
   });
 });
 
@@ -57,6 +90,17 @@ describe('findGroundingRedirects', () => {
 });
 
 describe('parseResearchResult', () => {
+  // What the two-document reply must end up as: one list, nothing lost.
+  it('folds a reply that arrived as two documents', () => {
+    const reply = `{"candidates":[${JSON.stringify(good)}],"sources":["https://example.ac.kr/a"]}
+{"candidates":[${JSON.stringify({ ...good, month: 9 })}]}`;
+
+    const result = parseResearchResult(extractJson(reply), 2027);
+
+    expect(result.candidates.map((entry) => entry.month)).toEqual([3, 9]);
+    expect(result.sources).toEqual(['https://example.ac.kr/a']);
+  });
+
   it('accepts a well-formed candidate unchanged', () => {
     const result = parseResearchResult({ candidates: [good], sources: ['https://example.ac.kr'] }, 2027);
 

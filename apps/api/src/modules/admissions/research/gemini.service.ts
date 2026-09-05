@@ -87,7 +87,11 @@ export class GeminiService {
 
   private parseResponse(payload: GeminiApiResponse): GeminiAnswer {
     const candidate = payload.candidates?.[0];
+    // `thought` parts are the model's own reasoning, not its answer. They are
+    // prose, they sometimes contain a draft of the JSON, and joining them onto
+    // the answer is what turns one reply into two JSON documents.
     const text = (candidate?.content?.parts ?? [])
+      .filter((part) => part.thought !== true)
       .map((part) => part.text ?? '')
       .join('')
       .trim();
@@ -119,49 +123,122 @@ export function findGroundingRedirects(text: string): string[] {
 }
 
 /**
- * Pulls the JSON object out of a model reply.
+ * Pulls the JSON out of a model reply.
  *
  * Grounded answers ignore `responseMimeType` often enough that this is the
  * normal path, not a fallback: they come back fenced, or with a sentence in
- * front. Exported for the tests.
+ * front, or — intermittently, which is what makes it a support ticket rather
+ * than a broken build — as *two* documents, the asked-for object followed by
+ * a second one, a repeat, or a closing remark. `JSON.parse` on that says
+ * "Unexpected non-whitespace character after JSON", and slicing from the first
+ * brace to the last one keeps both halves and fails the same way.
+ *
+ * So the reply is scanned for every complete, balanced JSON value in it and
+ * the unparseable text between them is dropped. One value is returned as
+ * itself; several are returned as a list, which `parseResearchResult` folds
+ * back into one envelope — a round the model reported in its second document
+ * is still a round. Exported for the tests.
  */
 export function extractJson(text: string): unknown {
-  const trimmed = text.trim();
+  const values = extractJsonValues(text);
+  if (values.length === 0) throw new Error('Хариунаас JSON олдсонгүй.');
+  return values.length === 1 ? values[0] : values;
+}
 
-  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(trimmed);
-  const candidate = fenced?.[1]?.trim() ?? trimmed;
-
-  try {
-    return JSON.parse(candidate);
-  } catch {
-    // Last resort: the outermost {...} or [...] in the reply — whichever opens
-    // first, so an unwrapped candidate list is not mistaken for its first entry.
-    // The array case is not hypothetical: models routinely drop the envelope and
-    // answer with the list alone, which `parseResearchResult` unwraps.
-    const object = outermost(candidate, '{', '}');
-    const array = outermost(candidate, '[', ']');
-    const slice = pickOuter(candidate, object, array);
-    if (slice === null) throw new Error('Хариунаас JSON олдсонгүй.');
-    return JSON.parse(slice);
-  }
+/** Every complete JSON value in a reply, in the order it was written. */
+export function extractJsonValues(text: string): unknown[] {
+  const fenced = fencedBlocks(text);
+  const values = (fenced.length > 0 ? fenced : [text.trim()]).flatMap(jsonValuesIn);
+  // A fence the model opened around something that is not JSON should not hide
+  // the JSON written outside it.
+  return values.length > 0 || fenced.length === 0 ? values : jsonValuesIn(text.trim());
 }
 
 interface GeminiApiResponse {
   candidates?: {
-    content?: { parts?: { text?: string }[] };
+    content?: { parts?: { text?: string; thought?: boolean }[] };
     groundingMetadata?: { groundingChunks?: { web?: { uri?: string } }[] };
   }[];
   usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
 }
 
-function outermost(text: string, open: string, close: string): string | null {
-  const start = text.indexOf(open);
-  const end = text.lastIndexOf(close);
-  return start === -1 || end <= start ? null : text.slice(start, end + 1);
+/** Every ```-fenced block in a reply — models fence each document separately. */
+function fencedBlocks(text: string): string[] {
+  return [...text.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)]
+    .map((match) => (match[1] ?? '').trim())
+    .filter(Boolean);
 }
 
-/** Whichever slice starts earlier in the reply; the other is nested inside it. */
-function pickOuter(text: string, object: string | null, array: string | null): string | null {
-  if (object === null || array === null) return object ?? array;
-  return text.indexOf('{') < text.indexOf('[') ? object : array;
+function jsonValuesIn(chunk: string): unknown[] {
+  const whole = tryParse(chunk);
+  if (whole) return [whole.value];
+
+  return balancedSlices(chunk)
+    .map(tryParse)
+    .filter((parsed): parsed is { value: unknown } => parsed !== null)
+    .map((parsed) => parsed.value);
+}
+
+function tryParse(text: string): { value: unknown } | null {
+  try {
+    return { value: JSON.parse(text) };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The `{...}` / `[...]` runs in a string, each one balanced. Quoted braces do
+ * not count — a `sourceUrl` or a Mongolian note is free to contain one.
+ */
+function balancedSlices(text: string): string[] {
+  const slices: string[] = [];
+
+  for (let index = 0; index < text.length; ) {
+    const start = nextOpener(text, index);
+    if (start === -1) break;
+
+    const end = matchingClose(text, start);
+    if (end === -1) break;
+
+    slices.push(text.slice(start, end + 1));
+    index = end + 1;
+  }
+
+  return slices;
+}
+
+function nextOpener(text: string, from: number): number {
+  const object = text.indexOf('{', from);
+  const array = text.indexOf('[', from);
+  if (object === -1 || array === -1) return Math.max(object, array);
+  return Math.min(object, array);
+}
+
+/** The index of the bracket closing the one at `start`, or -1 if it never closes. */
+function matchingClose(text: string, start: number): number {
+  const expected: string[] = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+
+    if (char === '"') inString = true;
+    else if (char === '{') expected.push('}');
+    else if (char === '[') expected.push(']');
+    else if (char === '}' || char === ']') {
+      if (expected.pop() !== char) return -1;
+      if (expected.length === 0) return index;
+    }
+  }
+
+  return -1;
 }

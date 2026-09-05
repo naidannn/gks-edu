@@ -27,7 +27,7 @@ const RUN_SELECT = {
   startedAt: true,
   finishedAt: true,
   createdAt: true,
-  university: { select: { nameMn: true } },
+  university: { select: { nameMn: true, nameEn: true } },
   requestedBy: { select: { id: true, name: true } },
 } satisfies Prisma.IntakeResearchRunSelect;
 
@@ -126,6 +126,10 @@ export class IntakeResearchService {
       data: { status: IntakeResearchStatus.RUNNING, startedAt: new Date() },
     });
 
+    // Kept outside the try so a failed parse still lands in `rawResponse`,
+    // which is the only way to see what the model actually wrote.
+    let rawResponse: string | null = null;
+
     try {
       const links = (run.university.links ?? {}) as { officialWebsite?: string | null };
       const prompt = buildResearchPrompt({
@@ -143,6 +147,7 @@ export class IntakeResearchService {
         prompt,
         mockAnswer: () => mockResearchAnswer(run.year, run.levels),
       });
+      rawResponse = answer.text.slice(0, 20_000);
 
       // `answer.sources` is Google's grounding trail, the one part of the reply
       // the model does not author. Empty means the search tool never ran and
@@ -169,7 +174,7 @@ export class IntakeResearchService {
           status: IntakeResearchStatus.SUCCEEDED,
           candidates: candidates as unknown as Prisma.InputJsonValue,
           sources,
-          rawResponse: answer.text.slice(0, 20_000),
+          rawResponse,
           promptTokens: answer.promptTokens,
           responseTokens: answer.responseTokens,
           finishedAt: new Date(),
@@ -186,7 +191,12 @@ export class IntakeResearchService {
             : String(error);
       await this.prisma.intakeResearchRun.update({
         where: { id: runId },
-        data: { status: IntakeResearchStatus.FAILED, error: message.slice(0, 1000), finishedAt: new Date() },
+        data: {
+          status: IntakeResearchStatus.FAILED,
+          error: message.slice(0, 1000),
+          rawResponse,
+          finishedAt: new Date(),
+        },
       });
       this.logger.error(`Элсэлтийн судалгаа амжилтгүй боллоо (${runId}): ${message}`);
     }
@@ -214,6 +224,7 @@ export class IntakeResearchService {
     return {
       ...rest,
       universityNameMn: university.nameMn,
+      universityNameEn: university.nameEn,
       candidates: (candidates as IntakeCandidate[] | null) ?? null,
     };
   }

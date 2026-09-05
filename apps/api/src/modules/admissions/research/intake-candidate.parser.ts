@@ -79,8 +79,10 @@ export function parseResearchResult(
   // Asked for the {candidates, sources} envelope, given the bare list often
   // enough to be the normal path rather than an error — `gemini-3.1-flash-lite`
   // does it on nearly every JSON-mode reply. The list is the part that matters;
-  // dropping it over its wrapper would lose a whole year of rounds.
-  const envelope = Array.isArray(payload) ? { candidates: payload } : payload;
+  // dropping it over its wrapper would lose a whole year of rounds. A reply
+  // written as several JSON documents arrives here as a list too (`extractJson`),
+  // so the same branch folds those back together.
+  const envelope = Array.isArray(payload) ? fold(payload) : payload;
 
   if (!isRecord(envelope)) throw new IntakeResearchParseError('Хариу объект биш байна.');
   if (!Array.isArray(envelope.candidates)) {
@@ -95,6 +97,33 @@ export function parseResearchResult(
   const sources = Array.isArray(envelope.sources)
     ? [...new Set(envelope.sources.filter(isHttpUrl))].slice(0, MAX_SOURCES)
     : [];
+
+  return { candidates, sources };
+}
+
+/**
+ * Folds a list into one envelope.
+ *
+ * The list is either the bare candidate list the model wrote instead of the
+ * envelope, or — when a reply came back as more than one JSON document — those
+ * documents. Both shapes can be mixed in the same list, so each entry is
+ * unwrapped on its own: an envelope contributes its candidates and sources, a
+ * nested list its entries, and anything else is a candidate.
+ */
+function fold(entries: unknown[]): { candidates: unknown[]; sources: unknown[] } {
+  const candidates: unknown[] = [];
+  const sources: unknown[] = [];
+
+  for (const entry of entries) {
+    if (Array.isArray(entry)) {
+      candidates.push(...entry);
+    } else if (isRecord(entry) && Array.isArray(entry.candidates)) {
+      candidates.push(...entry.candidates);
+      if (Array.isArray(entry.sources)) sources.push(...entry.sources);
+    } else {
+      candidates.push(entry);
+    }
+  }
 
   return { candidates, sources };
 }
