@@ -82,6 +82,15 @@ APP_PUBLIC_URL=https://$DOMAIN
 SMS_DAILY_LIMIT_PER_USER=3
 SMS_DAILY_LIMIT_GLOBAL=500
 
+# --- Gemini (1H-10) ----------------------------------------------------------
+# The admin "research this school's intake calendar online" button. With no key
+# GEMINI_MOCK stays true and the screen gets a labelled fixture instead, so the
+# feature is usable before the key exists — the same arrangement as QPAY_MOCK.
+GEMINI_API_KEY=
+GEMINI_MODEL="gemini-2.5-pro"
+GEMINI_TIMEOUT_MS=120000
+GEMINI_MOCK=true
+
 # --- Storage ----------------------------------------------------------------
 # Uploaded documents live on the server's disk, outside the deployed code so
 # that a deploy's rsync --delete can never remove them.
