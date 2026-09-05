@@ -64,6 +64,16 @@ export interface UniversityForm {
   commissionNote: string;
   internalNote: string;
   isPublished: boolean;
+
+  /**
+   * THE South Korea rank. Normally written by `pnpm ranking:import`; the boxes
+   * exist for a school the table names but the importer could not match.
+   */
+  theKoreaRank: string;
+  theWorldRank: string;
+  theRankYear: string;
+  /** Staff nudge to the GKS score, in points. `gksScore`/`gksRank` are computed. */
+  gksRankBoost: string;
 }
 
 export function emptyUniversityForm(): UniversityForm {
@@ -79,6 +89,7 @@ export function emptyUniversityForm(): UniversityForm {
     dormMealIncluded: '', dormDepositKrw: '', dormNote: '',
     acceptsLanguagePrep: false, acceptsFromMongolia: true, isGksEligible: false,
     agentContractStatus: 'NONE', commissionNote: '', internalNote: '', isPublished: false,
+    theKoreaRank: '', theWorldRank: '', theRankYear: '', gksRankBoost: '0',
   };
 }
 
@@ -139,6 +150,11 @@ export function fillFromUniversity(form: UniversityForm, u: AdminUniversityDetai
   form.commissionNote = str(u.commissionNote);
   form.internalNote = str(u.internalNote);
   form.isPublished = u.isPublished;
+
+  form.theKoreaRank = num(u.theKoreaRank);
+  form.theWorldRank = str(u.theWorldRank);
+  form.theRankYear = num(u.theRankYear);
+  form.gksRankBoost = String(u.gksRankBoost ?? 0);
 }
 
 /** Required text fields, by form key → label used in the error message. */
@@ -166,6 +182,10 @@ const NUMERIC: [keyof UniversityForm, { min: number; max: number; integer: boole
   ['dormPricePerMonthKrw', { min: 0, max: 100_000_000, integer: true }],
   ['dormPricePerSemesterKrw', { min: 0, max: 100_000_000, integer: true }],
   ['dormDepositKrw', { min: 0, max: 100_000_000, integer: true }],
+  ['theKoreaRank', { min: 1, max: 2000, integer: true }],
+  ['theRankYear', { min: 2000, max: new Date().getFullYear() + 1, integer: true }],
+  // Mirrors `MAX_RANK_BOOST` on the API — a bigger number is rejected there.
+  ['gksRankBoost', { min: -25, max: 25, integer: false }],
 ];
 
 export function validateUniversityForm(form: UniversityForm, errors: Record<string, string>): boolean {
@@ -264,5 +284,11 @@ export function universityPayload(form: UniversityForm): Record<string, unknown>
     commissionNote: text(form.commissionNote),
     internalNote: text(form.internalNote),
     isPublished: form.isPublished,
+
+    theKoreaRank: number(form.theKoreaRank),
+    theWorldRank: text(form.theWorldRank),
+    theRankYear: number(form.theRankYear),
+    // NOT NULL on the column, so an empty box means "no nudge", not "unknown".
+    gksRankBoost: number(form.gksRankBoost) ?? 0,
   };
 }

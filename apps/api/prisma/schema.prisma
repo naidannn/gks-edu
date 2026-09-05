@@ -82,6 +82,7 @@ model User {
   auditLogs               AuditLog[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+  gksRankingConfigs       GksRankingConfig[]
 
   @@index([createdAt])
   @@map("users")
@@ -223,6 +224,29 @@ model University {
   /// Per-field provenance: verified / editorial / estimated.
   quality    Json  @default("{}")
 
+  // --- Ranking (1A-28 … 1A-31, ARCHITECTURE.md §3.1) ---
+  /// Times Higher Education "South Korea Rank" — the base rank. Ties share a
+  /// number (three schools sit at 8), and only 41 of the 135 schools appear at
+  /// all; `null` means "рэйтингд ороогүй", never "worst".
+  theKoreaRank Int?
+  /// THE world rank as published — "=58", "251-300", "1501+". A display string
+  /// on purpose: a band is not a number and must not be sorted as one.
+  theWorldRank String?
+  /// Which edition the two columns above came from, e.g. 2026.
+  theRankYear  Int?
+
+  /// Our own 0-100 recommendation score. Written only by `GksRankingService`.
+  gksScore      Float?
+  /// Dense rank over `gksScore`, 1 = shown first. The default catalogue order.
+  gksRank       Int?
+  /// Staff thumb on the scale, in score points (-25 … +25) — the one part of
+  /// the score a human sets by hand.
+  gksRankBoost  Float     @default(0)
+  /// Per-component contributions of the last run, so the admin screen can say
+  /// why a school sits where it does: { base, partnership, fit, demand, practical }.
+  gksScoreParts Json?
+  gksScoredAt   DateTime?
+
   // --- Staff-maintained; never touched by the importer ---
   acceptsLanguagePrep Boolean             @default(false)
   acceptsFromMongolia Boolean             @default(true)
@@ -249,7 +273,36 @@ model University {
   @@index([isPublished])
   @@index([regionEn])
   @@index([type])
+  @@index([gksRank])
+  @@index([theKoreaRank])
   @@map("universities")
+}
+
+/// Weights behind the GKS ranking (1A-29). One row — `id` is pinned to
+/// "default" so there can only ever be one. Weights are business configuration,
+/// not constants: the office retunes them without a deploy, exactly like
+/// `ServicePricing` (CLAUDE.md, gksedu.md §5.4).
+model GksRankingConfig {
+  id String @id @default("default")
+
+  /// The five component weights. They need not sum to 100 — the score is
+  /// normalised by their total, so raising one lowers the others' share.
+  weightBaseRank    Float @default(40)
+  weightPartnership Float @default(20)
+  weightFit         Float @default(15)
+  weightDemand      Float @default(15)
+  weightPractical   Float @default(10)
+
+  /// Base-component score for a school THE does not rank. Neutral by design:
+  /// equal to the score of the last ranked school, so "unranked" costs a school
+  /// nothing beyond the schools that are actually ranked above it.
+  unrankedBaseScore Float @default(45)
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?  @db.Uuid
+  updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("gks_ranking_config")
 }
 
 model UniversityProgram {

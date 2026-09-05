@@ -37,6 +37,8 @@ const AGENT_OPTIONS: { value: AgentContractStatus | ''; label: string }[] = [
   ...(Object.entries(AGENT_CONTRACT_STATUS_LABELS) as [AgentContractStatus, string][]).map(([value, label]) => ({ value, label })),
 ];
 const SORT_OPTIONS = [
+  { value: 'gks', label: 'GKS эрэмбээр' },
+  { value: 'rank', label: 'THE рэйтингээр' },
   { value: 'name', label: 'Нэрээр (А–Я)' },
   { value: 'city', label: 'Хотоор' },
   { value: 'students', label: 'Оюутны тоогоор' },
@@ -52,7 +54,7 @@ const agentContractStatus = ref<AgentContractStatus | ''>('');
 const publishFilter = ref<'all' | 'published' | 'draft'>('all');
 const languagePrep = ref(false);
 const gks = ref(false);
-const sort = ref('name');
+const sort = ref('gks');
 const page = ref(1);
 
 const query = computed(() => ({
@@ -60,6 +62,8 @@ const query = computed(() => ({
   limit: 25,
   sort: sort.value,
   // Newest-first is what you want from a date column; A–Я from the rest.
+  // Newest/biggest first for the date and count columns; #1 first for the two
+  // rank columns, where ascending already means "best".
   order: sort.value === 'updated' || sort.value === 'students' ? 'desc' : 'asc',
   ...(q.value ? { q: q.value } : {}),
   ...(region.value ? { region: region.value } : {}),
@@ -156,6 +160,14 @@ useHead({ title: 'Сургууль · CRM' });
         <NuxtLink to="/universities" target="_blank" class="gks-crm__site-link">
           <DsIcon name="external-link" :size="16" /> Нийтийн каталог
         </NuxtLink>
+        <DsButton
+          v-if="auth.isAdmin"
+          variant="secondary"
+          icon-left="sliders-horizontal"
+          @click="navigateTo('/admin/universities/ranking')"
+        >
+          GKS эрэмбэ
+        </DsButton>
         <DsButton v-if="auth.isAdmin" variant="accent" icon-left="plus" @click="navigateTo('/admin/universities/new')">
           Шинэ сургууль
         </DsButton>
@@ -209,6 +221,8 @@ useHead({ title: 'Сургууль · CRM' });
       <table class="gks-table">
         <thead>
           <tr>
+            <th class="gks-table__num">GKS</th>
+            <th class="gks-table__num">THE</th>
             <th>Сургууль</th>
             <th>Төрөл</th>
             <th>Байршил</th>
@@ -223,6 +237,19 @@ useHead({ title: 'Сургууль · CRM' });
         </thead>
         <tbody>
           <tr v-for="u in data.items" :key="u.id" class="gks-crm__row" @click="navigateTo(`/admin/universities/${u.id}`)">
+            <td class="gks-tnum gks-table__num">
+              <span v-if="u.gksRank" :title="u.gksScore !== null ? `Оноо ${u.gksScore}` : undefined">
+                #{{ u.gksRank }}
+              </span>
+              <span v-else class="gks-crm__muted">—</span>
+              <span v-if="u.gksRankBoost" class="gks-crm__boost">
+                {{ u.gksRankBoost > 0 ? '+' : '' }}{{ u.gksRankBoost }}
+              </span>
+            </td>
+            <td class="gks-tnum gks-table__num">
+              <span v-if="u.theKoreaRank">#{{ u.theKoreaRank }}</span>
+              <span v-else class="gks-crm__muted">—</span>
+            </td>
             <td>
               <div class="gks-uni__ident">
                 <img v-if="u.logoPath" :src="u.logoPath" alt="" class="gks-uni__logo" loading="lazy">
@@ -302,6 +329,14 @@ useHead({ title: 'Сургууль · CRM' });
 .gks-crm__skeleton-row { height: 44px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
 .gks-crm__empty { text-align: center; color: var(--text-muted); }
 .gks-crm__muted { color: var(--text-subtle); }
+/** A hand-set boost, shown next to the rank it produced. */
+.gks-crm__boost {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--text-subtle);
+}
 
 .gks-crm__table-wrap { overflow-x: auto; border: var(--border-hair) solid var(--line-hairline); background: var(--surface-card); }
 .gks-table { width: 100%; border-collapse: collapse; font-size: var(--fs-body-sm); white-space: nowrap; }

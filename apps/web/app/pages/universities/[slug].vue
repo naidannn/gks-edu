@@ -45,6 +45,27 @@ const costRows = computed(() => {
 
 const dormitory = computed(() => uni.value.dormitory);
 
+/**
+ * Times Higher Education's South Korea table — the base rank (1A-28).
+ *
+ * Only 41 Korean universities appear in it against the 135 we carry, so a
+ * missing rank is stated as "рэйтингд ороогүй" rather than left to the generic
+ * "мэдээлэл шинэчлэгдэж байна": we are not waiting on this number, the school
+ * genuinely is not in the table.
+ */
+const THE_RANKED_KOREAN_UNIVERSITIES = 41;
+const theRankedTotal = THE_RANKED_KOREAN_UNIVERSITIES;
+
+const rankingTitle = computed(() =>
+  uni.value.theRankYear ? `Олон улсын рэйтинг · ${uni.value.theRankYear}` : 'Олон улсын рэйтинг',
+);
+const koreaRankLabel = computed(() =>
+  uni.value.theKoreaRank ? `Солонгост #${uni.value.theKoreaRank}` : 'Рэйтингд ороогүй',
+);
+const worldRankLabel = computed(() =>
+  uni.value.theWorldRank ? `Дэлхийд ${uni.value.theWorldRank}` : 'Рэйтингд ороогүй',
+);
+
 /** Group the intake terms by programme level so the table reads by track. */
 const intakesByLevel = computed<[ProgramLevel, IntakeTerm[]][]>(() => {
   const groups = new Map<ProgramLevel, IntakeTerm[]>();
@@ -114,6 +135,9 @@ useSeoMeta({
           <DsBadge tone="neutral" icon="map-pin">{{ uni.cityMn }}, {{ uni.regionMn }}</DsBadge>
           <DsBadge v-if="uni.acceptsLanguagePrep" tone="info">Хэлний бэлтгэл авдаг</DsBadge>
           <DsBadge v-if="uni.isGksEligible" tone="accent">GKS тэтгэлэг</DsBadge>
+          <DsBadge v-if="uni.theKoreaRank" tone="neutral" icon="trophy">
+            Солонгост #{{ uni.theKoreaRank }}
+          </DsBadge>
         </div>
       </div>
       <div class="gks-uni__cta">
@@ -196,6 +220,18 @@ useSeoMeta({
           <CommonDataValue label="Кампусын тоо" :value="formatNumber(uni.numCampuses)" />
           <CommonDataValue label="Кампусын орчин" :value="uni.campusInfo" />
         </dl>
+      </DsCard>
+
+      <!-- 3b · Олон улсын рэйтинг (Times Higher Education) -->
+      <DsCard :title="rankingTitle">
+        <dl>
+          <CommonDataValue label="Солонгосын эрэмбэ" :value="koreaRankLabel" />
+          <CommonDataValue label="Дэлхийн эрэмбэ" :value="worldRankLabel" />
+        </dl>
+        <p class="gks-uni__rank-note">
+          Эх сурвалж: Times Higher Education. Солонгосын {{ theRankedTotal }} их сургууль
+          энэ жагсаалтад багтдаг тул түүнд ороогүй нь чанар муу гэсэн үг биш.
+        </p>
       </DsCard>
 
       <!-- 4 · Дотуур байр -->
@@ -306,6 +342,12 @@ useSeoMeta({
 </template>
 
 <style scoped>
+.gks-uni__rank-note {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+}
+
 .gks-uni { display: flex; flex-direction: column; gap: var(--sp-6); }
 
 .gks-uni__crumbs {

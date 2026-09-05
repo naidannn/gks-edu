@@ -44,6 +44,19 @@ export interface UniversityLinks {
 /** Per-field provenance: which values are verified, editorial or estimated. */
 export type UniversityQuality = Record<string, string>;
 
+/**
+ * Per-component contributions behind one school's `gksScore`, each 0-100
+ * before weighting. Staff-only — it is the answer to "why is this school
+ * fourth?" (ARCHITECTURE.md §3.1).
+ */
+export interface GksScoreParts {
+  base: number;
+  partnership: number;
+  fit: number;
+  demand: number;
+  practical: number;
+}
+
 export interface UniversityCard {
   id: string;
   slug: string;
@@ -61,6 +74,14 @@ export interface UniversityCard {
   acceptsLanguagePrep: boolean;
   isGksEligible: boolean;
   livingCost: LivingCost | null;
+  /**
+   * Times Higher Education "South Korea Rank" — the base rank, and the only
+   * one shown publicly. `null` means "рэйтингд ороогүй", never "worst".
+   */
+  theKoreaRank: number | null;
+  /** THE world rank as published — "=58", "251-300", "1501+". A band, not a number. */
+  theWorldRank: string | null;
+  theRankYear: number | null;
 }
 
 export interface UniversityProgram {
@@ -156,6 +177,16 @@ export interface AdminUniversityRow {
   agentContractStatus: AgentContractStatus;
   isPublished: boolean;
   updatedAt: string;
+  theKoreaRank: number | null;
+  theWorldRank: string | null;
+  theRankYear: number | null;
+  /** Our own 0-100 recommendation score. Computed; never public. */
+  gksScore: number | null;
+  /** Position by `gksScore`, 1 = shown first. The catalogue's default order. */
+  gksRank: number | null;
+  /** The staff thumb on the scale, in score points. */
+  gksRankBoost: number;
+  gksScoredAt: string | null;
   _count: { programs: number; intakes: number; cases: number };
 }
 
@@ -192,6 +223,8 @@ export interface AdminUniversityDetail extends Omit<AdminUniversityRow, '_count'
   commissionNote: string | null;
   /** Internal — staff notes; never exposed on a public endpoint. */
   internalNote: string | null;
+  /** Why this school sits where it does; null until the first recompute. */
+  gksScoreParts: GksScoreParts | null;
   createdAt: string;
   programs: AdminUniversityProgram[];
   intakes: AdminIntakeTerm[];
@@ -223,4 +256,54 @@ export interface UniversityRegionOption {
   value: string;
   label: string;
   count: number;
+}
+
+/* ------------------------------------------------------------------------- *
+ * GKS ranking (admin 1A-29 … 1A-31)
+ *
+ * Two ranks sit on a university. `theKoreaRank` is Times Higher Education's,
+ * imported and citable. `gksRank` is ours: a weighted blend of the outside
+ * rank, the agent contract, fit for a Mongolian applicant, our own demand and
+ * success history, and practical factors — and it is what orders the catalogue
+ * and the search results for every visitor.
+ * ------------------------------------------------------------------------- */
+
+/** The five weights plus the neutral floor, as the office tunes them. */
+export interface GksRankingConfig {
+  id: string;
+  weightBaseRank: number;
+  weightPartnership: number;
+  weightFit: number;
+  weightDemand: number;
+  weightPractical: number;
+  /** Base-component score for a school THE does not rank. Neutral, not zero. */
+  unrankedBaseScore: number;
+  updatedAt: string;
+  updatedById: string | null;
+}
+
+export type GksRankingWeights = Omit<GksRankingConfig, 'id' | 'updatedAt' | 'updatedById'>;
+
+export interface GksRankingPreviewRow {
+  rank: number;
+  nameMn: string;
+  score: number;
+  boost: number;
+  theKoreaRank: number | null;
+  parts: GksScoreParts;
+}
+
+/** A dry run: what the catalogue would look like under different weights. */
+export interface GksRankingPreview {
+  weights: GksRankingWeights;
+  total: number;
+  rows: GksRankingPreviewRow[];
+}
+
+export interface GksRankingRecomputeSummary {
+  scored: number;
+  /** Distinct positions handed out — fewer than `scored` when schools tie. */
+  ranked: number;
+  durationMs: number;
+  top: { rank: number; nameMn: string; score: number }[];
 }

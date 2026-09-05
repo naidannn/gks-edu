@@ -11,12 +11,21 @@ const route = useRoute();
 const router = useRouter();
 
 const PAGE_SIZE = 12;
+/**
+ * `gks` is the default: our own recommendation order, computed on the API
+ * (ARCHITECTURE.md §3.1). `rank` is Times Higher Education's South Korea rank,
+ * for a visitor who would rather see the outside opinion.
+ */
 const SORTS: { value: string; label: string }[] = [
+  { value: 'gks', label: 'Санал болгох эрэмбээр' },
+  { value: 'rank', label: 'Солонгосын рэйтингээр' },
   { value: 'name', label: 'Нэрээр (А–Я)' },
   { value: 'students', label: 'Оюутны тоогоор' },
   { value: 'founded', label: 'Байгуулагдсан оноор' },
   { value: 'city', label: 'Хотоор' },
 ];
+
+const DEFAULT_SORT = 'gks';
 
 const str = (value: unknown): string => (typeof value === 'string' ? value : '');
 const num = (value: unknown, fallback: number): number => {
@@ -31,7 +40,7 @@ const filters = computed(() => ({
   type: str(route.query.type) as UniversityType | '',
   languagePrep: route.query.languagePrep === '1',
   gks: route.query.gks === '1',
-  sort: str(route.query.sort) || 'name',
+  sort: str(route.query.sort) || DEFAULT_SORT,
   page: num(route.query.page, 1),
 }));
 

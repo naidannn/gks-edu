@@ -14,10 +14,15 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
+import { Audit } from '../../common/decorators/audit.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { Role } from '../../prisma/client.js';
 import { AdminUniversitiesService } from './admin-universities.service.js';
+import { GksRankingService } from './ranking/gks-ranking.service.js';
+import { PreviewRankingDto, UpdateRankingConfigDto } from './dto/ranking-config.dto.js';
 import { CreateIntakeTermDto, UpdateIntakeTermDto } from './dto/intake-term.dto.js';
 import { CreateUniversityDto } from './dto/create-university.dto.js';
 import { QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
@@ -38,7 +43,10 @@ import {
 @Roles(...STAFF_ROLES)
 @Controller('admin/universities')
 export class AdminUniversitiesController {
-  constructor(private readonly universities: AdminUniversitiesService) {}
+  constructor(
+    private readonly universities: AdminUniversitiesService,
+    private readonly ranking: GksRankingService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List every university, drafts included (1A-25)' })
@@ -56,6 +64,41 @@ export class AdminUniversitiesController {
   @ApiOperation({ summary: 'Regions across every school, for the filter panel' })
   regions() {
     return this.universities.regions();
+  }
+
+  // --- GKS ranking (1A-29 … 1A-31) ---
+  //
+  // Declared above `:id`: Nest matches routes in declaration order, and
+  // `ranking/config` would otherwise be swallowed by the id route.
+
+  @Get('ranking/config')
+  @ApiOperation({ summary: 'Weights behind the GKS ranking (1A-29)' })
+  rankingConfig() {
+    return this.ranking.getConfig();
+  }
+
+  @Get('ranking/preview')
+  @ApiOperation({ summary: 'Dry-run the ranking with different weights — nothing is written' })
+  rankingPreview(@Query() query: PreviewRankingDto) {
+    const { limit, ...overrides } = query;
+    return this.ranking.preview(overrides, limit);
+  }
+
+  @Patch('ranking/config')
+  @Roles(Role.ADMIN)
+  @Audit({ action: 'university.ranking.config', entity: 'GksRankingConfig', idFrom: 'response.id' })
+  @ApiOperation({ summary: 'Retune the weights — recomputes every school (1A-29)' })
+  updateRankingConfig(@Body() dto: UpdateRankingConfigDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.ranking.updateConfig(dto, user.id);
+  }
+
+  @Post('ranking/recompute')
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Audit({ action: 'university.ranking.recompute', entity: 'University' })
+  @ApiOperation({ summary: 'Rescore and re-rank every school now (1A-30)' })
+  recomputeRanking() {
+    return this.ranking.recompute();
   }
 
   @Get(':id')

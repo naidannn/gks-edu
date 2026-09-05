@@ -111,6 +111,15 @@ model University {
   commissionNote        String?                   // дотоод, §15.5
   internalNote          String?                   // дотоод
   isPublished           Boolean @default(false)
+  // --- Эрэмбэ (§3.1) ---
+  theKoreaRank  Int?                      // THE-ийн Солонгосын эрэмбэ; null = рэйтингд ороогүй
+  theWorldRank  String?                   // "=58", "251–300", "1501+" — интервал тул текст
+  theRankYear   Int?                      // 2026
+  gksScore      Float?                    // манай 0–100 оноо; зөвхөн систем бичнэ
+  gksRank       Int?                      // gksScore-оор гаргасан эрэмбэ, 1 = эхэнд
+  gksRankBoost  Float @default(0)         // ажилтны гар засвар, -25…+25 оноо
+  gksScoreParts Json?                     // задаргаа: base/partnership/fit/demand/practical
+  gksScoredAt   DateTime?
   programs      UniversityProgram[]
   intakes       IntakeTerm[]
 }
@@ -132,6 +141,59 @@ adapter) бэлэн болтол `apps/web/public/universities/logos`-оос ү�
 frontend дээр "мэдээлэл шинэчлэгдэж байна" гэж үзүүлнэ, 0 гэж биш. `advantages`, `nameMn` нь
 редакцийн текст — нээлтээс өмнө хүн шалгана. Дахин импорт нь `slug`-аар `upsert` хийж,
 гараар бөглөсөн талбаруудыг (`acceptsLanguagePrep` … `internalNote`) **дарж бичихгүй**.
+
+### 3.1. Хоёр эрэмбэ — үндсэн rank ба GKS rank (1A-28 … 1A-31)
+
+Сургууль бүр **хоёр** эрэмбэ авна. Эхнийх нь гаднаас ирдэг, хоёр дахь нь манайх.
+
+| | Үндсэн rank | GKS rank |
+|---|---|---|
+| Талбар | `theKoreaRank`, `theWorldRank`, `theRankYear` | `gksScore`, `gksRank`, `gksScoreParts` |
+| Эх сурвалж | Times Higher Education — *Best universities in South Korea* (2026 хувилбар) | Манай томьёо |
+| Хамрах хүрээ | Солонгосын **41** сургууль (манай каталогийн 40 нь таарна; DGIST бидэнд алга) | 135/135 |
+| Хэн бичдэг | `pnpm ranking:import` (`the-korea-ranking.ts` дэх хүснэгт) | `GksRankingService.recompute()` |
+| Нийтэд харагдах уу | **Тийм** — картан дээр «Солонгост #5», дэлгэрэнгүйд дэлхийн эрэмбэ хамт | **Үгүй** — зөвхөн эрэмбэлэлтэд ажиллана, тоо нь админд л харагдана |
+
+**GKS rank нь каталог болон хайлтын үндсэн эрэмбэ.** `GET /universities`-ийн `sort`-ийн
+анхдагч утга `gks`; хэрэглэгч хүсвэл `rank` (THE), `name`, `students`, `founded`, `city`
+руу шилжинэ. Нүүр хуудасны «онцлох» болон логоны хэсэг ч мөн адил `gks`-ээр эрэмбэлэгдэнэ.
+
+**Оноо (`apps/api/src/modules/universities/ranking/gks-ranking.math.ts`).** Тав бүрэлдэхүүн,
+тус бүр 0–100, дараа нь жингээр холилдоно. Жин нь **харьцангуй** — нийлбэрээр нь
+нормчилдог тул 100 болох албагүй.
+
+| Бүрэлдэхүүн | Анхдагч жин | Юу хэмждэг |
+|---|---|---|
+| `base` | 40 | THE-ийн Солонгосын эрэмбэ. #1 → 100, #40 → 45 |
+| `partnership` | 20 | `agentContractStatus`: SIGNED 100 / IN_TALKS 60 / EXPIRED 25 / NONE 10 |
+| `fit` | 15 | `isGksEligible` 35 + `acceptsLanguagePrep` 30 + `acceptsFromMongolia` 20 + монгол оюутны тоо 15 |
+| `demand` | 15 | хадгалсан тоо 40 + `Case` тоо 35 + мэдүүлгийн зөвшөөрөгдөх хувь 25 |
+| `practical` | 10 | төлбөр 30 + амьжиргаа 25 + Сөүлээс алслалт 20 + мэдээллийн бүрэн байдал 25 |
+
+Дараа нь `gksRankBoost` (ажилтны гар засвар, ±25 оноо) нэмэгдэж, 0–100 хооронд хязгаарлагдаж,
+`gksRank` нь буурах онооны **dense** эрэмбэ болно (тэнцвэл ижил дугаар авна).
+
+Хоёр зарчим кодод бичигдсэн:
+
+1. **Мэдэгдэхгүй нь хамгийн муу биш.** Дутуу тоо бүрэлдэхүүнийхээ саармаг дунджийг авна,
+   тэг биш. THE-д ороогүй 94 сургууль `unrankedBaseScore` (анхдагчаар 45 — яг 40-р
+   сургуулийн оноо) авдаг нь үүний хамгийн том тохиолдол. Мэдүүлгийн түүхгүй сургууль
+   Лапласын урьдчилсан магадлалаар 0.5 авна — шинэ байсандаа сүүлд орохгүй.
+2. **Тоонууд харьцангуй.** «Хамгийн их хадгалагдсан» гэдэг нь тухайн өдрийн хамгийн
+   ачаалалтай сургуультай харьцуулсан утга, тул нэг сургуулийг дангаар нь дахин онооход
+   утгагүй — 135 мөрийг үргэлж хамт тооцоолно.
+
+**Хэзээ дахин тооцоолох вэ.** BullMQ дээр өдөрт нэг удаа (`gks-ranking` дараалал,
+`immediately: true` тул шинэ deploy шууд эрэмбэлнэ), мөн каталогийн засвар бүрийн дараа
+дараалалд ордог (`AdminUniversitiesService.invalidate` → `scheduleRecompute`, 5 секундын
+саатал нь олон засварыг нэг ажил болгож нэгтгэнэ). Админ `POST
+/admin/universities/ranking/recompute`-оор яг одоо ажиллуулж болно. Бичилт нь 135 тусдаа
+`update` биш, ганц `UPDATE … FROM (VALUES …)` — Supabase pooler 115 мс зайтай тул (CLAUDE.md,
+хатуу дүрэм 8).
+
+**Жин тохируулах.** `GksRankingConfig` — ганц мөр (`id = "default"`), `ServicePricing`-тэй
+адил бизнесийн тохиргоо, тогтмол биш. Дэлгэц: `/admin/universities/ranking` — жин засах,
+хадгалахаас өмнө `GET …/ranking/preview`-ээр урьдчилан харах, задаргааг мөр бүрээр нээх.
 
 ---
 

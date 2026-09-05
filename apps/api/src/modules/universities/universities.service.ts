@@ -26,6 +26,11 @@ const CARD_FIELDS = {
   acceptsLanguagePrep: true,
   isGksEligible: true,
   livingCost: true,
+  // The base rank is public and citable; `gksScore`/`gksRank` are not — they
+  // order the list and stay behind the admin screen (ARCHITECTURE.md §3.1).
+  theKoreaRank: true,
+  theWorldRank: true,
+  theRankYear: true,
 } satisfies Prisma.UniversitySelect;
 
 const DETAIL_FIELDS = {
@@ -52,6 +57,17 @@ const DETAIL_FIELDS = {
 } satisfies Prisma.UniversitySelect;
 
 const ORDER_BY: Record<UniversitySort, (order: Prisma.SortOrder) => Prisma.UniversityOrderByWithRelationInput[]> = {
+  // The default. `gksRank` is 1-is-best, so ascending is the recommended order;
+  // a null means the school has not been scored yet and belongs at the back.
+  gks: (order) => [{ gksRank: { sort: order, nulls: 'last' } }, { nameMn: 'asc' }],
+  // The outside opinion, for a visitor who wants it. Only 41 of 135 schools
+  // carry one, so the unranked tail falls back to our own order rather than
+  // to an arbitrary alphabet.
+  rank: (order) => [
+    { theKoreaRank: { sort: order, nulls: 'last' } },
+    { gksRank: { sort: 'asc', nulls: 'last' } },
+    { nameMn: 'asc' },
+  ],
   name: (order) => [{ nameMn: order }],
   city: (order) => [{ cityMn: order }, { nameMn: 'asc' }],
   // Null metrics sort last either way — an unknown value is not a small one.

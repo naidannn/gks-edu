@@ -20,6 +20,13 @@ const monthlyCost = computed(() =>
     props.university.livingCost?.monthlyTotalMax,
   ),
 );
+
+/**
+ * Times Higher Education's South Korea rank — the one rank shown publicly.
+ * Only 41 of the 135 schools have one, and a school without it is "рэйтингд
+ * ороогүй", so the badge is simply absent rather than showing a dash.
+ */
+const theRank = computed(() => props.university.theKoreaRank);
 </script>
 
 <template>
@@ -39,9 +46,18 @@ const monthlyCost = computed(() =>
       </div>
 
       <div class="gks-uni-card__title">
-        <span v-if="university.type !== 'NATIONAL'" class="gks-uni-card__type">
-          {{ UNIVERSITY_TYPE_LABELS[university.type] }}
-        </span>
+        <div class="gks-uni-card__chips">
+          <span v-if="university.type !== 'NATIONAL'" class="gks-uni-card__type">
+            {{ UNIVERSITY_TYPE_LABELS[university.type] }}
+          </span>
+          <span
+            v-if="theRank"
+            class="gks-uni-card__rank"
+            :title="`Times Higher Education — Солонгосын рэйтинг ${university.theRankYear ?? ''}`"
+          >
+            Солонгост #{{ theRank }}
+          </span>
+        </div>
         <h3 class="gks-uni-card__name">{{ displayName }}</h3>
         <p class="gks-uni-card__name-ko">{{ university.nameKo }}</p>
       </div>
@@ -104,9 +120,9 @@ const monthlyCost = computed(() =>
   color: var(--text-subtle);
 }
 .gks-uni-card__title { min-width: 0; }
+.gks-uni-card__chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 3px; }
 .gks-uni-card__type {
   display: inline-flex;
-  margin-bottom: 3px;
   padding: 2px 6px;
   border: var(--border-hair) solid var(--line-hairline);
   border-radius: var(--radius-pill);
@@ -118,6 +134,20 @@ const monthlyCost = computed(() =>
   letter-spacing: .04em;
   text-transform: uppercase;
 }
+.gks-uni-card__rank {
+  display: inline-flex;
+  padding: 2px 6px;
+  border: var(--border-hair) solid var(--line-ink);
+  border-radius: var(--radius-pill);
+  color: var(--text-strong);
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  letter-spacing: .04em;
+  font-variant-numeric: var(--num-tabular);
+  text-transform: uppercase;
+}
+
 .gks-uni-card__name {
   font-family: var(--font-display);
   font-size: var(--fs-body-lg);

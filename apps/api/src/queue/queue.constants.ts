@@ -29,3 +29,8 @@ export const REMINDER_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 export const REPORT_REFRESH_QUEUE = 'report-refresh';
 export const REPORT_REFRESH_JOB = 'refresh-views';
 export const REPORT_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/** Nightly GKS ranking recompute (1A-30) — also queued ad hoc after a catalogue edit. */
+export const GKS_RANKING_QUEUE = 'gks-ranking';
+export const GKS_RANKING_JOB = 'recompute-ranking';
+export const GKS_RANKING_INTERVAL_MS = 24 * 60 * 60 * 1000;

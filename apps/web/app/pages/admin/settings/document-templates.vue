@@ -64,7 +64,8 @@ async function load() {
     const [templateList, ruleList, uniPage1, uniPage2] = await Promise.all([
       api.get<DocumentTemplate[]>('/document-templates?includeInactive=true'),
       api.get<RequirementRule[]>('/requirement-rules'),
-      api.get<{ items: UniversityCard[] }>('/universities', { query: { limit: 100, page: 1 } }),
+      // A picker, not a recommendation — alphabetical is what staff scan for.
+      api.get<{ items: UniversityCard[] }>('/universities', { query: { limit: 100, page: 1, sort: 'name' } }),
       api.get<{ items: UniversityCard[] }>('/universities', { query: { limit: 100, page: 2 } }),
     ]);
     templates.value = templateList;

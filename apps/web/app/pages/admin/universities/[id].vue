@@ -3,6 +3,7 @@ import type {
   AdminIntakeTerm,
   AdminUniversityDetail,
   AdminUniversityProgram,
+  GksScoreParts,
   IntakeStatus,
   ProgramLevel,
 } from '@gks/shared';
@@ -287,6 +288,24 @@ function formatDate(value: string | null): string {
   return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+/**
+ * The five components behind `gksScore`, labelled. Empty until the first
+ * recompute has run for this school (1A-30).
+ */
+const SCORE_PART_LABELS: [keyof GksScoreParts, string][] = [
+  ['base', 'Үндсэн рэйтинг (THE)'],
+  ['partnership', 'Агентын гэрээ'],
+  ['fit', 'Монголд тохирох байдал'],
+  ['demand', 'Эрэлт ба амжилт'],
+  ['practical', 'Практик хүчин зүйл'],
+];
+
+const scoreParts = computed(() => {
+  const parts = university.value?.gksScoreParts;
+  if (!parts) return [];
+  return SCORE_PART_LABELS.map(([key, label]) => ({ label, value: parts[key] }));
+});
+
 function intakeTone(status: IntakeStatus): BadgeTone {
   if (status === 'OPEN') return 'success';
   if (status === 'CLOSED') return 'neutral';
@@ -494,6 +513,41 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
         </div>
       </DsCard>
 
+      <!-- ── GKS ranking, read only (1A-30) ────────────────────────────── -->
+      <DsCard title="GKS эрэмбэ" eyebrow="Тооцоолсон">
+        <p class="gks-form-page__hint">
+          Каталог болон хайлт энэ эрэмбээр эрэмбэлэгддэг. Оноог систем тооцоолох тул
+          гараар засах цорын ганц зүйл нь дээрх «Рэйтинг» хэсгийн засварын оноо.
+          <NuxtLink to="/admin/universities/ranking" class="gks-form-page__link">Жинг тохируулах</NuxtLink>
+        </p>
+        <dl class="gks-meta">
+          <div>
+            <dt>Эрэмбэ</dt>
+            <dd class="gks-tnum">{{ university.gksRank ? `#${university.gksRank}` : UNKNOWN_LABEL }}</dd>
+          </div>
+          <div>
+            <dt>Оноо</dt>
+            <dd class="gks-tnum">{{ university.gksScore?.toFixed(2) ?? UNKNOWN_LABEL }}</dd>
+          </div>
+          <div>
+            <dt>Гар засвар</dt>
+            <dd class="gks-tnum">
+              {{ university.gksRankBoost ? `${university.gksRankBoost > 0 ? '+' : ''}${university.gksRankBoost}` : '0' }}
+            </dd>
+          </div>
+          <div>
+            <dt>Сүүлд тооцоолсон</dt>
+            <dd class="gks-tnum">
+              {{ university.gksScoredAt ? formatDate(university.gksScoredAt) : UNKNOWN_LABEL }}
+            </dd>
+          </div>
+          <div v-for="part in scoreParts" :key="part.label">
+            <dt>{{ part.label }}</dt>
+            <dd class="gks-tnum">{{ part.value.toFixed(0) }} / 100</dd>
+          </div>
+        </dl>
+      </DsCard>
+
       <!-- ── Importer-owned, read only ─────────────────────────────────── -->
       <DsCard title="Импортын мэдээлэл" eyebrow="Зөвхөн харах">
         <p class="gks-form-page__hint">
@@ -557,6 +611,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
 .gks-form-page__back:hover { color: var(--brand-600); }
 .gks-form-page__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .gks-form-page__hint { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
+.gks-form-page__link { color: var(--text-strong); text-decoration: underline; text-underline-offset: 2px; }
 .gks-form-page__badges { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); flex-wrap: wrap; }
 .gks-form-page__loading { color: var(--text-muted); }
 .gks-form-page__body { display: flex; flex-direction: column; gap: var(--sp-4); }

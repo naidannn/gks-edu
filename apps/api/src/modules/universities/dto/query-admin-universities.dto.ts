@@ -4,7 +4,16 @@ import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { AgentContractStatus, ProgramLevel, UniversityType } from '../../../prisma/client.js';
 
-export const ADMIN_UNIVERSITY_SORTS = ['name', 'city', 'students', 'founded', 'updated', 'created'] as const;
+export const ADMIN_UNIVERSITY_SORTS = [
+  'gks',
+  'rank',
+  'name',
+  'city',
+  'students',
+  'founded',
+  'updated',
+  'created',
+] as const;
 export type AdminUniversitySort = (typeof ADMIN_UNIVERSITY_SORTS)[number];
 
 /** Query strings arrive as "true"/"false"; class-transformer needs the nudge. */

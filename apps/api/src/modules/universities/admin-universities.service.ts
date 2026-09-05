@@ -3,6 +3,7 @@ import { Prisma } from '../../prisma/client.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { GksRankingService } from './ranking/gks-ranking.service.js';
 import { LIST_CACHE_PATTERN } from './universities.service.js';
 import type { CreateIntakeTermDto, UpdateIntakeTermDto } from './dto/intake-term.dto.js';
 import type { CreateUniversityDto } from './dto/create-university.dto.js';
@@ -37,6 +38,15 @@ const ROW_FIELDS = {
   agentContractStatus: true,
   isPublished: true,
   updatedAt: true,
+  // Staff see both ranks and the score behind ours — the public card only ever
+  // shows the THE number (ARCHITECTURE.md §3.1).
+  theKoreaRank: true,
+  theWorldRank: true,
+  theRankYear: true,
+  gksScore: true,
+  gksRank: true,
+  gksRankBoost: true,
+  gksScoredAt: true,
   _count: { select: { programs: true, intakes: true, cases: true } },
 } satisfies Prisma.UniversitySelect;
 
@@ -62,6 +72,7 @@ const DETAIL_FIELDS = {
   quality: true,
   commissionNote: true,
   internalNote: true,
+  gksScoreParts: true,
   createdAt: true,
   _count: {
     select: {
@@ -105,6 +116,12 @@ const INTAKE_FIELDS = {
 } satisfies Prisma.IntakeTermSelect;
 
 const ORDER_BY: Record<AdminUniversitySort, (order: Prisma.SortOrder) => Prisma.UniversityOrderByWithRelationInput[]> = {
+  gks: (order) => [{ gksRank: { sort: order, nulls: 'last' } }, { nameMn: 'asc' }],
+  rank: (order) => [
+    { theKoreaRank: { sort: order, nulls: 'last' } },
+    { gksRank: { sort: 'asc', nulls: 'last' } },
+    { nameMn: 'asc' },
+  ],
   name: (order) => [{ nameMn: order }],
   city: (order) => [{ cityMn: order }, { nameMn: 'asc' }],
   // Null metrics sort last either way — an unknown value is not a small one.
@@ -136,6 +153,7 @@ const NON_NULLABLE_FIELDS = [
   'isGksEligible',
   'agentContractStatus',
   'isPublished',
+  'gksRankBoost',
 ] as const;
 
 /** Relations that make a school undeletable — its history would go with it. */
@@ -156,6 +174,7 @@ export class AdminUniversitiesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly ranking: GksRankingService,
   ) {}
 
   async findAll(query: QueryAdminUniversitiesDto) {
@@ -478,12 +497,23 @@ export class AdminUniversitiesService {
     if (!intake) throw new NotFoundException(`Intake ${intakeId} not found`);
   }
 
-  /** Drops the public catalogue's read-through cache for the touched school(s). */
+  /**
+   * Drops the public catalogue's read-through cache for the touched school(s)
+   * and queues a ranking recompute.
+   *
+   * Every write that lands here moves a ranking input — a contract status, a
+   * GKS flag, a programme's tuition, an intro that changes the completeness
+   * score — and those inputs are relative, so one edit reshuffles the whole
+   * catalogue. The recompute is queued rather than awaited: the editor gets
+   * their response back immediately and the new order lands a few seconds later
+   * (`GksRankingService.scheduleRecompute`).
+   */
   private async invalidate(...slugs: string[]): Promise<void> {
     await Promise.all([
       ...[...new Set(slugs)].map((slug) => this.cache.del(`university:${slug}`)),
       this.cache.del('universities:facets'),
       this.cache.delByPattern(LIST_CACHE_PATTERN),
+      this.ranking.scheduleRecompute(),
     ]);
   }
 }

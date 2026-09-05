@@ -102,6 +102,24 @@ verified, editorial, or estimated — surface `null` as "мэдээлэл шин
 a confident zero. Dormitory prices, international-student counts and `nearestMetroBus` are
 unfilled by design.
 
+## Two ranks, not one
+
+A university carries a **base rank** and a **GKS rank**, and they are not interchangeable
+(`ARCHITECTURE.md` §3.1).
+
+- **Base rank** — Times Higher Education's *South Korea Rank 2026*. Imported from the table
+  in `apps/api/src/modules/universities/ranking/the-korea-ranking.ts` by `pnpm ranking:import`.
+  Only 41 Korean universities are in it, so `theKoreaRank = null` means "рэйтингд ороогүй",
+  never "worst". This is the only rank shown publicly.
+- **GKS rank** — ours. `gksScore` blends five weighted components, `gksRank` is the dense
+  ranking over it, and that is the **default order of the catalogue and of every search**.
+  Never public: it orders the list, it does not appear on the card.
+
+`gksScore` and `gksRank` are computed columns — only `GksRankingService` writes them. The one
+handle staff get is `gksRankBoost` (±25 points). Weights live in `GksRankingConfig`, which is
+admin configuration like `ServicePricing`, not constants. The components are relative to each
+other, so the whole catalogue is always rescored together — there is no rescoring one row.
+
 ## Working on tasks
 
 1. Find the task in `docs/TASKS.md` (IDs like `1D-04`).
@@ -118,6 +136,7 @@ unfilled by design.
 pnpm dev              # web :3000 + api :3001
 pnpm prisma:migrate   # after any schema change
 pnpm prisma:seed
+pnpm ranking:import   # THE South Korea rank → theKoreaRank (--dry to preview)
 pnpm typecheck && pnpm lint && pnpm test
 pnpm tasks            # roadmap progress
 ```

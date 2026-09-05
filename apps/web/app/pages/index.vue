@@ -4,10 +4,12 @@ import type { UniversityCard, UniversityFacets } from '@gks/shared';
 /** Public landing page: hero, planner, active admissions, services, trust wall, FAQ, CTA (1A-09). */
 const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets', { lazy: true });
 const selectedCity = ref('');
+// Our own recommendation order (1A-30) — the same order the catalogue uses, so
+// the landing page and the catalogue never disagree about what to show first.
 const featuredQuery = computed(() => ({
   limit: 12,
-  sort: 'students',
-  order: 'desc',
+  sort: 'gks',
+  order: 'asc',
   ...(selectedCity.value ? { region: selectedCity.value } : {}),
 }));
 
@@ -16,7 +18,7 @@ const { data: featuredUniversities, status: featuredStatus } = await useApiFetch
   meta: { total: number };
 }>('/universities', { query: featuredQuery, lazy: true });
 const { data: partnerUniversities } = await useApiFetch<{ items: UniversityCard[] }>('/universities', {
-  query: { limit: 30, sort: 'students', order: 'desc' },
+  query: { limit: 30, sort: 'gks', order: 'asc' },
   lazy: true,
 });
 

@@ -4,7 +4,8 @@ import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { ProgramLevel, UniversityType } from '../../../prisma/client.js';
 
-export const UNIVERSITY_SORTS = ['name', 'students', 'founded', 'city'] as const;
+/** `gks` first: it is the default order of the whole catalogue (1A-30). */
+export const UNIVERSITY_SORTS = ['gks', 'rank', 'name', 'students', 'founded', 'city'] as const;
 export type UniversitySort = (typeof UNIVERSITY_SORTS)[number];
 
 /** Query strings arrive as "true"/"false"; class-transformer needs the nudge. */
@@ -46,10 +47,14 @@ export class QueryUniversitiesDto extends PaginationQueryDto {
   @IsOptional()
   gks?: boolean;
 
-  @ApiPropertyOptional({ enum: UNIVERSITY_SORTS, default: 'name' })
+  @ApiPropertyOptional({
+    enum: UNIVERSITY_SORTS,
+    default: 'gks',
+    description: 'gks = our recommendation order, rank = THE South Korea rank',
+  })
   @IsIn(UNIVERSITY_SORTS)
   @IsOptional()
-  sort: UniversitySort = 'name';
+  sort: UniversitySort = 'gks';
 
   @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'asc' })
   @IsIn(['asc', 'desc'])

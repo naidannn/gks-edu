@@ -198,6 +198,44 @@ function removeAdvantage(index: number) {
         hint="Нийтийн хуудсанд хэзээ ч харагдахгүй"
       />
     </DsCard>
+
+    <DsCard title="Рэйтинг">
+      <p class="gks-uform__note">
+        Times Higher Education-ий Солонгосын рэйтингийг <code>pnpm ranking:import</code>
+        бөглөнө — эдгээр нүд нь тааруулж чадаагүй ганц нэг сургуульд зориулагдсан.
+        GKS эрэмбийг систем өөрөө тооцоолох тул зөвхөн засварын оноог гараар өгнө.
+      </p>
+      <div class="gks-uform__grid">
+        <DsInput
+          v-model="form.theKoreaRank"
+          label="Солонгосын эрэмбэ (THE)"
+          type="number"
+          :error="errors.theKoreaRank"
+          hint="Хоосон = рэйтингд ороогүй"
+        />
+        <DsInput
+          v-model="form.theWorldRank"
+          label="Дэлхийн эрэмбэ (THE)"
+          placeholder="251-300"
+          hint="Бичвэр — THE интервалаар нийтэлдэг"
+        />
+        <DsInput
+          v-model="form.theRankYear"
+          label="Рэйтингийн он"
+          type="number"
+          :error="errors.theRankYear"
+          placeholder="2026"
+        />
+        <DsInput
+          v-model="form.gksRankBoost"
+          label="GKS онооны засвар"
+          type="number"
+          step="0.5"
+          :error="errors.gksRankBoost"
+          hint="-25 … +25 оноо. 0 = засваргүй"
+        />
+      </div>
+    </DsCard>
   </div>
 </template>
 
@@ -207,6 +245,7 @@ function removeAdvantage(index: number) {
 .gks-uform__grid + .gks-uform__wide,
 .gks-uform__grid + :deep(.gks-field) { margin-top: var(--sp-4); }
 .gks-uform__note { margin-bottom: var(--sp-4); color: var(--text-muted); font-size: var(--fs-body-sm); }
+.gks-uform__note code { font-family: var(--font-mono, monospace); font-size: 0.92em; }
 .gks-uform__switches { display: flex; flex-wrap: wrap; gap: var(--sp-5); margin-bottom: var(--sp-4); }
 
 .gks-uform__list { margin-top: var(--sp-5); border: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }

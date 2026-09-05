@@ -18,6 +18,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { AgentContractStatus, UniversityType } from '../../../prisma/client.js';
+import { MAX_RANK_BOOST } from '../ranking/gks-ranking.math.js';
 import { DormitoryDto, UniversityLinksDto } from './university-json.dto.js';
 
 /** Same convention as the importer's slugs and `CreatePostDto`. */
@@ -256,4 +257,40 @@ export class CreateUniversityDto {
   @IsBoolean()
   @IsOptional()
   isPublished?: boolean;
+
+  // --- Ranking (1A-28). `gksScore` / `gksRank` are absent by design: they are
+  // computed, and the only handle staff get on them is `gksRankBoost`. ---
+
+  @ApiPropertyOptional({ description: 'THE South Korea Rank; null = рэйтингд ороогүй' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(2000)
+  @IsOptional()
+  theKoreaRank?: number | null;
+
+  @ApiPropertyOptional({ example: '251-300', description: 'THE world rank as published — a band, not a number' })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  theWorldRank?: string | null;
+
+  @ApiPropertyOptional({ example: 2026, description: 'Edition the two ranks above came from' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(MAX_FOUNDED_YEAR)
+  @IsOptional()
+  theRankYear?: number | null;
+
+  @ApiPropertyOptional({
+    default: 0,
+    description: `Staff nudge to the GKS score, in points (-${MAX_RANK_BOOST} … +${MAX_RANK_BOOST})`,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-MAX_RANK_BOOST)
+  @Max(MAX_RANK_BOOST)
+  @IsOptional()
+  gksRankBoost?: number;
 }
