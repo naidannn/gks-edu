@@ -71,16 +71,18 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
 </script>
 
 <template>
-  <div class="gks-settings">
-    <header class="gks-settings__head">
-      <span class="gks-eyebrow">Тохиргоо</span>
-      <h1 class="gks-settings__title">Үйлчилгээний үнэ, урьдчилгаа</h1>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">Тохиргоо</span>
+        <h1 class="gks-page__title">Үйлчилгээний үнэ, урьдчилгаа</h1>
+      </div>
     </header>
 
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>
 
     <DsCard title="Шинэ хувилбар нэмэх">
-      <div class="gks-settings__form">
+      <div class="gks-form-grid">
         <DsSelect v-model="form.serviceType" :options="SERVICE_TYPES.map((s) => ({ value: s, label: SERVICE_LABELS[s] }))" label="Үйлчилгээ" />
         <DsInput v-model="form.totalAmount" type="number" label="Нийт төлбөр (₮)" />
         <DsSelect v-model="form.prepaymentMode" :options="PREPAYMENT_MODES.map((m) => ({ value: m, label: PREPAYMENT_MODE_LABELS[m] }))" label="Урьдчилгааны хэлбэр" />
@@ -91,7 +93,7 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
       <p class="gks-settings__hint">Шинэ хувилбар идэвхжихэд одоо идэвхтэй үнэ хаагдаж, дараагийн шинэ гэрээнд л нөлөөлнэ — хуучин гэрээ өөрчлөгдөхгүй.</p>
     </DsCard>
 
-    <div v-if="pending && !rows.length" class="gks-settings__skeleton" />
+    <div v-if="pending && !rows.length" class="gks-skeleton__row gks-skeleton--page" />
 
     <DsCard v-for="s in SERVICE_TYPES" v-else :key="s" :title="SERVICE_LABELS[s]">
       <template v-if="activeByService.get(s)">
@@ -115,13 +117,10 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
 </template>
 
 <style scoped>
-.gks-settings { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-settings__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-settings__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); align-items: end; }
 .gks-settings__hint { margin-top: var(--sp-3); font-size: var(--fs-caption); color: var(--text-subtle); }
-.gks-settings__skeleton { height: 200px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
 .gks-settings__facts { display: flex; flex-direction: column; gap: var(--sp-1); }
 .gks-settings__unknown { color: var(--text-subtle); font-style: italic; }
 .gks-settings__history { margin-top: var(--sp-3); font-size: var(--fs-caption); color: var(--text-muted); }
 .gks-settings__history ul { margin-top: var(--sp-2); display: flex; flex-direction: column; gap: var(--sp-1); }
 </style>
+

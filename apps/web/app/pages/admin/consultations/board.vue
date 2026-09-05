@@ -94,13 +94,13 @@ function formatDate(value: string | null): string {
 </script>
 
 <template>
-  <div class="gks-board">
-    <header class="gks-board__head">
+  <div class="gks-page gks-board">
+    <header class="gks-page__head">
       <div>
         <span class="gks-eyebrow">CRM</span>
-        <h1 class="gks-board__title">Борлуулалтын самбар</h1>
+        <h1 class="gks-page__title">Борлуулалтын самбар</h1>
       </div>
-      <div class="gks-board__actions">
+      <div class="gks-page__actions">
         <DsTag :selected="!mineOnly" clickable @click="mineOnly = false">Бүгд</DsTag>
         <DsTag :selected="mineOnly" clickable @click="mineOnly = true">Надад оноогдсон</DsTag>
         <DsButton variant="secondary" size="sm" icon-left="list" @click="navigateTo('/admin/consultations')">
@@ -158,20 +158,20 @@ function formatDate(value: string | null): string {
 </template>
 
 <style scoped>
-.gks-board { display: flex; flex-direction: column; gap: var(--sp-4); }
-.gks-board__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
-.gks-board__title { font-size: var(--fs-h3); font-weight: var(--fw-bold); margin-top: var(--sp-1); }
-.gks-board__actions { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
-.gks-board__error { color: var(--danger-600, #b00020); font-size: var(--fs-small); }
-.gks-board__note { color: var(--text-subtle); font-size: var(--fs-small); }
+/* The pipeline is the page: it takes the height the shell leaves it, and each
+   column scrolls on its own rather than the whole board scrolling as one. */
+.gks-board { flex: 1; min-height: 0; }
+.gks-board__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
+.gks-board__note { color: var(--text-subtle); font-size: var(--fs-body-sm); }
 
 .gks-board__columns {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(210px, 1fr);
+  grid-auto-columns: minmax(240px, 1fr);
   gap: var(--sp-3);
   overflow-x: auto;
   padding-bottom: var(--sp-3);
+  align-items: start;
 }
 
 .gks-board__col {
@@ -180,13 +180,28 @@ function formatDate(value: string | null): string {
   gap: var(--sp-2);
   padding: var(--sp-3);
   border: var(--border-hair) solid var(--line-hairline);
-  border-radius: var(--radius-lg);
-  background: var(--surface-page);
+  border-radius: var(--radius-3);
+  background: var(--surface-sunken);
   min-height: 220px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.gks-board__col--over { border-color: var(--brand-600, #1f4e9c); background: color-mix(in oklab, var(--brand-600, #1f4e9c) 6%, var(--surface-page)); }
+.gks-board__col--over { border-color: var(--brand-600); background: var(--surface-selected); }
 
-.gks-board__col-head { display: flex; align-items: center; justify-content: space-between; }
+/* Sticky so you can still see which column you are dropping into halfway
+   down a long one. */
+.gks-board__col-head {
+  position: sticky;
+  top: calc(var(--sp-3) * -1);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) 0;
+  padding: var(--sp-3);
+  background: var(--surface-sunken);
+}
 .gks-board__col-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-caps); color: var(--text-subtle); }
 .gks-board__col-count { font-size: var(--fs-micro); color: var(--text-subtle); }
 .gks-board__col-empty { color: var(--text-subtle); font-size: var(--fs-micro); text-align: center; padding: var(--sp-4) 0; }
@@ -194,14 +209,14 @@ function formatDate(value: string | null): string {
 .gks-board__card {
   padding: var(--sp-3);
   border: var(--border-hair) solid var(--line-hairline);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-2);
   background: var(--surface-card);
   cursor: grab;
 }
 .gks-board__card:active { cursor: grabbing; }
 .gks-board__card--dragging { opacity: 0.4; }
-.gks-board__card-name { font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.gks-board__card-name { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gks-board__card-meta { font-size: var(--fs-micro); color: var(--text-subtle); }
 .gks-board__card-foot { display: flex; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 11px; color: var(--text-subtle); }
-.gks-board__card-due--overdue { color: var(--danger-600, #b00020); font-weight: var(--fw-semibold); }
+.gks-board__card-due--overdue { color: var(--danger-fg); font-weight: var(--fw-semibold); }
 </style>

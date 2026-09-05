@@ -30,13 +30,10 @@ const SORT_OPTIONS = [
 
 const auth = useAuthStore();
 const api = useApi();
-const route = useRoute();
 
-/** The dashboard links here pre-filtered; the URL is the source of that state. */
+/* The dashboard links here pre-filtered; `useUrlFilters` below reads that. */
 const q = ref('');
-const stage = ref<LeadStage | ''>(
-  (Object.keys(LEAD_STAGE_LABELS) as LeadStage[]).find((value) => value === route.query.stage) ?? '',
-);
+const stage = ref<LeadStage | ''>('');
 const source = ref<LeadSource | ''>('');
 const assignedFilter = ref<'all' | 'mine' | 'unassigned'>('all');
 const sort = ref('createdAt');
@@ -89,25 +86,43 @@ function formatDate(value: string | null): string {
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 
+/* Filters live in the URL: a filtered queue can be bookmarked, shared and
+   survives a refresh. */
+useUrlFilters({
+  q,
+  stage: [stage, STAGE_OPTIONS.map((o) => o.value)],
+  source: [source, SOURCE_OPTIONS.map((o) => o.value)],
+  assigned: [assignedFilter, ['all', 'mine', 'unassigned']],
+  sort: [sort, SORT_OPTIONS.map((o) => o.value)],
+});
+
 useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
 </script>
 
 <template>
-  <div class="gks-crm">
-    <header class="gks-crm__head">
-      <span class="gks-eyebrow">CRM</span>
-      <h1 class="gks-crm__title">Зөвлөгөө хүсэлт</h1>
-      <p v-if="data" class="gks-crm__count gks-tnum">{{ data.meta.total }} хүсэлт</p>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">CRM</span>
+        <h1 class="gks-page__title">Зөвлөгөө хүсэлт</h1>
+        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} хүсэлт</p>
+      </div>
     </header>
 
     <DsCard>
-      <div class="gks-crm__filters">
-        <DsInput v-model="q" icon-left="search" type="search" placeholder="Нэр, утас, имэйлээр хайх…" />
+      <div class="gks-filters">
+        <DsInput
+          v-model="q"
+          class="gks-filters__search"
+          icon-left="search"
+          type="search"
+          placeholder="Нэр, утас, имэйлээр хайх…  ( / )"
+        />
         <DsSelect v-model="stage" :options="STAGE_OPTIONS" aria-label="Үе шат" />
         <DsSelect v-model="source" :options="SOURCE_OPTIONS" aria-label="Суваг" />
         <DsSelect v-model="sort" :options="SORT_OPTIONS" aria-label="Эрэмбэ" />
       </div>
-      <div class="gks-crm__toggles">
+      <div class="gks-toggles">
         <DsTag :selected="assignedFilter === 'all'" clickable @click="assignedFilter = 'all'">Бүгд</DsTag>
         <DsTag :selected="assignedFilter === 'mine'" clickable @click="assignedFilter = 'mine'">Надад оноогдсон</DsTag>
         <DsTag :selected="assignedFilter === 'unassigned'" clickable @click="assignedFilter = 'unassigned'">Хариуцагчгүй</DsTag>
@@ -118,16 +133,16 @@ useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
       <p>Хүсэлтийн жагсаалтыг ачаалж чадсангүй.</p>
     </DsCard>
 
-    <div v-else-if="pending && !data" class="gks-crm__skeleton">
-      <div v-for="n in 6" :key="n" class="gks-crm__skeleton-row" />
+    <div v-else-if="pending && !data" class="gks-skeleton">
+      <div v-for="n in 6" :key="n" class="gks-skeleton__row" />
     </div>
 
     <DsCard v-else-if="!data?.items.length" padding="var(--sp-8)">
-      <p class="gks-crm__empty">Тохирох хүсэлт олдсонгүй.</p>
+      <p class="gks-empty">Тохирох хүсэлт олдсонгүй.</p>
     </DsCard>
 
-    <div v-else class="gks-crm__table-wrap">
-      <table class="gks-table">
+    <div v-else class="gks-table-wrap">
+      <table class="gks-table gks-table--cards">
         <thead>
           <tr>
             <th>Нэр</th>
@@ -140,17 +155,17 @@ useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
           </tr>
         </thead>
         <tbody>
-          <tr v-for="lead in data.items" :key="lead.id" class="gks-crm__row" @click="navigateTo(`/admin/consultations/${lead.id}`)">
-            <td>
+          <tr v-for="lead in data.items" :key="lead.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/consultations/${lead.id}`)" @keydown.enter="navigateTo(`/admin/consultations/${lead.id}`)">
+            <td data-label="Нэр">
               {{ lead.lastName }} {{ lead.firstName }}
               <DsBadge v-if="lead.client" tone="success" icon="user-check">Үйлчлүүлэгч</DsBadge>
             </td>
-            <td class="gks-tnum">{{ lead.phone }}</td>
-            <td>{{ LEAD_SOURCE_LABELS[lead.source] }}</td>
-            <td><DsBadge :tone="LEAD_STAGE_TONE[lead.stage]">{{ LEAD_STAGE_LABELS[lead.stage] }}</DsBadge></td>
-            <td>{{ lead.assignedTo?.name ?? lead.assignedTo?.email ?? '—' }}</td>
-            <td class="gks-tnum">{{ formatDate(lead.nextContactAt) }}</td>
-            <td class="gks-tnum">{{ formatDate(lead.createdAt) }}</td>
+            <td class="gks-tnum" data-label="Утас">{{ lead.phone }}</td>
+            <td data-label="Суваг">{{ LEAD_SOURCE_LABELS[lead.source] }}</td>
+            <td data-label="Үе шат"><DsBadge :tone="LEAD_STAGE_TONE[lead.stage]">{{ LEAD_STAGE_LABELS[lead.stage] }}</DsBadge></td>
+            <td data-label="Хариуцагч">{{ lead.assignedTo?.name ?? lead.assignedTo?.email ?? '—' }}</td>
+            <td class="gks-tnum" data-label="Дараагийн холбогдох">{{ formatDate(lead.nextContactAt) }}</td>
+            <td class="gks-tnum" data-label="Үүсгэсэн">{{ formatDate(lead.createdAt) }}</td>
           </tr>
         </tbody>
       </table>
@@ -164,41 +179,3 @@ useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
   </div>
 </template>
 
-<style scoped>
-.gks-crm { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-crm__title {
-  margin-top: var(--sp-2);
-  font-family: var(--font-display);
-  font-size: var(--fs-h2);
-  font-weight: var(--fw-bold);
-}
-.gks-crm__count { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
-
-.gks-crm__filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--sp-3); }
-.gks-crm__toggles { display: flex; gap: var(--sp-2); margin-top: var(--sp-4); }
-
-.gks-crm__skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-crm__skeleton-row { height: 44px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-.gks-crm__empty { text-align: center; color: var(--text-muted); }
-
-.gks-crm__table-wrap { overflow-x: auto; border: var(--border-hair) solid var(--line-hairline); background: var(--surface-card); }
-.gks-table { width: 100%; border-collapse: collapse; font-size: var(--fs-body-sm); white-space: nowrap; }
-.gks-table th {
-  text-align: left;
-  padding: var(--sp-3);
-  font-size: var(--fs-caption);
-  color: var(--text-subtle);
-  border-bottom: var(--border-hair) solid var(--line-hairline);
-  background: var(--surface-sunken);
-}
-.gks-table td { padding: var(--sp-3); border-bottom: var(--border-hair) solid var(--line-hairline); }
-.gks-crm__row { cursor: pointer; }
-.gks-crm__row:hover { background: var(--surface-sunken); }
-
-.gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
-.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); }
-
-@media (max-width: 900px) {
-  .gks-crm__filters { grid-template-columns: 1fr 1fr; }
-}
-</style>

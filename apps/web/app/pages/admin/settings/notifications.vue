@@ -102,12 +102,12 @@ async function seedMissing() {
 </script>
 
 <template>
-  <div class="gks-ntpl">
-    <header class="gks-ntpl__head">
+  <div class="gks-page">
+    <header class="gks-page__head">
       <div>
         <span class="gks-eyebrow">§16</span>
-        <h1 class="gks-ntpl__title">Мэдэгдлийн загвар</h1>
-        <p class="gks-ntpl__note">
+        <h1 class="gks-page__title">Мэдэгдлийн загвар</h1>
+        <p class="gks-page__hint">
           <code v-for="name in PLACEHOLDER_EXAMPLES" :key="name">{{ name }}</code>
           зэрэг орлуулга илгээх үед бөглөгдөнө.
           Систем доторх мэдэгдлийг унтраах боломжгүй — зөвхөн имэйл, SMS-ийг унтраана.
@@ -126,7 +126,7 @@ async function seedMissing() {
 
     <p v-if="errorMsg" class="gks-ntpl__error">{{ errorMsg }}</p>
     <p v-if="notice" class="gks-ntpl__notice">{{ notice }}</p>
-    <p v-if="pending" class="gks-ntpl__note">Уншиж байна…</p>
+    <p v-if="pending" class="gks-page__hint">Уншиж байна…</p>
 
     <DsCard v-for="group in NOTIFICATION_EVENT_GROUPS" v-show="!pending" :key="group.title" :title="group.title">
       <div v-for="event in group.events" :key="event" class="gks-ntpl__event">
@@ -155,7 +155,7 @@ async function seedMissing() {
             <DsInput v-model="draft.titleMn" label="Гарчиг" required />
             <DsTextarea v-model="draft.bodyMn" label="Агуулга" :rows="8" required />
             <DsInput v-model="draft.linkMn" label="Холбоос" :hint="LINK_HINT" />
-            <div class="gks-ntpl__form-actions">
+            <div class="gks-form-actions">
               <DsButton type="submit" variant="accent" size="sm" :disabled="saving">
                 {{ saving ? 'Хадгалж байна…' : 'Хадгалах' }}
               </DsButton>
@@ -169,36 +169,27 @@ async function seedMissing() {
 </template>
 
 <style scoped>
-.gks-ntpl { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-ntpl__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
-.gks-ntpl__title { font-size: var(--fs-h3); font-weight: var(--fw-bold); margin: var(--sp-1) 0; }
-.gks-ntpl__note { font-size: var(--fs-small); color: var(--text-subtle); max-width: 62ch; }
-.gks-ntpl__note code { font-family: var(--font-mono); font-size: var(--fs-micro); }
-.gks-ntpl__error { color: var(--danger-600, #b00020); font-size: var(--fs-small); }
-.gks-ntpl__notice { color: var(--success-700, #14663f); font-size: var(--fs-small); }
-
-.gks-ntpl__usage { display: flex; gap: var(--sp-5); flex-wrap: wrap; font-size: var(--fs-small); }
-
+.gks-page__hint code { font-family: var(--font-mono); font-size: var(--fs-micro); }
+.gks-ntpl__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
+.gks-ntpl__notice { color: var(--success-fg); font-size: var(--fs-body-sm); }
+.gks-ntpl__usage { display: flex; gap: var(--sp-5); flex-wrap: wrap; font-size: var(--fs-body-sm); }
 .gks-ntpl__event { padding: var(--sp-4) 0; border-bottom: var(--border-hair) solid var(--line-hairline); }
 .gks-ntpl__event:last-child { border-bottom: none; }
 .gks-ntpl__event-title { font-weight: var(--fw-semibold); margin-bottom: var(--sp-2); }
-
 .gks-ntpl__row { padding: var(--sp-3) 0; }
 .gks-ntpl__row-head { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
-.gks-ntpl__row-title { font-size: var(--fs-small); flex: 1; min-width: 200px; }
+.gks-ntpl__row-title { font-size: var(--fs-body-sm); flex: 1; min-width: 200px; }
 .gks-ntpl__row-actions { display: flex; align-items: center; gap: var(--sp-3); }
-
 .gks-ntpl__body {
   margin: var(--sp-2) 0 0;
   padding: var(--sp-3);
   background: var(--surface-page);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   white-space: pre-wrap;
   color: var(--text-subtle);
 }
-
 .gks-ntpl__form { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-3); }
-.gks-ntpl__form-actions { display: flex; gap: var(--sp-2); }
 </style>
+

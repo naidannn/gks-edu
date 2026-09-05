@@ -119,36 +119,44 @@ useHead({ title: 'Виз · CRM' });
 </script>
 
 <template>
-  <div class="gks-visadm">
-    <header class="gks-visadm__head">
-      <span class="gks-eyebrow">CRM</span>
-      <h1 class="gks-visadm__title">Визний хэрэг</h1>
-      <p v-if="data" class="gks-visadm__count gks-tnum">{{ data.meta.total }} хэрэг</p>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">CRM</span>
+        <h1 class="gks-page__title">Визний хэрэг</h1>
+        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} хэрэг</p>
+      </div>
     </header>
 
     <DsCard>
-      <div class="gks-visadm__filters">
-        <DsInput v-model="q" icon-left="search" type="search" placeholder="Хэргийн код, хэрэглэгчээр хайх…" />
+      <div class="gks-filters">
+        <DsInput
+          v-model="q"
+          class="gks-filters__search"
+          icon-left="search"
+          type="search"
+          placeholder="Хэргийн код, хэрэглэгчээр хайх…  ( / )"
+        />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
       </div>
     </DsCard>
 
     <p v-if="error" class="gks-visadm__error">{{ error }}</p>
 
-    <div class="gks-visadm__grid">
-      <aside class="gks-visadm__list">
-        <div v-if="pending && !data" class="gks-visadm__skeleton"><div v-for="n in 5" :key="n" class="gks-visadm__skeleton-row" /></div>
+    <div class="gks-split">
+      <aside class="gks-split__list gks-queue-list">
+        <div v-if="pending && !data" class="gks-skeleton gks-skeleton--tall"><div v-for="n in 5" :key="n" class="gks-skeleton__row" /></div>
         <p v-else-if="!data?.items.length" class="gks-visadm__empty">Визний хэрэг алга байна.</p>
         <button
           v-for="item in data?.items ?? []"
           :key="item.id"
           type="button"
-          class="gks-visadm__item"
-          :class="{ 'gks-visadm__item--active': item.caseId === selectedCaseId }"
+          class="gks-queue-item"
+          :class="{ 'gks-queue-item--active': item.caseId === selectedCaseId }"
           @click="select(item.caseId)"
         >
-          <span class="gks-visadm__item-case gks-tnum">{{ item.case.code }}</span>
-          <span class="gks-visadm__item-name">{{ item.case.user.name ?? '—' }}</span>
+          <span class="gks-queue-item__sub gks-tnum">{{ item.case.code }}</span>
+          <span class="gks-queue-item__name">{{ item.case.user.name ?? '—' }}</span>
           <DsBadge :tone="VISA_STATUS_TONE[item.status]">{{ VISA_STATUS_LABELS[item.status] }}</DsBadge>
         </button>
 
@@ -165,7 +173,7 @@ useHead({ title: 'Виз · CRM' });
             <DsBadge :tone="VISA_STATUS_TONE[current.status]">{{ VISA_STATUS_LABELS[current.status] }}</DsBadge>
           </template>
 
-          <dl class="gks-visadm__facts">
+          <dl class="gks-facts">
             <div><dt>Хэрэглэгч</dt><dd>{{ current.case.user.name ?? '—' }}</dd></div>
             <div><dt>Утас</dt><dd class="gks-tnum">{{ current.case.user.phone ?? '—' }}</dd></div>
             <div><dt>Сургууль</dt><dd>{{ current.case.university?.nameMn ?? UNKNOWN_LABEL }}</dd></div>
@@ -210,47 +218,13 @@ useHead({ title: 'Виз · CRM' });
 </template>
 
 <style scoped>
-.gks-visadm { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-visadm__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-visadm__count { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-visadm__filters { display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-3); }
+.gks-facts { margin-bottom: var(--sp-4); }
 .gks-visadm__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
-
-.gks-visadm__grid { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: var(--sp-4); align-items: start; }
-.gks-visadm__list { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-visadm__item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  align-items: flex-start;
-  text-align: left;
-  padding: var(--sp-3);
-  border: var(--border-hair) solid var(--line-soft);
-  border-radius: var(--radius-2);
-  background: var(--surface-card);
-  cursor: pointer;
-}
-.gks-visadm__item:hover { background: var(--surface-hover); }
-.gks-visadm__item--active { border-color: var(--brand-600); background: var(--surface-selected); }
-.gks-visadm__item-case { font-size: var(--fs-caption); color: var(--text-subtle); }
-.gks-visadm__item-name { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
-
 .gks-visadm__detail { display: flex; flex-direction: column; gap: var(--sp-4); }
-.gks-visadm__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-4); }
-.gks-visadm__facts dt { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--ls-caps); color: var(--text-subtle); }
-.gks-visadm__facts dd { font-size: var(--fs-body-sm); color: var(--text-body); margin-top: 2px; }
 .gks-visadm__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); align-items: end; margin-bottom: var(--sp-3); }
 .gks-visadm__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .gks-visadm__docs { margin-top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-body-sm); }
 .gks-visadm__docs li { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); }
 .gks-visadm__empty { color: var(--text-subtle); font-style: italic; }
-.gks-visadm__skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-visadm__skeleton-row { height: 64px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-.gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-3); margin-top: var(--sp-2); }
-.gks-pager__status { font-size: var(--fs-caption); color: var(--text-muted); }
-
-@media (max-width: 1100px) {
-  .gks-visadm__grid { grid-template-columns: 1fr; }
-  .gks-visadm__filters { grid-template-columns: 1fr; }
-}
 </style>
+

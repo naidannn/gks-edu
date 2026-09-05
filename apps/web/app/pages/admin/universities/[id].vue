@@ -316,18 +316,18 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
 </script>
 
 <template>
-  <div class="gks-form-page">
+  <div class="gks-page gks-page--form">
     <DsCard v-if="loadError" accent><p>Сургуулийн мэдээллийг ачаалж чадсангүй.</p></DsCard>
     <p v-else-if="pending && !university" class="gks-form-page__loading">Ачаалж байна…</p>
 
     <template v-else-if="university">
-      <header class="gks-form-page__head">
+      <header class="gks-page__head">
         <div>
-          <NuxtLink to="/admin/universities" class="gks-form-page__back">
+          <NuxtLink to="/admin/universities" class="gks-page__back">
             <DsIcon name="arrow-left" :size="16" /> Сургуулийн жагсаалт
           </NuxtLink>
-          <h1 class="gks-form-page__title">{{ university.nameMn }}</h1>
-          <p class="gks-form-page__hint">
+          <h1 class="gks-page__title">{{ university.nameMn }}</h1>
+          <p class="gks-page__hint">
             {{ university.nameEn }} · {{ university.nameKo }} · {{ university.cityMn }}, {{ university.regionMn }}
           </p>
           <div class="gks-form-page__badges">
@@ -341,12 +341,12 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
             <DsBadge v-if="university.isGksEligible" tone="accent">GKS</DsBadge>
           </div>
         </div>
-        <div class="gks-form-page__head-actions">
+        <div class="gks-page__actions">
           <NuxtLink
             v-if="university.isPublished"
             :to="`/universities/${university.slug}`"
             target="_blank"
-            class="gks-form-page__back"
+            class="gks-page__back"
           >
             <DsIcon name="external-link" :size="16" /> Нийтийн хуудас
           </NuxtLink>
@@ -362,12 +362,12 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
       </header>
 
       <!-- ── The record itself ─────────────────────────────────────────── -->
-      <form class="gks-form-page__body" @submit.prevent="save">
+      <form class="gks-form-body" @submit.prevent="save">
         <UniversityAdminFields v-model="form" :errors="errors" :slug-locked="slugLocked" />
 
         <DsCard v-if="saveError" accent><p class="gks-form-page__error">{{ saveError }}</p></DsCard>
 
-        <div class="gks-form-page__actions">
+        <div class="gks-form-actions">
           <DsButton v-if="slugLocked" variant="ghost" icon-left="unlock" @click="slugLocked = false">
             Slug засах
           </DsButton>
@@ -386,7 +386,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
         <p v-if="programError" class="gks-form-page__error">{{ programError }}</p>
 
         <div v-if="programFormOpen" class="gks-sub-form">
-          <div class="gks-sub-form__grid">
+          <div class="gks-form-grid">
             <DsSelect v-model="programDraft.level" label="Түвшин" :options="LEVEL_OPTIONS" />
             <DsInput v-model="programDraft.nameMn" label="Нэр (монгол)" required />
             <DsInput v-model="programDraft.nameEn" label="Нэр (англи)" />
@@ -399,9 +399,9 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
             <DsInput v-model="programDraft.ieltsScore" label="IELTS оноо" type="number" step="0.5" />
           </div>
           <DsTextarea v-model="programDraft.otherRequirements" label="Бусад шаардлага" :rows="2" />
-          <div class="gks-sub-form__actions">
+          <div class="gks-form-actions">
             <DsSwitch v-model="programDraft.isPublished" label="Нийтэд харагдана" />
-            <span class="gks-sub-form__spacer" />
+            <span class="gks-form-actions__spacer" />
             <DsButton variant="secondary" size="sm" @click="programFormOpen = false">Болих</DsButton>
             <DsButton variant="accent" size="sm" icon-left="save" :loading="programSaving" @click="saveProgram">
               {{ editingProgramId ? 'Хадгалах' : 'Нэмэх' }}
@@ -414,7 +414,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
           энэ сургуулийг олохгүй.
         </p>
 
-        <div v-else class="gks-crm__table-wrap">
+        <div v-else class="gks-table-wrap gks-table-wrap--auto">
           <table class="gks-table">
             <thead>
               <tr>
@@ -432,8 +432,8 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
               <tr v-for="p in university.programs" :key="p.id">
                 <td>{{ PROGRAM_LEVEL_LABELS[p.level] }}</td>
                 <td>
-                  <span class="gks-crm__name">{{ p.nameMn }}</span>
-                  <span v-if="p.nameEn" class="gks-crm__sub">{{ p.nameEn }}</span>
+                  <span class="gks-cell-name">{{ p.nameMn }}</span>
+                  <span v-if="p.nameEn" class="gks-cell-sub">{{ p.nameEn }}</span>
                 </td>
                 <td>{{ p.faculty ?? '—' }}</td>
                 <td class="gks-tnum gks-table__num">{{ p.durationYears ?? '—' }}</td>
@@ -463,7 +463,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
         <p v-if="intakeError" class="gks-form-page__error">{{ intakeError }}</p>
 
         <div v-if="intakeFormOpen" class="gks-sub-form">
-          <div class="gks-sub-form__grid">
+          <div class="gks-form-grid">
             <DsSelect v-model="intakeDraft.level" label="Түвшин" :options="LEVEL_OPTIONS" />
             <DsInput v-model="intakeDraft.year" label="Он" type="number" />
             <DsSelect v-model="intakeDraft.month" label="Элсэлтийн сар" :options="MONTH_OPTIONS" />
@@ -471,8 +471,8 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
             <DsSelect v-model="intakeDraft.status" label="Төлөв" :options="INTAKE_STATUS_OPTIONS" />
           </div>
           <DsTextarea v-model="intakeDraft.note" label="Тэмдэглэл" :rows="2" />
-          <div class="gks-sub-form__actions">
-            <span class="gks-sub-form__spacer" />
+          <div class="gks-form-actions">
+            <span class="gks-form-actions__spacer" />
             <DsButton variant="secondary" size="sm" @click="intakeFormOpen = false">Болих</DsButton>
             <DsButton variant="accent" size="sm" icon-left="save" :loading="intakeSaving" @click="saveIntake">
               {{ editingIntakeId ? 'Хадгалах' : 'Нэмэх' }}
@@ -484,7 +484,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
           Элсэлтийн улирал бүртгэгдээгүй байна. Хэрэг нээхэд улирал сонгох шаардлагатай.
         </p>
 
-        <div v-else class="gks-crm__table-wrap">
+        <div v-else class="gks-table-wrap gks-table-wrap--auto">
           <table class="gks-table">
             <thead>
               <tr>
@@ -515,7 +515,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
 
       <!-- ── GKS ranking, read only (1A-30) ────────────────────────────── -->
       <DsCard title="GKS эрэмбэ" eyebrow="Тооцоолсон">
-        <p class="gks-form-page__hint">
+        <p class="gks-page__hint">
           Каталог болон хайлт энэ эрэмбээр эрэмбэлэгддэг. Оноог систем тооцоолох тул
           гараар засах цорын ганц зүйл нь дээрх «Рэйтинг» хэсгийн засварын оноо.
           <NuxtLink to="/admin/universities/ranking" class="gks-form-page__link">Жинг тохируулах</NuxtLink>
@@ -550,7 +550,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
 
       <!-- ── Importer-owned, read only ─────────────────────────────────── -->
       <DsCard title="Импортын мэдээлэл" eyebrow="Зөвхөн харах">
-        <p class="gks-form-page__hint">
+        <p class="gks-page__hint">
           Амьдралын зардал ба чанарын тэмдэглэгээг импорт хөтөлдөг — энд гараар засдаггүй.
         </p>
         <dl class="gks-meta">
@@ -572,7 +572,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
 
       <!-- ── Danger zone ───────────────────────────────────────────────── -->
       <DsCard v-if="auth.isAdmin" title="Сургууль устгах" accent>
-        <p class="gks-form-page__hint">
+        <p class="gks-page__hint">
           <template v-if="referenceCount > 0">
             Энэ сургууль {{ referenceCount }} бичлэгт холбогдсон тул устгах боломжгүй.
             Оронд нь «Нийтлэлээс хасах» товчийг ашиглана уу.
@@ -582,7 +582,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
           </template>
         </p>
         <p v-if="deleteError" class="gks-form-page__error">{{ deleteError }}</p>
-        <div class="gks-form-page__actions">
+        <div class="gks-form-actions">
           <template v-if="confirmDelete">
             <span class="gks-form-page__confirm">«{{ university.nameMn }}»-г бүрмөсөн устгах уу?</span>
             <DsButton variant="secondary" @click="confirmDelete = false">Болих</DsButton>
@@ -604,23 +604,13 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
 </template>
 
 <style scoped>
-.gks-form-page { display: flex; flex-direction: column; gap: var(--sp-5); max-width: 1100px; }
-.gks-form-page__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
-.gks-form-page__head-actions { display: flex; align-items: center; gap: var(--sp-4); }
-.gks-form-page__back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--text-subtle); text-decoration: none; }
-.gks-form-page__back:hover { color: var(--brand-600); }
-.gks-form-page__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-form-page__hint { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
 .gks-form-page__link { color: var(--text-strong); text-decoration: underline; text-underline-offset: 2px; }
 .gks-form-page__badges { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); flex-wrap: wrap; }
 .gks-form-page__loading { color: var(--text-muted); }
-.gks-form-page__body { display: flex; flex-direction: column; gap: var(--sp-4); }
 .gks-form-page__error { color: var(--danger-fg); font-size: var(--fs-body-sm); margin-bottom: var(--sp-3); }
 .gks-form-page__empty { color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-form-page__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-3); }
 .gks-form-page__saved { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--success-fg); font-size: var(--fs-body-sm); }
 .gks-form-page__confirm { margin-right: auto; font-size: var(--fs-body-sm); }
-
 .gks-sub-form {
   display: flex;
   flex-direction: column;
@@ -631,28 +621,9 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
   border: var(--border-hair) solid var(--line-hairline);
   border-radius: var(--radius-2);
 }
-.gks-sub-form__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
-.gks-sub-form__actions { display: flex; align-items: center; gap: var(--sp-3); }
-.gks-sub-form__spacer { flex: 1; }
-
-.gks-crm__table-wrap { overflow-x: auto; border: var(--border-hair) solid var(--line-hairline); }
-.gks-table { width: 100%; border-collapse: collapse; font-size: var(--fs-body-sm); white-space: nowrap; }
-.gks-table th { text-align: left; padding: var(--sp-3); font-size: var(--fs-caption); color: var(--text-subtle); border-bottom: var(--border-hair) solid var(--line-hairline); background: var(--surface-sunken); }
-.gks-table td { padding: var(--sp-3); border-bottom: var(--border-hair) solid var(--line-hairline); }
-.gks-table__num { text-align: right; }
-.gks-table__actions { display: flex; gap: var(--sp-1); justify-content: flex-end; }
-.gks-crm__name { display: block; font-weight: var(--fw-medium); }
-.gks-crm__sub { display: block; font-size: var(--fs-micro); color: var(--text-subtle); }
-
-.gks-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); margin-top: var(--sp-4); }
+.gks-table__actions > * + * { margin-left: var(--sp-1); }
+.gks-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-4); margin-top: var(--sp-4); }
 .gks-meta dt { font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-meta dd { margin-top: var(--sp-1); font-size: var(--fs-body-sm); }
-
-@media (max-width: 1100px) {
-  .gks-sub-form__grid { grid-template-columns: 1fr 1fr; }
-  .gks-meta { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 700px) {
-  .gks-sub-form__grid { grid-template-columns: 1fr; }
-}
 </style>
+

@@ -1,86 +1,22 @@
 <script setup lang="ts">
+import type { AdminNavGroup } from '~/composables/useAdminShell';
 import { useAuthStore } from '~/stores/auth';
 
 /**
- * CRM shell: fixed sidebar + slim topbar. Every `/admin/*` page uses this
- * instead of the public `default` layout — no marketing header/footer here.
+ * CRM shell: sidebar + slim topbar. Every `/admin/*` page uses this instead of
+ * the public `default` layout — no marketing header/footer here.
+ *
+ * The shell is built for people who live in it all day, so it gives the work
+ * area everything it can: no reading-width container (a CRM table wants the
+ * whole monitor, unlike an article), a sidebar that folds to an icon rail, a
+ * compact-density switch, and ⌘K to reach any screen or client without
+ * touching the mouse. The nav map itself lives in `useAdminShell` because the
+ * command palette searches the same list the sidebar renders.
  */
 const auth = useAuthStore();
 const route = useRoute();
 
-interface AdminNavItem {
-  to: string;
-  label: string;
-  icon: string;
-  /**
-   * Highlight on this exact path only. Needed where a sibling route lives
-   * under the same prefix — `/admin/consultations` vs `.../board`.
-   */
-  exact?: boolean;
-}
-
-interface AdminNavGroup {
-  /** Null for the primary block, which needs no heading. */
-  title: string | null;
-  items: AdminNavItem[];
-  /** Secondary blocks start folded — progressive disclosure (1G-17). */
-  collapsible?: boolean;
-}
-
-/**
- * Client-centric navigation (1G-17).
- *
- * The primary block is the daily loop: what needs attention, the enquiries
- * coming in, the people under contract, the work queue. Contracts, payments,
- * documents, applications and visa are no longer top-level destinations —
- * they live inside a client's workspace, and their cross-client queues sit in
- * "Үйл ажиллагаа" for the days someone works one function across everybody.
- */
-const NAV: AdminNavGroup[] = [
-  {
-    title: null,
-    items: [
-      { to: '/admin', label: 'Хяналтын самбар', icon: 'layout-dashboard' },
-      { to: '/admin/consultations', label: 'Зөвлөгөө хүсэлт', icon: 'message-square', exact: true },
-      { to: '/admin/consultations/board', label: 'Борлуулалтын самбар', icon: 'kanban' },
-      { to: '/admin/clients', label: 'Үйлчлүүлэгч', icon: 'users' },
-      { to: '/admin/work-tasks', label: 'Ажил & хуваарь', icon: 'list-checks' },
-    ],
-  },
-  {
-    title: 'Лавлах',
-    items: [{ to: '/admin/universities', label: 'Сургууль', icon: 'school' }],
-  },
-  {
-    title: 'Үйл ажиллагаа',
-    collapsible: true,
-    items: [
-      { to: '/admin/cases', label: 'Хэрэг', icon: 'folder' },
-      { to: '/admin/documents', label: 'Материал шалгах', icon: 'file-check-2' },
-      { to: '/admin/applications', label: 'Мэдүүлэг', icon: 'graduation-cap' },
-      { to: '/admin/visa', label: 'Виз', icon: 'plane' },
-      { to: '/admin/contracts', label: 'Гэрээ', icon: 'file-text' },
-      { to: '/admin/payments', label: 'Төлбөр', icon: 'credit-card' },
-    ],
-  },
-  {
-    title: 'Тайлан',
-    collapsible: true,
-    items: [{ to: '/admin/reports', label: 'Удирдлагын тайлан', icon: 'chart-column' }],
-  },
-  {
-    title: 'Тохиргоо',
-    collapsible: true,
-    items: [
-      { to: '/admin/settings/pricing', label: 'Үнийн тохиргоо', icon: 'settings' },
-      { to: '/admin/settings/contract-templates', label: 'Гэрээний загвар', icon: 'file-cog' },
-      { to: '/admin/settings/document-templates', label: 'Материалын загвар', icon: 'folder-cog' },
-      { to: '/admin/settings/notifications', label: 'Мэдэгдлийн загвар', icon: 'bell-ring' },
-      { to: '/admin/content', label: 'Контент', icon: 'newspaper' },
-      { to: '/admin/settings/staff', label: 'Ажилтан', icon: 'user-cog' },
-    ],
-  },
-];
+const { rail, density, paletteOpen, restore, toggleRail, toggleDensity } = useAdminShell();
 
 const sidebarOpen = ref(false);
 watch(() => route.fullPath, () => { sidebarOpen.value = false; });
@@ -91,10 +27,12 @@ function isActive(to: string, exact = false): boolean {
   return route.path === to || route.path.startsWith(`${to}/`);
 }
 
-const allItems = computed(() => NAV.flatMap((group) => group.items));
-const currentSection = computed(
-  () => allItems.value.find((item) => isActive(item.to, item.exact))?.label ?? 'CRM',
-);
+const currentSection = computed(() => findAdminNavItem(route.path)?.label ?? 'CRM');
+/** True on a record page, where the topbar shows "section → this record". */
+const isDetail = computed(() => {
+  const item = findAdminNavItem(route.path);
+  return Boolean(item && item.to !== route.path);
+});
 
 /**
  * A folded group opens itself when the page inside it is the one on screen,
@@ -104,7 +42,7 @@ const openGroups = ref(new Set<string>());
 watch(
   () => route.path,
   () => {
-    for (const group of NAV) {
+    for (const group of ADMIN_NAV) {
       if (group.title && group.items.some((item) => isActive(item.to, item.exact))) openGroups.value.add(group.title);
     }
   },
@@ -112,6 +50,8 @@ watch(
 );
 
 function isOpen(group: AdminNavGroup): boolean {
+  // A folded rail has no room for headings, so every group renders flat.
+  if (rail.value) return true;
   return !group.collapsible || Boolean(group.title && openGroups.value.has(group.title));
 }
 function toggleGroup(group: AdminNavGroup) {
@@ -122,6 +62,51 @@ function toggleGroup(group: AdminNavGroup) {
   openGroups.value = next;
 }
 
+/**
+ * Global keys. `/` and the single-letter shortcuts stay out of the way while
+ * a field has focus — otherwise typing a name into a filter would open the
+ * palette instead.
+ */
+function isTyping(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const meta = event.metaKey || event.ctrlKey;
+
+  if (meta && event.key.toLowerCase() === 'k') {
+    event.preventDefault();
+    paletteOpen.value = !paletteOpen.value;
+    return;
+  }
+  if (meta && event.key === '\\') {
+    event.preventDefault();
+    toggleRail();
+    return;
+  }
+  if (isTyping(event.target) || meta || event.altKey) return;
+
+  if (event.key === '/') {
+    // Hand `/` to the page's own search box when it has one, so the muscle
+    // memory works on a list screen and still opens the palette elsewhere.
+    // Search fields first — a page can have a plain text field above its
+    // filter bar, and that is not what `/` means.
+    const search = document.querySelector<HTMLInputElement>('main input[type="search"]')
+      ?? document.querySelector<HTMLInputElement>('main input.gks-filters__search');
+    event.preventDefault();
+    if (search) search.focus();
+    else paletteOpen.value = true;
+  }
+}
+
+onMounted(() => {
+  restore();
+  window.addEventListener('keydown', onKeydown);
+});
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
+
 async function onLogout() {
   await auth.logout();
   await navigateTo('/login');
@@ -129,10 +114,14 @@ async function onLogout() {
 </script>
 
 <template>
-  <div class="gks-admin" :class="{ 'gks-admin--sidebar-open': sidebarOpen }">
+  <div
+    class="gks-admin"
+    :class="{ 'gks-admin--sidebar-open': sidebarOpen, 'gks-admin--rail': rail }"
+    :data-density="density"
+  >
     <aside class="gks-admin__sidebar">
       <div class="gks-admin__brand">
-        <NuxtLink to="/admin" class="gks-admin__brand-link">
+        <NuxtLink to="/admin" class="gks-admin__brand-link" :title="rail ? 'GKS CRM' : undefined">
           <img src="~/assets/img/gks-logo-mark.png" alt="" class="gks-admin__logo">
           <span class="gks-admin__brand-text">CRM</span>
         </NuxtLink>
@@ -142,18 +131,20 @@ async function onLogout() {
       </div>
 
       <nav class="gks-admin__nav" aria-label="Админ цэс">
-        <div v-for="(group, index) in NAV" :key="group.title ?? 'primary'" class="gks-admin__group">
-          <button
-            v-if="group.title && group.collapsible"
-            type="button"
-            class="gks-admin__group-toggle"
-            :aria-expanded="isOpen(group)"
-            @click="toggleGroup(group)"
-          >
-            <span>{{ group.title }}</span>
-            <DsIcon :name="isOpen(group) ? 'chevron-down' : 'chevron-right'" :size="14" />
-          </button>
-          <p v-else-if="group.title" class="gks-admin__group-title">{{ group.title }}</p>
+        <div v-for="(group, index) in ADMIN_NAV" :key="group.title ?? 'primary'" class="gks-admin__group">
+          <template v-if="!rail">
+            <button
+              v-if="group.title && group.collapsible"
+              type="button"
+              class="gks-admin__group-toggle"
+              :aria-expanded="isOpen(group)"
+              @click="toggleGroup(group)"
+            >
+              <span>{{ group.title }}</span>
+              <DsIcon :name="isOpen(group) ? 'chevron-down' : 'chevron-right'" :size="14" />
+            </button>
+            <p v-else-if="group.title" class="gks-admin__group-title">{{ group.title }}</p>
+          </template>
 
           <template v-if="isOpen(group)">
             <NuxtLink
@@ -162,25 +153,26 @@ async function onLogout() {
               :to="item.to"
               class="gks-admin__nav-link"
               :class="{ 'gks-admin__nav-link--active': isActive(item.to, item.exact) }"
+              :title="rail ? item.label : undefined"
             >
               <DsIcon :name="item.icon" :size="18" />
-              <span>{{ item.label }}</span>
+              <span class="gks-admin__nav-label">{{ item.label }}</span>
             </NuxtLink>
           </template>
 
-          <span v-if="index === 0" class="gks-admin__divider" aria-hidden="true" />
+          <span v-if="index === 0 || rail" class="gks-admin__divider" aria-hidden="true" />
         </div>
       </nav>
 
       <div class="gks-admin__sidebar-foot">
-        <NuxtLink to="/" class="gks-admin__site-link">
+        <NuxtLink to="/" class="gks-admin__site-link" :title="rail ? 'Вебсайт руу буцах' : undefined">
           <DsIcon name="arrow-left" :size="16" />
-          <span>Вебсайт руу буцах</span>
+          <span class="gks-admin__nav-label">Вебсайт руу буцах</span>
         </NuxtLink>
 
         <ClientOnly>
           <div class="gks-admin__user">
-            <div class="gks-admin__user-avatar" aria-hidden="true">
+            <div class="gks-admin__user-avatar" :title="auth.user?.name ?? auth.user?.email ?? ''">
               {{ (auth.user?.name ?? auth.user?.email ?? '?').slice(0, 1).toUpperCase() }}
             </div>
             <div class="gks-admin__user-info">
@@ -211,9 +203,43 @@ async function onLogout() {
         <button type="button" class="gks-admin__icon-btn gks-admin__menu-btn" aria-label="Цэс нээх" @click="sidebarOpen = true">
           <DsIcon name="menu" :size="20" />
         </button>
-        <span class="gks-admin__topbar-title">{{ currentSection }}</span>
+        <button
+          type="button"
+          class="gks-admin__icon-btn gks-admin__rail-btn"
+          :aria-label="rail ? 'Цэсийг дэлгэх' : 'Цэсийг нарийсгах'"
+          :title="`${rail ? 'Цэсийг дэлгэх' : 'Цэсийг нарийсгах'} (⌘\\)`"
+          @click="toggleRail"
+        >
+          <DsIcon :name="rail ? 'panel-left-open' : 'panel-left-close'" :size="18" />
+        </button>
+
+        <nav class="gks-admin__crumbs" aria-label="Замчлал">
+          <span class="gks-admin__crumb">{{ currentSection }}</span>
+          <template v-if="isDetail">
+            <DsIcon name="chevron-right" :size="13" />
+            <span class="gks-admin__crumb gks-admin__crumb--current">Дэлгэрэнгүй</span>
+          </template>
+        </nav>
+
+        <button type="button" class="gks-admin__search" @click="paletteOpen = true">
+          <DsIcon name="search" :size="16" />
+          <span class="gks-admin__search-text">Хайх…</span>
+          <kbd class="gks-kbd">⌘K</kbd>
+        </button>
+
+        <button
+          type="button"
+          class="gks-admin__icon-btn"
+          :aria-pressed="density === 'compact'"
+          :title="density === 'compact' ? 'Тансаг харагдац' : 'Нягт харагдац'"
+          aria-label="Мөрийн нягтрал"
+          @click="toggleDensity"
+        >
+          <DsIcon :name="density === 'compact' ? 'rows-3' : 'rows-2'" :size="18" />
+        </button>
+
         <ClientOnly>
-          <NotificationsBell class="gks-admin__bell" />
+          <NotificationsBell />
         </ClientOnly>
       </header>
 
@@ -221,6 +247,10 @@ async function onLogout() {
         <slot />
       </main>
     </div>
+
+    <ClientOnly>
+      <AdminCommandPalette v-if="paletteOpen" @close="paletteOpen = false" />
+    </ClientOnly>
   </div>
 </template>
 
@@ -235,22 +265,24 @@ async function onLogout() {
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
-  width: 256px;
+  width: var(--admin-sidebar-w);
   display: flex;
   flex-direction: column;
   background: var(--surface-card);
   border-right: var(--border-hair) solid var(--line-hairline);
-  transition: transform var(--dur-base) var(--ease-standard);
+  transition: transform var(--dur-base) var(--ease-standard), width var(--dur-base) var(--ease-standard);
 }
+.gks-admin--rail .gks-admin__sidebar { width: var(--admin-rail-w); }
 
 .gks-admin__brand {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 68px;
+  min-height: var(--admin-topbar-h);
   padding: 0 var(--sp-5);
   border-bottom: var(--border-hair) solid var(--line-hairline);
 }
+.gks-admin--rail .gks-admin__brand { padding: 0; justify-content: center; }
 .gks-admin__brand-link { display: flex; align-items: center; gap: var(--sp-3); text-decoration: none; }
 .gks-admin__logo { height: 24px; width: auto; display: block; }
 .gks-admin__brand-text {
@@ -263,7 +295,7 @@ async function onLogout() {
 }
 .gks-admin__icon-btn.gks-admin__close { display: none; }
 
-.gks-admin__nav { flex: 1; display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-4); overflow-y: auto; }
+.gks-admin__nav { flex: 1; display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-4) var(--sp-3); overflow-y: auto; }
 .gks-admin__group { display: flex; flex-direction: column; gap: 2px; }
 .gks-admin__group-title,
 .gks-admin__group-toggle {
@@ -284,16 +316,19 @@ async function onLogout() {
 .gks-admin__group-toggle { cursor: pointer; }
 .gks-admin__group-toggle:hover { color: var(--text-strong); }
 .gks-admin__divider { height: 1px; margin: var(--sp-2) var(--sp-3) 0; background: var(--line-hairline); }
+.gks-admin--rail .gks-admin__divider { margin: var(--sp-2) var(--sp-2) 0; }
+
 .gks-admin__nav-link {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-3);
+  padding: var(--sp-3);
   border-radius: var(--radius-2);
   font-size: var(--fs-body-sm);
   font-weight: var(--fw-medium);
   color: var(--text-muted);
   text-decoration: none;
+  white-space: nowrap;
   transition: var(--transition-control);
 }
 .gks-admin__nav-link:hover { background: var(--surface-hover); color: var(--text-strong); }
@@ -302,9 +337,13 @@ async function onLogout() {
   color: var(--brand-700);
   font-weight: var(--fw-semibold);
 }
+.gks-admin--rail .gks-admin__nav-link { justify-content: center; padding: var(--sp-3) 0; }
+.gks-admin--rail .gks-admin__nav-label,
+.gks-admin--rail .gks-admin__brand-text,
+.gks-admin--rail .gks-admin__user-info { display: none; }
 
 .gks-admin__sidebar-foot {
-  padding: var(--sp-4);
+  padding: var(--sp-4) var(--sp-3);
   border-top: var(--border-hair) solid var(--line-hairline);
   display: flex;
   flex-direction: column;
@@ -314,14 +353,18 @@ async function onLogout() {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
+  padding: 0 var(--sp-2);
   font-size: var(--fs-caption);
   color: var(--text-subtle);
   text-decoration: none;
 }
 .gks-admin__site-link:hover { color: var(--brand-600); }
+.gks-admin--rail .gks-admin__site-link,
+.gks-admin--rail .gks-admin__user { justify-content: center; padding: 0; }
 
-.gks-admin__user { display: flex; align-items: center; gap: var(--sp-3); }
+.gks-admin__user { display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-2); }
 .gks-admin__user--loading { min-height: 32px; }
+.gks-admin--rail .gks-admin__user { flex-direction: column; gap: var(--sp-2); }
 .gks-admin__user-avatar {
   flex: none;
   width: 32px;
@@ -360,6 +403,7 @@ async function onLogout() {
   transition: var(--transition-control);
 }
 .gks-admin__icon-btn:hover { background: var(--surface-hover); color: var(--text-strong); }
+.gks-admin__icon-btn[aria-pressed='true'] { background: var(--surface-selected); color: var(--brand-700); }
 
 /* ---- Off-canvas scrim (mobile only) ---- */
 .gks-admin__scrim {
@@ -374,7 +418,14 @@ async function onLogout() {
 }
 
 /* ---- Body: topbar + main ---- */
-.gks-admin__body { margin-left: 256px; min-height: 100vh; display: flex; flex-direction: column; }
+.gks-admin__body {
+  margin-left: var(--admin-sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left var(--dur-base) var(--ease-standard);
+}
+.gks-admin--rail .gks-admin__body { margin-left: var(--admin-rail-w); }
 
 .gks-admin__topbar {
   position: sticky;
@@ -382,45 +433,94 @@ async function onLogout() {
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  min-height: 56px;
-  padding: 0 var(--sp-6);
-  background: rgba(246, 248, 252, .9);
-  backdrop-filter: blur(8px);
+  gap: var(--sp-2);
+  min-height: var(--admin-topbar-h);
+  padding: 0 var(--admin-gutter);
+  background: rgba(246, 248, 252, .88);
+  backdrop-filter: blur(10px);
   border-bottom: var(--border-hair) solid var(--line-hairline);
 }
 .gks-admin__menu-btn { display: none; }
-.gks-admin__bell { margin-left: auto; }
-.gks-admin__topbar-title {
+
+.gks-admin__crumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  color: var(--text-subtle);
+}
+.gks-admin__crumb {
   font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--ls-caps-tight);
   text-transform: uppercase;
   color: var(--text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+.gks-admin__crumb--current { color: var(--text-strong); }
+
+/* The palette's handle. Pushed right so the topbar reads left-to-right:
+   where you are, then what you can reach. */
+.gks-admin__search {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 220px;
+  height: 32px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-2);
+  background: var(--surface-card);
+  color: var(--text-subtle);
+  font-size: var(--fs-caption);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-admin__search:hover { border-color: var(--line-strong); color: var(--text-body); }
+.gks-admin__search-text { flex: 1; text-align: left; }
 
 .gks-admin__main {
   flex: 1;
   width: 100%;
-  max-width: var(--container-content);
-  margin: 0 auto;
-  padding: var(--sp-6);
+  min-width: 0;
+  padding: var(--sp-6) var(--admin-gutter) var(--sp-9);
 }
 
 /* ---- Mobile: sidebar becomes an off-canvas drawer ---- */
 @media (max-width: 900px) {
-  .gks-admin__sidebar {
+  .gks-admin__sidebar,
+  .gks-admin--rail .gks-admin__sidebar {
     width: 280px;
     transform: translateX(-100%);
     box-shadow: var(--shadow-dialog);
   }
+  /* The drawer is always the full menu — a rail makes no sense over a scrim. */
+  .gks-admin--rail .gks-admin__nav-label,
+  .gks-admin--rail .gks-admin__brand-text,
+  .gks-admin--rail .gks-admin__user-info { display: revert; }
+  .gks-admin--rail .gks-admin__nav-link { justify-content: flex-start; padding: var(--sp-3); }
+  .gks-admin--rail .gks-admin__brand { padding: 0 var(--sp-5); justify-content: space-between; }
+  .gks-admin--rail .gks-admin__user { flex-direction: row; }
+
   .gks-admin--sidebar-open .gks-admin__sidebar { transform: translateX(0); }
   .gks-admin--sidebar-open .gks-admin__scrim { display: block; }
   .gks-admin__icon-btn.gks-admin__close { display: inline-flex; }
 
-  .gks-admin__body { margin-left: 0; }
+  .gks-admin__body,
+  .gks-admin--rail .gks-admin__body { margin-left: 0; }
   .gks-admin__menu-btn { display: inline-flex; }
-  .gks-admin__topbar { padding: 0 var(--gutter-mobile); }
-  .gks-admin__main { padding: var(--sp-5) var(--gutter-mobile) var(--sp-8); }
+  .gks-admin__rail-btn { display: none; }
+  .gks-admin__main { padding: var(--sp-5) var(--admin-gutter) var(--sp-9); }
+}
+
+/* Below the phone breakpoint the search collapses to its icon — the label and
+   the ⌘K hint are both useless on a touch keyboard. */
+@media (max-width: 640px) {
+  .gks-admin__search { min-width: 0; padding: 0 var(--sp-2); }
+  .gks-admin__search-text, .gks-admin__search .gks-kbd { display: none; }
+  .gks-admin__crumbs { flex: 1; }
 }
 </style>

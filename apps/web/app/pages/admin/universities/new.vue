@@ -53,23 +53,23 @@ useHead({ title: 'Шинэ сургууль · CRM' });
 </script>
 
 <template>
-  <div class="gks-form-page">
+  <div class="gks-page gks-page--form">
     <header>
-      <NuxtLink to="/admin/universities" class="gks-form-page__back">
+      <NuxtLink to="/admin/universities" class="gks-page__back">
         <DsIcon name="arrow-left" :size="16" /> Сургуулийн жагсаалт
       </NuxtLink>
-      <h1 class="gks-form-page__title">Шинэ сургууль бүртгэх</h1>
-      <p class="gks-form-page__hint">
+      <h1 class="gks-page__title">Шинэ сургууль бүртгэх</h1>
+      <p class="gks-page__hint">
         Хөтөлбөр, элсэлтийн улирлыг хадгалсны дараа дэлгэрэнгүй хуудсан дээр нэмнэ.
       </p>
     </header>
 
-    <form class="gks-form-page__body" @submit.prevent="submit">
+    <form class="gks-form-body" @submit.prevent="submit">
       <UniversityAdminFields v-model="form" :errors="errors" />
 
       <DsCard v-if="submitError" accent><p class="gks-form-page__error">{{ submitError }}</p></DsCard>
 
-      <div class="gks-form-page__actions">
+      <div class="gks-form-actions">
         <DsButton variant="secondary" @click="navigateTo('/admin/universities')">Болих</DsButton>
         <DsButton type="submit" variant="accent" icon-left="plus" :loading="submitting">Сургууль бүртгэх</DsButton>
       </div>
@@ -78,12 +78,6 @@ useHead({ title: 'Шинэ сургууль · CRM' });
 </template>
 
 <style scoped>
-.gks-form-page { display: flex; flex-direction: column; gap: var(--sp-5); max-width: 1100px; }
-.gks-form-page__back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--text-subtle); text-decoration: none; }
-.gks-form-page__back:hover { color: var(--brand-600); }
-.gks-form-page__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-form-page__hint { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-form-page__body { display: flex; flex-direction: column; gap: var(--sp-4); }
 .gks-form-page__error { color: var(--danger-fg); }
-.gks-form-page__actions { display: flex; justify-content: flex-end; gap: var(--sp-3); }
+.gks-form-actions { justify-content: flex-end; }
 </style>

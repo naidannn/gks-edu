@@ -59,7 +59,7 @@ useHead({ title: 'Хэрэг · CRM' });
       </div>
     </DsCard>
 
-    <div v-else class="gks-caseredirect__skeleton" />
+    <div v-else class="gks-skeleton__row gks-skeleton--page" />
   </div>
 </template>
 
@@ -67,5 +67,4 @@ useHead({ title: 'Хэрэг · CRM' });
 .gks-caseredirect__text { font-size: var(--fs-body-sm); color: var(--text-muted); }
 .gks-caseredirect__actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-4); flex-wrap: wrap; }
 .gks-caseredirect__link { font-size: var(--fs-body-sm); color: var(--brand-700); }
-.gks-caseredirect__skeleton { height: 200px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
 </style>

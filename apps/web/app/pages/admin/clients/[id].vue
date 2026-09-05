@@ -96,9 +96,9 @@ useHead({
 </script>
 
 <template>
-  <div class="gks-ws">
+  <div class="gks-page">
     <DsCard v-if="error" accent><p>{{ error }}</p></DsCard>
-    <div v-else-if="pending && !client" class="gks-ws__skeleton" />
+    <div v-else-if="pending && !client" class="gks-skeleton__row gks-skeleton--page" />
 
     <template v-else-if="client">
       <CrmClientHeader
@@ -126,26 +126,26 @@ useHead({
 
         <DsCard v-if="saveError" accent><p class="gks-ws__error">{{ saveError }}</p></DsCard>
 
-        <div class="gks-ws__form-actions">
+        <div class="gks-form-actions">
           <DsButton variant="secondary" @click="editing = false">Болих</DsButton>
           <DsButton type="submit" variant="accent" icon-left="check" :loading="saving">Хадгалах</DsButton>
         </div>
       </form>
 
       <template v-else>
-        <nav class="gks-ws__tabs" aria-label="Үйлчлүүлэгчийн хэсгүүд">
+        <nav class="gks-tabs" aria-label="Үйлчлүүлэгчийн хэсгүүд">
           <button
             v-for="entry in TABS"
             :key="entry.key"
             type="button"
-            class="gks-ws__tab"
-            :class="{ 'gks-ws__tab--active': tab === entry.key }"
+            class="gks-tab"
+            :class="{ 'gks-tab--active': tab === entry.key }"
             :aria-current="tab === entry.key ? 'page' : undefined"
             @click="openTab(entry.key)"
           >
             <DsIcon :name="entry.icon" :size="16" />
             <span>{{ entry.label }}</span>
-            <span v-if="entry.key === 'overview' && alerts.length" class="gks-ws__tab-count gks-tnum">
+            <span v-if="entry.key === 'overview' && alerts.length" class="gks-tab__count gks-tnum">
               {{ alerts.length }}
             </span>
           </button>
@@ -193,48 +193,9 @@ useHead({
 </template>
 
 <style scoped>
-.gks-ws { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-ws__skeleton { height: 320px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-
-.gks-ws__tabs {
-  display: flex;
-  gap: var(--sp-1);
-  border-bottom: var(--border-hair) solid var(--line-hairline);
-  overflow-x: auto;
-}
-.gks-ws__tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-4);
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font-size: var(--fs-body-sm);
-  font-weight: var(--fw-medium);
-  color: var(--text-muted);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: var(--transition-control);
-}
-.gks-ws__tab:hover { color: var(--text-strong); }
-.gks-ws__tab--active { color: var(--brand-700); border-bottom-color: var(--brand-600); font-weight: var(--fw-semibold); }
-.gks-ws__tab-count {
-  display: inline-grid;
-  place-items: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: var(--radius-pill);
-  background: var(--danger-bg);
-  color: var(--danger-fg);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-}
-
-.gks-ws__form { display: flex; flex-direction: column; gap: var(--sp-4); max-width: 960px; }
+.gks-ws__form { display: flex; flex-direction: column; gap: var(--sp-4); max-width: 1100px; }
 .gks-ws__status-field { margin-top: var(--sp-4); max-width: 320px; }
-.gks-ws__form-actions { display: flex; justify-content: flex-end; gap: var(--sp-3); }
 .gks-ws__error { color: var(--danger-fg); }
 .gks-ws__empty { font-size: var(--fs-body-sm); color: var(--text-muted); }
 </style>
+

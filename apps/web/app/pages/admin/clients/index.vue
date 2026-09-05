@@ -52,7 +52,6 @@ const SORT_OPTIONS = [
 
 const auth = useAuthStore();
 const api = useApi();
-const route = useRoute();
 
 const q = ref('');
 const serviceType = ref<ServiceType | ''>('');
@@ -60,10 +59,9 @@ const stage = ref<CaseStage | ''>('');
 const status = ref<ClientStatus | ''>('');
 const source = ref<LeadSource | ''>('');
 const contractFilter = ref<'all' | 'with' | 'without'>('all');
-/** Seeded from the URL so a dashboard tile opens the queue it counted. */
-const attention = ref<ClientAttentionFilter | ''>(
-  ATTENTION_FILTERS.find((filter) => filter.value === route.query.attention)?.value ?? '',
-);
+/* Seeding from the URL — so a dashboard tile opens the queue it counted — is
+   `useUrlFilters`' job now, below. */
+const attention = ref<ClientAttentionFilter | ''>('');
 const assignedFilter = ref<'all' | 'mine' | 'unassigned'>('all');
 const sort = ref('createdAt');
 const page = ref(1);
@@ -151,48 +149,91 @@ const hasFilters = computed(() =>
   || assignedFilter.value !== 'all',
 );
 
+/* Filters live in the URL: a filtered queue can be bookmarked, shared and
+   survives a refresh. */
+useUrlFilters({
+  q,
+  serviceType: [serviceType, SERVICE_OPTIONS.map((o) => o.value)],
+  stage: [stage, STAGE_OPTIONS.map((o) => o.value)],
+  status: [status, STATUS_OPTIONS.map((o) => o.value)],
+  source: [source, SOURCE_OPTIONS.map((o) => o.value)],
+  contract: [contractFilter, ['all', 'with', 'without']],
+  assigned: [assignedFilter, ['all', 'mine', 'unassigned']],
+  attention: [attention, ATTENTION_FILTERS.map((f) => f.value)],
+  sort: [sort, SORT_OPTIONS.map((o) => o.value)],
+});
+
 useHead({ title: 'Үйлчлүүлэгч · CRM' });
 </script>
 
 <template>
-  <div class="gks-crm">
-    <header class="gks-crm__head">
-      <div>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
         <span class="gks-eyebrow">CRM</span>
-        <h1 class="gks-crm__title">Үйлчлүүлэгч</h1>
-        <p class="gks-crm__hint">Хүн бүрийн үе шат, явц, анхаарал шаардсан зүйл — нэг мөрөнд.</p>
+        <h1 class="gks-page__title">Үйлчлүүлэгч</h1>
+        <p class="gks-page__hint">Хүн бүрийн үе шат, явц, анхаарал шаардсан зүйл — нэг мөрөнд.</p>
       </div>
-      <div class="gks-crm__head-actions">
+      <div class="gks-page__actions">
         <DsButton variant="accent" icon-left="user-plus" @click="navigateTo('/admin/clients/new')">
           Шинэ үйлчлүүлэгч
         </DsButton>
       </div>
     </header>
 
-    <section v-if="stats" class="gks-crm__summary" aria-label="Хэрэглэгчийн тойм">
-      <div class="gks-crm__stat"><span>Нийт</span><strong class="gks-tnum">{{ stats.total }}</strong></div>
-      <div class="gks-crm__stat"><span>Идэвхтэй</span><strong class="gks-tnum">{{ stats.byStatus.ACTIVE ?? 0 }}</strong></div>
-      <div class="gks-crm__stat"><span>Гэрээтэй</span><strong class="gks-tnum">{{ stats.withContract }}</strong></div>
-      <div class="gks-crm__stat"><span>Хариуцагчгүй</span><strong class="gks-tnum">{{ stats.unassigned }}</strong></div>
+    <section v-if="stats" class="gks-stats" aria-label="Хэрэглэгчийн тойм">
+      <button type="button" class="gks-stat" :class="{ 'gks-stat--active': !hasFilters }" @click="clearFilters">
+        <span>Нийт</span><strong class="gks-tnum">{{ stats.total }}</strong>
+      </button>
+      <button
+        type="button"
+        class="gks-stat"
+        :class="{ 'gks-stat--active': status === 'ACTIVE' }"
+        @click="status = status === 'ACTIVE' ? '' : 'ACTIVE'"
+      >
+        <span>Идэвхтэй</span><strong class="gks-tnum">{{ stats.byStatus.ACTIVE ?? 0 }}</strong>
+      </button>
+      <button
+        type="button"
+        class="gks-stat"
+        :class="{ 'gks-stat--active': contractFilter === 'with' }"
+        @click="contractFilter = contractFilter === 'with' ? 'all' : 'with'"
+      >
+        <span>Гэрээтэй</span><strong class="gks-tnum">{{ stats.withContract }}</strong>
+      </button>
+      <button
+        type="button"
+        class="gks-stat"
+        :class="{ 'gks-stat--warn': stats.unassigned > 0, 'gks-stat--active': assignedFilter === 'unassigned' }"
+        @click="assignedFilter = assignedFilter === 'unassigned' ? 'all' : 'unassigned'"
+      >
+        <span>Хариуцагчгүй</span><strong class="gks-tnum">{{ stats.unassigned }}</strong>
+      </button>
     </section>
 
-    <DsCard>
-      <div class="gks-crm__filters">
-        <DsInput v-model="q" icon-left="search" type="search" placeholder="Нэр, утас, регистр, код, имэйлээр хайх…" />
+    <DsCard padding="var(--sp-5)">
+      <div class="gks-filters">
+        <DsInput
+          v-model="q"
+          class="gks-filters__search"
+          icon-left="search"
+          type="search"
+          placeholder="Нэр, утас, регистр, код, имэйлээр хайх…  ( / )"
+        />
         <DsSelect v-model="serviceType" :options="SERVICE_OPTIONS" aria-label="Үйлчилгээ" />
         <DsSelect v-model="stage" :options="STAGE_OPTIONS" aria-label="Зуучлалын үе шат" />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
         <DsSelect v-model="source" :options="SOURCE_OPTIONS" aria-label="Суваг" />
         <DsSelect v-model="sort" :options="SORT_OPTIONS" aria-label="Эрэмбэ" />
       </div>
-      <div class="gks-crm__toggles">
+      <div class="gks-toggles">
         <DsTag :selected="assignedFilter === 'all'" clickable @click="assignedFilter = 'all'">Бүгд</DsTag>
         <DsTag :selected="assignedFilter === 'mine'" clickable @click="assignedFilter = 'mine'">Надад оноогдсон</DsTag>
         <DsTag :selected="assignedFilter === 'unassigned'" clickable @click="assignedFilter = 'unassigned'">Хариуцагчгүй</DsTag>
-        <span class="gks-crm__toggle-sep" aria-hidden="true" />
+        <span class="gks-toggle-sep" aria-hidden="true" />
         <DsTag :selected="contractFilter === 'with'" clickable @click="contractFilter = contractFilter === 'with' ? 'all' : 'with'">Гэрээтэй</DsTag>
         <DsTag :selected="contractFilter === 'without'" clickable @click="contractFilter = contractFilter === 'without' ? 'all' : 'without'">Гэрээгүй</DsTag>
-        <span class="gks-crm__toggle-sep" aria-hidden="true" />
+        <span class="gks-toggle-sep" aria-hidden="true" />
         <DsTag
           v-for="filter in ATTENTION_FILTERS"
           :key="filter.value"
@@ -208,69 +249,88 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
 
     <DsCard v-if="error" accent><p>Үйлчлүүлэгчийн жагсаалтыг ачаалж чадсангүй.</p></DsCard>
 
-    <div v-else-if="pending && !data" class="gks-crm__skeleton">
-      <div v-for="n in 6" :key="n" class="gks-crm__skeleton-row" />
+    <div v-else-if="pending && !data" class="gks-skeleton">
+      <div v-for="n in 8" :key="n" class="gks-skeleton__row" />
     </div>
 
     <DsCard v-else-if="!data?.items.length" padding="var(--sp-8)">
-      <p class="gks-crm__empty">
+      <p class="gks-empty">
         {{ hasFilters ? 'Тохирох үйлчлүүлэгч олдсонгүй.' : 'Одоогоор бүртгэгдсэн үйлчлүүлэгч алга байна.' }}
       </p>
     </DsCard>
 
-    <div v-else class="gks-crm__table-wrap">
-      <table class="gks-table">
-        <thead>
-          <tr>
-            <th>Овог нэр</th>
-            <th>Утас</th>
-            <th>Үйлчилгээ · сургууль</th>
-            <th>Үе шат</th>
-            <th>Явц</th>
-            <th>Анхаарах</th>
-            <th>Хариуцагч</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="c in data.items" :key="c.id" class="gks-crm__row" @click="navigateTo(`/admin/clients/${c.id}`)">
-            <td>
-              <span class="gks-crm__name">{{ c.lastName }} {{ c.firstName }}</span>
-              <span class="gks-crm__sub gks-tnum">
-                {{ c.code }}<template v-if="c.caseCount > 1"> · {{ c.caseCount }} хэрэг</template>
-              </span>
-            </td>
-            <td class="gks-tnum">{{ c.phone }}</td>
-            <td>
-              <span>{{ SERVICE_LABELS[c.activeCase?.serviceType ?? c.primaryServiceType] }}</span>
-              <span class="gks-crm__sub">
-                {{ c.activeCase?.university?.nameMn ?? c.targetUniversity?.nameMn ?? '—' }}
-              </span>
-            </td>
-            <td>
-              <DsBadge v-if="c.activeCase" :tone="CASE_STAGE_TONE[c.activeCase.stage]">
-                {{ CASE_STAGE_LABELS[c.activeCase.stage] }}
-              </DsBadge>
-              <span v-else class="gks-crm__muted">Хэрэг нээгээгүй</span>
-            </td>
-            <td>
-              <div class="gks-crm__progress">
-                <span class="gks-crm__track">
-                  <span class="gks-crm__fill" :style="{ width: `${c.progressPercent}%` }" />
+    <template v-else>
+      <p class="gks-result-count gks-tnum">{{ data.meta.total }} үйлчлүүлэгч</p>
+
+      <div class="gks-table-wrap">
+        <table class="gks-table gks-table--cards">
+          <thead>
+            <tr>
+              <th>Овог нэр</th>
+              <th>Утас</th>
+              <th>Үйлчилгээ · сургууль</th>
+              <th>Үе шат</th>
+              <th>Явц</th>
+              <th>Анхаарах</th>
+              <th>Хариуцагч</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="c in data.items"
+              :key="c.id"
+              class="gks-row"
+              tabindex="0"
+              @click="navigateTo(`/admin/clients/${c.id}`)"
+              @keydown.enter="navigateTo(`/admin/clients/${c.id}`)"
+            >
+              <td data-label="Овог нэр">
+                <span>
+                  <!-- A real link so the row can be opened in a new tab; the
+                       row click stays for everything else. -->
+                  <NuxtLink :to="`/admin/clients/${c.id}`" class="gks-cell-name" @click.stop>
+                    {{ c.lastName }} {{ c.firstName }}
+                  </NuxtLink>
+                  <span class="gks-cell-sub gks-tnum">
+                    {{ c.code }}<template v-if="c.caseCount > 1"> · {{ c.caseCount }} хэрэг</template>
+                  </span>
                 </span>
-                <span class="gks-crm__percent gks-tnum">{{ c.progressPercent }}%</span>
-              </div>
-            </td>
-            <td>
-              <div v-if="attentionChips(c).length" class="gks-crm__chips">
-                <DsBadge v-for="chip in attentionChips(c)" :key="chip.key" :tone="chip.tone">{{ chip.label }}</DsBadge>
-              </div>
-              <span v-else class="gks-crm__muted">—</span>
-            </td>
-            <td>{{ c.assignedConsultant?.name ?? c.assignedConsultant?.email ?? '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              </td>
+              <td class="gks-tnum" data-label="Утас">{{ c.phone }}</td>
+              <td data-label="Үйлчилгээ">
+                <span>
+                  <span>{{ SERVICE_LABELS[c.activeCase?.serviceType ?? c.primaryServiceType] }}</span>
+                  <span class="gks-cell-sub">
+                    {{ c.activeCase?.university?.nameMn ?? c.targetUniversity?.nameMn ?? '—' }}
+                  </span>
+                </span>
+              </td>
+              <td data-label="Үе шат">
+                <DsBadge v-if="c.activeCase" :tone="CASE_STAGE_TONE[c.activeCase.stage]">
+                  {{ CASE_STAGE_LABELS[c.activeCase.stage] }}
+                </DsBadge>
+                <span v-else class="gks-muted">Хэрэг нээгээгүй</span>
+              </td>
+              <td data-label="Явц">
+                <div class="gks-progress">
+                  <span class="gks-progress__track">
+                    <span class="gks-progress__fill" :style="{ width: `${c.progressPercent}%` }" />
+                  </span>
+                  <span class="gks-progress__value gks-tnum">{{ c.progressPercent }}%</span>
+                </div>
+              </td>
+              <td data-label="Анхаарах">
+                <div v-if="attentionChips(c).length" class="gks-chips">
+                  <DsBadge v-for="chip in attentionChips(c)" :key="chip.key" :tone="chip.tone">{{ chip.label }}</DsBadge>
+                </div>
+                <span v-else class="gks-muted">—</span>
+              </td>
+              <td data-label="Хариуцагч">{{ c.assignedConsultant?.name ?? c.assignedConsultant?.email ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
 
     <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
       <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
@@ -281,59 +341,8 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
 </template>
 
 <style scoped>
-.gks-crm__progress { display: flex; align-items: center; gap: var(--sp-2); min-width: 110px; }
-.gks-crm__track { flex: 1; height: 5px; border-radius: var(--radius-pill); background: var(--n-100); overflow: hidden; }
-.gks-crm__fill { display: block; height: 100%; background: var(--brand-600); }
-.gks-crm__percent { font-size: var(--fs-caption); color: var(--text-subtle); }
-.gks-crm__chips { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
-
-.gks-crm { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-crm__head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
-.gks-crm__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-crm__hint { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-crm__head-actions { display: flex; align-items: center; gap: var(--sp-4); }
-.gks-crm__cases-link { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-subtle); text-decoration: none; }
-.gks-crm__cases-link:hover { color: var(--brand-600); }
-
-.gks-crm__summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); }
-.gks-crm__stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding: var(--sp-4);
-  background: var(--surface-card);
-  border: var(--border-hair) solid var(--line-hairline);
-  border-radius: var(--radius-2);
-}
-.gks-crm__stat span { font-size: var(--fs-caption); color: var(--text-subtle); }
-.gks-crm__stat strong { font-family: var(--font-display); font-size: var(--fs-h4); }
-
-.gks-crm__filters { display: grid; grid-template-columns: 2fr repeat(5, 1fr); gap: var(--sp-3); }
-.gks-crm__toggles { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-4); flex-wrap: wrap; }
-.gks-crm__toggle-sep { width: 1px; height: 20px; background: var(--line-hairline); }
-
-.gks-crm__skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-crm__skeleton-row { height: 44px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-.gks-crm__empty { text-align: center; color: var(--text-muted); }
-.gks-crm__muted { color: var(--text-subtle); }
-
-.gks-crm__table-wrap { overflow-x: auto; border: var(--border-hair) solid var(--line-hairline); background: var(--surface-card); }
-.gks-table { width: 100%; border-collapse: collapse; font-size: var(--fs-body-sm); white-space: nowrap; }
-.gks-table th { text-align: left; padding: var(--sp-3); font-size: var(--fs-caption); color: var(--text-subtle); border-bottom: var(--border-hair) solid var(--line-hairline); background: var(--surface-sunken); }
-.gks-table td { padding: var(--sp-3); border-bottom: var(--border-hair) solid var(--line-hairline); }
-.gks-crm__row { cursor: pointer; }
-.gks-crm__row:hover { background: var(--surface-sunken); }
-.gks-crm__name { display: block; font-weight: var(--fw-medium); }
-.gks-crm__sub { display: block; font-size: var(--fs-micro); color: var(--text-subtle); }
-
-.gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
-.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); }
-
-@media (max-width: 1200px) {
-  .gks-crm__filters { grid-template-columns: 1fr 1fr 1fr; }
-}
-@media (max-width: 900px) {
-  .gks-crm__summary { grid-template-columns: 1fr 1fr; }
-  .gks-crm__filters { grid-template-columns: 1fr 1fr; }
-}
+/* Everything this page used to declare — header, stats, filters, table, pager,
+   skeleton — now lives in `assets/css/admin.css`. */
+.gks-cell-name { text-decoration: none; }
+.gks-cell-name:hover { color: var(--brand-700); text-decoration: underline; }
 </style>

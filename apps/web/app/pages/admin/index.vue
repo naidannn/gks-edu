@@ -125,14 +125,30 @@ function isLate(value: string | null): boolean {
   return Boolean(value) && new Date(value!) < new Date();
 }
 
+/**
+ * Filled on the client: the server's clock is UTC and the office's is not.
+ * Written out by hand rather than through `toLocaleDateString('mn-MN')` —
+ * Chrome has no long-form Mongolian date data and silently answers in English.
+ */
+const WEEKDAYS_MN = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
+const today = ref('');
+onMounted(() => {
+  const now = new Date();
+  today.value = `${now.getFullYear()} оны ${now.getMonth() + 1} сарын ${now.getDate()}`
+    + `, ${WEEKDAYS_MN[now.getDay()]} гараг`;
+});
+
 useHead({ title: 'Хяналтын самбар · CRM' });
 </script>
 
 <template>
-  <div class="gks-dash">
-    <header class="gks-dash__head">
-      <span class="gks-eyebrow">CRM</span>
-      <h1 class="gks-dash__title">Өнөөдөр юунд анхаарах вэ?</h1>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">CRM</span>
+        <h1 class="gks-page__title">Өнөөдөр юунд анхаарах вэ?</h1>
+      </div>
+      <p class="gks-dash__today gks-tnum">{{ today }}</p>
     </header>
 
     <DsCard v-if="error" accent><p>Хяналтын самбарын мэдээллийг ачаалж чадсангүй.</p></DsCard>
@@ -208,10 +224,11 @@ useHead({ title: 'Хяналтын самбар · CRM' });
 </template>
 
 <style scoped>
-.gks-dash { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-dash__title { margin-top: var(--sp-1); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
+.gks-dash__today { font-size: var(--fs-body-sm); color: var(--text-subtle); }
 
-.gks-dash__queues { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-3); }
+/* The queue strip stretches to whatever the monitor gives it — five tiles on a
+   laptop, five wider ones on a 27". No fixed column count to re-tune. */
+.gks-dash__queues { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3); }
 .gks-queue {
   display: flex;
   flex-direction: column;
@@ -232,7 +249,7 @@ useHead({ title: 'Хяналтын самбар · CRM' });
 .gks-queue__label { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gks-queue__hint { font-size: var(--fs-caption); color: var(--text-subtle); }
 
-.gks-dash__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: start; }
+.gks-dash__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--sp-4); align-items: start; }
 .gks-dash__link { font-size: var(--fs-caption); color: var(--brand-700); text-decoration: none; }
 
 .gks-dash__rows { display: flex; flex-direction: column; }
@@ -253,11 +270,8 @@ useHead({ title: 'Хяналтын самбар · CRM' });
 .gks-dash__empty { font-size: var(--fs-body-sm); color: var(--text-subtle); }
 .gks-dash__skeleton { height: 180px; background: linear-gradient(var(--n-050), var(--n-100)); }
 
-@media (max-width: 1100px) {
-  .gks-dash__queues { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .gks-dash__grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
+@media (max-width: 520px) {
   .gks-dash__queues { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gks-dash__grid { grid-template-columns: 1fr; }
 }
 </style>

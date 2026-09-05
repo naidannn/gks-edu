@@ -268,19 +268,21 @@ function formatDay(value: string | null): string {
 </script>
 
 <template>
-  <div class="gks-content">
-    <header>
-      <span class="gks-eyebrow">§15</span>
-      <h1 class="gks-content__title">Контент удирдлага</h1>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">§15</span>
+        <h1 class="gks-page__title">Контент удирдлага</h1>
+      </div>
     </header>
 
-    <nav class="gks-content__tabs" aria-label="Контентын төрөл">
+    <nav class="gks-tabs" aria-label="Контентын төрөл">
       <button
         v-for="item in TABS"
         :key="item.key"
         type="button"
-        class="gks-content__tab"
-        :class="{ 'gks-content__tab--active': tab === item.key }"
+        class="gks-tab"
+        :class="{ 'gks-tab--active': tab === item.key }"
         @click="tab = item.key"
       >
         <DsIcon :name="item.icon" :size="16" />
@@ -294,7 +296,7 @@ function formatDay(value: string | null): string {
     <!-- Нийтлэл -->
     <template v-if="tab === 'posts'">
       <DsCard :title="postForm.id ? 'Нийтлэл засах' : 'Шинэ нийтлэл'">
-        <form class="gks-content__form" @submit.prevent="savePost">
+        <form class="gks-form-grid" @submit.prevent="savePost">
           <DsInput v-model="postForm.title" label="Гарчиг" required />
           <DsInput v-model="postForm.slug" label="Slug" hint="URL-д харагдах нэр" required />
           <DsInput v-model="postForm.excerpt" label="Товч тайлбар" />
@@ -304,7 +306,7 @@ function formatDay(value: string | null): string {
             label="Төлөв"
             :options="[{ value: 'DRAFT', label: POST_STATUS_LABELS.DRAFT }, { value: 'PUBLISHED', label: POST_STATUS_LABELS.PUBLISHED }]"
           />
-          <DsTextarea v-model="postForm.content" label="Агуулга (HTML)" :rows="10" class="gks-content__wide" required />
+          <DsTextarea v-model="postForm.content" label="Агуулга (HTML)" :rows="10" class="gks-form-grid__full" required />
           <div class="gks-content__actions">
             <DsButton type="submit" variant="accent" :disabled="postSaving">
               {{ postSaving ? 'Хадгалж байна…' : 'Хадгалах' }}
@@ -315,7 +317,7 @@ function formatDay(value: string | null): string {
       </DsCard>
 
       <DsCard title="Нийтлэлүүд">
-        <p v-if="!posts.length" class="gks-content__empty">Нийтлэл алга.</p>
+        <p v-if="!posts.length" class="gks-empty">Нийтлэл алга.</p>
         <ul v-else class="gks-content__list">
           <li v-for="post in posts" :key="post.id" class="gks-content__item">
             <div class="gks-content__item-main">
@@ -339,11 +341,11 @@ function formatDay(value: string | null): string {
     <!-- FAQ -->
     <template v-else-if="tab === 'faq'">
       <DsCard :title="faqForm.id ? 'Асуулт засах' : 'Шинэ асуулт'">
-        <form class="gks-content__form" @submit.prevent="saveFaq">
+        <form class="gks-form-grid" @submit.prevent="saveFaq">
           <DsSelect v-model="faqForm.category" label="Ангилал" :options="FAQ_OPTIONS" />
           <DsInput v-model.number="faqForm.order" label="Эрэмбэ" type="number" />
-          <DsInput v-model="faqForm.question" label="Асуулт" class="gks-content__wide" required />
-          <DsTextarea v-model="faqForm.answer" label="Хариулт" :rows="6" class="gks-content__wide" required />
+          <DsInput v-model="faqForm.question" label="Асуулт" class="gks-form-grid__full" required />
+          <DsTextarea v-model="faqForm.answer" label="Хариулт" :rows="6" class="gks-form-grid__full" required />
           <div class="gks-content__actions">
             <DsSwitch v-model="faqForm.isPublished" label="Нийтлэх" />
             <DsButton type="submit" variant="accent" :disabled="faqSaving">
@@ -355,7 +357,7 @@ function formatDay(value: string | null): string {
       </DsCard>
 
       <DsCard title="Асуултууд">
-        <p v-if="!faqs.length" class="gks-content__empty">Асуулт алга.</p>
+        <p v-if="!faqs.length" class="gks-empty">Асуулт алга.</p>
         <ul v-else class="gks-content__list">
           <li v-for="entry in faqs" :key="entry.id" class="gks-content__item">
             <div class="gks-content__item-main">
@@ -374,11 +376,11 @@ function formatDay(value: string | null): string {
     <!-- Баннер -->
     <template v-else>
       <DsCard :title="bannerForm.id ? 'Баннер засах' : 'Шинэ баннер'">
-        <form class="gks-content__form" @submit.prevent="saveBanner">
+        <form class="gks-form-grid" @submit.prevent="saveBanner">
           <DsSelect v-model="bannerForm.placement" label="Байршил" :options="PLACEMENT_OPTIONS" />
           <DsInput v-model.number="bannerForm.sortOrder" label="Эрэмбэ" type="number" />
-          <DsInput v-model="bannerForm.titleMn" label="Гарчиг" class="gks-content__wide" required />
-          <DsTextarea v-model="bannerForm.bodyMn" label="Тайлбар" :rows="3" class="gks-content__wide" />
+          <DsInput v-model="bannerForm.titleMn" label="Гарчиг" class="gks-form-grid__full" required />
+          <DsTextarea v-model="bannerForm.bodyMn" label="Тайлбар" :rows="3" class="gks-form-grid__full" />
           <DsInput v-model="bannerForm.linkUrl" label="Холбоос" hint="Жишээ: /gks-scholarship" />
           <DsInput v-model="bannerForm.linkLabel" label="Товчны текст" />
           <DsInput v-model="bannerForm.startsAt" label="Эхлэх огноо" type="date" />
@@ -394,7 +396,7 @@ function formatDay(value: string | null): string {
       </DsCard>
 
       <DsCard title="Баннерууд">
-        <p v-if="!banners.length" class="gks-content__empty">Баннер алга.</p>
+        <p v-if="!banners.length" class="gks-empty">Баннер алга.</p>
         <ul v-else class="gks-content__list">
           <li v-for="banner in banners" :key="banner.id" class="gks-content__item">
             <div class="gks-content__item-main">
@@ -419,30 +421,9 @@ function formatDay(value: string | null): string {
 </template>
 
 <style scoped>
-.gks-content { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-content__title { font-size: var(--fs-h3); font-weight: var(--fw-bold); margin: var(--sp-1) 0; }
-.gks-content__error { color: var(--danger-600, #b00020); font-size: var(--fs-small); }
-.gks-content__notice { color: var(--success-700, #14663f); font-size: var(--fs-small); }
-.gks-content__empty { color: var(--text-subtle); font-size: var(--fs-small); }
-
-.gks-content__tabs { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
-.gks-content__tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  border: var(--border-hair) solid var(--line-hairline);
-  border-radius: var(--radius-pill);
-  background: var(--surface-card);
-  font-size: var(--fs-small);
-  cursor: pointer;
-}
-.gks-content__tab--active { border-color: var(--brand-600, #1f4e9c); color: var(--brand-600, #1f4e9c); font-weight: var(--fw-semibold); }
-
-.gks-content__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-3); }
-.gks-content__wide { grid-column: 1 / -1; }
+.gks-content__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
+.gks-content__notice { color: var(--success-fg); font-size: var(--fs-body-sm); }
 .gks-content__actions { grid-column: 1 / -1; display: flex; gap: var(--sp-3); align-items: center; }
-
 .gks-content__list { list-style: none; margin: 0; padding: 0; }
 .gks-content__item {
   display: flex;
@@ -453,7 +434,8 @@ function formatDay(value: string | null): string {
 }
 .gks-content__item:last-child { border-bottom: none; }
 .gks-content__item-main { flex: 1; min-width: 0; }
-.gks-content__item-title { font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.gks-content__item-title { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); }
 .gks-content__item-meta { font-size: var(--fs-micro); color: var(--text-subtle); }
 .gks-content__item-actions { display: flex; gap: var(--sp-2); }
 </style>
+

@@ -100,20 +100,22 @@ function workload(row: StaffRow): number {
 </script>
 
 <template>
-  <div class="gks-staff">
-    <header>
-      <span class="gks-eyebrow">§15.6</span>
-      <h1 class="gks-staff__title">Ажилтны удирдлага</h1>
-      <p class="gks-staff__note">
-        Шинэ ажилтан нууц үггүй бүртгэгдэж, имэйлээр ирсэн урилгаараа өөрөө нууц үгээ тохируулна.
-      </p>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">§15.6</span>
+        <h1 class="gks-page__title">Ажилтны удирдлага</h1>
+        <p class="gks-page__hint">
+          Шинэ ажилтан нууц үггүй бүртгэгдэж, имэйлээр ирсэн урилгаараа өөрөө нууц үгээ тохируулна.
+        </p>
+      </div>
     </header>
 
     <p v-if="errorMsg" class="gks-staff__error">{{ errorMsg }}</p>
     <p v-if="notice" class="gks-staff__notice">{{ notice }}</p>
 
     <DsCard title="Шинэ ажилтан бүртгэх">
-      <form class="gks-staff__form" @submit.prevent="create">
+      <form class="gks-form-grid" @submit.prevent="create">
         <DsInput v-model="form.name" label="Нэр" required />
         <DsInput v-model="form.email" label="Имэйл" type="email" required />
         <DsInput v-model="form.phone" label="Утас" />
@@ -125,27 +127,27 @@ function workload(row: StaffRow): number {
     </DsCard>
 
     <DsCard title="Ажилтнууд">
-      <p v-if="pending" class="gks-staff__note">Уншиж байна…</p>
-      <p v-else-if="!rows.length" class="gks-staff__note">Ажилтан бүртгэгдээгүй байна.</p>
+      <p v-if="pending" class="gks-muted">Уншиж байна…</p>
+      <p v-else-if="!rows.length" class="gks-empty">Ажилтан бүртгэгдээгүй байна.</p>
 
-      <div v-else class="gks-staff__table-wrap">
-        <table class="gks-staff__table">
+      <div v-else class="gks-table-wrap gks-table-wrap--auto">
+        <table class="gks-table gks-table--cards">
           <thead>
             <tr>
               <th scope="col">Ажилтан</th>
               <th scope="col">Эрх</th>
               <th scope="col">Төлөв</th>
-              <th scope="col" class="gks-staff__num">Ачаалал</th>
+              <th scope="col" class="gks-table__num">Ачаалал</th>
               <th scope="col" />
             </tr>
           </thead>
           <tbody>
             <tr v-for="row in rows" :key="row.id" :class="{ 'gks-staff__row--off': !row.isActive }">
-              <td>
-                <p class="gks-staff__name">{{ row.name ?? '—' }}</p>
-                <p class="gks-staff__email gks-tnum">{{ row.email }}</p>
+              <td data-label="Ажилтан">
+                <p class="gks-cell-name">{{ row.name ?? '—' }}</p>
+                <p class="gks-cell-sub gks-tnum">{{ row.email }}</p>
               </td>
-              <td>
+              <td data-label="Эрх">
                 <DsSelect
                   :model-value="row.role"
                   :options="ROLE_OPTIONS"
@@ -153,14 +155,14 @@ function workload(row: StaffRow): number {
                   @update:model-value="(value: string) => patch(row, { role: value as UserRole })"
                 />
               </td>
-              <td>
+              <td data-label="Төлөв">
                 <DsBadge :tone="row.isActive ? 'success' : 'neutral'">
                   {{ row.isActive ? 'Идэвхтэй' : 'Идэвхгүй' }}
                 </DsBadge>
                 <DsBadge v-if="!row.claimedAt" tone="warning">Идэвхжүүлээгүй</DsBadge>
               </td>
-              <td class="gks-staff__num gks-tnum">{{ workload(row) }}</td>
-              <td class="gks-staff__actions">
+              <td class="gks-table__num gks-tnum" data-label="Ачаалал">{{ workload(row) }}</td>
+              <td class="gks-table__actions">
                 <DsButton
                   v-if="!row.claimedAt"
                   variant="secondary"
@@ -188,27 +190,9 @@ function workload(row: StaffRow): number {
 </template>
 
 <style scoped>
-.gks-staff { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-staff__title { font-size: var(--fs-h3); font-weight: var(--fw-bold); margin: var(--sp-1) 0; }
-.gks-staff__note { font-size: var(--fs-small); color: var(--text-subtle); }
-.gks-staff__error { color: var(--danger-600, #b00020); font-size: var(--fs-small); }
-.gks-staff__notice { color: var(--success-700, #14663f); font-size: var(--fs-small); }
-
-.gks-staff__form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--sp-3);
-  align-items: end;
-}
-
-.gks-staff__table-wrap { overflow-x: auto; }
-.gks-staff__table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
-.gks-staff__table th,
-.gks-staff__table td { padding: var(--sp-3); border-bottom: var(--border-hair) solid var(--line-hairline); text-align: left; vertical-align: middle; }
-.gks-staff__table th { font-size: var(--fs-micro); color: var(--text-subtle); text-transform: uppercase; letter-spacing: var(--ls-caps); }
-.gks-staff__num { text-align: right; }
-.gks-staff__name { font-weight: var(--fw-semibold); }
-.gks-staff__email { font-size: var(--fs-micro); color: var(--text-subtle); }
-.gks-staff__actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
-.gks-staff__row--off { opacity: 0.6; }
+.gks-staff__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
+.gks-staff__notice { color: var(--success-fg); font-size: var(--fs-body-sm); }
+.gks-staff__row--off { opacity: .6; }
+.gks-table__actions > * + * { margin-left: var(--sp-2); }
 </style>
+

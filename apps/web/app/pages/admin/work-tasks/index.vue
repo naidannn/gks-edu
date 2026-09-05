@@ -121,13 +121,15 @@ useHead({ title: 'Материалын ажил · CRM' });
 </script>
 
 <template>
-  <div class="gks-tasks">
-    <header class="gks-tasks__head">
-      <span class="gks-eyebrow">CRM</span>
-      <h1 class="gks-tasks__title">Материал боловсруулах ажил</h1>
-      <p v-if="data" class="gks-tasks__count gks-tnum">
-        {{ data.meta.total }} даалгавар · {{ workload?.overdue ?? 0 }} хугацаа хэтэрсэн
-      </p>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">CRM</span>
+        <h1 class="gks-page__title">Материал боловсруулах ажил</h1>
+        <p v-if="data" class="gks-result-count gks-tnum">
+          {{ data.meta.total }} даалгавар · {{ workload?.overdue ?? 0 }} хугацаа хэтэрсэн
+        </p>
+      </div>
     </header>
 
     <p v-if="error" class="gks-tasks__error">{{ error }}</p>
@@ -142,7 +144,7 @@ useHead({ title: 'Материалын ажил · CRM' });
     </DsCard>
 
     <DsCard title="Шинэ даалгавар">
-      <div class="gks-tasks__form">
+      <div class="gks-form-grid">
         <DsInput v-model="draft.caseId" label="Хэргийн ID" placeholder="UUID" />
         <DsSelect v-model="draft.type" label="Төрөл" :options="TYPE_OPTIONS" />
         <DsInput v-model="draft.title" label="Гарчиг" />
@@ -153,29 +155,29 @@ useHead({ title: 'Материалын ажил · CRM' });
     </DsCard>
 
     <DsCard>
-      <div class="gks-tasks__filters">
+      <div class="gks-filters">
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
         <DsSelect v-model="assigneeId" :options="ASSIGNEE_OPTIONS" aria-label="Хариуцагч" />
       </div>
     </DsCard>
 
-    <div v-if="pending && !data" class="gks-tasks__skeleton"><div v-for="n in 5" :key="n" class="gks-tasks__skeleton-row" /></div>
-    <DsCard v-else-if="!data?.items.length" padding="var(--sp-8)"><p class="gks-tasks__empty">Даалгавар алга байна.</p></DsCard>
+    <div v-if="pending && !data" class="gks-skeleton"><div v-for="n in 5" :key="n" class="gks-skeleton__row" /></div>
+    <DsCard v-else-if="!data?.items.length" padding="var(--sp-8)"><p class="gks-empty">Даалгавар алга байна.</p></DsCard>
 
-    <div v-else class="gks-tasks__table-wrap">
-      <table class="gks-table">
+    <div v-else class="gks-table-wrap">
+      <table class="gks-table gks-table--cards">
         <thead>
           <tr><th>Хэрэг</th><th>Даалгавар</th><th>Төрөл</th><th>Хариуцагч</th><th>Хугацаа</th><th>Төлөв</th><th /></tr>
         </thead>
         <tbody>
           <tr v-for="task in data.items" :key="task.id">
-            <td class="gks-tnum">{{ task.case?.code ?? '—' }}</td>
-            <td>
+            <td class="gks-tnum" data-label="Хэрэг">{{ task.case?.code ?? '—' }}</td>
+            <td data-label="Даалгавар">
               {{ task.title }}
               <span v-if="task.caseDocument" class="gks-tasks__doc">{{ task.caseDocument.template.nameMn }}</span>
             </td>
-            <td>{{ WORK_TASK_TYPE_LABELS[task.type] }}</td>
-            <td>
+            <td data-label="Төрөл">{{ WORK_TASK_TYPE_LABELS[task.type] }}</td>
+            <td data-label="Хариуцагч">
               <DsSelect
                 :model-value="task.assigneeId ?? ''"
                 :options="ASSIGNEE_OPTIONS"
@@ -183,8 +185,8 @@ useHead({ title: 'Материалын ажил · CRM' });
                 @update:model-value="assign(task, $event)"
               />
             </td>
-            <td class="gks-tnum" :class="{ 'gks-tasks__overdue': isOverdue(task) }">{{ formatDate(task.dueAt) }}</td>
-            <td><DsBadge :tone="task.status === 'DONE' ? 'success' : task.status === 'CANCELLED' ? 'neutral' : 'info'">{{ WORK_TASK_STATUS_LABELS[task.status] }}</DsBadge></td>
+            <td class="gks-tnum" :class="{ 'gks-tasks__overdue': isOverdue(task) }" data-label="Хугацаа">{{ formatDate(task.dueAt) }}</td>
+            <td data-label="Төлөв"><DsBadge :tone="task.status === 'DONE' ? 'success' : task.status === 'CANCELLED' ? 'neutral' : 'info'">{{ WORK_TASK_STATUS_LABELS[task.status] }}</DsBadge></td>
             <td>
               <DsButton v-if="task.status === 'TODO'" size="sm" variant="ghost" @click="setStatus(task, 'IN_PROGRESS')">Эхлүүлэх</DsButton>
               <DsButton v-else-if="task.status === 'IN_PROGRESS'" size="sm" variant="ghost" @click="setStatus(task, 'DONE')">Дуусгах</DsButton>
@@ -203,25 +205,10 @@ useHead({ title: 'Материалын ажил · CRM' });
 </template>
 
 <style scoped>
-.gks-tasks { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-tasks__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-tasks__count { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
 .gks-tasks__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
 .gks-tasks__workload { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-body-sm); }
 .gks-tasks__workload li { display: flex; justify-content: space-between; gap: var(--sp-3); }
-.gks-tasks__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-3); }
-.gks-tasks__filters { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
-.gks-tasks__skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-tasks__skeleton-row { height: 44px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-.gks-tasks__empty { text-align: center; color: var(--text-muted); }
-.gks-tasks__table-wrap { overflow-x: auto; border: var(--border-hair) solid var(--line-hairline); background: var(--surface-card); }
-.gks-table { width: 100%; border-collapse: collapse; font-size: var(--fs-body-sm); }
-.gks-table th { text-align: left; padding: var(--sp-3); font-size: var(--fs-caption); color: var(--text-subtle); border-bottom: var(--border-hair) solid var(--line-hairline); background: var(--surface-sunken); }
-.gks-table td { padding: var(--sp-3); border-bottom: var(--border-hair) solid var(--line-hairline); vertical-align: middle; }
 .gks-tasks__doc { display: block; font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-tasks__overdue { color: var(--danger-fg); font-weight: var(--fw-semibold); }
-.gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
-.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); }
-
-@media (max-width: 900px) { .gks-tasks__filters { grid-template-columns: 1fr; } }
 </style>
+

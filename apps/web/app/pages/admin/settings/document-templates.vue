@@ -185,12 +185,12 @@ useHead({ title: 'Материалын загвар · CRM' });
 </script>
 
 <template>
-  <div class="gks-tpl">
-    <header class="gks-tpl__head">
+  <div class="gks-page">
+    <header class="gks-page__head">
       <div>
         <span class="gks-eyebrow">Тохиргоо</span>
-        <h1 class="gks-tpl__title">Материалын загвар ба дүрэм</h1>
-        <p class="gks-tpl__count gks-tnum">{{ templates.length }} загвар · {{ rules.length }} дүрэм</p>
+        <h1 class="gks-page__title">Материалын загвар ба дүрэм</h1>
+        <p class="gks-result-count gks-tnum">{{ templates.length }} загвар · {{ rules.length }} дүрэм</p>
       </div>
       <DsButton variant="accent" icon-left="plus" @click="showNewTemplate = !showNewTemplate">Шинэ загвар</DsButton>
     </header>
@@ -198,7 +198,7 @@ useHead({ title: 'Материалын загвар · CRM' });
     <p v-if="error" class="gks-tpl__error">{{ error }}</p>
 
     <DsCard v-if="showNewTemplate" title="Шинэ материалын загвар">
-      <div class="gks-tpl__form">
+      <div class="gks-form-grid">
         <DsInput v-model="draft.code" label="Код" placeholder="HS_TRANSCRIPT" required />
         <DsInput v-model="draft.nameMn" label="Нэр (монгол)" required />
         <DsInput v-model="draft.sourceHint" label="Хаанаас авах" placeholder="E-Mongolia-аас" />
@@ -216,19 +216,19 @@ useHead({ title: 'Материалын загвар · CRM' });
       <DsButton variant="accent" :loading="saving" :disabled="!draft.code || !draft.nameMn" @click="createTemplate">Үүсгэх</DsButton>
     </DsCard>
 
-    <div class="gks-tpl__grid">
-      <aside class="gks-tpl__list">
-        <div v-if="pending" class="gks-tpl__skeleton"><div v-for="n in 8" :key="n" class="gks-tpl__skeleton-row" /></div>
+    <div class="gks-split">
+      <aside class="gks-split__list gks-queue-list">
+        <div v-if="pending" class="gks-skeleton"><div v-for="n in 8" :key="n" class="gks-skeleton__row" /></div>
         <button
           v-for="template in templates"
           :key="template.id"
           type="button"
-          class="gks-tpl__item"
-          :class="{ 'gks-tpl__item--active': template.id === selectedId, 'gks-tpl__item--off': !template.isActive }"
+          class="gks-queue-item"
+          :class="{ 'gks-queue-item--active': template.id === selectedId, 'gks-tpl__off': !template.isActive }"
           @click="selectedId = template.id"
         >
-          <span class="gks-tpl__item-name">{{ template.nameMn }}</span>
-          <span class="gks-tpl__item-code gks-tnum">{{ template.code }} · {{ template._count?.rules ?? 0 }} дүрэм</span>
+          <span class="gks-queue-item__name">{{ template.nameMn }}</span>
+          <span class="gks-queue-item__sub gks-tnum">{{ template.code }} · {{ template._count?.rules ?? 0 }} дүрэм</span>
         </button>
       </aside>
 
@@ -238,7 +238,7 @@ useHead({ title: 'Материалын загвар · CRM' });
             <DsButton size="sm" variant="secondary" :loading="saving" @click="saveTemplate">Хадгалах</DsButton>
           </template>
 
-          <div class="gks-tpl__form">
+          <div class="gks-form-grid">
             <DsInput v-model="selected.nameMn" label="Нэр" />
             <DsInput v-model="selected.sourceHint" label="Хаанаас авах" />
             <DsInput v-model="selected.issuerHint" label="Баталгаажуулах" />
@@ -273,7 +273,7 @@ useHead({ title: 'Материалын загвар · CRM' });
 
           <div class="gks-tpl__new-rule">
             <h3 class="gks-tpl__new-rule-title">Дүрэм нэмэх</h3>
-            <div class="gks-tpl__form">
+            <div class="gks-form-grid">
               <DsSelect v-model="ruleDraft.stage" label="Шат" :options="STAGE_OPTIONS" />
               <DsSelect v-model="ruleDraft.necessity" label="Шаардлага" :options="NECESSITY_OPTIONS" />
               <DsSelect v-model="ruleDraft.universityId" label="Сургууль" :options="UNIVERSITY_OPTIONS" hint="Тухайн сургуулийн нэмэлт шаардлага" />
@@ -283,25 +283,25 @@ useHead({ title: 'Материалын загвар · CRM' });
             <div class="gks-tpl__dims">
               <div>
                 <p class="gks-tpl__dim-label">Үйлчилгээ <span>хоосон = бүгд</span></p>
-                <div class="gks-tpl__chips">
+                <div class="gks-chips">
                   <DsTag v-for="[value, label] in SERVICE_OPTIONS" :key="value" clickable :selected="ruleDraft.serviceTypes.includes(value)" @click="toggle(ruleDraft.serviceTypes, value)">{{ label }}</DsTag>
                 </div>
               </div>
               <div>
                 <p class="gks-tpl__dim-label">Боловсролын түвшин <span>хоосон = бүгд</span></p>
-                <div class="gks-tpl__chips">
+                <div class="gks-chips">
                   <DsTag v-for="[value, label] in EDUCATION_OPTIONS" :key="value" clickable :selected="ruleDraft.educationLevels.includes(value)" @click="toggle(ruleDraft.educationLevels, value)">{{ label }}</DsTag>
                 </div>
               </div>
               <div>
                 <p class="gks-tpl__dim-label">Батлан даагч <span>хоосон = бүгд</span></p>
-                <div class="gks-tpl__chips">
+                <div class="gks-chips">
                   <DsTag v-for="[value, label] in GUARANTOR_OPTIONS" :key="value" clickable :selected="ruleDraft.guarantorTypes.includes(value)" @click="toggle(ruleDraft.guarantorTypes, value)">{{ label }}</DsTag>
                 </div>
               </div>
               <div>
                 <p class="gks-tpl__dim-label">Батлан даагчийн хамаарал <span>хоосон = бүгд</span></p>
-                <div class="gks-tpl__chips">
+                <div class="gks-chips">
                   <DsTag v-for="[value, label] in RELATION_OPTIONS" :key="value" clickable :selected="ruleDraft.guarantorRelations.includes(value)" @click="toggle(ruleDraft.guarantorRelations, value)">{{ label }}</DsTag>
                 </div>
               </div>
@@ -317,35 +317,10 @@ useHead({ title: 'Материалын загвар · CRM' });
 </template>
 
 <style scoped>
-.gks-tpl { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-tpl__head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-4); flex-wrap: wrap; }
-.gks-tpl__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-tpl__count { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
 .gks-tpl__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
-
-.gks-tpl__grid { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: var(--sp-4); align-items: start; }
-.gks-tpl__list { display: flex; flex-direction: column; gap: var(--sp-1); max-height: 70vh; overflow-y: auto; }
-.gks-tpl__item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: left;
-  padding: var(--sp-3);
-  border: var(--border-hair) solid var(--line-soft);
-  border-radius: var(--radius-2);
-  background: var(--surface-card);
-  cursor: pointer;
-}
-.gks-tpl__item:hover { background: var(--surface-hover); }
-.gks-tpl__item--active { border-color: var(--brand-600); background: var(--surface-selected); }
-.gks-tpl__item--off { opacity: .55; }
-.gks-tpl__item-name { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
-.gks-tpl__item-code { font-size: var(--fs-caption); color: var(--text-subtle); }
-
+.gks-queue-item.gks-tpl__off { opacity: .55; }
 .gks-tpl__detail { display: flex; flex-direction: column; gap: var(--sp-4); }
-.gks-tpl__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-3); }
 .gks-tpl__flags { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-3); }
-
 .gks-tpl__rules { display: flex; flex-direction: column; gap: var(--sp-2); }
 .gks-tpl__rule { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-3); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-2); }
 .gks-tpl__rule--off { opacity: .5; }
@@ -353,19 +328,10 @@ useHead({ title: 'Материалын загвар · CRM' });
 .gks-tpl__rule-desc { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); }
 .gks-tpl__rule-note { margin-top: 2px; font-size: var(--fs-caption); color: var(--text-subtle); font-style: italic; }
 .gks-tpl__empty { color: var(--text-subtle); font-style: italic; }
-
 .gks-tpl__new-rule { margin-top: var(--sp-5); padding-top: var(--sp-5); border-top: var(--border-hair) solid var(--line-hairline); }
 .gks-tpl__new-rule-title { font-size: var(--fs-label); font-weight: var(--fw-semibold); margin-bottom: var(--sp-3); }
 .gks-tpl__dims { display: flex; flex-direction: column; gap: var(--sp-4); margin-bottom: var(--sp-4); }
 .gks-tpl__dim-label { font-size: var(--fs-caption); font-weight: var(--fw-medium); color: var(--text-muted); margin-bottom: var(--sp-2); }
 .gks-tpl__dim-label span { font-weight: var(--fw-regular); color: var(--text-subtle); font-size: var(--fs-micro); }
-.gks-tpl__chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-
-.gks-tpl__skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-tpl__skeleton-row { height: 52px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-
-@media (max-width: 1100px) {
-  .gks-tpl__grid { grid-template-columns: 1fr; }
-  .gks-tpl__list { max-height: none; }
-}
 </style>
+

@@ -1,0 +1,525 @@
+/*
+ * Admin (CRM) design layer.
+ *
+ * Every `/admin/*` page used to carry its own copy of the same six patterns —
+ * page header, stat strip, filter bar, table, pager, skeleton — each drifting a
+ * little from the last. They live here once instead, so a change to table
+ * density or a breakpoint lands on all 33 screens at the same time.
+ *
+ * Two knobs the shell sets on `.gks-admin` drive the whole layer:
+ *   data-density="compact"   tighter rows and controls, for long work sessions
+ *   data-rail                sidebar folded to icons, main gets the width back
+ *
+ * Page-scoped styles still win over anything here (scoped selectors carry the
+ * extra attribute), so a screen with a genuinely different need can override
+ * without fighting specificity.
+ */
+
+:root {
+  /* Row rhythm — re-declared under [data-density] below. */
+  --admin-cell-y: var(--sp-3);
+  --admin-cell-x: var(--sp-3);
+  --admin-gap: var(--sp-5);
+  --admin-table-fs: var(--fs-body-sm);
+
+  /* Shell geometry. The rail width is the only number the sidebar and the
+     body margin have to agree on. */
+  --admin-sidebar-w: 260px;
+  --admin-rail-w: 68px;
+  --admin-topbar-h: 56px;
+  /* Fluid page gutter: tight on a phone, generous on a 27" panel, never a
+     hard container. */
+  --admin-gutter: clamp(16px, 2.2vw, 40px);
+}
+
+.gks-admin[data-density='compact'] {
+  --admin-cell-y: var(--sp-2);
+  --admin-gap: var(--sp-4);
+  --admin-table-fs: var(--fs-caption);
+}
+
+/* ============================================================ page scaffold */
+
+/* The stack every admin screen is: header, then blocks, evenly spaced. */
+.gks-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-gap);
+  min-width: 0;
+}
+
+.gks-page__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+.gks-page__heading { min-width: 0; }
+.gks-page__title {
+  margin-top: var(--sp-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+}
+.gks-page__hint {
+  margin-top: var(--sp-1);
+  color: var(--text-muted);
+  font-size: var(--fs-body-sm);
+  max-width: var(--container-prose);
+}
+.gks-page__hint a { color: var(--brand-700); }
+.gks-page__actions { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+/*
+ * A page that is a form rather than a work surface. Fields keep a reading
+ * width even on a wide monitor — a 1600px-long text input helps nobody.
+ */
+.gks-page--form { max-width: 1100px; }
+.gks-form-body { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+/* Back link above a detail page's title. */
+.gks-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+  text-decoration: none;
+}
+.gks-page__back:hover { color: var(--brand-600); }
+
+/* ================================================================== stats */
+
+/*
+ * `auto-fit` rather than a fixed column count: four tiles fill a laptop, eight
+ * fill a wide monitor, and nothing has to declare a breakpoint per page.
+ */
+.gks-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sp-3);
+  /* Some strips are marked up as a `ul`, which is the honest element for them. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gks-stats--wide { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+
+.gks-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  background: var(--surface-card);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-2);
+  min-width: 0;
+}
+.gks-stat > span,
+.gks-stat__label {
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gks-stat > strong,
+.gks-stat__value {
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+.gks-stat__foot { font-size: var(--fs-micro); color: var(--text-subtle); }
+.gks-stat a { color: inherit; }
+
+.gks-stat--warn { border-color: var(--warning-line); background: var(--warning-bg); }
+.gks-stat--warn > strong, .gks-stat--warn .gks-stat__value { color: var(--warning-fg); }
+.gks-stat--danger { border-color: var(--danger-line); background: var(--danger-bg); }
+.gks-stat--danger > strong, .gks-stat--danger .gks-stat__value { color: var(--danger-fg); }
+.gks-stat--success { border-color: var(--success-line); background: var(--success-bg); }
+.gks-stat--success > strong, .gks-stat--success .gks-stat__value { color: var(--success-fg); }
+.gks-stat--info { border-color: var(--info-line); background: var(--info-bg); }
+.gks-stat--info > strong, .gks-stat--info .gks-stat__value { color: var(--info-fg); }
+
+/* A stat that filters the list below it reads as pressed when it is on. */
+a.gks-stat, button.gks-stat { text-align: left; cursor: pointer; text-decoration: none; transition: var(--transition-control); }
+a.gks-stat:hover, button.gks-stat:hover { border-color: var(--line-strong); background: var(--surface-hover); }
+.gks-stat--active { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
+
+/* ================================================================ filters */
+
+/*
+ * One search box that gets the room, then equal-width selects that wrap on
+ * their own. `auto-fit` again — no per-page media queries.
+ */
+.gks-filters {
+  display: grid;
+  /* `auto-fill`, not `auto-fit`: two selects on a wide monitor should stay two
+     normal-sized selects on the left, not stretch to half the screen each. */
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--sp-3);
+  align-items: center;
+}
+/*
+ * The search box gets two tracks. `DsInput` forwards `class` to the inner
+ * `<input>` rather than to its wrapper, so the grid item is matched through
+ * `:has()`; the bare rule covers a plain `<input>` used directly.
+ */
+.gks-filters__search,
+.gks-filters > *:has(.gks-filters__search) { grid-column: span 2; min-width: 0; }
+
+.gks-toggles {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.gks-filters + .gks-toggles { margin-top: var(--sp-4); }
+.gks-toggle-sep { width: 1px; height: 20px; background: var(--line-hairline); flex: none; }
+
+/* Result count / applied-filter summary line under the bar. */
+.gks-result-count {
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+}
+
+@media (max-width: 640px) {
+  .gks-filters { grid-template-columns: 1fr; }
+  .gks-filters__search,
+  .gks-filters > *:has(.gks-filters__search) { grid-column: auto; }
+}
+
+/* ================================================================== table */
+
+.gks-table-wrap {
+  position: relative;
+  overflow: auto;
+  /* Keeps a long list scrolling inside the page rather than pushing the
+     filter bar off the top of the screen. */
+  max-height: calc(100vh - 260px);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-2);
+  background: var(--surface-card);
+  overscroll-behavior: contain;
+}
+/* For tables short enough that a scroll box would look odd. */
+.gks-table-wrap--auto { max-height: none; }
+
+.gks-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--admin-table-fs);
+}
+.gks-table th {
+  text-align: left;
+  padding: var(--sp-3) var(--admin-cell-x);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--text-subtle);
+  white-space: nowrap;
+  background: var(--surface-sunken);
+  border-bottom: var(--border-hair) solid var(--line-hairline);
+}
+.gks-table td {
+  padding: var(--admin-cell-y) var(--admin-cell-x);
+  border-bottom: var(--border-hair) solid var(--line-hairline);
+  vertical-align: middle;
+}
+.gks-table tbody tr:last-child td { border-bottom: 0; }
+
+/* The header only sticks where there is a scroll box to stick inside. A table
+   sitting loose in a card scrolls with the page, and a sticky row there would
+   just hide under the topbar. */
+.gks-table-wrap .gks-table th { position: sticky; top: 0; z-index: 2; }
+/* Qualified, so a `th` carrying these wins over `.gks-table th`'s left align. */
+.gks-table .gks-table__num { text-align: right; font-variant-numeric: tabular-nums lining-nums; }
+.gks-table .gks-table__num--warn { color: var(--danger-fg); font-weight: var(--fw-semibold); }
+.gks-table .gks-table__actions { text-align: right; white-space: nowrap; }
+/* The second line of a cell, when the markup says `small` rather than a span. */
+.gks-table td small { display: block; margin-top: 2px; font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-table__caption {
+  text-align: left;
+  font-size: var(--fs-micro);
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  padding-bottom: var(--sp-2);
+}
+
+/* Rows that open something. Keyboard focus gets the same treatment as hover
+   so the list is navigable without a mouse. */
+.gks-row {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.gks-row:hover td { background: var(--surface-hover); }
+.gks-row:focus-visible { outline: none; }
+.gks-row:focus-visible td { background: var(--surface-selected); box-shadow: inset 0 0 0 0 transparent; }
+.gks-row:focus-visible td:first-child { box-shadow: inset 3px 0 0 0 var(--brand-600); }
+
+/* Two-line cell: the thing, then its identifier. */
+.gks-cell-name { display: block; font-weight: var(--fw-medium); color: var(--text-strong); }
+.gks-cell-sub { display: block; font-size: var(--fs-micro); color: var(--text-subtle); }
+.gks-muted { color: var(--text-subtle); }
+
+/* Chips inside a cell. */
+.gks-chips { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+
+/* Inline progress bar. */
+.gks-progress { display: flex; align-items: center; gap: var(--sp-2); min-width: 110px; }
+.gks-progress__track { flex: 1; height: 5px; border-radius: var(--radius-pill); background: var(--n-100); overflow: hidden; }
+.gks-progress__fill { display: block; height: 100%; background: var(--brand-600); border-radius: inherit; }
+.gks-progress__value { font-size: var(--fs-caption); color: var(--text-subtle); font-variant-numeric: tabular-nums; }
+
+/*
+ * Below 720px a wide CRM table stops being a table: each row becomes a card
+ * and every cell carries its own header via `data-label`. Opt in with
+ * `.gks-table--cards`, because a two-column table is fine as it is.
+ */
+@media (max-width: 720px) {
+  .gks-table--cards { display: block; }
+  .gks-table--cards thead { display: none; }
+  .gks-table--cards tbody, .gks-table--cards tr { display: block; }
+  .gks-table--cards tr {
+    padding: var(--sp-2) 0;
+    border-bottom: var(--border-hair) solid var(--line-hairline);
+  }
+  .gks-table--cards tbody tr:last-child { border-bottom: 0; }
+  /*
+   * Label above value, not beside it. A cell can hold anything — two lines of
+   * text, a select, a row of badges — and only a stacked block survives all of
+   * them; a side-by-side pair breaks the moment a cell has two children.
+   */
+  .gks-table--cards td {
+    display: block;
+    padding: var(--sp-2) var(--sp-4);
+    border: 0;
+    text-align: left;
+  }
+  .gks-table--cards td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    font-size: var(--fs-micro);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: var(--ls-caps-tight);
+  }
+  .gks-table--cards td:not([data-label])::before { content: none; }
+  .gks-table--cards td:empty { display: none; }
+  .gks-table--cards .gks-table__num,
+  .gks-table--cards .gks-table__actions { text-align: left; }
+  .gks-table-wrap { max-height: none; }
+}
+
+/* ============================================================= list + detail */
+
+/*
+ * The queue screens (documents, visa, applications) put a scrollable list
+ * beside a detail pane. On a wide monitor the list stays narrow and the detail
+ * takes the rest; below 1024px they stack.
+ */
+.gks-split {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: var(--admin-gap);
+  align-items: start;
+}
+.gks-split--wide { grid-template-columns: minmax(320px, 440px) minmax(0, 1fr); }
+.gks-split__list {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 1024px) {
+  .gks-split, .gks-split--wide { grid-template-columns: 1fr; }
+  .gks-split__list { max-height: none; }
+}
+
+/* The card that is one item in such a queue. Documents, visa and applications
+   all pick from a list this way, so the selected state is defined once. */
+.gks-queue-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.gks-queue-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-3);
+  border: var(--border-hair) solid var(--line-soft);
+  border-radius: var(--radius-2);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-queue-item:hover { background: var(--surface-hover); }
+.gks-queue-item--active { border-color: var(--brand-600); background: var(--surface-selected); }
+.gks-queue-item__name { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.gks-queue-item__sub { font-size: var(--fs-caption); color: var(--text-muted); }
+.gks-queue-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+
+/* =================================================================== tabs */
+
+/*
+ * Section tabs inside a record. Sticky under the shell's topbar, because on a
+ * client with forty documents the way back to "Тойм" should not be a scroll.
+ */
+.gks-tabs {
+  position: sticky;
+  top: var(--admin-topbar-h);
+  z-index: 20;
+  display: flex;
+  gap: var(--sp-1);
+  margin: 0 calc(var(--admin-gutter) * -1);
+  padding: 0 var(--admin-gutter);
+  background: var(--surface-page);
+  border-bottom: var(--border-hair) solid var(--line-hairline);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gks-tabs::-webkit-scrollbar { display: none; }
+
+.gks-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-tab:hover { color: var(--text-strong); }
+.gks-tab--active { color: var(--brand-700); border-bottom-color: var(--brand-600); font-weight: var(--fw-semibold); }
+
+/* The count badge on a tab that has something waiting behind it. */
+.gks-tab__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+}
+
+/* ================================================================== pager */
+
+.gks-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* =========================================================== empty + loading */
+
+.gks-empty { text-align: center; color: var(--text-muted); }
+
+.gks-skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
+.gks-skeleton__row {
+  height: 44px;
+  border-radius: var(--radius-1);
+  background: linear-gradient(90deg, var(--n-050) 25%, var(--n-100) 37%, var(--n-050) 63%);
+  background-size: 400% 100%;
+  animation: gks-shimmer 1.4s ease infinite;
+}
+@keyframes gks-shimmer {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gks-skeleton__row { animation: none; }
+}
+/* Queue cards are taller than table rows; the placeholder should be too. */
+.gks-skeleton--tall .gks-skeleton__row { height: 72px; }
+/* And a whole grouped block is taller again. */
+.gks-skeleton--group { gap: var(--sp-3); }
+.gks-skeleton--group .gks-skeleton__row { height: 140px; border-radius: var(--radius-3); }
+/* A single placeholder standing in for a whole record. */
+.gks-skeleton__row.gks-skeleton--page { height: 320px; border-radius: var(--radius-3); }
+
+/* ================================================================== forms */
+
+/* Admin edit forms: two columns on a laptop, one on a phone, without every
+   settings page inventing its own grid. */
+.gks-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+.gks-form-grid--wide { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.gks-form-grid__full { grid-column: 1 / -1; }
+
+.gks-form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.gks-form-actions__spacer { flex: 1; }
+
+/* A sticky action bar keeps Save reachable on a long form. */
+.gks-form-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 calc(var(--sp-6) * -1) calc(var(--sp-6) * -1);
+  padding: var(--sp-4) var(--sp-6);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(8px);
+  border-top: var(--border-hair) solid var(--line-hairline);
+  border-end-start-radius: var(--radius-3);
+  border-end-end-radius: var(--radius-3);
+}
+
+/* Definition-list of facts, used on every detail pane. */
+.gks-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-4);
+  margin: 0;
+}
+.gks-facts dt { font-size: var(--fs-micro); color: var(--text-subtle); text-transform: uppercase; letter-spacing: var(--ls-caps-tight); }
+.gks-facts dd { margin: var(--sp-1) 0 0; font-size: var(--fs-body-sm); color: var(--text-body); }
+
+/* ================================================================ keyboard */
+
+kbd.gks-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: var(--border-hair) solid var(--line-hairline);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-1);
+  background: var(--surface-card);
+  color: var(--text-subtle);
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+}

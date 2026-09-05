@@ -68,22 +68,22 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
 </script>
 
 <template>
-  <div class="gks-form-page">
+  <div class="gks-page gks-page--form">
     <header>
-      <NuxtLink to="/admin/clients" class="gks-form-page__back">
+      <NuxtLink to="/admin/clients" class="gks-page__back">
         <DsIcon name="arrow-left" :size="16" /> Үйлчлүүлэгчийн жагсаалт
       </NuxtLink>
-      <h1 class="gks-form-page__title">{{ leadId ? 'Сэжмээс хэрэглэгч бүртгэх' : 'Шинэ хэрэглэгч бүртгэх' }}</h1>
-      <p v-if="lead" class="gks-form-page__hint">
+      <h1 class="gks-page__title">{{ leadId ? 'Сэжмээс хэрэглэгч бүртгэх' : 'Шинэ хэрэглэгч бүртгэх' }}</h1>
+      <p v-if="lead" class="gks-page__hint">
         <DsIcon name="user-search" :size="14" />
         {{ lead.lastName }} {{ lead.firstName }} сэжмээс — сэжмийн бүртгэл түүхэндээ хэвээр үлдэнэ.
       </p>
-      <p v-else class="gks-form-page__hint">
+      <p v-else class="gks-page__hint">
         Сэжимгүйгээр шууд бүртгэнэ. Гэрээ байгуулахад шаардлагатай мэдээллийг бүрэн авна.
       </p>
     </header>
 
-    <form class="gks-form-page__body" @submit.prevent="submit">
+    <form class="gks-form-body" @submit.prevent="submit">
       <CrmClientFormFields
         v-model="form"
         :errors="errors"
@@ -104,7 +104,7 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
 
       <DsCard v-if="submitError" accent><p class="gks-form-page__error">{{ submitError }}</p></DsCard>
 
-      <div class="gks-form-page__actions">
+      <div class="gks-form-actions">
         <DsButton variant="secondary" @click="navigateTo(leadId ? `/admin/consultations/${leadId}` : '/admin/clients')">
           Болих
         </DsButton>
@@ -117,14 +117,9 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
 </template>
 
 <style scoped>
-.gks-form-page { display: flex; flex-direction: column; gap: var(--sp-5); max-width: 960px; }
-.gks-form-page__back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--text-subtle); text-decoration: none; }
-.gks-form-page__back:hover { color: var(--brand-600); }
-.gks-form-page__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-form-page__hint { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
+.gks-page__hint { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
 
-.gks-form-page__body { display: flex; flex-direction: column; gap: var(--sp-4); }
 .gks-form-page__switches { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-4); }
 .gks-form-page__error { color: var(--danger-fg); }
-.gks-form-page__actions { display: flex; justify-content: flex-end; gap: var(--sp-3); }
+.gks-form-actions { justify-content: flex-end; }
 </style>

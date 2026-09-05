@@ -184,12 +184,12 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 </script>
 
 <template>
-  <div class="gks-appadm">
-    <NuxtLink to="/admin/applications" class="gks-appadm__back"><DsIcon name="arrow-left" :size="16" /> Мэдүүлэг</NuxtLink>
+  <div class="gks-page">
+    <NuxtLink to="/admin/applications" class="gks-page__back"><DsIcon name="arrow-left" :size="16" /> Мэдүүлэг</NuxtLink>
     <p v-if="error" class="gks-appadm__error">{{ error }}</p>
 
     <DsCard v-if="!application && !pending" title="Мэдүүлэг нээгдээгүй">
-      <p class="gks-appadm__muted">Энэ хэрэг дээр сургуулийн мэдүүлэг үүсээгүй байна.</p>
+      <p class="gks-muted">Энэ хэрэг дээр сургуулийн мэдүүлэг үүсээгүй байна.</p>
       <DsButton variant="accent" :loading="busy" @click="open">Мэдүүлэг нээх</DsButton>
     </DsCard>
 
@@ -199,7 +199,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
           <DsBadge :tone="APPLICATION_STATUS_TONE[application.status]">{{ APPLICATION_STATUS_LABELS[application.status] }}</DsBadge>
         </template>
 
-        <dl class="gks-appadm__facts">
+        <dl class="gks-facts">
           <div><dt>Хэрэглэгч</dt><dd>{{ application.case.user?.name ?? '—' }}</dd></div>
           <div><dt>Сургууль</dt><dd>{{ application.university?.nameMn ?? UNKNOWN_LABEL }}</dd></div>
           <div><dt>Илгээсэн</dt><dd class="gks-tnum">{{ formatDate(application.submittedAt) }}</dd></div>
@@ -231,7 +231,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
           <DsInput v-model="interview.note" label="Бэлтгэлийн заавар" placeholder="Хэрэглэгчид харагдана" />
           <DsButton variant="secondary" :disabled="!interview.at || busy" @click="scheduleInterview">Товлох</DsButton>
         </div>
-        <p v-if="application.interviewAt" class="gks-appadm__muted gks-tnum">
+        <p v-if="application.interviewAt" class="gks-muted gks-tnum">
           Одоогийн товлолт: {{ formatDate(application.interviewAt) }}
         </p>
       </DsCard>
@@ -300,7 +300,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
           <li v-for="invoice in invoices" :key="invoice.id">
             <div>
               <p class="gks-tnum">{{ formatKrwAmount(invoice.totalKrw) }} · {{ formatMntAmount(invoice.amountMnt) }}</p>
-              <p class="gks-appadm__muted gks-tnum">{{ formatDate(invoice.createdAt) }} · ханш {{ Number(invoice.fxRate) }}₮</p>
+              <p class="gks-muted gks-tnum">{{ formatDate(invoice.createdAt) }} · ханш {{ Number(invoice.fxRate) }}₮</p>
             </div>
             <div class="gks-appadm__invoice-actions">
               <DsBadge :tone="invoice.status === 'CONFIRMED_BY_SCHOOL' ? 'success' : invoice.status === 'PAID' ? 'info' : 'neutral'">
@@ -323,7 +323,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
         <DsButton variant="accent" :disabled="busy" @click="recordInvitation">
           {{ invitation ? 'Урилга шинэчлэх' : 'Урилга бүртгэх' }}
         </DsButton>
-        <p v-if="invitation" class="gks-appadm__muted gks-tnum">
+        <p v-if="invitation" class="gks-muted gks-tnum">
           Бүртгэсэн: {{ formatDate(invitation.issuedAt ?? invitation.receivedAt) }}
         </p>
       </DsCard>
@@ -332,14 +332,10 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 </template>
 
 <style scoped>
-.gks-appadm { display: flex; flex-direction: column; gap: var(--sp-4); }
-.gks-appadm__back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-muted); text-decoration: none; align-self: flex-start; }
+.gks-page__back { align-self: flex-start; }
 .gks-appadm__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
-.gks-appadm__muted { color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-muted { font-size: var(--fs-caption); }
 
-.gks-appadm__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-4); }
-.gks-appadm__facts dt { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--ls-caps); color: var(--text-subtle); }
-.gks-appadm__facts dd { font-size: var(--fs-body-sm); color: var(--text-body); margin-top: 2px; }
 
 .gks-appadm__gate { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-3); border-radius: var(--radius-2); background: var(--warning-bg); border: var(--border-hair) solid var(--warning-line); color: var(--warning-fg); font-size: var(--fs-body-sm); }
 .gks-appadm__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }

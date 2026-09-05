@@ -221,22 +221,22 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 </script>
 
 <template>
-  <div class="gks-lead">
-    <NuxtLink to="/admin/consultations" class="gks-lead__back"><DsIcon name="arrow-left" :size="16" /> Зөвлөгөө хүсэлт</NuxtLink>
+  <div class="gks-page">
+    <NuxtLink to="/admin/consultations" class="gks-page__back"><DsIcon name="arrow-left" :size="16" /> Зөвлөгөө хүсэлт</NuxtLink>
 
     <DsCard v-if="leadError" accent><p>Хүсэлтийг ачаалж чадсангүй.</p></DsCard>
-    <div v-else-if="leadPending && !lead" class="gks-lead__skeleton" />
+    <div v-else-if="leadPending && !lead" class="gks-skeleton__row gks-skeleton--page" />
 
     <template v-else-if="lead">
-      <header class="gks-lead__head">
+      <header class="gks-page__head">
         <div>
-          <h1 class="gks-lead__title">{{ lead.lastName }} {{ lead.firstName }}</h1>
+          <h1 class="gks-page__title">{{ lead.lastName }} {{ lead.firstName }}</h1>
           <div class="gks-lead__tags">
             <DsBadge :tone="LEAD_STAGE_TONE[lead.stage]">{{ LEAD_STAGE_LABELS[lead.stage] }}</DsBadge>
             <DsBadge tone="neutral">{{ LEAD_SOURCE_LABELS[lead.source] }}</DsBadge>
           </div>
         </div>
-        <div class="gks-lead__head-side">
+        <div class="gks-page__actions gks-lead__head-side">
           <div class="gks-lead__contact">
             <a :href="`tel:${lead.phone}`" class="gks-lead__contact-link gks-tnum"><DsIcon name="phone" :size="16" /> {{ lead.phone }}</a>
             <a v-if="lead.email" :href="`mailto:${lead.email}`" class="gks-lead__contact-link"><DsIcon name="mail" :size="16" /> {{ lead.email }}</a>
@@ -286,7 +286,7 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 
           <!-- Facts -->
           <DsCard title="Мэдээлэл">
-            <dl class="gks-lead__facts">
+            <dl class="gks-facts">
               <CommonDataValue label="Нас" :value="lead.age ? `${lead.age} нас` : null" />
               <CommonDataValue label="Боловсрол" :value="lead.educationLevel ? EDUCATION_LEVEL_LABELS[lead.educationLevel as EducationLevel] : null" />
               <CommonDataValue label="Дундаж (GPA)" :value="lead.gpa ? String(lead.gpa) : null" />
@@ -377,49 +377,26 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 </template>
 
 <style scoped>
-.gks-lead { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-lead__back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--fs-body-sm);
-  color: var(--text-muted);
-  text-decoration: none;
-  align-self: flex-start;
-}
-.gks-lead__back:hover { color: var(--brand-600); }
-
-.gks-lead__skeleton { height: 400px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-
-.gks-lead__head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--sp-4); }
-.gks-lead__title { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .gks-lead__tags { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
-.gks-lead__head-side { display: flex; flex-direction: column; gap: var(--sp-3); align-items: flex-end; }
+.gks-lead__head-side { flex-direction: column; align-items: flex-end; }
 .gks-lead__contact { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-end; }
 .gks-lead__contact-link { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); text-decoration: none; }
 .gks-lead__contact-link:hover { color: var(--brand-600); }
-
-.gks-lead__grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--sp-5); align-items: start; }
+.gks-lead__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); gap: var(--sp-5); align-items: start; }
 .gks-lead__main { display: flex; flex-direction: column; gap: var(--sp-5); min-width: 0; }
 .gks-lead__side { display: flex; flex-direction: column; gap: var(--sp-5); }
-
 .gks-lead__dup-note { font-size: var(--fs-micro); color: var(--text-subtle); }
-.gks-lead__dup-error { font-size: var(--fs-micro); color: var(--danger-600, #b00020); }
+.gks-lead__dup-error { font-size: var(--fs-micro); color: var(--danger-fg); }
 .gks-lead__dup-list { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
 .gks-lead__dup { display: flex; flex-direction: column; gap: var(--sp-1); align-items: flex-start; }
 .gks-lead__dup-name { font-size: var(--fs-small); font-weight: var(--fw-semibold); color: var(--text-body); text-decoration: none; }
 .gks-lead__dup-name:hover { color: var(--brand-600); }
 .gks-lead__dup-meta { font-size: 11px; color: var(--text-subtle); }
-
 .gks-lead__transition { display: flex; flex-direction: column; gap: var(--sp-3); align-items: flex-start; }
 .gks-lead__unknown { color: var(--text-subtle); font-style: italic; }
 .gks-lead__error { color: var(--danger-fg); font-size: var(--fs-caption); }
-
-.gks-lead__facts { display: flex; flex-direction: column; gap: var(--sp-1); }
 .gks-lead__note { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: var(--border-hair) solid var(--line-hairline); color: var(--text-muted); line-height: var(--lh-body); white-space: pre-line; }
-
 .gks-lead__composer { display: flex; flex-direction: column; gap: var(--sp-3); padding-bottom: var(--sp-4); margin-bottom: var(--sp-4); border-bottom: var(--border-hair) solid var(--line-hairline); }
-
 .gks-timeline { display: flex; flex-direction: column; gap: var(--sp-4); }
 .gks-timeline__item { padding-bottom: var(--sp-4); border-bottom: var(--border-hair) solid var(--line-hairline); }
 .gks-timeline__item:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -427,11 +404,10 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 .gks-timeline__date { font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-timeline__body { margin-top: var(--sp-2); color: var(--text-body); line-height: var(--lh-body); white-space: pre-line; }
 .gks-timeline__actor { margin-top: var(--sp-1); font-size: var(--fs-caption); color: var(--text-subtle); }
-
 .gks-lead__assignee { font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gks-lead__assign-actions { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
-
 @media (max-width: 900px) {
-  .gks-lead__grid { grid-template-columns: minmax(0, 1fr); }
+.gks-lead__grid { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
+

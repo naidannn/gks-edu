@@ -58,10 +58,12 @@ useHead({ title: 'Гэрээний загвар · CRM' });
 </script>
 
 <template>
-  <div class="gks-settings">
-    <header class="gks-settings__head">
-      <span class="gks-eyebrow">Тохиргоо</span>
-      <h1 class="gks-settings__title">Гэрээний загвар</h1>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">Тохиргоо</span>
+        <h1 class="gks-page__title">Гэрээний загвар</h1>
+      </div>
     </header>
 
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>
@@ -70,7 +72,7 @@ useHead({ title: 'Гэрээний загвар · CRM' });
       <DsSelect v-model="selectedService" :options="SERVICE_TYPES.map((s) => ({ value: s, label: SERVICE_LABELS[s] }))" label="Үйлчилгээ" />
     </DsCard>
 
-    <div v-if="pending && !templates.length" class="gks-settings__skeleton" />
+    <div v-if="pending && !templates.length" class="gks-skeleton__row gks-skeleton--page" />
 
     <DsCard v-else :title="`Идэвхтэй загвар (v${activeTemplate?.version ?? '—'})`">
       <DsTextarea v-model="draft" :rows="18" class="gks-settings__textarea" />
@@ -90,12 +92,10 @@ useHead({ title: 'Гэрээний загвар · CRM' });
 </template>
 
 <style scoped>
-.gks-settings { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-settings__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-settings__skeleton { height: 300px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
 .gks-settings__textarea { width: 100%; font-family: var(--font-mono, monospace); font-size: var(--fs-caption); }
 .gks-settings__hint { margin: var(--sp-3) 0; font-size: var(--fs-caption); color: var(--text-subtle); display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .gks-settings__hint code { background: var(--surface-sunken); padding: 2px 6px; border-radius: var(--radius-1); }
 .gks-settings__history-item { margin-bottom: var(--sp-3); font-size: var(--fs-body-sm); }
 .gks-settings__pre { margin-top: var(--sp-2); padding: var(--sp-3); background: var(--surface-sunken); white-space: pre-wrap; font-size: var(--fs-caption); }
 </style>
+

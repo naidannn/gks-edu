@@ -191,17 +191,17 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
 </script>
 
 <template>
-  <div class="gks-rank">
-    <header class="gks-rank__head">
+  <div class="gks-page">
+    <header class="gks-page__head">
       <div>
         <span class="gks-eyebrow">Каталог</span>
-        <h1 class="gks-rank__title">GKS эрэмбэ</h1>
-        <p class="gks-rank__hint">
+        <h1 class="gks-page__title">GKS эрэмбэ</h1>
+        <p class="gks-page__hint">
           Нийтийн каталог, хайлтын үр дүн бүр энэ эрэмбээр харагдана. Жин нь харьцангуй —
           нийлбэр нь 100 байх шаардлагагүй, доорх хувь нь бодит жинг харуулна.
         </p>
       </div>
-      <NuxtLink to="/admin/universities" class="gks-rank__back">
+      <NuxtLink to="/admin/universities" class="gks-page__back">
         <DsIcon name="arrow-left" :size="16" /> Сургуулийн жагсаалт
       </NuxtLink>
     </header>
@@ -209,8 +209,8 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>
     <DsCard v-if="okMsg"><p class="gks-rank__ok">{{ okMsg }}</p></DsCard>
 
-    <div v-if="pending" class="gks-rank__skeleton">
-      <div v-for="n in 4" :key="n" class="gks-rank__skeleton-row" />
+    <div v-if="pending" class="gks-skeleton">
+      <div v-for="n in 4" :key="n" class="gks-skeleton__row" />
     </div>
 
     <template v-else>
@@ -242,7 +242,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
           />
         </div>
 
-        <div class="gks-rank__actions">
+        <div class="gks-form-actions">
           <DsButton :loading="busy === 'save'" :disabled="!dirty" variant="accent" @click="save">
             Хадгалах, дахин эрэмбэлэх
           </DsButton>
@@ -250,7 +250,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
             Урьдчилан харах
           </DsButton>
           <DsButton v-if="dirty" variant="ghost" @click="reset">Буцаах</DsButton>
-          <span class="gks-rank__spacer" />
+          <span class="gks-form-actions__spacer" />
           <DsButton :loading="busy === 'recompute'" variant="secondary" icon-left="refresh-cw" @click="recompute">
             Одоо дахин тооцоолох
           </DsButton>
@@ -266,7 +266,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
           {{ dirty ? 'Хадгалаагүй жингээр тооцоолсон урьдчилсан жагсаалт.' : 'Одоогийн жингээр.' }}
           Нийт {{ preview.total }} сургууль эрэмбэлэгдсэн. Мөр дээр дарж задаргааг харна уу.
         </p>
-        <div class="gks-rank__table-wrap">
+        <div class="gks-table-wrap gks-table-wrap--auto">
           <table class="gks-table">
             <thead>
               <tr>
@@ -280,7 +280,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
             <tbody>
               <template v-for="row in preview.rows" :key="`${row.rank}-${row.nameMn}`">
                 <tr
-                  class="gks-rank__row"
+                  class="gks-row"
                   @click="expanded = expanded === row.rank ? null : row.rank"
                 >
                   <td class="gks-tnum gks-table__num">{{ row.rank }}</td>
@@ -288,11 +288,11 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
                   <td class="gks-tnum gks-table__num">{{ row.score.toFixed(2) }}</td>
                   <td class="gks-tnum gks-table__num">
                     <span v-if="row.boost">{{ row.boost > 0 ? '+' : '' }}{{ row.boost }}</span>
-                    <span v-else class="gks-rank__muted">—</span>
+                    <span v-else class="gks-muted">—</span>
                   </td>
                   <td class="gks-tnum gks-table__num">
                     <span v-if="row.theKoreaRank">#{{ row.theKoreaRank }}</span>
-                    <span v-else class="gks-rank__muted">—</span>
+                    <span v-else class="gks-muted">—</span>
                   </td>
                 </tr>
                 <tr v-if="expanded === row.rank" class="gks-rank__detail">
@@ -318,15 +318,8 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
 </template>
 
 <style scoped>
-.gks-rank { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-rank__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-5); }
-.gks-rank__title { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-rank__hint { max-width: 62ch; margin-top: var(--sp-2); color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-rank__back { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--text-muted); font-size: var(--fs-body-sm); text-decoration: none; }
-.gks-rank__back:hover { color: var(--text-strong); }
 .gks-rank__ok { color: var(--text-strong); }
-
-.gks-rank__weights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4) var(--sp-5); }
+.gks-rank__weights { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4) var(--sp-5); }
 .gks-rank__weight { display: flex; align-items: flex-start; gap: var(--sp-3); }
 .gks-rank__weight :deep(.gks-field) { flex: 1; }
 .gks-rank__share {
@@ -338,15 +331,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
   color: var(--text-strong);
 }
 .gks-rank__floor { margin-top: var(--sp-5); max-width: 48ch; }
-
-.gks-rank__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); margin-top: var(--sp-5); }
-.gks-rank__spacer { flex: 1; }
 .gks-rank__note { margin-top: var(--sp-3); color: var(--text-subtle); font-size: var(--fs-caption); }
-
-.gks-rank__table-wrap { margin-top: var(--sp-4); overflow-x: auto; }
-.gks-rank__row { cursor: pointer; }
-.gks-rank__row:hover { background: var(--surface-sunken); }
-.gks-rank__muted { color: var(--text-subtle); }
 .gks-rank__detail > td { background: var(--surface-sunken); }
 .gks-rank__parts { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; }
 .gks-rank__parts li { display: grid; grid-template-columns: 22ch 1fr 4ch; align-items: center; gap: var(--sp-3); }
@@ -354,12 +339,8 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
 .gks-rank__part-value { font-size: var(--fs-caption); font-weight: var(--fw-semibold); text-align: right; }
 .gks-rank__bar { display: block; height: 6px; background: var(--surface-card); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-pill); overflow: hidden; }
 .gks-rank__bar-fill { display: block; height: 100%; background: var(--text-strong); }
-
-.gks-rank__skeleton { display: grid; gap: var(--sp-3); }
-.gks-rank__skeleton-row { height: 64px; background: var(--surface-sunken); border-radius: var(--radius-1); }
-
 @media (max-width: 900px) {
-  .gks-rank__weights { grid-template-columns: 1fr; }
-  .gks-rank__head { flex-direction: column; }
+.gks-rank__weights { grid-template-columns: 1fr; }
 }
 </style>
+

@@ -129,16 +129,24 @@ useHead({ title: 'Материал шалгах · CRM' });
 </script>
 
 <template>
-  <div class="gks-review">
-    <header class="gks-review__head">
-      <span class="gks-eyebrow">CRM</span>
-      <h1 class="gks-review__title">Материал шалгах</h1>
-      <p v-if="data" class="gks-review__count gks-tnum">{{ data.meta.total }} материал дараалалд</p>
+  <div class="gks-page">
+    <header class="gks-page__head">
+      <div class="gks-page__heading">
+        <span class="gks-eyebrow">CRM</span>
+        <h1 class="gks-page__title">Материал шалгах</h1>
+        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} материал дараалалд</p>
+      </div>
     </header>
 
     <DsCard>
-      <div class="gks-review__filters">
-        <DsInput v-model="q" icon-left="search" type="search" placeholder="Хэргийн код, хэрэглэгчээр хайх…" />
+      <div class="gks-filters">
+        <DsInput
+          v-model="q"
+          class="gks-filters__search"
+          icon-left="search"
+          type="search"
+          placeholder="Хэргийн код, хэрэглэгчээр хайх…  ( / )"
+        />
         <DsSelect v-model="stage" :options="STAGE_OPTIONS" aria-label="Шат" />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
       </div>
@@ -150,24 +158,24 @@ useHead({ title: 'Материал шалгах · CRM' });
     </p>
     <p v-if="error" class="gks-review__error">{{ error }}</p>
 
-    <div class="gks-review__grid">
-      <aside class="gks-review__queue">
-        <div v-if="pending && !data" class="gks-review__skeleton">
-          <div v-for="n in 5" :key="n" class="gks-review__skeleton-row" />
+    <div class="gks-split">
+      <aside class="gks-split__list gks-queue-list">
+        <div v-if="pending && !data" class="gks-skeleton gks-skeleton--tall">
+          <div v-for="n in 5" :key="n" class="gks-skeleton__row" />
         </div>
-        <p v-else-if="!data?.items.length" class="gks-review__empty">Шалгах материал алга байна.</p>
+        <p v-else-if="!data?.items.length" class="gks-empty">Шалгах материал алга байна.</p>
 
         <button
           v-for="item in data?.items ?? []"
           :key="item.id"
           type="button"
-          class="gks-review__item"
-          :class="{ 'gks-review__item--active': item.id === selectedId }"
+          class="gks-queue-item"
+          :class="{ 'gks-queue-item--active': item.id === selectedId }"
           @click="select(item.id)"
         >
-          <span class="gks-review__item-name">{{ item.template.nameMn }}</span>
-          <span class="gks-review__item-case gks-tnum">{{ item.case.code }} · {{ item.case.user.name ?? item.case.user.email }}</span>
-          <span class="gks-review__item-meta">
+          <span class="gks-queue-item__name">{{ item.template.nameMn }}</span>
+          <span class="gks-queue-item__sub gks-tnum">{{ item.case.code }} · {{ item.case.user.name ?? item.case.user.email }}</span>
+          <span class="gks-queue-item__meta">
             <DsBadge :tone="DOCUMENT_STATUS_TONE[item.status]">{{ DOCUMENT_STATUS_LABELS[item.status] }}</DsBadge>
             <span class="gks-review__waited">{{ waitedFor(item.submittedAt) }}</span>
           </span>
@@ -193,7 +201,7 @@ useHead({ title: 'Материал шалгах · CRM' });
           @upload="onUpload"
           @open="openFile"
         />
-        <DsCard v-else padding="var(--sp-8)"><p class="gks-review__empty">Зүүн талаас материал сонгоно уу.</p></DsCard>
+        <DsCard v-else padding="var(--sp-8)"><p class="gks-empty">Зүүн талаас материал сонгоно уу.</p></DsCard>
 
         <DsCard v-if="upcoming.length" title="Хугацаа дөхсөн" eyebrow="Дараагийн 7 хоног">
           <ul class="gks-review__due">
@@ -212,50 +220,14 @@ useHead({ title: 'Материал шалгах · CRM' });
 </template>
 
 <style scoped>
-.gks-review { display: flex; flex-direction: column; gap: var(--sp-5); }
-.gks-review__title { margin-top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
-.gks-review__count { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-review__filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--sp-3); }
 .gks-review__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
 .gks-review__scope { font-size: var(--fs-body-sm); color: var(--text-muted); }
 .gks-review__clear { border: 0; background: none; padding: 0; font: inherit; color: var(--brand-700); text-decoration: underline; cursor: pointer; }
-
-.gks-review__grid { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: var(--sp-4); align-items: start; }
-.gks-review__queue { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-review__item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  text-align: left;
-  padding: var(--sp-3);
-  border: var(--border-hair) solid var(--line-soft);
-  border-radius: var(--radius-2);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: var(--transition-control);
-}
-.gks-review__item:hover { background: var(--surface-hover); }
-.gks-review__item--active { border-color: var(--brand-600); background: var(--surface-selected); }
-.gks-review__item-name { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
-.gks-review__item-case { font-size: var(--fs-caption); color: var(--text-muted); }
-.gks-review__item-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-1); }
 .gks-review__waited { font-size: var(--fs-micro); color: var(--text-subtle); }
-
 .gks-review__detail { display: flex; flex-direction: column; gap: var(--sp-4); }
-.gks-review__empty { text-align: center; color: var(--text-muted); }
-.gks-review__skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gks-review__skeleton-row { height: 72px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }
-
 .gks-review__due { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-body-sm); }
-.gks-review__due li { display: grid; grid-template-columns: 110px 1fr auto; gap: var(--sp-2); align-items: baseline; }
+.gks-review__due li { display: grid; grid-template-columns: minmax(140px, auto) 1fr auto; gap: var(--sp-3); align-items: baseline; }
 .gks-review__due-link { color: var(--brand-700); text-decoration: none; }
 .gks-review__due-date { color: var(--text-subtle); font-size: var(--fs-caption); }
-
-.gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-3); margin-top: var(--sp-2); }
-.gks-pager__status { font-size: var(--fs-caption); color: var(--text-muted); }
-
-@media (max-width: 1100px) {
-  .gks-review__grid { grid-template-columns: 1fr; }
-  .gks-review__filters { grid-template-columns: 1fr; }
-}
 </style>
+
