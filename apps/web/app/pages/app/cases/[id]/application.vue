@@ -56,7 +56,7 @@ function formatDate(value: string | null): string {
       <dl class="gks-app-stage__facts">
         <div>
           <dt>Сургууль</dt>
-          <dd>{{ application.university?.nameMn ?? UNKNOWN_LABEL }}</dd>
+          <dd>{{ universityName(application.university, UNKNOWN_LABEL) }}</dd>
         </div>
         <div>
           <dt>Хөтөлбөр</dt>

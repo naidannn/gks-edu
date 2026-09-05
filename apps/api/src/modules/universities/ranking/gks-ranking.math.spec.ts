@@ -16,6 +16,7 @@ function blankSchool(overrides: Partial<RankingInput> = {}): RankingInput {
   return {
     id: overrides.id ?? 'a',
     nameMn: overrides.nameMn ?? 'Тест сургууль',
+    nameEn: overrides.nameEn ?? 'Test University',
     theKoreaRank: null,
     agentContractStatus: 'NONE',
     isGksEligible: false,

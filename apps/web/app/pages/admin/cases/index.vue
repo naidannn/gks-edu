@@ -122,7 +122,7 @@ useHead({ title: 'Хэрэг · CRM' });
             <td class="gks-tnum" data-label="Код">{{ c.code }}</td>
             <td data-label="Хэрэглэгч">{{ c.user.name ?? c.user.email }}</td>
             <td data-label="Үйлчилгээ">{{ SERVICE_LABELS[c.serviceType] }}</td>
-            <td data-label="Сургууль">{{ c.university?.nameMn ?? '—' }}</td>
+            <td data-label="Сургууль">{{ universityName(c.university) }}</td>
             <td data-label="Үе шат"><DsBadge :tone="CASE_STAGE_TONE[c.stage]">{{ CASE_STAGE_LABELS[c.stage] }}</DsBadge></td>
             <td class="gks-tnum" data-label="Үүсгэсэн">{{ formatDate(c.createdAt) }}</td>
           </tr>

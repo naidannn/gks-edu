@@ -69,7 +69,7 @@ export interface RequirementRule {
   sortOrder: number;
   isActive: boolean;
   template?: Pick<DocumentTemplate, 'id' | 'code' | 'nameMn' | 'needsTranslation' | 'needsPhysicalOriginal'>;
-  university?: { id: string; nameMn: string } | null;
+  university?: { id: string; nameMn: string; nameEn: string } | null;
 }
 
 export interface CaseConditions {

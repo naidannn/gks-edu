@@ -16,7 +16,7 @@ import { profileCompleteness } from './profile-completeness.js';
 const TERMINAL_STAGES: CaseStage[] = [CaseStage.COMPLETED, CaseStage.CANCELLED, CaseStage.REJECTED];
 
 const CASE_INCLUDE = {
-  university: { select: { id: true, nameMn: true, slug: true } },
+  university: { select: { id: true, nameMn: true, nameEn: true, slug: true } },
   // The client plans around these three dates (1H-09). `internalDeadline` is
   // the one the portal counts down to — the school's date is shown only so
   // the buffer is visible.

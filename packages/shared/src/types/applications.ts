@@ -38,7 +38,7 @@ export interface Application {
   interviewNote: string | null;
   decidedAt: string | null;
   note: string | null;
-  university: { id: string; nameMn: string; nameKo: string; logoPath: string | null } | null;
+  university: { id: string; nameMn: string; nameEn: string; nameKo: string; logoPath: string | null } | null;
   program: { id: string; nameMn: string; level: string } | null;
   intake: { id: string; year: number; month: number } | null;
   results: ApplicationResult[];
@@ -107,7 +107,7 @@ export interface FxRate {
 
 export interface UniversityApplicationReportRow {
   universityId: string | null;
-  university: { id: string; nameMn: string; nameKo: string } | null;
+  university: { id: string; nameMn: string; nameEn: string; nameKo: string } | null;
   status: ApplicationStatus;
   count: number;
 }

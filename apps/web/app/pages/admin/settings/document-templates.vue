@@ -89,10 +89,7 @@ const SERVICE_OPTIONS = Object.entries(SERVICE_LABELS) as [ServiceType, string][
 const EDUCATION_OPTIONS = Object.entries(EDUCATION_LEVEL_LABELS) as [EducationLevel, string][];
 const GUARANTOR_OPTIONS = Object.entries(GUARANTOR_TYPE_LABELS) as [GuarantorType, string][];
 const RELATION_OPTIONS = Object.entries(GUARANTOR_RELATION_LABELS) as [GuarantorRelation, string][];
-const UNIVERSITY_OPTIONS = computed(() => [
-  { value: '', label: 'Бүх сургууль' },
-  ...universities.value.map((u) => ({ value: u.id, label: u.nameMn })),
-]);
+const UNIVERSITY_OPTIONS = computed(() => toUniversityOptions(universities.value, 'Бүх сургууль'));
 
 function toggle<T>(list: T[], value: T) {
   const index = list.indexOf(value);
@@ -177,7 +174,7 @@ function describe(rule: RequirementRule): string {
   if (rule.educationLevels.length) parts.push(rule.educationLevels.map((e) => EDUCATION_LEVEL_LABELS[e]).join(', '));
   if (rule.guarantorTypes.length) parts.push(rule.guarantorTypes.map((g) => GUARANTOR_TYPE_LABELS[g]).join(', '));
   if (rule.guarantorRelations.length) parts.push(rule.guarantorRelations.map((r) => GUARANTOR_RELATION_LABELS[r]).join(', '));
-  if (rule.university) parts.push(rule.university.nameMn);
+  if (rule.university) parts.push(universityName(rule.university));
   return parts.length ? parts.join(' · ') : 'Бүх тохиолдолд';
 }
 
@@ -276,7 +273,13 @@ useHead({ title: 'Материалын загвар · CRM' });
             <div class="gks-form-grid">
               <DsSelect v-model="ruleDraft.stage" label="Шат" :options="STAGE_OPTIONS" />
               <DsSelect v-model="ruleDraft.necessity" label="Шаардлага" :options="NECESSITY_OPTIONS" />
-              <DsSelect v-model="ruleDraft.universityId" label="Сургууль" :options="UNIVERSITY_OPTIONS" hint="Тухайн сургуулийн нэмэлт шаардлага" />
+              <DsCombobox
+                v-model="ruleDraft.universityId"
+                label="Сургууль"
+                :options="UNIVERSITY_OPTIONS"
+                :loading="pending"
+                hint="Тухайн сургуулийн нэмэлт шаардлага"
+              />
               <DsInput v-model="ruleDraft.sortOrder" label="Эрэмбэ" type="number" inputmode="numeric" />
             </div>
 

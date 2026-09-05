@@ -112,6 +112,7 @@ export interface AdmissionBoardUniversity {
   id: string;
   slug: string;
   nameMn: string;
+  nameEn: string;
   logoPath: string | null;
   cityMn: string;
 }
@@ -200,6 +201,7 @@ export interface IntakeResearchRun {
   id: string;
   universityId: string;
   universityNameMn: string;
+  universityNameEn: string;
   levels: ProgramLevel[];
   year: number;
   status: IntakeResearchStatus;

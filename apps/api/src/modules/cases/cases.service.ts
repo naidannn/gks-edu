@@ -63,7 +63,7 @@ export class CasesService {
   async findMine(userId: string) {
     return this.prisma.case.findMany({
       where: { userId },
-      include: { university: { select: { id: true, nameMn: true } } },
+      include: { university: { select: { id: true, nameMn: true, nameEn: true } } },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -75,7 +75,7 @@ export class CasesService {
         where,
         include: {
           user: { select: { id: true, name: true, email: true } },
-          university: { select: { id: true, nameMn: true } },
+          university: { select: { id: true, nameMn: true, nameEn: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: query.skip,
@@ -109,7 +109,7 @@ export class CasesService {
       // `client` lets a case-scoped URL resolve to the client workspace that
       // now owns these screens.
       user: { select: { id: true, name: true, email: true, client: { select: { id: true, code: true } } } },
-      university: { select: { id: true, nameMn: true } },
+      university: { select: { id: true, nameMn: true, nameEn: true } },
       assignedConsultant: { select: { id: true, name: true } },
       assignedDocOfficer: { select: { id: true, name: true } },
       contract: true,

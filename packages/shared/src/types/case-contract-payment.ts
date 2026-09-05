@@ -144,7 +144,7 @@ export interface CaseListItem {
   createdAt: string;
   updatedAt: string;
   user: PersonRef;
-  university: { id: string; nameMn: string } | null;
+  university: { id: string; nameMn: string; nameEn: string } | null;
 }
 
 export interface CaseDetail extends CaseListItem {

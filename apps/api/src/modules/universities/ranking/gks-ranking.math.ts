@@ -40,6 +40,7 @@ export const DEFAULT_RANKING_WEIGHTS: RankingWeights = {
 export interface RankingInput {
   id: string;
   nameMn: string;
+  nameEn: string;
   theKoreaRank: number | null;
   agentContractStatus: AgentContractStatus;
   isGksEligible: boolean;
@@ -87,6 +88,7 @@ export interface ScoreParts {
 export interface ScoredUniversity {
   id: string;
   nameMn: string;
+  nameEn: string;
   score: number;
   parts: ScoreParts;
   boost: number;
@@ -259,6 +261,7 @@ export function rankAll(
     return {
       id: input.id,
       nameMn: input.nameMn,
+      nameEn: input.nameEn,
       score: Math.round(blend(parts, weights, input.gksRankBoost) * 100) / 100,
       parts,
       boost: input.gksRankBoost,

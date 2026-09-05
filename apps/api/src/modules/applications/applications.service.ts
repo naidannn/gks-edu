@@ -29,7 +29,7 @@ import type {
 } from './dto/application.dto.js';
 
 const APPLICATION_INCLUDE = {
-  university: { select: { id: true, nameMn: true, nameKo: true, logoPath: true } },
+  university: { select: { id: true, nameMn: true, nameEn: true, nameKo: true, logoPath: true } },
   program: { select: { id: true, nameMn: true, level: true } },
   intake: { select: { id: true, year: true, month: true } },
   results: { orderBy: { round: 'asc' } },
@@ -116,7 +116,7 @@ export class ApplicationsService {
     });
     const universities = await this.prisma.university.findMany({
       where: { id: { in: rows.map((row) => row.universityId).filter((id): id is string => id !== null) } },
-      select: { id: true, nameMn: true, nameKo: true },
+      select: { id: true, nameMn: true, nameEn: true, nameKo: true },
     });
     const byId = new Map(universities.map((university) => [university.id, university]));
 

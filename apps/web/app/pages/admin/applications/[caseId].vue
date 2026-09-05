@@ -201,7 +201,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 
         <dl class="gks-facts">
           <div><dt>Хэрэглэгч</dt><dd>{{ application.case.user?.name ?? '—' }}</dd></div>
-          <div><dt>Сургууль</dt><dd>{{ application.university?.nameMn ?? UNKNOWN_LABEL }}</dd></div>
+          <div><dt>Сургууль</dt><dd>{{ universityName(application.university, UNKNOWN_LABEL) }}</dd></div>
           <div><dt>Илгээсэн</dt><dd class="gks-tnum">{{ formatDate(application.submittedAt) }}</dd></div>
           <div><dt>Материал</dt><dd class="gks-tnum">{{ readiness?.requiredTotal ?? 0 }}-с {{ (readiness?.requiredTotal ?? 0) - (readiness?.missing.length ?? 0) }} бүрдсэн</dd></div>
         </dl>

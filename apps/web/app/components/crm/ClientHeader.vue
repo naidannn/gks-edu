@@ -23,7 +23,7 @@ const consultant = computed(
     ?? 'Хариуцагчгүй',
 );
 const target = computed(() => {
-  const university = props.activeCase?.university?.nameMn ?? props.client.targetUniversity?.nameMn;
+  const university = universityName(props.activeCase?.university ?? props.client.targetUniversity, '');
   const major = props.client.targetMajor;
   return [university, major].filter(Boolean).join(' · ') || null;
 });

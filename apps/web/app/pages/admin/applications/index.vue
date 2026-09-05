@@ -62,7 +62,7 @@ onMounted(load);
 const byUniversity = computed(() => {
   const map = new Map<string, { name: string; total: number; accepted: number; rejected: number }>();
   for (const row of report.value) {
-    const key = row.university?.nameMn ?? 'Сургууль сонгоогүй';
+    const key = universityName(row.university, NO_UNIVERSITY_LABEL);
     const entry = map.get(key) ?? { name: key, total: 0, accepted: 0, rejected: 0 };
     entry.total += row.count;
     if (row.status === 'ACCEPTED') entry.accepted += row.count;
@@ -142,7 +142,7 @@ useHead({ title: 'Мэдүүлэг · CRM' });
           <tr v-for="item in data.items" :key="item.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/applications/${item.case.id}`)" @keydown.enter="navigateTo(`/admin/applications/${item.case.id}`)">
             <td class="gks-tnum" data-label="Хэрэг">{{ item.case.code }}</td>
             <td data-label="Хэрэглэгч">{{ item.case.user?.name ?? '—' }}</td>
-            <td data-label="Сургууль">{{ item.university?.nameMn ?? UNKNOWN_LABEL }}</td>
+            <td data-label="Сургууль">{{ universityName(item.university, UNKNOWN_LABEL) }}</td>
             <td data-label="Үйлчилгээ">{{ SERVICE_LABELS[item.case.serviceType] }}</td>
             <td data-label="Төлөв"><DsBadge :tone="APPLICATION_STATUS_TONE[item.status]">{{ APPLICATION_STATUS_LABELS[item.status] }}</DsBadge></td>
             <td class="gks-tnum" data-label="Илгээсэн">{{ formatDate(item.submittedAt) }}</td>

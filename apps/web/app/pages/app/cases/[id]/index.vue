@@ -55,7 +55,7 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
         </DsBadge>
       </template>
       <p class="gks-overview__intake-term">
-        {{ gksCase.university?.nameMn ?? 'Сургууль сонгоогүй' }} — {{ intake.year }} оны
+        {{ universityName(gksCase.university, NO_UNIVERSITY_LABEL) }} — {{ intake.year }} оны
         {{ INTAKE_MONTH_LABELS[intake.month] ?? `${intake.month}-р сар` }} ·
         {{ PROGRAM_LEVEL_LABELS[intake.level] }}
       </p>

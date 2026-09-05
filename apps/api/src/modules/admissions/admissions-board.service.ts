@@ -84,7 +84,7 @@ export class AdmissionsBoardService {
         requirementNote: true,
         note: true,
         status: true,
-        university: { select: { id: true, slug: true, nameMn: true, logoPath: true, cityMn: true } },
+        university: { select: { id: true, slug: true, nameMn: true, nameEn: true, logoPath: true, cityMn: true } },
       },
     });
 

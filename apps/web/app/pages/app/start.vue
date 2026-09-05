@@ -86,10 +86,8 @@ watch(
 const profile = computed(() => overview.value?.profile ?? null);
 const openServices = computed(() => overview.value?.openServiceTypes ?? []);
 
-const universityOptions = computed(() => [
-  { value: '', label: 'Дараа шийдье / зөвлөхтэй ярина' },
-  ...catalogue.universities.value.map((u) => ({ value: u.id, label: `${u.nameMn} · ${u.cityMn}` })),
-]);
+const universityOptions = computed(() =>
+  toUniversityOptions(catalogue.universities.value, 'Дараа шийдье / зөвлөхтэй ярина'));
 
 const selected = computed(() => services.value.find((s) => s.serviceType === chosen.value) ?? null);
 const selectedUniversity = computed(
@@ -223,11 +221,11 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
         Одоо шийдээгүй бол хоосон орхиж болно — зөвлөх тантай хамт сонгоно. Сонголтоо дараа ч өөрчилж болно.
       </p>
       <div class="gks-start__fields">
-        <DsSelect
+        <DsCombobox
           v-model="universityId"
           label="Сургууль"
           :options="universityOptions"
-          :disabled="catalogue.loading.value"
+          :loading="catalogue.loading.value"
         />
         <DsInput v-model="targetMajor" label="Зорьж буй мэргэжил" placeholder="Компьютерийн ухаан" />
         <DsSelect
@@ -265,7 +263,7 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
       <dl class="gks-start__summary">
         <div><dt>Гэрээ байгуулагч</dt><dd>{{ profile?.fullName ?? '—' }}</dd></div>
         <div><dt>Үйлчилгээ</dt><dd>{{ selected ? SERVICE_LABELS[selected.serviceType] : '—' }}</dd></div>
-        <div><dt>Сургууль</dt><dd>{{ selectedUniversity?.nameMn ?? 'Сонгоогүй' }}</dd></div>
+        <div><dt>Сургууль</dt><dd>{{ universityName(selectedUniversity, 'Сонгоогүй') }}</dd></div>
         <div>
           <dt>Элсэлтийн улирал</dt>
           <dd>

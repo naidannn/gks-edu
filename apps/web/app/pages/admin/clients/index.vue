@@ -301,7 +301,7 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
                 <span>
                   <span>{{ SERVICE_LABELS[c.activeCase?.serviceType ?? c.primaryServiceType] }}</span>
                   <span class="gks-cell-sub">
-                    {{ c.activeCase?.university?.nameMn ?? c.targetUniversity?.nameMn ?? '—' }}
+                    {{ universityName(c.activeCase?.university ?? c.targetUniversity) }}
                   </span>
                 </span>
               </td>

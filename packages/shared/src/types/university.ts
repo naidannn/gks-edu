@@ -323,6 +323,7 @@ export type GksRankingWeights = Omit<GksRankingConfig, 'id' | 'updatedAt' | 'upd
 export interface GksRankingPreviewRow {
   rank: number;
   nameMn: string;
+  nameEn: string;
   score: number;
   boost: number;
   theKoreaRank: number | null;
@@ -341,5 +342,5 @@ export interface GksRankingRecomputeSummary {
   /** Distinct positions handed out — fewer than `scored` when schools tie. */
   ranked: number;
   durationMs: number;
-  top: { rank: number; nameMn: string; score: number }[];
+  top: { rank: number; nameMn: string; nameEn: string; score: number }[];
 }

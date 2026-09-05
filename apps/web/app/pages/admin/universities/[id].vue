@@ -312,7 +312,7 @@ function intakeTone(status: IntakeStatus): BadgeTone {
   return 'info';
 }
 
-useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM` });
+useHead({ title: () => `${universityName(university.value, 'Сургууль')} · CRM` });
 </script>
 
 <template>
@@ -326,9 +326,9 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
           <NuxtLink to="/admin/universities" class="gks-page__back">
             <DsIcon name="arrow-left" :size="16" /> Сургуулийн жагсаалт
           </NuxtLink>
-          <h1 class="gks-page__title">{{ university.nameMn }}</h1>
+          <h1 class="gks-page__title">{{ universityName(university) }}</h1>
           <p class="gks-page__hint">
-            {{ university.nameEn }} · {{ university.nameKo }} · {{ university.cityMn }}, {{ university.regionMn }}
+            {{ university.nameMn }} · {{ university.nameKo }} · {{ university.cityMn }}, {{ university.regionMn }}
           </p>
           <div class="gks-form-page__badges">
             <DsBadge :tone="university.isPublished ? 'success' : 'neutral'">
@@ -584,7 +584,7 @@ useHead({ title: () => `${university.value?.nameMn ?? 'Сургууль'} · CRM
         <p v-if="deleteError" class="gks-form-page__error">{{ deleteError }}</p>
         <div class="gks-form-actions">
           <template v-if="confirmDelete">
-            <span class="gks-form-page__confirm">«{{ university.nameMn }}»-г бүрмөсөн устгах уу?</span>
+            <span class="gks-form-page__confirm">«{{ universityName(university) }}»-г бүрмөсөн устгах уу?</span>
             <DsButton variant="secondary" @click="confirmDelete = false">Болих</DsButton>
             <DsButton variant="danger" icon-left="trash-2" :loading="deleting" @click="remove">Тийм, устга</DsButton>
           </template>

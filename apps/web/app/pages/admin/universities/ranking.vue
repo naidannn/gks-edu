@@ -284,7 +284,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
                   @click="expanded = expanded === row.rank ? null : row.rank"
                 >
                   <td class="gks-tnum gks-table__num">{{ row.rank }}</td>
-                  <td>{{ row.nameMn }}</td>
+                  <td>{{ universityName(row) }}</td>
                   <td class="gks-tnum gks-table__num">{{ row.score.toFixed(2) }}</td>
                   <td class="gks-tnum gks-table__num">
                     <span v-if="row.boost">{{ row.boost > 0 ? '+' : '' }}{{ row.boost }}</span>

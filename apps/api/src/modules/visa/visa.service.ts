@@ -41,7 +41,7 @@ const VISA_INCLUDE = {
       stage: true,
       userId: true,
       user: { select: { id: true, name: true, phone: true } },
-      university: { select: { id: true, nameMn: true } },
+      university: { select: { id: true, nameMn: true, nameEn: true } },
     },
   },
 } satisfies Prisma.VisaCaseInclude;

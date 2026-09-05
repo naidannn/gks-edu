@@ -5,7 +5,6 @@ import type {
   IntakeCandidate,
   IntakeResearchRun,
   ProgramLevel,
-  UniversityCard,
 } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
@@ -45,10 +44,8 @@ const MONTH_OPTIONS = [3, 6, 9, 12].map((m) => ({
 }));
 const STATUS_OPTIONS = Object.entries(INTAKE_STATUS_LABELS).map(([value, label]) => ({ value, label }));
 
-const universityOptions = computed(() => [
-  { value: '', label: 'Сургууль сонгоно уу' },
-  ...catalogue.universities.value.map((u: UniversityCard) => ({ value: u.id, label: `${u.nameMn} · ${u.cityMn}` })),
-]);
+const universityOptions = computed(() =>
+  toUniversityOptions(catalogue.universities.value, 'Сургууль сонгоно уу'));
 
 onMounted(async () => {
   catalogue.load();
@@ -225,7 +222,7 @@ function formatDate(value: string | null): string {
         <span class="gks-eyebrow">Элсэлт</span>
         <h1 class="gks-page__title">{{ editingId ? 'Элсэлт засах' : 'Шинэ элсэлт нэмэх' }}</h1>
         <p v-if="existing" class="gks-page__hint">
-          {{ existing.university?.nameMn }} — {{ existing.year }} ·
+          {{ universityName(existing.university) }} — {{ existing.year }} ·
           {{ INTAKE_MONTH_LABELS[existing.month] ?? `${existing.month}-р сар` }}
         </p>
       </div>
@@ -263,7 +260,12 @@ function formatDate(value: string | null): string {
       </p>
 
       <div class="gks-intake-form__research-controls">
-        <DsSelect v-model="form.universityId" label="Сургууль" :options="universityOptions" />
+        <DsCombobox
+          v-model="form.universityId"
+          label="Сургууль"
+          :options="universityOptions"
+          :loading="catalogue.loading.value"
+        />
         <DsSelect v-model="researchYear" label="Жил" :options="RESEARCH_YEARS" />
       </div>
 
@@ -360,11 +362,12 @@ function formatDate(value: string | null): string {
 
       <template v-else>
         <div class="gks-form-grid">
-          <DsSelect
+          <DsCombobox
             v-model="form.universityId"
             label="Сургууль"
             :options="universityOptions"
             :disabled="Boolean(editingId)"
+            :loading="catalogue.loading.value"
             :error="errors.universityId"
           />
           <DsSelect v-model="form.level" label="Түвшин" :options="LEVEL_OPTIONS" :error="errors.level" />

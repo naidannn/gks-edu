@@ -86,7 +86,7 @@ function formatDue(value: string | null): string | null {
         <DsButton size="sm" variant="accent" :loading="saving" @click="saveFlight">Хадгалах</DsButton>
         <p v-if="error" class="gks-dep__error">{{ error }}</p>
         <p v-if="plan.case.university" class="gks-dep__uni">
-          <DsIcon name="map-pin" :size="14" /> {{ plan.case.university.nameMn }} · {{ plan.case.university.cityMn }}
+          <DsIcon name="map-pin" :size="14" /> {{ universityName(plan.case.university) }} · {{ plan.case.university.cityMn }}
         </p>
       </DsCard>
 

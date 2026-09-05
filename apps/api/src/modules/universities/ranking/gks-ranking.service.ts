@@ -28,7 +28,7 @@ export interface RecomputeSummary {
   scored: number;
   ranked: number;
   durationMs: number;
-  top: { rank: number; nameMn: string; score: number }[];
+  top: { rank: number; nameMn: string; nameEn: string; score: number }[];
 }
 
 /**
@@ -102,7 +102,12 @@ export class GksRankingService {
       scored: scored.length,
       ranked: scored.length ? scored[scored.length - 1]!.rank : 0,
       durationMs: Date.now() - startedAt,
-      top: scored.slice(0, 10).map((row) => ({ rank: row.rank, nameMn: row.nameMn, score: row.score })),
+      top: scored.slice(0, 10).map((row) => ({
+        rank: row.rank,
+        nameMn: row.nameMn,
+        nameEn: row.nameEn,
+        score: row.score,
+      })),
     };
 
     this.logger.log(`GKS ranking recomputed: ${summary.scored} schools in ${summary.durationMs} ms`);
@@ -126,6 +131,7 @@ export class GksRankingService {
       rows: scored.slice(0, limit).map((row) => ({
         rank: row.rank,
         nameMn: row.nameMn,
+        nameEn: row.nameEn,
         score: row.score,
         boost: row.boost,
         theKoreaRank: row.theKoreaRank,
@@ -167,6 +173,7 @@ export class GksRankingService {
         select: {
           id: true,
           nameMn: true,
+          nameEn: true,
           theKoreaRank: true,
           agentContractStatus: true,
           isGksEligible: true,
@@ -214,6 +221,7 @@ export class GksRankingService {
       return {
         id: university.id,
         nameMn: university.nameMn,
+        nameEn: university.nameEn,
         theKoreaRank: university.theKoreaRank,
         agentContractStatus: university.agentContractStatus,
         isGksEligible: university.isGksEligible,

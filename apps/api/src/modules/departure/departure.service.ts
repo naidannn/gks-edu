@@ -11,7 +11,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const PLAN_INCLUDE = {
   items: { orderBy: { sortOrder: 'asc' } },
-  case: { select: { id: true, code: true, userId: true, university: { select: { id: true, nameMn: true, cityMn: true } } } },
+  case: { select: { id: true, code: true, userId: true, university: { select: { id: true, nameMn: true, nameEn: true, cityMn: true } } } },
 } satisfies Prisma.DeparturePlanInclude;
 
 /**

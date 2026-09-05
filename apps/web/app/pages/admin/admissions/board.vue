@@ -110,7 +110,7 @@ function ownerLabel(row: AdmissionBoardCase): string {
     <section v-for="group in groups" v-else :key="group.intake.id" class="gks-board__group">
       <header class="gks-board__group-head">
         <div>
-          <h2>{{ group.intake.university.nameMn }}</h2>
+          <h2>{{ universityName(group.intake.university) }}</h2>
           <p>
             {{ group.intake.year }} оны
             {{ INTAKE_MONTH_LABELS[group.intake.month] ?? `${group.intake.month}-р сар` }} ·

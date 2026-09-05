@@ -176,7 +176,7 @@ useHead({ title: 'Виз · CRM' });
           <dl class="gks-facts">
             <div><dt>Хэрэглэгч</dt><dd>{{ current.case.user.name ?? '—' }}</dd></div>
             <div><dt>Утас</dt><dd class="gks-tnum">{{ current.case.user.phone ?? '—' }}</dd></div>
-            <div><dt>Сургууль</dt><dd>{{ current.case.university?.nameMn ?? UNKNOWN_LABEL }}</dd></div>
+            <div><dt>Сургууль</dt><dd>{{ universityName(current.case.university, UNKNOWN_LABEL) }}</dd></div>
           </dl>
 
           <div class="gks-visadm__row">

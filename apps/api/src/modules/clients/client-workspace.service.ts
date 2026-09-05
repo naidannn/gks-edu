@@ -34,7 +34,7 @@ const OPEN_DOC_STATUSES: DocumentStatus[] = [
 const DEADLINE_WARNING_DAYS = 7;
 
 const WORKSPACE_CASE_INCLUDE = {
-  university: { select: { id: true, nameMn: true } },
+  university: { select: { id: true, nameMn: true, nameEn: true } },
   intake: { select: { id: true, year: true, month: true } },
   contract: { include: { collateralContract: true } },
   payments: { orderBy: { createdAt: 'desc' } },

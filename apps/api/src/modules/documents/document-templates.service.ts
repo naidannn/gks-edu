@@ -22,7 +22,7 @@ export class DocumentTemplatesService {
   async getTemplate(id: string) {
     const template = await this.prisma.documentTemplate.findUnique({
       where: { id },
-      include: { rules: { include: { university: { select: { id: true, nameMn: true } } }, orderBy: { sortOrder: 'asc' } } },
+      include: { rules: { include: { university: { select: { id: true, nameMn: true, nameEn: true } } }, orderBy: { sortOrder: 'asc' } } },
     });
     if (!template) throw new NotFoundException(`Материалын загвар ${id} олдсонгүй`);
     return template;
@@ -67,7 +67,7 @@ export class DocumentTemplatesService {
       where,
       include: {
         template: { select: { id: true, code: true, nameMn: true, needsPhysicalOriginal: true, needsTranslation: true } },
-        university: { select: { id: true, nameMn: true } },
+        university: { select: { id: true, nameMn: true, nameEn: true } },
       },
       orderBy: [{ stage: 'asc' }, { sortOrder: 'asc' }],
     });

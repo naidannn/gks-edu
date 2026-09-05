@@ -41,10 +41,7 @@ const SERVICE_OPTIONS = [
 const SOURCE_OPTIONS = (Object.entries(LEAD_SOURCE_LABELS) as [LeadSource, string][])
   .map(([value, label]) => ({ value, label }));
 
-const universityOptions = computed(() => [
-  { value: '', label: 'Сургууль сонгоогүй' },
-  ...props.universities.map((u) => ({ value: u.id, label: `${u.nameMn} · ${u.cityMn}` })),
-]);
+const universityOptions = computed(() => toUniversityOptions(props.universities));
 
 const age = computed(() => clientAge(form.value));
 const isMinor = computed(() => isMinorForm(form.value));
@@ -116,11 +113,11 @@ const isMinor = computed(() => isMinorForm(form.value));
         :options="SERVICE_OPTIONS"
         :error="errors.primaryServiceType"
       />
-      <DsSelect
+      <DsCombobox
         v-model="form.targetUniversityId"
         label="Зорилтот сургууль"
         :options="universityOptions"
-        :disabled="loadingUniversities"
+        :loading="loadingUniversities"
       />
       <DsInput v-model="form.targetMajor" label="Зорьж буй мэргэжил" />
       <DsSelect v-if="variant === 'staff'" v-model="form.source" label="Хаанаас ирсэн" :options="SOURCE_OPTIONS" />

@@ -21,7 +21,7 @@ function stageTone(stage: CaseStage): 'neutral' | 'info' | 'success' | 'danger' 
           <p class="gks-case-card__code gks-tnum">{{ item.code }}</p>
           <p class="gks-case-card__service">
             {{ SERVICE_LABELS[item.serviceType] }}
-            <span v-if="item.university"> · {{ item.university.nameMn }}</span>
+            <span v-if="item.university"> · {{ universityName(item.university) }}</span>
           </p>
         </div>
         <DsBadge :tone="stageTone(item.stage)">{{ CASE_STAGE_LABELS[item.stage] }}</DsBadge>

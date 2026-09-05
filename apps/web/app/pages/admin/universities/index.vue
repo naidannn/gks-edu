@@ -275,8 +275,8 @@ useHead({ title: 'Сургууль · CRM' });
                   <DsIcon name="school" :size="16" />
                 </span>
                 <span>
-                  <span class="gks-cell-name">{{ u.nameMn }}</span>
-                  <span class="gks-cell-sub">{{ u.nameEn }}</span>
+                  <span class="gks-cell-name">{{ universityName(u) }}</span>
+                  <span class="gks-cell-sub">{{ universitySubName(u) }}</span>
                 </span>
               </div>
             </td>

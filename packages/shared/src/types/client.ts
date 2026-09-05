@@ -14,9 +14,17 @@ import type { LeadSource } from './lead-crm';
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type ClientStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
 
+/**
+ * How a school is named wherever it appears inside another record.
+ *
+ * Both names travel together: the office works from paperwork, which is in
+ * English, so that is what the CRM leads with (`universityName`), while the
+ * Mongolian one stays available for the line underneath it.
+ */
 export interface UniversityRef {
   id: string;
   nameMn: string;
+  nameEn: string;
 }
 
 export interface ConsultantRef {

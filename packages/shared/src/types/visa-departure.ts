@@ -35,7 +35,7 @@ export interface VisaCase {
     stage: CaseStage;
     userId: string;
     user: { id: string; name: string | null; phone: string | null };
-    university: { id: string; nameMn: string } | null;
+    university: { id: string; nameMn: string; nameEn: string } | null;
   };
 }
 
@@ -76,6 +76,6 @@ export interface DeparturePlan {
   emergencyNote: string | null;
   note: string | null;
   items: DepartureChecklistItem[];
-  case: { id: string; code: string; userId: string; university: { id: string; nameMn: string; cityMn: string } | null };
+  case: { id: string; code: string; userId: string; university: { id: string; nameMn: string; nameEn: string; cityMn: string } | null };
   progress: { total: number; done: number; percent: number };
 }

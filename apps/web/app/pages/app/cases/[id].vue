@@ -67,7 +67,7 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний хэр�
           <h1 class="gks-mycase__title gks-tnum">{{ gksCase.code }}</h1>
           <p class="gks-mycase__service">
             {{ SERVICE_LABELS[gksCase.serviceType] }}
-            <span v-if="gksCase.university"> · {{ gksCase.university.nameMn }}</span>
+            <span v-if="gksCase.university"> · {{ universityName(gksCase.university) }}</span>
           </p>
         </div>
         <DsBadge :tone="stageTone(gksCase.stage)">{{ CASE_STAGE_LABELS[gksCase.stage] }}</DsBadge>

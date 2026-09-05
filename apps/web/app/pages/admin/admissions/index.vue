@@ -227,8 +227,8 @@ function countdown(row: AdmissionListItem | Row): string {
             @keydown.enter="navigateTo(`/admin/admissions/new?id=${row.id}`)"
           >
             <td data-label="Сургууль">
-              <span class="gks-adm-admin__uni">{{ row.university.nameMn }}</span>
-              <small>{{ row.university.cityMn }}</small>
+              <span class="gks-adm-admin__uni">{{ universityName(row.university) }}</span>
+              <small>{{ universitySubName(row.university) }}</small>
             </td>
             <td class="gks-tnum" data-label="Элсэлт">
               {{ row.year }} · {{ INTAKE_MONTH_LABELS[row.month] ?? `${row.month}-р сар` }}

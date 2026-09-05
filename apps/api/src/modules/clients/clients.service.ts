@@ -74,7 +74,7 @@ const CASE_SUMMARY_SELECT = {
   stage: true,
   serviceType: true,
   createdAt: true,
-  university: { select: { id: true, nameMn: true } },
+  university: { select: { id: true, nameMn: true, nameEn: true } },
   contract: { select: { id: true, status: true, type: true, signedAt: true, createdAt: true } },
 } satisfies Prisma.CaseSelect;
 
@@ -93,7 +93,7 @@ const LIST_SELECT = {
   targetMajor: true,
   createdAt: true,
   updatedAt: true,
-  targetUniversity: { select: { id: true, nameMn: true } },
+  targetUniversity: { select: { id: true, nameMn: true, nameEn: true } },
   assignedConsultant: { select: { id: true, name: true, email: true } },
   user: {
     select: {

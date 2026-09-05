@@ -79,8 +79,8 @@ async function search(term: string) {
   uniHits.value = (universities?.items ?? []).map((u) => ({
     key: `uni:${u.id}`,
     to: `/admin/universities/${u.id}`,
-    label: u.nameMn,
-    sub: u.nameKo || u.nameEn || undefined,
+    label: universityName(u),
+    sub: universitySubName(u) ?? undefined,
     icon: 'school',
     group: 'Сургууль',
   }));
