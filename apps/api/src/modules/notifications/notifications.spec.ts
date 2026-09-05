@@ -57,6 +57,9 @@ describe('NOTIFICATION_TEMPLATES (1G-06)', () => {
         NotificationEvent.VISA_APPOINTMENT_DUE,
         NotificationEvent.VISA_RESULT,
         NotificationEvent.DEPARTURE_NEAR,
+        // Missing an intake deadline loses the place outright (1H-09); the
+        // other two admissions events stay off SMS.
+        NotificationEvent.INTAKE_DEADLINE_NEAR,
       ].sort(),
     );
   });

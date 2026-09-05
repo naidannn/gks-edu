@@ -5,7 +5,6 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
 import { GksRankingService } from './ranking/gks-ranking.service.js';
 import { LIST_CACHE_PATTERN } from './universities.service.js';
-import type { CreateIntakeTermDto, UpdateIntakeTermDto } from './dto/intake-term.dto.js';
 import type { CreateUniversityDto } from './dto/create-university.dto.js';
 import type { AdminUniversitySort, QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
 import type { UpdateUniversityDto } from './dto/update-university.dto.js';
@@ -104,15 +103,31 @@ const PROGRAM_FIELDS = {
   isPublished: true,
 } satisfies Prisma.UniversityProgramSelect;
 
+/**
+ * The catalogue detail page still lists a school's rounds. The dates and the
+ * provenance now live in the admissions module, so keep the two selects in
+ * step — a missing column here shows up as a blank date on that page.
+ */
 const INTAKE_FIELDS = {
   id: true,
   universityId: true,
   level: true,
   year: true,
   month: true,
+  openAt: true,
   applicationDeadline: true,
+  internalDeadline: true,
+  internalDeadlineIsManual: true,
+  classStartDate: true,
+  resultAnnouncedAt: true,
+  quota: true,
+  admissionFeeKrw: true,
+  requirementNote: true,
   status: true,
   note: true,
+  sourceUrl: true,
+  sourceType: true,
+  verifiedAt: true,
 } satisfies Prisma.IntakeTermSelect;
 
 const ORDER_BY: Record<AdminUniversitySort, (order: Prisma.SortOrder) => Prisma.UniversityOrderByWithRelationInput[]> = {
@@ -350,67 +365,6 @@ export class AdminUniversitiesService {
     await this.invalidate(slug);
   }
 
-  // --- Intake terms (1A-24) ---
-
-  async createIntake(universityId: string, dto: CreateIntakeTermDto) {
-    const slug = await this.requireSlug(universityId);
-
-    const duplicate = await this.prisma.intakeTerm.findFirst({
-      where: { universityId, level: dto.level, year: dto.year, month: dto.month },
-      select: { id: true },
-    });
-    if (duplicate) throw new ConflictException('Тухайн түвшний энэ элсэлтийн улирал аль хэдийн бүртгэгдсэн байна.');
-
-    const intake = await this.prisma.intakeTerm.create({
-      data: {
-        ...this.stripUndefined(dto),
-        universityId,
-        ...(dto.applicationDeadline ? { applicationDeadline: new Date(dto.applicationDeadline) } : {}),
-      } as Prisma.IntakeTermUncheckedCreateInput,
-      select: INTAKE_FIELDS,
-    });
-
-    await this.invalidate(slug);
-    return intake;
-  }
-
-  async updateIntake(universityId: string, intakeId: string, dto: UpdateIntakeTermDto) {
-    const slug = await this.requireSlug(universityId);
-    await this.requireIntake(universityId, intakeId);
-
-    const intake = await this.prisma.intakeTerm.update({
-      where: { id: intakeId },
-      data: {
-        ...this.stripUndefined(dto),
-        ...(dto.applicationDeadline !== undefined
-          ? { applicationDeadline: dto.applicationDeadline ? new Date(dto.applicationDeadline) : null }
-          : {}),
-      } as Prisma.IntakeTermUpdateInput,
-      select: INTAKE_FIELDS,
-    });
-
-    await this.invalidate(slug);
-    return intake;
-  }
-
-  async removeIntake(universityId: string, intakeId: string): Promise<void> {
-    const slug = await this.requireSlug(universityId);
-    await this.requireIntake(universityId, intakeId);
-
-    const [cases, applications] = await Promise.all([
-      this.prisma.case.count({ where: { intakeId } }),
-      this.prisma.application.count({ where: { intakeId } }),
-    ]);
-    if (cases + applications > 0) {
-      throw new ConflictException(
-        `Энэ элсэлтийн улирал ${cases} хэрэг, ${applications} мэдүүлэгт ашиглагдсан тул устгах боломжгүй.`,
-      );
-    }
-
-    await this.prisma.intakeTerm.delete({ where: { id: intakeId } });
-    await this.invalidate(slug);
-  }
-
   // --- Internals ---
 
   private buildWhere(query: QueryAdminUniversitiesDto): Prisma.UniversityWhereInput {
@@ -489,13 +443,6 @@ export class AdminUniversitiesService {
     if (!program) throw new NotFoundException(`Programme ${programId} not found`);
   }
 
-  private async requireIntake(universityId: string, intakeId: string): Promise<void> {
-    const intake = await this.prisma.intakeTerm.findFirst({
-      where: { id: intakeId, universityId },
-      select: { id: true },
-    });
-    if (!intake) throw new NotFoundException(`Intake ${intakeId} not found`);
-  }
 
   /**
    * Drops the public catalogue's read-through cache for the touched school(s)

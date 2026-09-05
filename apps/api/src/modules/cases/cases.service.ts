@@ -3,6 +3,7 @@ import { paginate } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { type CaseStage, Prisma, Role, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { AdmissionsService } from '../admissions/admissions.service.js';
 import type { AssignCaseDto } from './dto/assign-case.dto.js';
 import type { CreateCaseDto } from './dto/create-case.dto.js';
 import type { QueryCasesDto } from './dto/query-cases.dto.js';
@@ -20,17 +21,32 @@ const MAIN_LINE_MAX_SORT = 900;
 export class CasesService {
   private readonly logger = new Logger(CasesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly admissions: AdmissionsService,
+  ) {}
 
   async create(dto: CreateCaseDto) {
-    return this.createWithin(this.prisma, dto);
+    const created = await this.createWithin(this.prisma, dto);
+    // Outside `createWithin` so it also runs for the transactional callers,
+    // after their transaction has committed.
+    if (created.intakeId) await this.admissions.applyDeadlineToCase(created.id);
+    return created;
   }
 
   /**
    * Same as `create`, but inside a caller's transaction — registering a client
    * opens their first case in one atomic step (1B-14).
+   *
+   * The intake is validated before anything is written: until 1H, `intakeId`
+   * went into the row unchecked, so a case could point at another school's
+   * round, at the wrong level, or at one that closed months ago.
    */
   async createWithin(db: Db, dto: CreateCaseDto) {
+    if (dto.intakeId) {
+      await this.admissions.assertSelectable(dto.intakeId, dto.universityId, dto.serviceType);
+    }
+
     return db.case.create({
       data: {
         code: await this.generateCode(db),

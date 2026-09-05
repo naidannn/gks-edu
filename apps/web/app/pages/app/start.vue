@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PortalCaseDetail, ServiceOption, ServiceType } from '@gks/shared';
+import type { IntakeTerm, PortalCaseDetail, ServiceOption, ServiceType } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
 /**
@@ -21,7 +21,10 @@ const loading = ref(true);
 const step = ref<1 | 2 | 3>(1);
 const chosen = ref<ServiceType | null>(null);
 const universityId = ref('');
+const intakeId = ref('');
 const targetMajor = ref('');
+const intakes = ref<IntakeTerm[]>([]);
+const intakesLoading = ref(false);
 const submitting = ref(false);
 const errorMsg = ref<string | null>(null);
 
@@ -41,7 +44,44 @@ onMounted(async () => {
     step.value = 2;
   }
   if (typeof route.query.universityId === 'string') universityId.value = route.query.universityId;
+  // `/admissions` and the school page link straight to one round.
+  if (typeof route.query.intakeId === 'string') intakeId.value = route.query.intakeId;
 });
+
+/**
+ * The rounds this school still accepts, for the chosen service (1H-07).
+ *
+ * Loaded per school rather than up front: the catalogue has 135 of them, and
+ * a visitor only ever needs the one they picked.
+ */
+async function loadIntakes(schoolId: string) {
+  if (!schoolId) {
+    intakes.value = [];
+    return;
+  }
+  intakesLoading.value = true;
+  try {
+    intakes.value = await api.get<IntakeTerm[]>(`/admissions/university/${schoolId}`);
+  } catch {
+    // A missing calendar must not block opening a case — the round stays
+    // unset and a consultant picks it later.
+    intakes.value = [];
+  } finally {
+    intakesLoading.value = false;
+  }
+}
+
+watch(universityId, async (value, previous) => {
+  // Changing school invalidates a round chosen at the old one.
+  if (previous !== undefined && value !== previous) intakeId.value = '';
+  await loadIntakes(value);
+});
+watch(
+  () => chosen.value,
+  () => {
+    if (universityId.value) void loadIntakes(universityId.value);
+  },
+);
 
 const profile = computed(() => overview.value?.profile ?? null);
 const openServices = computed(() => overview.value?.openServiceTypes ?? []);
@@ -55,6 +95,33 @@ const selected = computed(() => services.value.find((s) => s.serviceType === cho
 const selectedUniversity = computed(
   () => catalogue.universities.value.find((u) => u.id === universityId.value) ?? null,
 );
+
+/** Only the levels this service may target — GKS covers all four (§4.3). */
+const eligibleIntakes = computed(() => {
+  const service = chosen.value;
+  if (!service) return intakes.value;
+  if (service === 'GKS_SCHOLARSHIP') return intakes.value;
+  return intakes.value.filter((intake) => intake.level === service);
+});
+
+const intakeOptions = computed(() => [
+  { value: '', label: 'Дараа шийдье / зөвлөхтэй ярина' },
+  ...eligibleIntakes.value.map((intake) => ({
+    value: intake.id,
+    label:
+      `${intake.year} · ${INTAKE_MONTH_LABELS[intake.month] ?? `${intake.month}-р сар`}` +
+      ` — ${PROGRAM_LEVEL_LABELS[intake.level]}` +
+      (intake.internalDeadline ? ` (бүртгэл ${formatIntakeDate(intake.internalDeadline)} хүртэл)` : ''),
+  })),
+]);
+
+const selectedIntake = computed(() => intakes.value.find((intake) => intake.id === intakeId.value) ?? null);
+
+function formatIntakeDate(value: string | null): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+}
 
 function isTaken(serviceType: ServiceType): boolean {
   return openServices.value.includes(serviceType);
@@ -74,6 +141,7 @@ async function submit() {
     const created = await api.post<PortalCaseDetail>('/me/cases', {
       serviceType: chosen.value,
       universityId: universityId.value || undefined,
+      intakeId: intakeId.value || undefined,
       targetMajor: targetMajor.value.trim() || undefined,
     });
     await refresh();
@@ -162,6 +230,29 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
           :disabled="catalogue.loading.value"
         />
         <DsInput v-model="targetMajor" label="Зорьж буй мэргэжил" placeholder="Компьютерийн ухаан" />
+        <DsSelect
+          v-if="universityId"
+          v-model="intakeId"
+          label="Элсэлтийн улирал"
+          :options="intakeOptions"
+          :disabled="intakesLoading"
+        />
+      </div>
+      <p v-if="universityId && !intakesLoading && !eligibleIntakes.length" class="gks-start__note">
+        Энэ сургуулийн элсэлтийн хугацаа хараахан бүртгэгдээгүй байна. Зөвлөх тантай хамт тодруулна.
+      </p>
+      <div v-else-if="selectedIntake" class="gks-start__intake">
+        <p>
+          <strong>Бүртгэлийн эцсийн хугацаа:</strong>
+          <span class="gks-tnum">{{ formatIntakeDate(selectedIntake.internalDeadline) }}</span>
+          <span v-if="selectedIntake.daysUntilInternalDeadline !== null">
+            ({{ selectedIntake.daysUntilInternalDeadline }} хоног үлдлээ)
+          </span>
+        </p>
+        <p>Хичээл эхлэх: <span class="gks-tnum">{{ formatIntakeDate(selectedIntake.classStartDate) }}</span></p>
+        <p class="gks-start__intake-hint">
+          Энэ огноо хүртэл материалаа бүрэн бүрдүүлсэн байх шаардлагатай.
+        </p>
       </div>
       <footer class="gks-start__actions">
         <DsButton variant="secondary" icon-left="arrow-left" @click="step = 1">Буцах</DsButton>
@@ -175,6 +266,16 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
         <div><dt>Гэрээ байгуулагч</dt><dd>{{ profile?.fullName ?? '—' }}</dd></div>
         <div><dt>Үйлчилгээ</dt><dd>{{ selected ? SERVICE_LABELS[selected.serviceType] : '—' }}</dd></div>
         <div><dt>Сургууль</dt><dd>{{ selectedUniversity?.nameMn ?? 'Сонгоогүй' }}</dd></div>
+        <div>
+          <dt>Элсэлтийн улирал</dt>
+          <dd>
+            <template v-if="selectedIntake">
+              {{ selectedIntake.year }} · {{ INTAKE_MONTH_LABELS[selectedIntake.month] ?? `${selectedIntake.month}-р сар` }}
+              <span class="gks-tnum">(бүртгэл {{ formatIntakeDate(selectedIntake.internalDeadline) }} хүртэл)</span>
+            </template>
+            <template v-else>Сонгоогүй</template>
+          </dd>
+        </div>
         <div><dt>Мэргэжил</dt><dd>{{ targetMajor || 'Сонгоогүй' }}</dd></div>
         <div>
           <dt>Нийт төлбөр</dt>
@@ -271,6 +372,9 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
 
 .gks-start__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); margin-top: var(--sp-4); }
 .gks-start__note { font-size: var(--fs-body-sm); color: var(--text-muted); line-height: var(--lh-body); }
+.gks-start__intake { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-4); border: 1px solid var(--line-soft); border-radius: var(--radius-2); background: var(--surface-sunken, var(--n-050)); font-size: var(--fs-body-sm); }
+.gks-start__intake strong { color: var(--text-body); }
+.gks-start__intake-hint { color: var(--text-subtle); font-size: var(--fs-caption); line-height: 1.6; }
 .gks-start__cta { margin-top: var(--sp-4); }
 
 .gks-start__summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-5); }

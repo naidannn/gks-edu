@@ -73,6 +73,7 @@ Do not restate that here; extend it when infrastructure changes.
 | Боломжит харилцагч / сэжим | `Lead` | pre-contract |
 | Гэрээтэй хэрэглэгч | *derived*, not a role | user with an active `Contract` |
 | Хэрэг (үйлчилгээний нэг мөчлөг) | `Case` | central aggregate: one user + one service + one target university |
+| Элсэлтийн улирал | `IntakeTerm` | one school × level × year × month; `IntakeProgramOverride` for a programme on its own calendar |
 | Зуучлалын гэрээ | `Contract` | |
 | Барьцааны гэрээ | `CollateralContract` | metadata only — never priced or automated (`gksedu.md` §5.4) |
 | Урьдчилгаа / үлдэгдэл төлбөр | `Payment` kind `PREPAYMENT` / `BALANCE` | |
@@ -84,8 +85,19 @@ Do not restate that here; extend it when infrastructure changes.
 
 Full entity definitions and state machines: `docs/ARCHITECTURE.md` §3–§9.
 
-## Two rules that are easy to get wrong
+## Three rules that are easy to get wrong
 
+- **The school's deadline is not our deadline, and clients never see the school's.**
+  `IntakeTerm.applicationDeadline` is the school's published last day; `internalDeadline`
+  is ours, `AdmissionConfig.internalLeadDays` earlier (currently 7 — configuration, not a
+  constant). Translation, notarisation and postage live in that gap. Every case, reminder
+  and countdown runs on the **internal** date, and it is the only deadline in a public or
+  portal payload — given two dates people work to the later one. Staff see both. There is
+  also no "not open yet" phase: we register for a published round any time before our own
+  deadline, so `openAt` never gates anything. A deadline a human typed sets
+  `internalDeadlineIsManual` and is never recomputed. All of the arithmetic lives in
+  `apps/api/src/modules/admissions/intake-deadline.ts` — don't re-derive it elsewhere
+  (`ARCHITECTURE.md` §3.2).
 - **Balance-payment timing differs by service.** Regular brokerage (language prep, BA, MA,
   PhD) → balance is due **after the visa is issued**. GKS scholarship → balance is due
   **after the scholarship result**, before the visa. Never hard-code one order (`gksedu.md` §9).

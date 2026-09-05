@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
 import {
+  CaseStage,
   DocumentStatus,
+  IntakeStatus,
   LeadStage,
   Necessity,
   NotificationEvent,
@@ -10,6 +12,7 @@ import {
   VisaStatus,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { AdmissionConfigService } from '../admissions/admission-config.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import {
   LEAD_STAGE_LABELS,
@@ -29,6 +32,31 @@ const VISA_APPOINTMENT_OFFSETS = [3, 1] as const;
 const DEPARTURE_OFFSETS = [14, 7, 1] as const;
 const VISA_RENEWAL_OFFSETS = [30, 14] as const;
 
+/** Cases past their intake, or gone — the calendar no longer applies to them. */
+const INTAKE_SETTLED_STAGES = [
+  CaseStage.APPLICATION_SUBMITTED,
+  CaseStage.ADMITTED,
+  CaseStage.TUITION_INVOICED,
+  CaseStage.INVITATION_RECEIVED,
+  CaseStage.GKS_ROUND1_PASSED,
+  CaseStage.GKS_ROUND2_PASSED,
+  CaseStage.VISA,
+  CaseStage.VISA_APPROVED,
+  CaseStage.BALANCE_PAID,
+  CaseStage.COLLATERAL_CONTRACT,
+  CaseStage.PRE_DEPARTURE,
+  CaseStage.DEPARTED,
+  CaseStage.COMPLETED,
+  CaseStage.ON_HOLD,
+  CaseStage.CANCELLED,
+  CaseStage.REJECTED,
+];
+
+/** Mongolian name of an intake round, for the notification body. */
+function intakeName(year: number, month: number): string {
+  return `${year} оны ${month}-р сарын элсэлт`;
+}
+
 export interface SweepResult {
   documents: number;
   payments: number;
@@ -36,6 +64,10 @@ export interface SweepResult {
   visaRenewals: number;
   departures: number;
   followUps: number;
+  /** 1H-09 — to the client: their round is closing. */
+  intakeDeadlines: number;
+  /** 1H-09 — to the assigned staff: this case will miss it. */
+  atRiskCases: number;
 }
 
 /**
@@ -52,6 +84,7 @@ export class ReminderSweepsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly admissionConfig: AdmissionConfigService,
   ) {}
 
   async sweepAll(now: Date = new Date()): Promise<SweepResult> {
@@ -62,6 +95,8 @@ export class ReminderSweepsService {
       visaRenewals: await this.sweepVisaRenewals(now),
       departures: await this.sweepDepartures(now),
       followUps: await this.sweepLeadFollowUps(now),
+      intakeDeadlines: await this.sweepIntakeDeadlines(now),
+      atRiskCases: await this.sweepAtRiskCases(now),
     };
 
     const total = Object.values(result).reduce((sum, count) => sum + count, 0);
@@ -310,6 +345,180 @@ export class ReminderSweepsService {
           leadPhone: lead.phone,
           stageName: LEAD_STAGE_LABELS[lead.stage],
           nextContactDate: formatDateMn(lead.nextContactAt),
+        },
+      });
+    }
+    return sent;
+  }
+
+  /* ----------------------------------------------------------------------- *
+   * Admissions (1H-09)
+   *
+   * The two sweeps that answer the office's own complaint: a client who lets
+   * the round close on them, and a consultant who forgets the client. Both
+   * read `internalDeadline` — our date, not the school's.
+   * ----------------------------------------------------------------------- */
+
+  /** To the client: the round they chose is closing and documents are short. */
+  private async sweepIntakeDeadlines(now: Date): Promise<number> {
+    const offsets = (await this.admissionConfig.get()).clientReminderOffsets;
+    if (!offsets.length) return 0;
+
+    const horizon = new Date(now.getTime() + Math.max(...offsets) * DAY_MS);
+
+    const cases = await this.prisma.case.findMany({
+      where: {
+        stage: { notIn: INTAKE_SETTLED_STAGES },
+        intake: {
+          status: IntakeStatus.OPEN,
+          internalDeadline: { not: null, gte: startOfDay(now), lte: horizon },
+        },
+      },
+      select: {
+        id: true,
+        code: true,
+        userId: true,
+        intake: {
+          select: {
+            id: true,
+            year: true,
+            month: true,
+            internalDeadline: true,
+            university: { select: { nameMn: true } },
+          },
+        },
+        documents: {
+          where: { deletedAt: null, necessity: Necessity.REQUIRED },
+          select: { status: true },
+        },
+      },
+    });
+
+    let sent = 0;
+    for (const row of cases) {
+      const intake = row.intake;
+      if (!intake?.internalDeadline) continue;
+
+      const daysLeft = Math.ceil((intake.internalDeadline.getTime() - now.getTime()) / DAY_MS);
+      // Sorted descending, so the first match is the tightest rung reached.
+      const offset = [...offsets].sort((a, b) => a - b).find((candidate) => daysLeft <= candidate);
+      if (offset === undefined) continue;
+
+      const missing = row.documents.filter((doc) => !SETTLED_STATUSES.includes(doc.status)).length;
+
+      sent += await this.notifications.dispatch({
+        event: NotificationEvent.INTAKE_DEADLINE_NEAR,
+        userIds: [row.userId],
+        caseId: row.id,
+        dedupeSubject: `${intake.id}:${offset}`,
+        context: {
+          universityName: intake.university.nameMn,
+          intakeName: intakeName(intake.year, intake.month),
+          deadlineDate: formatDateMn(intake.internalDeadline),
+          daysLeft: Math.max(daysLeft, 0),
+          missingDocuments: missing,
+          caseCode: row.code,
+          caseId: row.id,
+        },
+      });
+    }
+    return sent;
+  }
+
+  /**
+   * To the assigned consultant and document officer: this case is short on
+   * documents with its deadline in sight.
+   *
+   * Deliberately staff-only. The client already gets their own countdown; this
+   * is the one that makes a forgotten case visible to somebody who can act.
+   */
+  private async sweepAtRiskCases(now: Date): Promise<number> {
+    const config = await this.admissionConfig.get();
+    if (!config.staffReminderOffsets.length) return 0;
+
+    const horizon = new Date(now.getTime() + Math.max(...config.staffReminderOffsets) * DAY_MS);
+
+    const cases = await this.prisma.case.findMany({
+      where: {
+        stage: { notIn: INTAKE_SETTLED_STAGES },
+        intake: {
+          status: IntakeStatus.OPEN,
+          internalDeadline: { not: null, gte: startOfDay(now), lte: horizon },
+        },
+      },
+      select: {
+        id: true,
+        code: true,
+        assignedConsultantId: true,
+        assignedDocOfficerId: true,
+        user: { select: { name: true, client: { select: { lastName: true, firstName: true } } } },
+        intake: {
+          select: {
+            id: true,
+            year: true,
+            month: true,
+            internalDeadline: true,
+            university: { select: { nameMn: true } },
+          },
+        },
+        documents: {
+          where: { deletedAt: null, necessity: Necessity.REQUIRED },
+          select: { status: true },
+        },
+      },
+    });
+    if (!cases.length) return 0;
+
+    // A case nobody owns is the worst version of this problem, so it goes to
+    // every active consultant rather than nowhere.
+    const needsFallback = cases.some((row) => !row.assignedConsultantId && !row.assignedDocOfficerId);
+    const fallback = needsFallback
+      ? await this.prisma.user.findMany({
+          where: { isActive: true, role: { in: STAFF_ROLES as unknown as Role[] } },
+          select: { id: true },
+        })
+      : [];
+
+    let sent = 0;
+    for (const row of cases) {
+      const intake = row.intake;
+      if (!intake?.internalDeadline) continue;
+
+      const daysLeft = Math.ceil((intake.internalDeadline.getTime() - now.getTime()) / DAY_MS);
+      const offset = [...config.staffReminderOffsets]
+        .sort((a, b) => a - b)
+        .find((candidate) => daysLeft <= candidate);
+      if (offset === undefined) continue;
+
+      const required = row.documents.length;
+      const done = row.documents.filter((doc) => SETTLED_STATUSES.includes(doc.status)).length;
+      // No document list yet is 0% ready, not 100% — that case is exactly the
+      // one nobody has started.
+      const readiness = required ? Math.round((done / required) * 100) : 0;
+      if (readiness >= config.riskReadinessThreshold) continue;
+
+      const recipients = [row.assignedConsultantId, row.assignedDocOfficerId].filter(
+        (id): id is string => Boolean(id),
+      );
+      const userIds = recipients.length ? recipients : fallback.map((staff) => staff.id);
+      if (!userIds.length) continue;
+
+      const client = row.user.client;
+      sent += await this.notifications.dispatch({
+        event: NotificationEvent.INTAKE_CASE_AT_RISK,
+        userIds,
+        caseId: row.id,
+        dedupeSubject: `${intake.id}:${row.id}:${offset}`,
+        context: {
+          caseCode: row.code,
+          caseId: row.id,
+          clientName: client ? `${client.lastName} ${client.firstName}` : (row.user.name ?? '—'),
+          universityName: intake.university.nameMn,
+          intakeName: intakeName(intake.year, intake.month),
+          deadlineDate: formatDateMn(intake.internalDeadline),
+          daysLeft: Math.max(daysLeft, 0),
+          readiness,
+          missingDocuments: required - done,
         },
       });
     }

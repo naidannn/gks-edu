@@ -29,6 +29,7 @@ const SERVICES: NavLink[] = [
 
 const NAV: NavItem[] = [
   { to: '/universities', label: 'Их сургуулиуд' },
+  { to: '/admissions', label: 'Элсэлт' },
   { label: 'Үйлчилгээ', children: SERVICES },
   { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
 ];
@@ -51,6 +52,7 @@ const FOOTER_SERVICES = [
  */
 const FOOTER_EXPLORE = [
   { to: '/universities', label: 'Их сургуулиуд' },
+  { to: '/admissions', label: 'Элсэлтийн хуанли' },
   { to: '/#planner', label: 'Сурах замын төлөвлөгч' },
   { to: '/blog', label: 'Мэдээ' },
   { to: '/faq', label: 'Түгээмэл асуулт' },

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AdmissionListItem, PaginatedResult, ServiceType } from '@gks/shared';
 import type { AdmissionStatus } from '~/utils/admissions';
 import {
   formatAdmissionDate,
@@ -7,80 +8,79 @@ import {
   getAdmissionStatus,
 } from '~/utils/admissions';
 
+/**
+ * The homepage's live intake countdown (1H-06).
+ *
+ * It reads real `IntakeTerm` rows and counts down to OUR deadline
+ * (`internalDeadline`) — the only one a visitor is shown. The school's own,
+ * later date stays on the staff screens: given both, people work to the later
+ * one and arrive with unfinished documents.
+ */
 interface ActiveAdmission {
+  id: string;
   slug: string;
   name: string;
   logo: string | null;
   city: string;
   degree: string;
-  service: string;
+  service: ServiceType;
   intake: string;
+  /** When applications opened; the progress bar needs a start. */
   startAt: string;
+  /** Our deadline — the only one shown, and what the countdown runs to. */
   deadline: string;
+  classStartDate: string | null;
+  quota: number | null;
   requirements: string[];
-  readiness: number;
-  missingDocuments: number;
 }
 
-// Temporary marketing data until admission windows are managed through IntakeTerm.
-const ACTIVE_ADMISSIONS: ActiveAdmission[] = [
-  {
-    slug: 'kyung-hee-university',
-    name: 'Kyung Hee University',
-    logo: '/universities/logos/kyung-hee-university.png',
-    city: 'Seoul, Korea',
-    degree: 'Бакалавр',
-    service: 'BACHELOR',
-    intake: '2027 Spring',
-    startAt: '2026-09-01T09:00:00+08:00',
-    deadline: '2026-09-12T18:00:00+08:00',
-    requirements: ['TOPIK 3+', 'Ахлах сургуулийн гэрчилгээ', 'Дүнгийн хуулга', 'Өөрийн танилцуулга', 'Тодорхойлох захидал'],
-    readiness: 80,
-    missingDocuments: 2,
-  },
-  {
-    slug: 'sejong-university',
-    name: 'Sejong University',
-    logo: '/universities/logos/sejong-university.png',
-    city: 'Seoul, Korea',
-    degree: 'Бакалавр',
-    service: 'BACHELOR',
-    intake: '2027 Spring',
-    startAt: '2026-09-05T09:00:00+08:00',
-    deadline: '2026-09-16T18:00:00+08:00',
-    requirements: ['TOPIK 3+', 'Ахлах сургуулийн гэрчилгээ', 'Дүнгийн хуулга', 'Өөрийн танилцуулга'],
-    readiness: 75,
-    missingDocuments: 2,
-  },
-  {
-    slug: 'hanyang-university',
-    name: 'Hanyang University',
-    logo: '/universities/logos/hanyang-university.png',
-    city: 'Seoul, Korea',
-    degree: 'Магистр',
-    service: 'MASTER',
-    intake: '2027 Spring',
-    startAt: '2026-09-10T09:00:00+08:00',
-    deadline: '2026-09-21T18:00:00+08:00',
-    requirements: ['TOPIK 4+', 'Бакалаврын диплом', 'Дүнгийн хуулга', 'Судалгааны төлөвлөгөө', 'Тодорхойлох захидал'],
-    readiness: 60,
-    missingDocuments: 3,
-  },
-  {
-    slug: 'kookmin-university',
-    name: 'Kookmin University',
-    logo: null,
-    city: 'Seoul, Korea',
-    degree: 'Бакалавр',
-    service: 'BACHELOR',
-    intake: '2027 Spring',
-    startAt: '2026-09-15T09:00:00+08:00',
-    deadline: '2026-09-25T18:00:00+08:00',
-    requirements: ['TOPIK 3+', 'Ахлах сургуулийн гэрчилгээ', 'Дүнгийн хуулга', 'Англи хэлтэй хөтөлбөрийн нотолгоо'],
-    readiness: 50,
-    missingDocuments: 2,
-  },
-];
+const LEVEL_SERVICE: Record<string, ServiceType> = {
+  LANGUAGE_PREP: 'LANGUAGE_PREP',
+  BACHELOR: 'BACHELOR',
+  MASTER: 'MASTER',
+  PHD: 'PHD',
+};
+
+/** How far back the progress bar starts when a school published no opening date. */
+const ASSUMED_WINDOW_DAYS = 60;
+
+const { data } = await useApiFetch<PaginatedResult<AdmissionListItem>>('/admissions', {
+  query: { limit: 4, sort: 'deadline', order: 'asc' },
+  key: 'home-active-admissions',
+});
+
+function toAdmission(row: AdmissionListItem): ActiveAdmission | null {
+  // No deadline, nothing to count down to — such a round belongs on the
+  // admissions page, not in a countdown block.
+  const deadline = row.internalDeadline;
+  if (!deadline) return null;
+
+  const startAt =
+    row.openAt ?? new Date(new Date(deadline).getTime() - ASSUMED_WINDOW_DAYS * DAY_IN_MS).toISOString();
+
+  return {
+    id: row.id,
+    slug: row.university.slug,
+    name: row.university.nameEn,
+    logo: row.university.logoPath,
+    city: row.university.cityMn,
+    degree: PROGRAM_LEVEL_LABELS[row.level],
+    service: LEVEL_SERVICE[row.level] ?? 'BACHELOR',
+    intake: `${row.year} · ${INTAKE_MONTH_LABELS[row.month] ?? `${row.month}-р сар`}`,
+    startAt,
+    deadline,
+    classStartDate: row.classStartDate,
+    quota: row.quota,
+    requirements: (row.requirementNote ?? '')
+      .split(/[;\n]/)
+      .map((line) => line.trim())
+      .filter(Boolean),
+  };
+}
+
+const admissions = computed<ActiveAdmission[]>(
+  () => (data.value?.items ?? []).map((row) => toAdmission(row)).filter((row): row is ActiveAdmission => row !== null),
+);
 
 const STATUS_META: Record<AdmissionStatus, { label: string; shortLabel: string }> = {
   OPEN: { label: 'Элсэлт нээлттэй', shortLabel: 'Нээлттэй' },
@@ -94,11 +94,19 @@ const drawerCloseButton = ref<HTMLButtonElement | null>(null);
 let drawerOpener: HTMLElement | null = null;
 let clock: ReturnType<typeof setInterval> | undefined;
 
-const featuredAdmission = ACTIVE_ADMISSIONS[0]!;
-const secondaryAdmissions = ACTIVE_ADMISSIONS.slice(1);
-const closingSoonCount = computed(() =>
-  ACTIVE_ADMISSIONS.filter((admission) => getStatus(admission) !== 'OPEN').length,
+const featuredAdmission = computed(() => admissions.value[0] ?? null);
+const secondaryAdmissions = computed(() => admissions.value.slice(1));
+const closingSoonCount = computed(
+  () => admissions.value.filter((admission) => getStatus(admission) !== 'OPEN').length,
 );
+
+/** The nearest round, for the section intro — no more hard-coded "2027 spring". */
+const introLine = computed(() => {
+  const next = featuredAdmission.value;
+  if (!next) return '';
+  const days = getCountdown(next).days;
+  return `Хамгийн ойрын элсэлт: ${next.name} — ${next.intake}. Бүртгэл хаагдахад ${days} хоног үлдлээ.`;
+});
 
 function getCountdown(admission: ActiveAdmission) {
   return getAdmissionCountdown(admission.deadline, currentTime.value);
@@ -164,16 +172,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="gks-admissions" aria-labelledby="active-admissions-title">
+  <section v-if="featuredAdmission" class="gks-admissions" aria-labelledby="active-admissions-title">
     <div class="gks-admissions__head">
       <div>
         <p class="gks-admissions__eyebrow"><span aria-hidden="true">🔥</span> Одоо элсэлт явагдаж байна</p>
         <h2 id="active-admissions-title" class="gks-admissions__title">Одоо элсэлт авч буй их сургуулиуд</h2>
-        <p class="gks-admissions__intro">
-          2027 оны хаврын элсэлт эхэллээ. Зарим сургуулийн бүртгэл хэдхэн хоногийн дараа хаагдана.
-        </p>
+        <p class="gks-admissions__intro">{{ introLine }}</p>
       </div>
-      <div class="gks-admissions__alert">
+      <div v-if="closingSoonCount" class="gks-admissions__alert">
         <DsIcon name="bell-ring" :size="18" />
         <span><strong class="gks-tnum">{{ closingSoonCount }}</strong> сургууль удахгүй хаагдана</span>
       </div>
@@ -204,7 +210,7 @@ onBeforeUnmount(() => {
           <p class="gks-admission__dates">
             <DsIcon name="calendar-days" :size="17" />
             <span>
-              Материал хүлээн авах хугацаа
+              Бүртгэл хүлээн авах хугацаа
               <strong class="gks-tnum">{{ formatAdmissionDate(featuredAdmission.startAt) }} — {{ formatAdmissionDate(featuredAdmission.deadline) }}</strong>
             </span>
           </p>
@@ -270,7 +276,7 @@ onBeforeUnmount(() => {
     </article>
 
     <ul class="gks-admission-list">
-      <li v-for="admission in secondaryAdmissions" :key="admission.slug">
+      <li v-for="admission in secondaryAdmissions" :key="admission.id">
         <article class="gks-admission-card" :class="`gks-admission--${getStatus(admission).toLowerCase()}`">
           <div class="gks-admission-card__head">
             <img v-if="admission.logo" :src="admission.logo" :alt="`${admission.name} лого`" width="52" height="52">
@@ -283,7 +289,7 @@ onBeforeUnmount(() => {
             </div>
             <span class="gks-admission__status"><i /> {{ getCountdown(admission).days }} хоног үлдлээ</span>
           </div>
-          <p class="gks-admission-card__date-label">Материал хүлээн авах хугацаа</p>
+          <p class="gks-admission-card__date-label">Бүртгэл хүлээн авах хугацаа</p>
           <p class="gks-admission-card__dates gks-tnum">
             {{ formatAdmissionDate(admission.startAt) }} — {{ formatAdmissionDate(admission.deadline) }}
           </p>
@@ -312,7 +318,7 @@ onBeforeUnmount(() => {
           <aside
             role="dialog"
             aria-modal="true"
-            :aria-labelledby="`admission-${selectedAdmission.slug}-title`"
+            :aria-labelledby="`admission-${selectedAdmission.id}-title`"
             class="gks-admission-drawer__panel"
           >
             <button
@@ -330,8 +336,8 @@ onBeforeUnmount(() => {
                 <DsIcon name="landmark" :size="26" />
               </span>
               <div>
-                <p>{{ selectedAdmission.intake }} Admission</p>
-                <h2 :id="`admission-${selectedAdmission.slug}-title`">{{ selectedAdmission.name }}</h2>
+                <p>{{ selectedAdmission.intake }} · {{ selectedAdmission.degree }}</p>
+                <h2 :id="`admission-${selectedAdmission.id}-title`">{{ selectedAdmission.name }}</h2>
               </div>
             </div>
             <div class="gks-admission-drawer__remaining" :class="`gks-admission--${getStatus(selectedAdmission).toLowerCase()}`">
@@ -341,22 +347,33 @@ onBeforeUnmount(() => {
               </strong>
             </div>
             <div class="gks-admission-drawer__section">
+              <h3>Хугацаа</h3>
+              <dl class="gks-admission-drawer__dates">
+                <div>
+                  <dt>Бүртгэлийн эцсийн хугацаа</dt>
+                  <dd class="gks-tnum">{{ formatAdmissionDate(selectedAdmission.deadline) }}</dd>
+                </div>
+                <div v-if="selectedAdmission.classStartDate">
+                  <dt>Хичээл эхлэх</dt>
+                  <dd class="gks-tnum">{{ formatAdmissionDate(selectedAdmission.classStartDate) }}</dd>
+                </div>
+                <div v-if="selectedAdmission.quota !== null">
+                  <dt>Авах хүний тоо</dt>
+                  <dd class="gks-tnum">{{ selectedAdmission.quota }}</dd>
+                </div>
+              </dl>
+              <p class="gks-admission-drawer__hint">
+                Энэ хугацаа дуустал хэдийд ч бүртгүүлэх боломжтой. Материал бүрдүүлэх хугацаа
+                шаардагддаг тул эрт эхлэх тусам сайн.
+              </p>
+            </div>
+            <div v-if="selectedAdmission.requirements.length" class="gks-admission-drawer__section">
               <h3>Үндсэн шаардлага</h3>
               <ul>
                 <li v-for="requirement in selectedAdmission.requirements" :key="requirement">
                   <DsIcon name="check" :size="17" /> {{ requirement }}
                 </li>
               </ul>
-            </div>
-            <div class="gks-admission-drawer__section">
-              <div class="gks-admission-drawer__readiness-head">
-                <h3>Таны бэлэн байдал</h3>
-                <strong class="gks-tnum">{{ selectedAdmission.readiness }}%</strong>
-              </div>
-              <div class="gks-admission-drawer__readiness" role="progressbar" aria-label="Материалын бэлэн байдал" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="selectedAdmission.readiness">
-                <span :style="{ width: `${selectedAdmission.readiness}%` }" />
-              </div>
-              <p>{{ selectedAdmission.missingDocuments }} материал дутуу байна</p>
             </div>
             <button type="button" class="gks-admission-drawer__cta" @click="startApplication(selectedAdmission)">
               Материалаа бэлдэж эхлэх <DsIcon name="arrow-right" :size="18" />
@@ -372,6 +389,12 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.gks-admission-drawer__dates { display: grid; gap: var(--sp-3); }
+.gks-admission-drawer__dates > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); }
+.gks-admission-drawer__dates dt { color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-admission-drawer__dates dd { font-weight: var(--fw-semibold); }
+.gks-admission-drawer__hint { margin-top: var(--sp-3); color: var(--text-subtle); font-size: var(--fs-caption); line-height: 1.6; }
+
 .gks-admissions {
   padding: var(--sp-7);
   border: var(--border-hair) solid var(--brand-100);
@@ -431,10 +454,14 @@ onBeforeUnmount(() => {
 .gks-admission-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
 .gks-admission-card { height: 100%; padding: var(--sp-4); border: 1px solid var(--line-soft); border-radius: var(--radius-3); background: var(--surface-card); box-shadow: var(--shadow-raised); --admission-fg: var(--green-700); --admission-bg: var(--green-050); --admission-line: var(--green-100); transition: border-color var(--dur-base), box-shadow var(--dur-base), transform var(--dur-base); }
 .gks-admission-card:hover { border-color: var(--brand-200); box-shadow: var(--shadow-card); transform: translateY(-2px); }
-.gks-admission-card__head { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: var(--sp-3); }
+.gks-admission-card__head { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: var(--sp-3); }
+/* The countdown pill sits on its own row: schools are named in English, and
+   "Korea Advanced Institute of Science and Technology (KAIST)" leaves nothing
+   for the title if the pill competes with it for the same line. */
+.gks-admission-card__head .gks-admission__status { grid-column: 1 / -1; justify-self: start; }
 .gks-admission-card__head img { width: 52px; height: 52px; padding: 4px; object-fit: contain; border: 1px solid var(--line-soft); border-radius: 50%; }
 .gks-admission__logo-placeholder { display: grid; place-items: center; width: 52px; height: 52px; border: 1px solid var(--brand-100); border-radius: 50%; background: var(--brand-050); color: var(--brand-600); }
-.gks-admission-card__head h3 { font-size: var(--fs-body); font-weight: var(--fw-semibold); }
+.gks-admission-card__head h3 { font-size: var(--fs-body); font-weight: var(--fw-semibold); overflow-wrap: anywhere; }
 .gks-admission-card__head p { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-caption); }
 .gks-admission-card__date-label { margin-top: var(--sp-5); color: var(--text-muted); font-size: var(--fs-micro); }
 .gks-admission-card__dates { color: var(--text-body); font-size: var(--fs-body-sm); font-weight: var(--fw-medium); }
@@ -462,10 +489,6 @@ onBeforeUnmount(() => {
 .gks-admission-drawer__section ul { display: grid; gap: var(--sp-3); margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
 .gks-admission-drawer__section li { display: flex; align-items: center; gap: var(--sp-3); color: var(--text-body); font-size: var(--fs-body-sm); }
 .gks-admission-drawer__section li .gks-icon { display: grid; place-items: center; padding: 3px; border-radius: 50%; background: var(--green-050); color: var(--green-700); }
-.gks-admission-drawer__readiness-head { display: flex; align-items: center; justify-content: space-between; }
-.gks-admission-drawer__readiness-head strong { color: var(--brand-700); }
-.gks-admission-drawer__readiness { height: 9px; margin-top: var(--sp-3); overflow: hidden; border-radius: var(--radius-pill); background: var(--n-100); }
-.gks-admission-drawer__readiness span { display: block; height: 100%; border-radius: inherit; background: var(--brand-600); }
 .gks-admission-drawer__section > p { margin-top: var(--sp-2); color: var(--text-muted); font-size: var(--fs-caption); }
 .gks-admission-drawer__cta { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); width: 100%; min-height: 50px; margin-top: var(--sp-8); border: 1px solid var(--brand-600); border-radius: var(--radius-2); background: var(--brand-600); color: white; font-weight: var(--fw-semibold); cursor: pointer; box-shadow: var(--shadow-brand); }
 .gks-admission-drawer__cta:hover { background: var(--brand-700); }
@@ -480,7 +503,6 @@ onBeforeUnmount(() => {
   .gks-admission-featured__action { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; }
   .gks-admission__primary { margin-top: 0; }
   .gks-admission-card__head { grid-template-columns: 48px 1fr; }
-  .gks-admission-card__head .gks-admission__status { grid-column: 1 / -1; }
 }
 
 @media (max-width: 820px) {
@@ -490,8 +512,7 @@ onBeforeUnmount(() => {
   .gks-admission-featured__timing { padding: var(--sp-5) 0; border-inline: 0; border-block: 1px solid var(--line-soft); }
   .gks-admission-featured__action { grid-column: auto; display: flex; }
   .gks-admission-list { grid-template-columns: 1fr; }
-  .gks-admission-card__head { grid-template-columns: 52px 1fr auto; }
-  .gks-admission-card__head .gks-admission__status { grid-column: auto; }
+  .gks-admission-card__head { grid-template-columns: 52px 1fr; }
 }
 
 @media (max-width: 540px) {
@@ -504,7 +525,6 @@ onBeforeUnmount(() => {
   .gks-countdown__unit { padding: var(--sp-2) 2px; }
   .gks-countdown__unit strong { font-size: 24px; }
   .gks-admission-card__head { grid-template-columns: 48px 1fr; }
-  .gks-admission-card__head .gks-admission__status { grid-column: 1 / -1; }
   .gks-admission-card__footer { align-items: flex-start; flex-direction: column; }
   .gks-admission-drawer__panel { padding: var(--sp-6) var(--sp-5); }
 }

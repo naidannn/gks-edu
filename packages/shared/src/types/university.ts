@@ -5,9 +5,12 @@
  * them as "мэдээлэл шинэчлэгдэж байна", never as 0 (ARCHITECTURE.md §3).
  */
 
+import type { IntakePhase, IntakeProgramOverride } from './admissions';
+
 export type UniversityType = 'NATIONAL' | 'PUBLIC' | 'PRIVATE';
 export type ProgramLevel = 'LANGUAGE_PREP' | 'BACHELOR' | 'MASTER' | 'PHD';
-export type IntakeStatus = 'PLANNED' | 'OPEN' | 'CLOSED';
+export type IntakeStatus = 'PLANNED' | 'OPEN' | 'CLOSED' | 'CANCELLED';
+export type IntakeSource = 'MANUAL' | 'AI_ASSISTED' | 'IMPORTED';
 
 export interface LivingCost {
   tier?: string;
@@ -98,14 +101,33 @@ export interface UniversityProgram {
   otherRequirements: string | null;
 }
 
+/**
+ * One intake round as a client sees it.
+ *
+ * `internalDeadline` is the only deadline here — OUR last day, which is
+ * `AdmissionConfig.internalLeadDays` before the school's. The school's own date
+ * exists in the database but never reaches a client payload: given two
+ * deadlines people work to the later one. Staff get both via `AdminIntakeTerm`.
+ */
 export interface IntakeTerm {
   id: string;
   level: ProgramLevel;
   year: number;
   month: number;
-  applicationDeadline: string | null;
+  openAt: string | null;
+  internalDeadline: string | null;
+  classStartDate: string | null;
+  resultAnnouncedAt: string | null;
+  quota: number | null;
+  admissionFeeKrw: number | null;
+  requirementNote: string | null;
   status: IntakeStatus;
   note: string | null;
+  sourceUrl: string | null;
+  /** Derived from the dates — see `IntakePhase` in `./admissions`. */
+  phase: IntakePhase;
+  /** Days until `internalDeadline`; negative once it has passed, null with no date. */
+  daysUntilInternalDeadline: number | null;
 }
 
 export interface UniversityDetail extends UniversityCard {
@@ -198,6 +220,20 @@ export interface AdminUniversityProgram extends UniversityProgram {
 
 export interface AdminIntakeTerm extends IntakeTerm {
   universityId: string;
+  /** The school's own published last day — staff-only; it is the buffer they manage. */
+  applicationDeadline: string | null;
+  /** True while `internalDeadline` was typed by a human and is never recomputed. */
+  internalDeadlineIsManual: boolean;
+  sourceType: IntakeSource;
+  verifiedAt: string | null;
+  verifiedBy: { id: string; name: string | null } | null;
+  programOverrides: IntakeProgramOverride[];
+  _count: { cases: number; applications: number };
+}
+
+/** The list and detail payloads carry the school; a save response does not. */
+export interface AdminIntakeTermWithUniversity extends AdminIntakeTerm {
+  university: UniversityCard;
 }
 
 export interface AdminUniversityDetail extends Omit<AdminUniversityRow, '_count'> {

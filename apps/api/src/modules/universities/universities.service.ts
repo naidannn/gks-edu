@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '../../prisma/client.js';
+import { IntakeStatus, Prisma } from '../../prisma/client.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { computeIntakePhase, daysUntil } from '../admissions/intake-deadline.js';
 import type { QueryUniversitiesDto, UniversitySort } from './dto/query-universities.dto.js';
 
 /**
@@ -160,16 +161,26 @@ export class UniversitiesService {
                 otherRequirements: true,
               },
             },
+            // Drafts never reach a visitor; a cancelled round is not news either.
             intakes: {
+              where: { status: { in: [IntakeStatus.OPEN, IntakeStatus.CLOSED] } },
               orderBy: [{ year: 'asc' }, { month: 'asc' }],
               select: {
                 id: true,
                 level: true,
                 year: true,
                 month: true,
+                openAt: true,
                 applicationDeadline: true,
+                internalDeadline: true,
+                classStartDate: true,
+                resultAnnouncedAt: true,
+                quota: true,
+                admissionFeeKrw: true,
+                requirementNote: true,
                 status: true,
                 note: true,
+                sourceUrl: true,
               },
             },
           },
@@ -178,7 +189,22 @@ export class UniversitiesService {
         if (!university) {
           throw new NotFoundException(`University ${slug} not found`);
         }
-        return university;
+
+        // `phase` and the countdown are derived, not stored. They are computed
+        // here so the school page and the admissions list read the calendar the
+        // same way; the 2-minute cache is well inside a day of drift.
+        //
+        // `applicationDeadline` is used for the phase and then dropped: a
+        // visitor is given one date to work to, ours (`internalDeadline`).
+        const now = new Date();
+        return {
+          ...university,
+          intakes: university.intakes.map(({ applicationDeadline, ...intake }) => ({
+            ...intake,
+            phase: computeIntakePhase({ applicationDeadline, internalDeadline: intake.internalDeadline }, intake.status, now),
+            daysUntilInternalDeadline: daysUntil(intake.internalDeadline, now),
+          })),
+        };
       },
       DETAIL_CACHE_TTL_MS,
     );

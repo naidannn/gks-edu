@@ -77,8 +77,18 @@ const intakesByLevel = computed<[ProgramLevel, IntakeTerm[]][]>(() => {
   return [...groups.entries()];
 });
 
+/** `null` is "мэдээлэл шинэчлэгдэж байна", never a guessed date (CLAUDE.md). */
+function formatIntakeDate(value: string | null): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+}
+
 useHead({
-  title: () => uni.value.nameMn,
+  // Schools are named in English across the whole public site — the Mongolian
+  // transliteration varies between sources, while the English name is what a
+  // visitor can match against the school's own site and paperwork.
+  title: () => uni.value.nameEn,
   // JSON-LD (1A-19) — one university per page, so a static computed script is enough.
   script: [
     {
@@ -87,8 +97,9 @@ useHead({
         JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'EducationalOrganization',
-          name: uni.value.nameMn,
-          alternateName: [uni.value.nameEn, uni.value.nameKo],
+          // `name` tracks the visible <h1>; the other two are alternates.
+          name: uni.value.nameEn,
+          alternateName: [uni.value.nameMn, uni.value.nameKo],
           address: {
             '@type': 'PostalAddress',
             addressLocality: uni.value.cityEn,
@@ -104,8 +115,8 @@ useHead({
 useSeoMeta({
   description: () =>
     uni.value.shortIntroMn ??
-    `${uni.value.nameMn} — ${uni.value.cityMn}, Солонгос. Элсэлт, зардал, зуучлалын мэдээлэл.`,
-  ogTitle: () => `${uni.value.nameMn} · GKS Edu`,
+    `${uni.value.nameEn} — ${uni.value.cityMn}, Солонгос. Элсэлт, зардал, зуучлалын мэдээлэл.`,
+  ogTitle: () => `${uni.value.nameEn} · GKS Edu`,
   ogType: 'article',
 });
 </script>
@@ -115,21 +126,21 @@ useSeoMeta({
     <nav class="gks-uni__crumbs" aria-label="Замын мөр">
       <NuxtLink to="/universities">Сургуулиуд</NuxtLink>
       <span aria-hidden="true">/</span>
-      <span>{{ uni.nameMn }}</span>
+      <span>{{ uni.nameEn }}</span>
     </nav>
 
     <header class="gks-uni__head">
       <img
         v-if="uni.logoPath"
         :src="uni.logoPath"
-        :alt="`${uni.nameMn} лого`"
+        :alt="`${uni.nameEn} лого`"
         class="gks-uni__logo"
         width="88"
         height="88"
       >
       <div>
-        <h1 class="gks-uni__title">{{ uni.nameMn }}</h1>
-        <p class="gks-uni__names">{{ uni.nameEn }} · {{ uni.nameKo }}</p>
+        <h1 class="gks-uni__title">{{ uni.nameEn }}</h1>
+        <p class="gks-uni__names">{{ uni.nameMn }} · {{ uni.nameKo }}</p>
         <div class="gks-uni__tags">
           <DsBadge tone="neutral">{{ UNIVERSITY_TYPE_LABELS[uni.type] }}</DsBadge>
           <DsBadge tone="neutral" icon="map-pin">{{ uni.cityMn }}, {{ uni.regionMn }}</DsBadge>
@@ -309,17 +320,52 @@ useSeoMeta({
         </table>
       </DsCard>
 
-      <DsCard v-if="intakesByLevel.length" title="Элсэлтийн улирал" class="gks-uni__wide">
+      <DsCard v-if="intakesByLevel.length" title="Элсэлтийн хугацаа" class="gks-uni__wide">
+        <template #action>
+          <NuxtLink class="gks-uni__intake-all" :to="{ path: '/admissions', query: { q: uni.nameEn } }">
+            Бүх элсэлт
+          </NuxtLink>
+        </template>
+        <p class="gks-uni__intake-note">
+          Бүртгэлийн эцсийн хугацаа хүртэл хэдийд ч бүртгүүлэх боломжтой. Материал бүрдүүлэх,
+          орчуулах хугацаа шаардагддаг тул эрт эхлэх тусам сайн.
+        </p>
         <div v-for="[level, terms] in intakesByLevel" :key="level" class="gks-uni__intake-group">
           <h4 class="gks-uni__intake-title">{{ PROGRAM_LEVEL_LABELS[level] }}</h4>
-          <ul class="gks-uni__intakes">
-            <li v-for="term in terms" :key="term.id">
-              <span class="gks-tnum">{{ term.year }} · {{ INTAKE_MONTH_LABELS[term.month] ?? `${term.month}-р сар` }}</span>
-              <DsBadge :tone="term.status === 'OPEN' ? 'success' : 'neutral'">
-                {{ INTAKE_STATUS_LABELS[term.status] }}
-              </DsBadge>
-            </li>
-          </ul>
+          <div class="gks-uni__intake-scroll">
+            <table class="gks-table gks-uni__intake-table">
+              <thead>
+                <tr>
+                  <th scope="col">Элсэлт</th>
+                  <th scope="col">Бүртгэлийн эцсийн хугацаа</th>
+                  <th scope="col">Хичээл эхлэх</th>
+                  <th scope="col">Төлөв</th>
+                  <th scope="col"><span class="gks-sr-only">Үйлдэл</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="term in terms" :key="term.id">
+                  <td class="gks-tnum">
+                    {{ term.year }} · {{ INTAKE_MONTH_LABELS[term.month] ?? `${term.month}-р сар` }}
+                  </td>
+                  <td class="gks-tnum gks-uni__intake-ours">{{ formatIntakeDate(term.internalDeadline) }}</td>
+                  <td class="gks-tnum">{{ formatIntakeDate(term.classStartDate) }}</td>
+                  <td>
+                    <DsBadge :tone="INTAKE_PHASE_TONE[term.phase]">{{ INTAKE_PHASE_LABELS[term.phase] }}</DsBadge>
+                  </td>
+                  <td>
+                    <NuxtLink
+                      v-if="term.phase !== 'CLOSED'"
+                      class="gks-uni__intake-cta"
+                      :to="{ path: '/app/start', query: { universityId: uni.id, intakeId: term.id } }"
+                    >
+                      Бүртгүүлэх
+                    </NuxtLink>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </DsCard>
     </div>
@@ -451,15 +497,15 @@ useSeoMeta({
 
 .gks-uni__intake-group + .gks-uni__intake-group { margin-top: var(--sp-5); }
 .gks-uni__intake-title { font-size: var(--fs-label); font-weight: var(--fw-semibold); }
-.gks-uni__intakes { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-3); }
-.gks-uni__intakes li {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-  border: var(--border-hair) solid var(--line-hairline);
-  font-size: var(--fs-caption);
-}
+.gks-uni__intake-note { margin-bottom: var(--sp-4); color: var(--text-subtle); font-size: var(--fs-caption); line-height: 1.6; }
+.gks-uni__intake-note strong { color: var(--text-body); }
+.gks-uni__intake-all { color: var(--brand-700); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); }
+/* A wide table must scroll inside its own box, never the page. */
+.gks-uni__intake-scroll { margin-top: var(--sp-3); overflow-x: auto; }
+.gks-uni__intake-table { min-width: 560px; font-size: var(--fs-caption); }
+/* The date a client actually has to hit. */
+.gks-uni__intake-ours { color: var(--brand-700); font-weight: var(--fw-semibold); }
+.gks-uni__intake-cta { color: var(--brand-700); font-weight: var(--fw-semibold); white-space: nowrap; }
 
 .gks-uni__foot-inner {
   display: flex;

@@ -6,7 +6,9 @@ import type {
   ContractDetail,
   PaymentItem,
 } from './case-contract-payment';
+import type { IntakePhase } from './admissions';
 import type { ClientDetail, UniversityRef } from './client';
+import type { IntakeStatus, ProgramLevel } from './university';
 import type { StageProgress } from './documents';
 import type { UserRole } from '../schemas/user';
 
@@ -29,6 +31,12 @@ export interface NextAction {
   label: string;
   description: string;
   tab: CaseTab;
+  /**
+   * Days until the intake's internal deadline — set only while the ball is
+   * with the client and the date is close (1H-09). Negative once it has
+   * passed; absent when there is no intake or no hurry.
+   */
+  urgentDaysLeft?: number | null;
 }
 
 export interface MissingProfileField {
@@ -78,7 +86,25 @@ export interface PortalCase {
   createdAt: string;
   updatedAt: string;
   university: UniversityRef | null;
-  intake: { id: string; year: number; month: number } | null;
+  /**
+   * The round this case is racing (1H-09). One deadline only: `internalDeadline`
+   * is ours, and it is the date the case is actually driven to. The school's
+   * later date is staff-side and never reaches the portal.
+   */
+  intake: {
+    id: string;
+    level: ProgramLevel;
+    year: number;
+    month: number;
+    openAt: string | null;
+    internalDeadline: string | null;
+    classStartDate: string | null;
+    resultAnnouncedAt: string | null;
+    requirementNote: string | null;
+    status: IntakeStatus;
+    phase: IntakePhase;
+    daysUntilInternalDeadline: number | null;
+  } | null;
   contract: ContractDetail | null;
   payments: PaymentItem[];
   /** Stage sequence for this service, read from `CaseFlowDefinition` (§5). */

@@ -119,6 +119,19 @@ GET    /api/v1/universities       public — q, region, type, level, languagePre
 GET    /api/v1/universities/facets public — filter counts by region and type
 GET    /api/v1/universities/:slug public — detail + programmes + intake terms
 
+GET    /api/v1/admissions         public — the intake calendar; level, year, month, region, sort
+GET    /api/v1/admissions/facets  public — filter counts by level, month, year, region
+GET    /api/v1/admissions/calendar/:year   public — one year bucketed by intake month
+GET    /api/v1/admissions/university/:id   public — rounds a new applicant can still join
+
+GET    /api/v1/admin/admissions        staff — every round, drafts included (1H-05)
+POST   /api/v1/admin/admissions        staff — add a round
+POST   /api/v1/admin/admissions/bulk   staff — save several reviewed rounds at once
+GET    /api/v1/admin/admissions/board  staff — cases grouped under the round they race (1H-08)
+GET    /api/v1/admin/admissions/at-risk staff — cases short on documents, deadline in sight
+GET    /api/v1/admin/admissions/config admin — lead time, reminder ladder, risk threshold
+POST   /api/v1/admin/admissions/research staff — queue a Gemini lookup, poll the run (1H-10)
+
 POST   /api/v1/leads/public       public, 5 req/hour — website consultation request
 GET    /api/v1/pricing/public     public — the prices the service pages quote
 GET    /api/v1/banners            public — live promo banners
@@ -161,6 +174,37 @@ An account is matched by `User.googleId` first, then by email (case-insensitivel
 when Google reports `email_verified`). A match is linked rather than duplicated, which is
 also how a staff-created client with an outstanding claim invitation (1B-17) can walk in
 through Google instead of setting a password.
+
+### Admissions (1H)
+
+`IntakeTerm` carries four dates, and two of them are easy to confuse:
+`applicationDeadline` is the **school's** last day; `internalDeadline` is **ours**, set
+`AdmissionConfig.internalLeadDays` earlier (7 by default) to cover translation,
+notarisation and postage. Cases, reminders and every countdown run on the internal one,
+and it is the only deadline that reaches a client — the school's own date stays in the
+staff payloads, because a person given two deadlines works to the later one.
+
+Phases are `OPEN → FINAL_CALL → CLOSED`. There is no "opens later" state: `openAt` is when
+the *school* starts accepting, while GKS registers a client for a published round at any
+point before its own deadline.
+
+`internalDeadline` is derived automatically unless a human types one, which sets
+`internalDeadlineIsManual` and freezes it against later recomputes; sending `null` hands
+the row back to the rule. The date arithmetic is pure and tested in
+`apps/api/src/modules/admissions/intake-deadline.ts`.
+
+**Gemini research.** `POST /admin/admissions/research` queues a grounded Google-Search
+lookup of one school's calendar (30-90s, so it is a BullMQ job the admin screen polls).
+The result only ever **fills the form** — staff read the candidates next to their source
+links and save the ones they believe. Nothing writes an intake by itself.
+
+```bash
+# GEMINI_API_KEY unset → GEMINI_MOCK defaults to true and a labelled fixture is returned,
+# so the screen and its review flow work without a key (same idea as QPAY_MOCK).
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-2.5-pro
+GEMINI_TIMEOUT_MS=120000
+```
 
 ### Notifications and reports
 

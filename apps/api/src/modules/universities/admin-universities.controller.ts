@@ -23,7 +23,11 @@ import { Role } from '../../prisma/client.js';
 import { AdminUniversitiesService } from './admin-universities.service.js';
 import { GksRankingService } from './ranking/gks-ranking.service.js';
 import { PreviewRankingDto, UpdateRankingConfigDto } from './dto/ranking-config.dto.js';
-import { CreateIntakeTermDto, UpdateIntakeTermDto } from './dto/intake-term.dto.js';
+import {
+  CreateIntakeTermForUniversityDto,
+  UpdateIntakeTermForUniversityDto,
+} from '../admissions/dto/intake-term.dto.js';
+import { AdmissionsService } from '../admissions/admissions.service.js';
 import { CreateUniversityDto } from './dto/create-university.dto.js';
 import { QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
 import { UpdateUniversityDto } from './dto/update-university.dto.js';
@@ -46,6 +50,7 @@ export class AdminUniversitiesController {
   constructor(
     private readonly universities: AdminUniversitiesService,
     private readonly ranking: GksRankingService,
+    private readonly admissions: AdmissionsService,
   ) {}
 
   @Get()
@@ -157,21 +162,31 @@ export class AdminUniversitiesController {
   }
 
   // --- Intake terms ---
+  //
+  // Kept on this path because the catalogue detail page edits rounds inline
+  // (1A-27), but the work belongs to the admissions module: the internal
+  // deadline, the cache invalidation and the delete guard all live there, and
+  // duplicating them would be how the two drift apart.
 
   @Post(':id/intakes')
-  @ApiOperation({ summary: 'Add an intake term (1A-27)' })
-  createIntake(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CreateIntakeTermDto) {
-    return this.universities.createIntake(id, dto);
+  @ApiOperation({ summary: 'Add an intake term (1A-27, 1H-05)' })
+  createIntake(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateIntakeTermForUniversityDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.admissions.create({ ...dto, universityId: id }, user.id);
   }
 
   @Patch(':id/intakes/:intakeId')
-  @ApiOperation({ summary: 'Edit an intake term (1A-27)' })
+  @ApiOperation({ summary: 'Edit an intake term (1A-27, 1H-05)' })
   updateIntake(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('intakeId', ParseUUIDPipe) intakeId: string,
-    @Body() dto: UpdateIntakeTermDto,
+    @Body() dto: UpdateIntakeTermForUniversityDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.universities.updateIntake(id, intakeId, dto);
+    return this.admissions.update(intakeId, dto, user.id, id);
   }
 
   @Delete(':id/intakes/:intakeId')
@@ -181,6 +196,6 @@ export class AdminUniversitiesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Param('intakeId', ParseUUIDPipe) intakeId: string,
   ): Promise<void> {
-    await this.universities.removeIntake(id, intakeId);
+    await this.admissions.remove(intakeId, id);
   }
 }

@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CaseStage, ContractType, type Prisma, ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { computeIntakePhase, daysUntil } from '../admissions/intake-deadline.js';
 import { CasesService } from '../cases/cases.service.js';
 import { ClientsService } from '../clients/clients.service.js';
 import { ContractsService } from '../contracts/contracts.service.js';
@@ -15,8 +16,25 @@ import { profileCompleteness } from './profile-completeness.js';
 const TERMINAL_STAGES: CaseStage[] = [CaseStage.COMPLETED, CaseStage.CANCELLED, CaseStage.REJECTED];
 
 const CASE_INCLUDE = {
-  university: { select: { id: true, nameMn: true } },
-  intake: { select: { id: true, year: true, month: true } },
+  university: { select: { id: true, nameMn: true, slug: true } },
+  // The client plans around these three dates (1H-09). `internalDeadline` is
+  // the one the portal counts down to — the school's date is shown only so
+  // the buffer is visible.
+  intake: {
+    select: {
+      id: true,
+      level: true,
+      year: true,
+      month: true,
+      openAt: true,
+      applicationDeadline: true,
+      internalDeadline: true,
+      classStartDate: true,
+      resultAnnouncedAt: true,
+      requirementNote: true,
+      status: true,
+    },
+  },
   contract: true,
   payments: { orderBy: { createdAt: 'desc' } },
 } satisfies Prisma.CaseInclude;
@@ -204,8 +222,21 @@ export class MeService {
       this.documents.progress(row.id, 'VISA'),
     ]);
 
+    // The client works to one date, ours. `applicationDeadline` decides the
+    // phase and is then dropped — quoting the school's later date next to it is
+    // how somebody talks themselves into another week.
+    const now = new Date();
+    const intake = row.intake
+      ? (({ applicationDeadline, ...rest }) => ({
+          ...rest,
+          phase: computeIntakePhase({ applicationDeadline, internalDeadline: rest.internalDeadline }, rest.status, now),
+          daysUntilInternalDeadline: daysUntil(rest.internalDeadline, now),
+        }))(row.intake)
+      : null;
+
     return {
       ...row,
+      intake,
       journey,
       documents: { admission: admissionDocs, visa: visaDocs } satisfies Record<string, StageProgress>,
       nextAction: nextAction({
@@ -223,6 +254,7 @@ export class MeService {
         payments: row.payments.map((payment) => ({ kind: payment.kind, status: payment.status })),
         admissionDocs,
         visaDocs,
+        daysUntilIntakeDeadline: intake?.daysUntilInternalDeadline ?? null,
       }),
     };
   }

@@ -8,10 +8,12 @@ import {
   EducationLevel,
   GuarantorRelation,
   GuarantorType,
+  IntakeStatus,
   Necessity,
   type Prisma,
   PrepaymentMode,
   PrismaClient,
+  ProgramLevel,
   Role,
   ServiceType,
 } from '../src/generated/prisma/client.js';
@@ -499,10 +501,92 @@ async function main(): Promise<void> {
   await seedRequirementRules(await seedDocumentTemplates());
   await seedDepartureChecklist();
   await seedNotificationTemplates();
+  await seedAdmissionConfig();
+  await seedIntakeTerms();
 
   console.log(
     'Seed complete: admin@gks.edu / consultant@gks.edu / student@gks.edu (password: password123)',
   );
+}
+
+/**
+ * 1H-02 — the admissions configuration row. Created with the schema defaults
+ * (7-day internal lead time, the reminder ladder) so the office has something
+ * to retune rather than a missing row; `update: {}` keeps their retuning.
+ */
+async function seedAdmissionConfig(): Promise<void> {
+  await prisma.admissionConfig.upsert({ where: { id: 'default' }, update: {}, create: { id: 'default' } });
+  console.log('Seeded admissions configuration');
+}
+
+/**
+ * 1H — a demonstrable intake calendar.
+ *
+ * `IntakeTerm` shipped empty (TASKS.md 1A-24 is blocked on the business
+ * supplying real dates), which left the homepage countdown, the admissions
+ * page and the case wizard with nothing to render. These rows follow the
+ * general Korean calendar of §4.1-§4.2 — classes in month M, the school's
+ * window closing at the end of month M-2 — for the first few published
+ * schools, so every screen is exercisable before the real dates arrive.
+ *
+ * They are deliberately marked unverified (`verifiedAt` stays null), so the
+ * admin list flags them as "хянагдаагүй" and nobody mistakes a seeded
+ * approximation for a checked date.
+ */
+async function seedIntakeTerms(): Promise<void> {
+  const universities = await prisma.university.findMany({
+    where: { isPublished: true },
+    select: { id: true },
+    orderBy: { gksRank: { sort: 'asc', nulls: 'last' } },
+    take: 6,
+  });
+  if (!universities.length) {
+    console.log('Skipped intake terms — no published universities yet (run `pnpm universities:import`)');
+    return;
+  }
+
+  const config = await prisma.admissionConfig.findUniqueOrThrow({ where: { id: 'default' } });
+  const year = new Date().getFullYear() + 1;
+  const levelMonths: [ProgramLevel, number[]][] = [
+    // Language prep runs four rounds a year, degree programmes two (§4.1, §4.2).
+    [ProgramLevel.LANGUAGE_PREP, [3, 6, 9, 12]],
+    [ProgramLevel.BACHELOR, [3, 9]],
+    [ProgramLevel.MASTER, [3, 9]],
+  ];
+
+  let created = 0;
+  for (const university of universities) {
+    for (const [level, months] of levelMonths) {
+      for (const month of months) {
+        // The window closes at the end of the month two months before classes.
+        const deadline = new Date(Date.UTC(year, month - 2, 0, 23, 59, 59));
+        const internalDeadline = new Date(deadline.getTime() - config.internalLeadDays * 24 * 60 * 60 * 1000);
+
+        const result = await prisma.intakeTerm.upsert({
+          where: {
+            universityId_level_year_month: { universityId: university.id, level, year, month },
+          },
+          update: {},
+          create: {
+            universityId: university.id,
+            level,
+            year,
+            month,
+            openAt: new Date(Date.UTC(year, month - 4, 1)),
+            applicationDeadline: deadline,
+            internalDeadline,
+            classStartDate: new Date(Date.UTC(year, month - 1, 2)),
+            status: IntakeStatus.OPEN,
+            note: 'Ерөнхий хуанлиар үүсгэсэн жишээ огноо — сургуулиас баталгаажуулаагүй.',
+          },
+          select: { createdAt: true, updatedAt: true },
+        });
+        if (result.createdAt.getTime() === result.updatedAt.getTime()) created += 1;
+      }
+    }
+  }
+
+  console.log(`Seeded ${created} intake terms across ${universities.length} universities (${year})`);
 }
 
 /**

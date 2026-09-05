@@ -24,6 +24,10 @@ import type {
   GuarantorRelation,
   GuarantorType,
   InvoiceItemKind,
+  IntakeCandidateConfidence,
+  IntakePhase,
+  IntakeResearchStatus,
+  IntakeSource,
   IntakeStatus,
   LeadActivityType,
   LeadSource,
@@ -135,9 +139,71 @@ export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {
 };
 
 export const INTAKE_STATUS_LABELS: Record<IntakeStatus, string> = {
-  PLANNED: 'Төлөвлөгдсөн',
+  PLANNED: 'Ноорог',
   OPEN: 'Нээлттэй',
   CLOSED: 'Хаагдсан',
+  CANCELLED: 'Цуцлагдсан',
+};
+
+export const INTAKE_STATUS_TONE: Record<IntakeStatus, BadgeTone> = {
+  PLANNED: 'neutral',
+  OPEN: 'success',
+  CLOSED: 'ink',
+  CANCELLED: 'danger',
+};
+
+/**
+ * Where an intake sits right now — derived from its dates by the API, never
+ * stored. There is no "not open yet": we register a client for a published
+ * round at any point before our own deadline.
+ *
+ * `FINAL_CALL` is the one worth reading twice: our deadline has passed but the
+ * school still accepts documents, so it is a staff decision rather than a
+ * closed door. It never appears on a public list.
+ */
+export const INTAKE_PHASE_LABELS: Record<IntakePhase, string> = {
+  OPEN: 'Нээлттэй',
+  FINAL_CALL: 'Сүүлийн боломж',
+  CLOSED: 'Хаагдсан',
+};
+
+export const INTAKE_PHASE_TONE: Record<IntakePhase, BadgeTone> = {
+  OPEN: 'success',
+  FINAL_CALL: 'warning',
+  CLOSED: 'neutral',
+};
+
+export const INTAKE_SOURCE_LABELS: Record<IntakeSource, string> = {
+  MANUAL: 'Гараар',
+  AI_ASSISTED: 'LLM-ээс хянагдсан',
+  IMPORTED: 'Импортлосон',
+};
+
+export const RESEARCH_STATUS_LABELS: Record<IntakeResearchStatus, string> = {
+  QUEUED: 'Дараалалд',
+  RUNNING: 'Судалж байна',
+  SUCCEEDED: 'Дууссан',
+  FAILED: 'Амжилтгүй',
+};
+
+export const RESEARCH_STATUS_TONE: Record<IntakeResearchStatus, BadgeTone> = {
+  QUEUED: 'neutral',
+  RUNNING: 'info',
+  SUCCEEDED: 'success',
+  FAILED: 'danger',
+};
+
+/** How far the model would stand behind a researched date. */
+export const RESEARCH_CONFIDENCE_LABELS: Record<IntakeCandidateConfidence, string> = {
+  HIGH: 'Өндөр',
+  MEDIUM: 'Дунд',
+  LOW: 'Бага',
+};
+
+export const RESEARCH_CONFIDENCE_TONE: Record<IntakeCandidateConfidence, BadgeTone> = {
+  HIGH: 'success',
+  MEDIUM: 'warning',
+  LOW: 'danger',
 };
 
 export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {

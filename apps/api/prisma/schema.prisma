@@ -95,6 +95,10 @@ model User {
   notificationPreferences NotificationPreference[]
   gksRankingConfigs       GksRankingConfig[]
 
+  verifiedIntakes    IntakeTerm[]
+  admissionConfigs   AdmissionConfig[]
+  intakeResearchRuns IntakeResearchRun[]
+
   @@index([createdAt])
   @@map("users")
 }
@@ -185,10 +189,24 @@ enum ProgramLevel {
   PHD
 }
 
+/// Staff-controlled lifecycle of an intake round. The *phase* a visitor sees
+/// (нээгдээгүй / нээлттэй / манайх хаагдсан / хаагдсан) is derived from the
+/// dates in `intake-deadline.ts` — this enum only says what staff decided.
 enum IntakeStatus {
+  /// Draft: entered but not published, invisible on every public payload.
   PLANNED
   OPEN
   CLOSED
+  /// The school is not running this round after all.
+  CANCELLED
+}
+
+/// Where an intake's dates came from. `AI_ASSISTED` means a human accepted a
+/// Gemini research candidate — the research itself never writes an intake.
+enum IntakeSource {
+  MANUAL
+  AI_ASSISTED
+  IMPORTED
 }
 
 model University {
@@ -280,6 +298,7 @@ model University {
 
   requirementRules RequirementRule[]
   applications     Application[]
+  researchRuns     IntakeResearchRun[]
 
   @@index([isPublished])
   @@index([regionEn])
@@ -339,8 +358,9 @@ model UniversityProgram {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  cases        Case[]
-  applications Application[]
+  cases           Case[]
+  applications    Application[]
+  intakeOverrides IntakeProgramOverride[]
 
   @@unique([universityId, level, nameMn])
   @@index([universityId])
@@ -349,6 +369,16 @@ model UniversityProgram {
 }
 
 /// Intake round. Language prep runs four a year, degree programmes two (§4.1, §4.2).
+///
+/// Four dates, and confusing two of them is the expensive mistake:
+///   `openAt`              — the school starts accepting applications
+///   `applicationDeadline` — the SCHOOL's last day (their published date)
+///   `internalDeadline`    — OURS: `applicationDeadline − AdmissionConfig.internalLeadDays`
+///                           (7 days by default), the date every case is driven to
+///   `classStartDate`      — classes begin, i.e. when the student flies out
+///
+/// One row covers a whole level at a school. When a single programme runs to a
+/// different calendar, `IntakeProgramOverride` overrides the dates for it.
 model IntakeTerm {
   id           String       @id @default(uuid()) @db.Uuid
   universityId String       @db.Uuid
@@ -358,21 +388,159 @@ model IntakeTerm {
   /// 3, 6, 9 or 12 — the Korean academic intake months.
   month        Int
 
-  applicationDeadline DateTime?
-  status              IntakeStatus @default(PLANNED)
-  note                String?
+  /// The school opens its application window.
+  openAt                   DateTime? @db.Date
+  /// The school's own last day for documents.
+  applicationDeadline      DateTime?
+  /// Our last day — `applicationDeadline` minus `AdmissionConfig.internalLeadDays`.
+  /// Recomputed whenever `applicationDeadline` or the config changes, UNLESS a
+  /// human typed it, in which case `internalDeadlineIsManual` freezes it.
+  internalDeadline         DateTime?
+  /// True once staff set `internalDeadline` by hand; the automatic recompute
+  /// then leaves this row alone.
+  internalDeadlineIsManual Boolean   @default(false)
+  /// First day of classes — the month above says which intake, this says the day.
+  classStartDate           DateTime? @db.Date
+  /// When the school publishes its decision.
+  resultAnnouncedAt        DateTime? @db.Date
+
+  /// Seats in this round, when the school publishes a number.
+  quota           Int?
+  /// Элсэлтийн хураамж — paid to the school, in KRW.
+  admissionFeeKrw Int?
+  /// Anything this round asks for beyond the standard document set.
+  requirementNote String?
+
+  status IntakeStatus @default(PLANNED)
+  note   String?
+
+  /// The school's own announcement page these dates were read off.
+  sourceUrl    String?
+  sourceType   IntakeSource @default(MANUAL)
+  /// Who last checked these dates against the school, and when. A row with no
+  /// `verifiedAt` is unconfirmed — the admin list flags it.
+  verifiedAt   DateTime?
+  verifiedById String?      @db.Uuid
+  verifiedBy   User?        @relation(fields: [verifiedById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cases        Case[]
-  clients      Client[]
-  applications Application[]
+  cases            Case[]
+  clients          Client[]
+  applications     Application[]
+  programOverrides IntakeProgramOverride[]
 
   @@unique([universityId, level, year, month])
   @@index([universityId])
   @@index([year, month])
+  @@index([status, internalDeadline])
+  @@index([internalDeadline])
   @@map("intake_terms")
+}
+
+/// One programme inside an intake round that runs to a different calendar.
+/// Kept out of `IntakeTerm` on purpose: the term stays the thing a `Case`
+/// points at, and its `@@unique(universityId, level, year, month)` stays whole.
+/// Resolution is always "override ?? term", in `intake-deadline.ts`.
+model IntakeProgramOverride {
+  id        String            @id @default(uuid()) @db.Uuid
+  intakeId  String            @db.Uuid
+  intake    IntakeTerm        @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  programId String            @db.Uuid
+  program   UniversityProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  /// Null on any of these means "use the term's value".
+  openAt                   DateTime? @db.Date
+  applicationDeadline      DateTime?
+  internalDeadline         DateTime?
+  internalDeadlineIsManual Boolean   @default(false)
+  classStartDate           DateTime? @db.Date
+  quota                    Int?
+  note                     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([intakeId, programId])
+  @@index([programId])
+  @@map("intake_program_overrides")
+}
+
+/// Admissions business configuration — one row, `id` pinned to "default".
+/// Business configuration, never constants: the office retunes the lead time
+/// and the reminder ladder without a deploy, exactly like `ServicePricing`
+/// and `GksRankingConfig` (CLAUDE.md, gksedu.md §5.4).
+model AdmissionConfig {
+  id String @id @default("default")
+
+  /// How many days before the school's deadline our own deadline falls.
+  /// The office's current rule is 7; it is a value, not a constant.
+  internalLeadDays Int @default(7)
+
+  /// Days before `internalDeadline` a client is reminded.
+  clientReminderOffsets  Int[] @default([30, 14, 7, 3, 1])
+  /// Days before `internalDeadline` the assigned staff are warned about a case
+  /// whose documents are still short.
+  staffReminderOffsets   Int[] @default([21, 14, 7, 3, 1])
+  /// Below this document-readiness percentage a case counts as at risk.
+  riskReadinessThreshold Int   @default(80)
+
+  /// Gemini model the "research this online" button runs against.
+  researchModel String @default("gemini-2.5-pro")
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?  @db.Uuid
+  updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("admission_config")
+}
+
+enum IntakeResearchStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+/// One run of "look this school's intake dates up online" (Gemini + Google
+/// Search grounding). The result is a *proposal*: staff read the candidates,
+/// drop them into the form and save. Nothing here ever becomes an
+/// `IntakeTerm` on its own.
+model IntakeResearchRun {
+  id           String     @id @default(uuid()) @db.Uuid
+  universityId String     @db.Uuid
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  /// Empty = every level.
+  levels ProgramLevel[] @default([])
+  year   Int
+
+  status IntakeResearchStatus @default(QUEUED)
+  model  String
+
+  /// Validated `IntakeCandidate[]` — the shape lives in `packages/shared`.
+  candidates  Json?
+  /// Grounding citations Gemini returned, so staff can check the source.
+  sources     String[] @default([])
+  /// The unparsed model output, kept for debugging a failed parse.
+  rawResponse String?
+  error       String?
+
+  promptTokens   Int?
+  responseTokens Int?
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  requestedById String? @db.Uuid
+  requestedBy   User?   @relation(fields: [requestedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([universityId, createdAt])
+  @@index([status])
+  @@map("intake_research_runs")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1689,9 +1857,17 @@ enum NotificationEvent {
   // Departure (§10)
   DEPARTURE_NEAR
   FLIGHT_INFO_UPDATED
+  // Admissions (§4.1, §4.2) — the intake calendar
+  /// To the client: our registration deadline for their intake is closing in.
+  INTAKE_DEADLINE_NEAR
+  /// To a saved-university follower: a new round opened at a school they starred.
+  INTAKE_OPENED
   // Staff-side
   LEAD_CREATED
   LEAD_FOLLOW_UP_DUE
+  /// To the assigned consultant and document officer: this case will miss its
+  /// intake unless someone moves. The answer to "ажилтан хэрэглэгчээ мартах".
+  INTAKE_CASE_AT_RISK
 }
 
 enum NotificationChannel {

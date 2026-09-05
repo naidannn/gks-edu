@@ -22,6 +22,15 @@ export interface NextAction {
   /** One sentence of context under it. */
   description: string;
   tab: CaseTab;
+  /**
+   * Days left until the intake's internal deadline, set only while the ball is
+   * with the client and the date is close enough to matter (1H-09).
+   *
+   * It decorates the action rather than replacing it: a client who is late
+   * still needs to be told *what* to do — the countdown only says how fast.
+   * `null` when there is no intake, no deadline, or no hurry.
+   */
+  urgentDaysLeft?: number | null;
 }
 
 export interface StageProgressLike {
@@ -44,6 +53,8 @@ export interface CaseSnapshot {
   payments: { kind: PaymentKind; status: PaymentStatus }[];
   admissionDocs: StageProgressLike;
   visaDocs: StageProgressLike;
+  /** From the case's `IntakeTerm`; negative once our deadline has passed. */
+  daysUntilIntakeDeadline?: number | null;
 }
 
 const WAIT_FOR_STAFF: NextAction = {
@@ -54,7 +65,34 @@ const WAIT_FOR_STAFF: NextAction = {
   tab: 'overview',
 };
 
+/** Inside this many days the intake deadline is worth shouting about. */
+const URGENT_WINDOW_DAYS = 30;
+
 export function nextAction(snapshot: CaseSnapshot): NextAction {
+  return withIntakeUrgency(resolveAction(snapshot), snapshot);
+}
+
+/**
+ * Marks the action urgent when the client is the one holding it up and their
+ * round is closing. Staff- and school-owned steps are left alone: telling a
+ * client to hurry while they are waiting on somebody else is just noise.
+ */
+function withIntakeUrgency(action: NextAction, snapshot: CaseSnapshot): NextAction {
+  const daysLeft = snapshot.daysUntilIntakeDeadline;
+  if (action.actor !== 'CLIENT' || daysLeft === null || daysLeft === undefined) return action;
+  if (daysLeft > URGENT_WINDOW_DAYS) return action;
+
+  const suffix =
+    daysLeft < 0
+      ? ' Манай бүртгэлийн хугацаа хэтэрсэн байна — зөвлөхтэйгээ яаралтай холбогдоно уу.'
+      : daysLeft === 0
+        ? ' Манай бүртгэлийн эцсийн хугацаа өнөөдөр дуусна.'
+        : ` Элсэлтийн бүртгэл хаагдахад ${daysLeft} хоног үлдлээ.`;
+
+  return { ...action, description: action.description + suffix, urgentDaysLeft: daysLeft };
+}
+
+function resolveAction(snapshot: CaseSnapshot): NextAction {
   switch (snapshot.stage) {
     case 'CONTRACT_DRAFT':
       return contractAction(snapshot);

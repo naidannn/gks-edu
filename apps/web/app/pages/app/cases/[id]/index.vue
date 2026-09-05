@@ -17,6 +17,29 @@ function transitionLabel(transition: CaseTransitionItem): string {
 }
 
 const admission = computed(() => gksCase.value?.documents.admission ?? null);
+const intake = computed(() => gksCase.value?.intake ?? null);
+
+/** `null` is "мэдээлэл шинэчлэгдэж байна", never a guessed date. */
+function formatDate(value: string | null): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function countdownLabel(days: number | null): string {
+  if (days === null) return 'Хугацаа тодорхойгүй';
+  if (days < 0) return `Хугацаа ${Math.abs(days)} хоногоор хэтэрсэн`;
+  if (days === 0) return 'Өнөөдөр хаагдана';
+  return `${days} хоног үлдлээ`;
+}
+
+function countdownTone(days: number | null): BadgeTone {
+  if (days === null) return 'neutral';
+  if (days < 0) return 'danger';
+  if (days <= 7) return 'danger';
+  if (days <= 21) return 'warning';
+  return 'success';
+}
 const payments = computed(() => (gksCase.value?.payments ?? []).filter((p) => p.kind === 'PREPAYMENT' || p.kind === 'BALANCE'));
 const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
 </script>
@@ -24,6 +47,38 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
 <template>
   <div v-if="gksCase" class="gks-overview">
     <PortalNextActionCard :action="gksCase.nextAction" :case-id="gksCase.id" />
+
+    <DsCard v-if="intake" title="Элсэлтийн хугацаа">
+      <template #action>
+        <DsBadge :tone="countdownTone(intake.daysUntilInternalDeadline)">
+          {{ countdownLabel(intake.daysUntilInternalDeadline) }}
+        </DsBadge>
+      </template>
+      <p class="gks-overview__intake-term">
+        {{ gksCase.university?.nameMn ?? 'Сургууль сонгоогүй' }} — {{ intake.year }} оны
+        {{ INTAKE_MONTH_LABELS[intake.month] ?? `${intake.month}-р сар` }} ·
+        {{ PROGRAM_LEVEL_LABELS[intake.level] }}
+      </p>
+      <dl class="gks-overview__dates">
+        <div>
+          <dt>Бүртгэлийн эцсийн хугацаа</dt>
+          <dd class="gks-tnum gks-overview__dates-ours">{{ formatDate(intake.internalDeadline) }}</dd>
+        </div>
+        <div>
+          <dt>Хичээл эхлэх</dt>
+          <dd class="gks-tnum">{{ formatDate(intake.classStartDate) }}</dd>
+        </div>
+        <div v-if="intake.resultAnnouncedAt">
+          <dt>Хариу зарлах</dt>
+          <dd class="gks-tnum">{{ formatDate(intake.resultAnnouncedAt) }}</dd>
+        </div>
+      </dl>
+      <p class="gks-overview__meta">
+        Энэ огноо хүртэл материалаа бүрэн бүрдүүлсэн байх шаардлагатай. Орчуулга, баталгаажуулалтад
+        хугацаа зарцуулагддаг тул эрт эхлэх тусам сайн.
+      </p>
+      <p v-if="intake.requirementNote" class="gks-overview__meta">{{ intake.requirementNote }}</p>
+    </DsCard>
 
     <div class="gks-overview__cols">
       <DsCard title="Материалын явц">
@@ -84,7 +139,15 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
 .gks-overview__figure { font-size: var(--fs-h2); font-weight: var(--fw-bold); color: var(--text-strong); }
 .gks-overview__bar { height: 6px; margin: var(--sp-3) 0; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
 .gks-overview__fill { height: 100%; background: var(--brand-500); }
-.gks-overview__meta { font-size: var(--fs-caption); color: var(--text-subtle); }
+.gks-overview__meta { font-size: var(--fs-caption); color: var(--text-subtle); line-height: 1.6; }
+.gks-overview__meta + .gks-overview__meta { margin-top: var(--sp-2); }
+.gks-overview__intake-term { font-weight: var(--fw-semibold); }
+.gks-overview__dates { display: grid; gap: var(--sp-2); margin-block: var(--sp-4); padding: var(--sp-3); border-radius: var(--radius-2); background: var(--surface-sunken, var(--n-050)); }
+.gks-overview__dates > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); }
+.gks-overview__dates dt { color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-overview__dates dd { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); }
+/* The date the case is driven to. */
+.gks-overview__dates-ours { color: var(--brand-700); }
 .gks-overview__link { display: inline-block; margin-top: var(--sp-4); font-size: var(--fs-body-sm); color: var(--brand-600); text-decoration: none; }
 .gks-overview__link:hover { text-decoration: underline; }
 

@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
 import { NOTIFICATION_QUEUE, REMINDER_SWEEP_QUEUE } from '../../queue/queue.constants.js';
 import { SmsModule } from '../../sms/sms.module.js';
+import { AdmissionsModule } from '../admissions/admissions.module.js';
 import { EmailService } from './email.service.js';
 import { NotificationTemplatesService } from './notification-templates.service.js';
 import { NotificationsController } from './notifications.controller.js';
@@ -19,6 +20,8 @@ import { SmsBudgetService } from './sms-budget.service.js';
 @Module({
   imports: [
     SmsModule,
+    // The daily sweep reads the admissions reminder ladder (1H-09).
+    AdmissionsModule,
     BullModule.registerQueue({ name: NOTIFICATION_QUEUE }, { name: REMINDER_SWEEP_QUEUE }),
   ],
   controllers: [NotificationsController],

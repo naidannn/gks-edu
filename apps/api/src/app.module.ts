@@ -28,6 +28,7 @@ import { PostsModule } from './modules/posts/posts.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { ReportsModule } from './modules/reports/reports.module.js';
 import { SavedUniversitiesModule } from './modules/saved-universities/saved-universities.module.js';
+import { AdmissionsModule } from './modules/admissions/admissions.module.js';
 import { UniversitiesModule } from './modules/universities/universities.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { VisaModule } from './modules/visa/visa.module.js';
@@ -59,6 +60,7 @@ import { StorageModule } from './storage/storage.module.js';
     AuthModule,
     UsersModule,
     UniversitiesModule,
+    AdmissionsModule,
     SavedUniversitiesModule,
     LeadsModule,
     PricingModule,

@@ -34,3 +34,11 @@ export const REPORT_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 export const GKS_RANKING_QUEUE = 'gks-ranking';
 export const GKS_RANKING_JOB = 'recompute-ranking';
 export const GKS_RANKING_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Gemini intake-date research (1H-10). Not a scheduler — jobs are added when
+ * staff press "Интернэтээс судлах". A grounded search runs 30-90s, which is
+ * why it is a job at all: the request would otherwise time out behind nginx.
+ */
+export const INTAKE_RESEARCH_QUEUE = 'intake-research';
+export const INTAKE_RESEARCH_JOB = 'research-intakes';

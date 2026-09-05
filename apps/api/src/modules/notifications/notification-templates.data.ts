@@ -28,6 +28,7 @@ const CASE_APPLICATION = '/app/cases/{{caseId}}/application';
 const CASE_VISA = '/app/cases/{{caseId}}/visa';
 const CASE_DEPARTURE = '/app/cases/{{caseId}}/departure';
 const CASE_CONTRACT = '/app/cases/{{caseId}}/contract';
+const ADMIN_ADMISSIONS_BOARD = '/admin/admissions/board';
 
 export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
   // ── Бүртгэл ──────────────────────────────────────────────────────────────
@@ -488,5 +489,86 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
       'Товлосон огноо: {{nextContactDate}}\n\n' +
       'CRM: {{link}}',
     linkMn: '/admin/leads/{{leadId}}',
+  },
+  // ── Элсэлтийн хугацаа (§4.1, §4.2 — 1H) ──────────────────────────────────
+  //
+  // `deadlineDate` is OUR deadline. The school's later one is deliberately
+  // absent from every client-facing message: given both dates, people work to
+  // the later one and arrive a week late.
+  {
+    event: NotificationEvent.INTAKE_DEADLINE_NEAR,
+    channel: NotificationChannel.IN_APP,
+    titleMn: 'Элсэлтийн бүртгэлийн хугацаа дөхөж байна',
+    bodyMn:
+      '{{universityName}} — {{intakeName}}. Бүртгэлийн эцсийн хугацаа {{deadlineDate}} ' +
+      '({{daysLeft}} хоног үлдлээ). Дутуу материалаа гүйцээнэ үү.',
+    linkMn: CASE_DOCS,
+  },
+  {
+    event: NotificationEvent.INTAKE_DEADLINE_NEAR,
+    channel: NotificationChannel.EMAIL,
+    titleMn: 'Элсэлтийн бүртгэл {{daysLeft}} хоногийн дараа хаагдана',
+    bodyMn:
+      'Сайн байна уу, {{clientName}}.\n\n' +
+      'Таны сонгосон элсэлт: {{universityName}} — {{intakeName}}\n' +
+      'Бүртгэлийн эцсийн хугацаа: {{deadlineDate}} ({{daysLeft}} хоног үлдлээ)\n\n' +
+      'Дутуу материал: {{missingDocuments}}\n' +
+      'Материалын жагсаалт: {{link}}\n\n' +
+      'GKS EDU GROUP',
+    linkMn: CASE_DOCS,
+  },
+  {
+    event: NotificationEvent.INTAKE_DEADLINE_NEAR,
+    channel: NotificationChannel.SMS,
+    titleMn: 'Элсэлтийн хугацаа дөхлөө',
+    bodyMn: 'GKSedu: {{universityName}} элсэлтийн бүртгэл {{deadlineDate}}-нд хаагдана. {{daysLeft}} хоног үлдлээ.',
+  },
+  {
+    event: NotificationEvent.INTAKE_OPENED,
+    channel: NotificationChannel.IN_APP,
+    titleMn: 'Хадгалсан сургуульд шинэ элсэлт нээгдлээ',
+    bodyMn: '{{universityName}} — {{intakeName}}. Бүртгэл {{deadlineDate}} хүртэл нээлттэй.',
+    linkMn: '/universities/{{universitySlug}}',
+  },
+  {
+    event: NotificationEvent.INTAKE_OPENED,
+    channel: NotificationChannel.EMAIL,
+    titleMn: '{{universityName}} — шинэ элсэлт нээгдлээ',
+    bodyMn:
+      'Сайн байна уу, {{clientName}}.\n\n' +
+      'Таны хадгалсан сургуульд шинэ элсэлт нээгдлээ:\n\n' +
+      '{{universityName}} — {{intakeName}}\n' +
+      'Хичээл эхлэх: {{classStartDate}}\n' +
+      'Бүртгэлийн эцсийн хугацаа: {{deadlineDate}}\n\n' +
+      'Дэлгэрэнгүй: {{link}}\n\n' +
+      'GKS EDU GROUP',
+    linkMn: '/universities/{{universitySlug}}',
+  },
+
+  // ── Ажилтанд: элсэлтээ алдаж болзошгүй хэрэг (1H-09) ─────────────────────
+  //
+  // The office's own words: "ажилтан хүртэл хэрэглэгчээ мартаад" — this is the
+  // notification that makes that visible before the date passes.
+  {
+    event: NotificationEvent.INTAKE_CASE_AT_RISK,
+    channel: NotificationChannel.IN_APP,
+    titleMn: 'Элсэлтээ алдаж болзошгүй хэрэг',
+    bodyMn:
+      '{{caseCode}} — {{clientName}}. {{universityName}} {{intakeName}}: {{daysLeft}} хоног үлдэхэд ' +
+      'материал {{readiness}}% бүрдсэн ({{missingDocuments}} дутуу).',
+    linkMn: '/admin/cases/{{caseId}}',
+  },
+  {
+    event: NotificationEvent.INTAKE_CASE_AT_RISK,
+    channel: NotificationChannel.EMAIL,
+    titleMn: '{{caseCode}} элсэлтээ алдаж болзошгүй — {{daysLeft}} хоног үлдлээ',
+    bodyMn:
+      'Анхаарал шаардсан хэрэг:\n\n' +
+      'Хэрэг: {{caseCode}} — {{clientName}}\n' +
+      'Элсэлт: {{universityName}} — {{intakeName}}\n' +
+      'Манай бүртгэлийн эцсийн хугацаа: {{deadlineDate}} ({{daysLeft}} хоног үлдлээ)\n' +
+      'Материалын бүрдэлт: {{readiness}}% ({{missingDocuments}} материал дутуу)\n\n' +
+      'Элсэлтийн самбар: {{link}}',
+    linkMn: ADMIN_ADMISSIONS_BOARD,
   },
 ];
