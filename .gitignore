@@ -30,3 +30,6 @@ deploy/.env.production
 
 # Rendered email previews (pnpm email:preview).
 apps/api/tmp/
+
+# Claude Code personal settings
+.claude/settings.local.json
