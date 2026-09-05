@@ -122,7 +122,7 @@ export const configuration = (): AppConfig => ({
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY ?? '',
-    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-pro',
+    model: process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite',
     baseUrl: process.env.GEMINI_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta',
     timeoutMs: Number.parseInt(process.env.GEMINI_TIMEOUT_MS ?? '120000', 10),
     // Defaults to mock unless a key is present AND mocking is not forced on.

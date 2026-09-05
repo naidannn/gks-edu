@@ -202,9 +202,15 @@ links and save the ones they believe. Nothing writes an intake by itself.
 # GEMINI_API_KEY unset → GEMINI_MOCK defaults to true and a labelled fixture is returned,
 # so the screen and its review flow work without a key (same idea as QPAY_MOCK).
 GEMINI_API_KEY=...
-GEMINI_MODEL=gemini-2.5-pro
+GEMINI_MODEL=gemini-3.1-flash-lite
 GEMINI_TIMEOUT_MS=120000
 ```
+
+The model is the cheapest one Google still answers on: the whole 2.5 family, `gemini-2.5-pro`
+included, now 404s for keys that did not already use it (*"no longer available to new users"*).
+`AdmissionConfig.researchModel` overrides the env value per run, so the office can move to
+another model from the admin screen without a deploy — a research reply is read by a human
+before anything is saved, which is what makes the lite tier acceptable here.
 
 ### Notifications and reports
 

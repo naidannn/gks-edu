@@ -1,10 +1,17 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+/** A link the grounding runtime minted for a result it actually fetched. */
+const GROUNDING_REDIRECT = /https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\/[\w=-]+/g;
+
 export interface GeminiAnswer {
   /** The model's text, expected to be the JSON object the prompt asked for. */
   text: string;
-  /** URLs the grounding step actually retrieved — the citation trail. */
+  /**
+   * URLs the grounding step actually retrieved — the citation trail, and the
+   * only part of a reply the model does not author. Empty means the search
+   * never ran, whatever the answer claims.
+   */
   sources: string[];
   promptTokens: number | null;
   responseTokens: number | null;
@@ -86,7 +93,16 @@ export class GeminiService {
       .trim();
 
     const chunks = candidate?.groundingMetadata?.groundingChunks ?? [];
-    const sources = [...new Set(chunks.map((chunk) => chunk.web?.uri).filter((uri): uri is string => Boolean(uri)))];
+    const cited = chunks.map((chunk) => chunk.web?.uri).filter((uri): uri is string => Boolean(uri));
+
+    // Google returns `groundingMetadata` only for a prose answer it can
+    // annotate; ask for JSON — as the research prompt does — and the field
+    // comes back empty even though the search ran. What survives either way is
+    // the redirect link, which the grounding runtime mints and hands to the
+    // model. It cannot be written from memory, so finding one is the proof
+    // that the tool ran, and its absence is what `IntakeResearchService`
+    // marks a run down for.
+    const sources = [...new Set([...cited, ...findGroundingRedirects(text)])];
 
     return {
       text,
@@ -95,6 +111,11 @@ export class GeminiService {
       responseTokens: payload.usageMetadata?.candidatesTokenCount ?? null,
     };
   }
+}
+
+/** The grounding links inlined in a reply. Exported for the tests. */
+export function findGroundingRedirects(text: string): string[] {
+  return text.match(GROUNDING_REDIRECT) ?? [];
 }
 
 /**
@@ -113,11 +134,15 @@ export function extractJson(text: string): unknown {
   try {
     return JSON.parse(candidate);
   } catch {
-    // Last resort: the outermost {...} in the reply.
-    const start = candidate.indexOf('{');
-    const end = candidate.lastIndexOf('}');
-    if (start === -1 || end <= start) throw new Error('Хариунаас JSON олдсонгүй.');
-    return JSON.parse(candidate.slice(start, end + 1));
+    // Last resort: the outermost {...} or [...] in the reply — whichever opens
+    // first, so an unwrapped candidate list is not mistaken for its first entry.
+    // The array case is not hypothetical: models routinely drop the envelope and
+    // answer with the list alone, which `parseResearchResult` unwraps.
+    const object = outermost(candidate, '{', '}');
+    const array = outermost(candidate, '[', ']');
+    const slice = pickOuter(candidate, object, array);
+    if (slice === null) throw new Error('Хариунаас JSON олдсонгүй.');
+    return JSON.parse(slice);
   }
 }
 
@@ -127,4 +152,16 @@ interface GeminiApiResponse {
     groundingMetadata?: { groundingChunks?: { web?: { uri?: string } }[] };
   }[];
   usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+}
+
+function outermost(text: string, open: string, close: string): string | null {
+  const start = text.indexOf(open);
+  const end = text.lastIndexOf(close);
+  return start === -1 || end <= start ? null : text.slice(start, end + 1);
+}
+
+/** Whichever slice starts earlier in the reply; the other is nested inside it. */
+function pickOuter(text: string, object: string | null, array: string | null): string | null {
+  if (object === null || array === null) return object ?? array;
+  return text.indexOf('{') < text.indexOf('[') ? object : array;
 }

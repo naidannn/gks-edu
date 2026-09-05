@@ -162,7 +162,7 @@ async function save() {
           "Интернэтээс судлах" товч ажиллуулах Gemini загвар. Түлхүүр тохируулаагүй бол систем
           хуурамч (mock) хариу буцаана — судалгаа биш гэдгийг үр дүн дээр нь бичиж өгдөг.
         </p>
-        <DsInput v-model="researchModel" label="Загвар" placeholder="gemini-2.5-pro" />
+        <DsInput v-model="researchModel" label="Загвар" placeholder="gemini-3.1-flash-lite" />
       </DsCard>
 
       <p v-if="errorMsg" class="gks-adm-config__error">{{ errorMsg }}</p>

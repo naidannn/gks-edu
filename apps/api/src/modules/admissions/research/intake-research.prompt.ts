@@ -20,20 +20,34 @@ const LEVEL_HINTS: Record<ProgramLevel, string> = {
 /**
  * The research prompt (1H-10).
  *
- * Three things it is built to prevent, because each one costs the office a
+ * Four things it is built to prevent, because each one costs the office a
  * student:
+ *  - an answer written without searching at all → the search order is the
+ *    first instruction and the last, and `parseResearchResult` caps every
+ *    candidate at LOW when Google's grounding trail comes back empty;
  *  - a recalled date presented as a found one → every field is nullable and
  *    the model is told to prefer `null` over a guess;
  *  - a date with no provenance → `sourceUrl` and `confidence` are required;
  *  - dates for the wrong school → the Korean name and the official domain are
  *    both pinned in the prompt.
+ *
+ * The search order needs restating this insistently because the lite models
+ * skip it: given a long, well-specified schema they will fill it in from
+ * memory and label the result HIGH.
  */
 export function buildResearchPrompt(subject: ResearchSubject): string {
   const levels = subject.levels.length
     ? subject.levels
     : (['LANGUAGE_PREP', 'BACHELOR', 'MASTER', 'PHD'] as ProgramLevel[]);
 
-  return `You are researching the official ${subject.year} admission calendar of a South Korean university for a Mongolian study-abroad agency. Use Google Search and read the university's own admissions pages.
+  return `You are researching the official ${subject.year} admission calendar of a South Korean university for a Mongolian study-abroad agency.
+
+THIS IS A LOOKUP, NOT A RECALL TASK. Before you write anything, RUN GOOGLE
+SEARCH — at least one query per level below, in Korean — and read the pages you
+find. Korean schools republish their calendar every year and move the dates
+when they do, so an intake date remembered from training data is not merely
+stale, it is the specific mistake that makes a student miss their round. If you
+have not opened a page for a round, you have not found that round.
 
 UNIVERSITY
   Korean name:  ${subject.nameKo}
@@ -64,6 +78,9 @@ For each round report:
   note                  IN MONGOLIAN, what is uncertain and why (or null)
 
 RULES — these matter more than completeness:
+  0. SEARCH FIRST, ALWAYS. Every date you report must come from a page you
+     opened during this search. Answering from memory is a failed run, and an
+     empty search returns an empty "candidates" list — never a remembered one.
   1. NEVER invent a date. If a date is not published, return null for it. A
      null is useful; a wrong deadline makes a student miss their intake.
   2. Report only rounds you found evidence for. Do not pad the list out to a
@@ -88,5 +105,7 @@ Answer with JSON only, no prose and no markdown fence:
     }
   ],
   "sources": ["https://...", "https://..."]
-}`;
+}
+
+"sources" lists the pages you actually opened. Search now, then answer.`;
 }

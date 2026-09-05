@@ -144,10 +144,22 @@ export class IntakeResearchService {
         mockAnswer: () => mockResearchAnswer(run.year, run.levels),
       });
 
+      // `answer.sources` is Google's grounding trail, the one part of the reply
+      // the model does not author. Empty means the search tool never ran and
+      // the dates were written from memory — which the lite models will happily
+      // do, and label HIGH. A mock run has no trail by construction and says so
+      // in its own notes, so it is exempt rather than marked down.
+      const grounded = this.gemini.isMock || answer.sources.length > 0;
+      if (!grounded) {
+        this.logger.warn(
+          `Grounding хоосон (${runId}): загвар хайлт хийлгүй хариулсан тул бүх саналыг LOW болголоо`,
+        );
+      }
+
       // Two guards, in order: the reply must be JSON, and the JSON must be the
       // shape we asked for. Anything else is a failed run, not a half-filled
       // form for a reviewer to untangle.
-      const parsed = parseResearchResult(extractJson(answer.text), run.year);
+      const parsed = parseResearchResult(extractJson(answer.text), run.year, { grounded });
       const candidates = this.dedupe(parsed.candidates);
       const sources = [...new Set([...answer.sources, ...parsed.sources])];
 

@@ -45,6 +45,23 @@ export interface IntakeResearchResult {
 
 export class IntakeResearchParseError extends Error {}
 
+export interface ParseOptions {
+  /**
+   * Whether Google's own grounding trail came back with the reply.
+   *
+   * It is the one claim in the exchange the model cannot author: an empty
+   * trail means the search tool never ran, so every date is a recollection —
+   * however confidently it was labelled, and however plausible the `sourceUrl`
+   * it wrote down looks. Defaults to `true` so a caller with no grounding
+   * signal (the tests, the mock) is left alone.
+   */
+  grounded?: boolean;
+}
+
+/** Said on every candidate of an ungrounded run, where the reviewer reads it. */
+const UNGROUNDED_NOTE =
+  'Google хайлт хийгдээгүй тул огноог загвар санамжаасаа бичсэн — эх сурвалж дээр нь заавал шалгана уу.';
+
 const CONFIDENCES: IntakeCandidateConfidence[] = ['HIGH', 'MEDIUM', 'LOW'];
 const MAX_CANDIDATES = 24;
 const MAX_SOURCES = 30;
@@ -54,25 +71,35 @@ const MAX_SOURCES = 30;
  * silently skips individual candidates that are malformed, because one bad
  * round in a year is not a reason to lose the other three.
  */
-export function parseResearchResult(payload: unknown, expectedYear: number): IntakeResearchResult {
-  if (!isRecord(payload)) throw new IntakeResearchParseError('Хариу объект биш байна.');
-  if (!Array.isArray(payload.candidates)) {
+export function parseResearchResult(
+  payload: unknown,
+  expectedYear: number,
+  options: ParseOptions = {},
+): IntakeResearchResult {
+  // Asked for the {candidates, sources} envelope, given the bare list often
+  // enough to be the normal path rather than an error — `gemini-3.1-flash-lite`
+  // does it on nearly every JSON-mode reply. The list is the part that matters;
+  // dropping it over its wrapper would lose a whole year of rounds.
+  const envelope = Array.isArray(payload) ? { candidates: payload } : payload;
+
+  if (!isRecord(envelope)) throw new IntakeResearchParseError('Хариу объект биш байна.');
+  if (!Array.isArray(envelope.candidates)) {
     throw new IntakeResearchParseError('Хариунд "candidates" жагсаалт алга байна.');
   }
 
-  const candidates = payload.candidates
+  const candidates = envelope.candidates
     .slice(0, MAX_CANDIDATES)
-    .map((entry) => parseCandidate(entry, expectedYear))
+    .map((entry) => parseCandidate(entry, expectedYear, options.grounded ?? true))
     .filter((entry): entry is IntakeCandidate => entry !== null);
 
-  const sources = Array.isArray(payload.sources)
-    ? [...new Set(payload.sources.filter(isHttpUrl))].slice(0, MAX_SOURCES)
+  const sources = Array.isArray(envelope.sources)
+    ? [...new Set(envelope.sources.filter(isHttpUrl))].slice(0, MAX_SOURCES)
     : [];
 
   return { candidates, sources };
 }
 
-function parseCandidate(entry: unknown, expectedYear: number): IntakeCandidate | null {
+function parseCandidate(entry: unknown, expectedYear: number, grounded: boolean): IntakeCandidate | null {
   if (!isRecord(entry)) return null;
 
   const level = entry.level;
@@ -92,6 +119,10 @@ function parseCandidate(entry: unknown, expectedYear: number): IntakeCandidate |
     : 'LOW';
   // Confidence without a citation is an opinion. Say so.
   if (!sourceUrl && confidence !== 'LOW') confidence = 'MEDIUM';
+  // Confidence without a search behind it is a memory. Say that louder.
+  if (!grounded) confidence = 'LOW';
+
+  const note = toText(entry.note, 1000);
 
   return {
     level: level as ProgramLevel,
@@ -106,7 +137,7 @@ function parseCandidate(entry: unknown, expectedYear: number): IntakeCandidate |
     requirementNote: toText(entry.requirementNote, 2000),
     confidence,
     sourceUrl,
-    note: toText(entry.note, 1000),
+    note: grounded ? note : [UNGROUNDED_NOTE, note].filter(Boolean).join(' '),
   };
 }
 

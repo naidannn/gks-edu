@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractJson } from './gemini.service.js';
+import { extractJson, findGroundingRedirects } from './gemini.service.js';
 import { IntakeResearchParseError, parseResearchResult } from './intake-candidate.parser.js';
 
 const good = {
@@ -33,8 +33,26 @@ describe('extractJson', () => {
     expect(extractJson('Here is what I found:\n{"candidates":[]}')).toEqual({ candidates: [] });
   });
 
+  it('reads a bare array with a sentence in front of it', () => {
+    expect(extractJson('Here is what I found:\n[{"level":"BACHELOR"}] ...')).toEqual([{ level: 'BACHELOR' }]);
+  });
+
   it('throws when there is no object at all', () => {
     expect(() => extractJson('I could not find anything.')).toThrow();
+  });
+});
+
+describe('findGroundingRedirects', () => {
+  // A JSON-shaped reply comes back with no `groundingMetadata` at all, so the
+  // inlined redirect is the only evidence left that the search ran.
+  const redirect = 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_x-y=';
+
+  it('finds the links the grounding runtime minted', () => {
+    expect(findGroundingRedirects(`{"sources":["${redirect}","https://yskli.com/a"]}`)).toEqual([redirect]);
+  });
+
+  it('finds nothing in a reply written without searching', () => {
+    expect(findGroundingRedirects('{"sources":["https://www.yonsei.ac.kr"]}')).toEqual([]);
   });
 });
 
@@ -55,6 +73,14 @@ describe('parseResearchResult', () => {
   it('rejects a payload that is not the expected envelope', () => {
     expect(() => parseResearchResult({ nope: true }, 2027)).toThrow(IntakeResearchParseError);
     expect(() => parseResearchResult('a string', 2027)).toThrow(IntakeResearchParseError);
+  });
+
+  // `gemini-3.1-flash-lite` answers with the list and no wrapper more often than not.
+  it('accepts a bare candidate array as the envelope', () => {
+    const result = parseResearchResult([good], 2027);
+
+    expect(result.candidates).toHaveLength(1);
+    expect(result.sources).toEqual([]);
   });
 
   // One bad round should not cost the reviewer the other three.
@@ -79,6 +105,33 @@ describe('parseResearchResult', () => {
 
   // A model that is sure but cannot say where it read it is stating an
   // opinion; the reviewer must see that difference.
+  // Google's grounding trail is the only claim the model cannot author, so an
+  // empty one outranks whatever confidence and sourceUrl the reply asserted.
+  it('caps every candidate at LOW when the reply was not grounded', () => {
+    const result = parseResearchResult({ candidates: [good] }, 2027, { grounded: false });
+
+    expect(result.candidates[0]?.confidence).toBe('LOW');
+    expect(result.candidates[0]?.note).toContain('Google хайлт хийгдээгүй');
+    // The citation it wrote down is kept — a reviewer still wants to open it.
+    expect(result.candidates[0]?.sourceUrl).toBe('https://example.ac.kr/admissions');
+  });
+
+  it('keeps the model note alongside the ungrounded warning', () => {
+    const result = parseResearchResult({ candidates: [{ ...good, note: 'Хугацаа тодорхойгүй.' }] }, 2027, {
+      grounded: false,
+    });
+
+    expect(result.candidates[0]?.note).toContain('Google хайлт хийгдээгүй');
+    expect(result.candidates[0]?.note).toContain('Хугацаа тодорхойгүй.');
+  });
+
+  it('leaves a grounded reply alone', () => {
+    const result = parseResearchResult({ candidates: [good] }, 2027, { grounded: true });
+
+    expect(result.candidates[0]?.confidence).toBe('HIGH');
+    expect(result.candidates[0]?.note).toBeNull();
+  });
+
   it('caps confidence at MEDIUM when the candidate cites no source', () => {
     const result = parseResearchResult({ candidates: [{ ...good, sourceUrl: null }] }, 2027);
 

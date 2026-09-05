@@ -87,7 +87,7 @@ SMS_DAILY_LIMIT_GLOBAL=500
 # GEMINI_MOCK stays true and the screen gets a labelled fixture instead, so the
 # feature is usable before the key exists — the same arrangement as QPAY_MOCK.
 GEMINI_API_KEY=
-GEMINI_MODEL="gemini-2.5-pro"
+GEMINI_MODEL="gemini-3.1-flash-lite"
 GEMINI_TIMEOUT_MS=120000
 GEMINI_MOCK=true
 

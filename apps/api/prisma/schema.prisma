@@ -487,7 +487,7 @@ model AdmissionConfig {
   riskReadinessThreshold Int   @default(80)
 
   /// Gemini model the "research this online" button runs against.
-  researchModel String @default("gemini-2.5-pro")
+  researchModel String @default("gemini-3.1-flash-lite")
 
   updatedAt   DateTime @updatedAt
   updatedById String?  @db.Uuid
