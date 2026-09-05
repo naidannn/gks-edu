@@ -4,6 +4,7 @@ import { OtpService } from '../../sms/otp.service.js';
 import { StorageService } from '../../storage/storage.service.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import {
+  BalanceTrigger,
   CaseStage,
   ContractStatus,
   ContractType,
@@ -17,9 +18,10 @@ import { CasesService } from '../cases/cases.service.js';
 import { SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
+import { amountInWordsMnCapitalized } from './amount-words.util.js';
 import { ContractPdfService } from './contract-pdf.service.js';
 import { ADULT_AGE, ageOn } from '../clients/dto/client-fields.js';
-import { formatAmount, renderContractBody } from './contract-template.util.js';
+import { formatAmount, formatAmountExact, renderContractBody } from './contract-template.util.js';
 import type { AcceptContractDto } from './dto/accept-contract.dto.js';
 import type { CreateContractDto } from './dto/create-contract.dto.js';
 import type { CreateContractTemplateDto } from './dto/create-contract-template.dto.js';
@@ -28,12 +30,28 @@ import type { RegisterPhysicalContractDto } from './dto/register-physical-contra
 import type { UpsertCollateralContractDto } from './dto/upsert-collateral-contract.dto.js';
 
 const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
-const CONTRACT_TITLE: Record<ServiceType, string> = {
-  LANGUAGE_PREP: 'ЗУУЧЛАЛЫН ГЭРЭЭ — Хэлний бэлтгэл',
-  BACHELOR: 'ЗУУЧЛАЛЫН ГЭРЭЭ — Бакалавр',
-  MASTER: 'ЗУУЧЛАЛЫН ГЭРЭЭ — Магистр',
-  PHD: 'ЗУУЧЛАЛЫН ГЭРЭЭ — Доктор',
-  GKS_SCHOLARSHIP: 'ЗУУЧЛАЛЫН ГЭРЭЭ — Засгийн газрын тэтгэлэг',
+
+/**
+ * One title for every service, the way the office's signed Word contract
+ * (`geree.docx`) heads the page — §1.1 of
+ * the body already names the programmes the contract covers.
+ */
+export const CONTRACT_TITLE = 'СУРГАЛТ ЗУУЧЛАЛЫН ГЭРЭЭ';
+export const CONTRACT_SUBTITLE = 'EDUCATIONAL MEDIATION AGREEMENT';
+/** `СГ` = "сургалт, зуучлал"; the sequence restarts every calendar year. */
+const CONTRACT_NUMBER_PREFIX = 'СГ';
+
+/**
+ * §2.2 names the moment the balance falls due, and that moment is service
+ * configuration (`ServicePricing.balanceTrigger`), never a constant — regular
+ * brokerage bills after the visa, a GKS case after the scholarship result
+ * (`gksedu.md` §9).
+ */
+export const BALANCE_CONDITION: Record<BalanceTrigger, string> = {
+  [BalanceTrigger.AFTER_VISA_APPROVED]:
+    'Зуучлуулагчид БНСУ-ын зохих төрлийн виз олгогдсоны дараа Зуучлагч тал энэ талаар Зуучлуулагчид боломжит богино хугацаанд мэдэгдэх бөгөөд үүний үндсэн дээр Зуучлуулагч нь үлдэгдэл төлбөрийг төлнө',
+  [BalanceTrigger.AFTER_SCHOLARSHIP_RESULT]:
+    'БНСУ-ын Засгийн газрын тэтгэлэгт хөтөлбөрийн албан ёсны үр дүн зарлагдаж, Зуучлуулагч тэтгэлэгт тэнцсэн тухай мэдэгдэл ирмэгц Зуучлагч тал энэ талаар Зуучлуулагчид боломжит богино хугацаанд мэдэгдэх бөгөөд үүний үндсэн дээр Зуучлуулагч нь үлдэгдэл төлбөрийг төлнө',
 };
 
 @Injectable()
@@ -99,25 +117,21 @@ export class ContractsService {
     const signedForByGuardian = Boolean(client && ageOn(client.birthDate) < ADULT_AGE);
 
     const { prepayment, balance } = PricingService.amounts(pricing);
+    const contractDate = new Date();
     const bodyMn = renderContractBody(template.bodyMn, {
-      contractDate: new Date().toLocaleDateString('en-CA'),
-      userName: client ? `${client.lastName} ${client.firstName}` : (gksCase.user.name ?? gksCase.user.email ?? '—'),
-      userRegister: client?.registerNumber ?? '—',
-      userBirthDate: client ? client.birthDate.toLocaleDateString('en-CA') : '—',
-      userPhone: client?.phone ?? gksCase.user.phone ?? '—',
-      userAddress: client?.address ?? '—',
-      guardianName:
-        signedForByGuardian && client?.guardianLastName
-          ? `${client.guardianLastName} ${client.guardianFirstName ?? ''}`.trim()
-          : '—',
-      guardianRegister: signedForByGuardian ? (client?.guardianRegisterNumber ?? '—') : '—',
-      guardianRelation: signedForByGuardian ? (client?.guardianRelation ?? '—') : '—',
+      ...partyTokens(gksCase.user, client, signedForByGuardian),
+      contractDate: contractDate.toLocaleDateString('en-CA'),
+      signatureDate: formatSignatureDate(contractDate),
       universityName: gksCase.university?.nameMn ?? 'Тодорхойгүй (сургууль сонголт хийгдээгүй)',
-      totalAmount: formatAmount(pricing.totalAmount),
-      prepaymentAmount: formatAmount(prepayment),
-      balanceAmount: formatAmount(balance),
+      totalAmount: formatAmountExact(pricing.totalAmount),
+      totalAmountWords: amountInWordsMnCapitalized(pricing.totalAmount),
+      prepaymentAmount: formatAmountExact(prepayment),
+      prepaymentAmountWords: amountInWordsMnCapitalized(prepayment),
+      balanceAmount: formatAmountExact(balance),
+      balanceAmountWords: amountInWordsMnCapitalized(balance),
+      balanceCondition: BALANCE_CONDITION[pricing.balanceTrigger],
       paymentSchedule: `Гэрээ байгуулах үед ${formatAmount(prepayment)}₮, ${
-        pricing.balanceTrigger === 'AFTER_SCHOLARSHIP_RESULT' ? 'тэтгэлэгт тэнцсэний дараа' : 'виз гарсны дараа'
+        pricing.balanceTrigger === BalanceTrigger.AFTER_SCHOLARSHIP_RESULT ? 'тэтгэлэгт тэнцсэний дараа' : 'виз гарсны дараа'
       } үлдэгдэл ${formatAmount(balance)}₮`,
     });
 
@@ -125,6 +139,7 @@ export class ContractsService {
       data: {
         caseId: gksCase.id,
         userId: gksCase.userId,
+        number: await this.nextContractNumber(contractDate),
         type: dto.type,
         status: dto.type === ContractType.ELECTRONIC ? ContractStatus.SENT : ContractStatus.DRAFT,
         totalAmountSnapshot: pricing.totalAmount,
@@ -271,7 +286,10 @@ export class ContractsService {
     const full = await this.prisma.contract.findUniqueOrThrow({ where: { id: contract.id }, include: { case: true } });
 
     const pdfBuffer = await this.pdf.render({
-      title: CONTRACT_TITLE[full.case.serviceType],
+      title: CONTRACT_TITLE,
+      subtitle: CONTRACT_SUBTITLE,
+      number: full.number,
+      contractDate: full.createdAt,
       bodyMn: full.bodyMn,
       signedAt: signature.signedAt,
       signedIp: signature.signedIp,
@@ -302,8 +320,7 @@ export class ContractsService {
       context: {
         caseId: full.caseId,
         caseCode: full.case.code,
-        // There is no separate contract number — the case code identifies it (§5.4).
-        contractNumber: full.case.code,
+        contractNumber: full.number,
         serviceName: SERVICE_TYPE_LABELS[full.case.serviceType],
       },
     });
@@ -331,9 +348,86 @@ export class ContractsService {
     }
   }
 
+  /**
+   * `СГ/26/001` — the next free number in the current calendar year. The unique
+   * index is the real guard: two consultants issuing a contract in the same
+   * second both read the same count, and the loser simply takes the next one.
+   */
+  private async nextContractNumber(on: Date, attempt = 0): Promise<string> {
+    const yearStart = new Date(on.getFullYear(), 0, 1);
+    const nextYearStart = new Date(on.getFullYear() + 1, 0, 1);
+    const issued = await this.prisma.contract.count({
+      where: { createdAt: { gte: yearStart, lt: nextYearStart } },
+    });
+    const year = String(on.getFullYear()).slice(-2);
+    const sequence = String(issued + 1 + attempt).padStart(3, '0');
+    const candidate = `${CONTRACT_NUMBER_PREFIX}/${year}/${sequence}`;
+
+    const taken = await this.prisma.contract.findUnique({ where: { number: candidate }, select: { id: true } });
+    return taken ? this.nextContractNumber(on, attempt + 1) : candidate;
+  }
+
   private async getOrThrow(id: string) {
     const contract = await this.prisma.contract.findUnique({ where: { id }, include: { collateralContract: true } });
     if (!contract) throw new NotFoundException(`Contract ${id} not found`);
     return contract;
   }
+}
+
+// ─── Template data ──────────────────────────────────────────────────────────
+
+type ContractClient = {
+  lastName: string;
+  firstName: string;
+  registerNumber: string;
+  birthDate: Date;
+  phone: string;
+  email: string | null;
+  address: string | null;
+  guardianLastName: string | null;
+  guardianFirstName: string | null;
+  guardianRegisterNumber: string | null;
+  guardianRelation: string | null;
+};
+
+type ContractUser = { name: string | null; email: string | null; phone: string | null };
+
+/**
+ * Everything the contract says about the two people signing it. The client
+ * record is where that legal identity lives (1B-14) — full name, register
+ * number, and the guardian who signs for a minor. The `userName`/`guardian*`
+ * tokens are kept for contract templates written before that Word file.
+ */
+export function partyTokens(user: ContractUser, client: ContractClient | null, byGuardian: boolean): Record<string, string> {
+  const guardianName =
+    byGuardian && client?.guardianLastName
+      ? `${client.guardianLastName} ${client.guardianFirstName ?? ''}`.trim()
+      : '—';
+
+  return {
+    userLastName: client?.lastName ?? '—',
+    userFirstName: client?.firstName ?? (user.name ?? '—'),
+    userShortName: client ? `${client.lastName.charAt(0)}.${client.firstName}` : (user.name ?? '—'),
+    userRegister: client?.registerNumber ?? '—',
+    userPhone: client?.phone ?? user.phone ?? '—',
+    userEmail: client?.email ?? user.email ?? '—',
+    userAddress: client?.address ?? '—',
+    // A minor is represented by the guardian, so the opening paragraph names
+    // them beside the client; an adult leaves no trace of the clause at all.
+    guardianNote:
+      byGuardian && guardianName !== '—'
+        ? `, түүний өмнөөс хууль ёсны төлөөлөгч ${guardianName} /РД: ${client?.guardianRegisterNumber ?? '—'}, ${client?.guardianRelation ?? 'асран хамгаалагч'}/`
+        : '',
+
+    userName: client ? `${client.lastName} ${client.firstName}` : (user.name ?? user.email ?? '—'),
+    userBirthDate: client ? client.birthDate.toLocaleDateString('en-CA') : '—',
+    guardianName,
+    guardianRegister: byGuardian ? (client?.guardianRegisterNumber ?? '—') : '—',
+    guardianRelation: byGuardian ? (client?.guardianRelation ?? '—') : '—',
+  };
+}
+
+/** `2026/09/02` — the date beside the client's signature in the Word file. */
+export function formatSignatureDate(date: Date): string {
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
 }

@@ -1035,6 +1035,10 @@ model Contract {
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  /// Contract number as it reads on the signed paper — `СГ/26/001`, the
+  /// sequence restarting each calendar year.
+  number String @unique
+
   type   ContractType
   status ContractStatus @default(DRAFT)
 

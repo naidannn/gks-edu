@@ -156,7 +156,7 @@ useHead({ title: 'Гэрээ · CRM' });
         <table class="gks-table gks-table--cards">
           <thead>
             <tr>
-              <th>Хэрэг / харилцагч</th>
+              <th>Гэрээ / харилцагч</th>
               <th>Үйлчилгээ</th>
               <th>Төлөв</th>
               <th>Гэрээ</th>
@@ -176,7 +176,7 @@ useHead({ title: 'Гэрээ · CRM' });
               <td data-label="Харилцагч">
                 <span>
                   <span class="gks-cell-name">{{ c.user.name ?? c.user.email }}</span>
-                  <span class="gks-cell-sub gks-tnum">{{ c.case.code }}</span>
+                  <span class="gks-cell-sub gks-tnum">№ {{ c.number }} · {{ c.case.code }}</span>
                 </span>
               </td>
               <td data-label="Үйлчилгээ">{{ SERVICE_LABELS[c.case.serviceType] }}</td>

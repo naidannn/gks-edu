@@ -18,6 +18,7 @@ const config = useRuntimeConfig();
 
 const busy = ref(false);
 const errorMsg = ref<string | null>(null);
+const showBody = ref(false);
 
 const contract = computed(() => props.workspaceCase.contract);
 const payments = computed(() => props.workspaceCase.payments);
@@ -156,6 +157,7 @@ const needsPhysicalRegistration = computed(
 
       <template v-else>
         <dl class="gks-cpay__facts">
+          <CommonDataValue label="Дугаар" :value="contract.number" />
           <CommonDataValue label="Төрөл" :value="CONTRACT_TYPE_LABELS[contract.type]" />
           <CommonDataValue label="Төлөв" :value="CONTRACT_STATUS_LABELS[contract.status]" />
           <CommonDataValue label="Нийт төлбөр" :value="mnt(contract.totalAmountSnapshot)" />
@@ -164,16 +166,25 @@ const needsPhysicalRegistration = computed(
           <CommonDataValue label="Гарын үсэг зурсан" :value="formatDateTime(contract.signedAt)" />
         </dl>
 
-        <DsButton
-          v-if="contract.pdfPath"
-          size="sm"
-          variant="secondary"
-          icon-left="download"
-          :loading="busy"
-          @click="downloadPdf(contract.id)"
-        >
-          PDF татах
-        </DsButton>
+        <div class="gks-cpay__row">
+          <DsButton
+            v-if="contract.pdfPath"
+            size="sm"
+            variant="secondary"
+            icon-left="download"
+            :loading="busy"
+            @click="downloadPdf(contract.id)"
+          >
+            PDF татах
+          </DsButton>
+          <DsButton size="sm" variant="ghost" @click="showBody = !showBody">
+            {{ showBody ? 'Эхийг хаах' : 'Гэрээний эх харах' }}
+          </DsButton>
+        </div>
+
+        <div v-if="showBody" class="gks-cpay__sheet">
+          <ContractDocument :body="contract.bodyMn" :number="contract.number" :date="contract.createdAt" />
+        </div>
 
         <div v-if="needsPhysicalRegistration" class="gks-cpay__subform">
           <h3 class="gks-cpay__subtitle">Биет гэрээ бүртгэх</h3>
@@ -263,6 +274,14 @@ const needsPhysicalRegistration = computed(
 
 <style scoped>
 .gks-cpay { display: flex; flex-direction: column; gap: var(--sp-4); }
+.gks-cpay__row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.gks-cpay__sheet {
+  margin-top: var(--sp-4);
+  max-height: 520px;
+  overflow-y: auto;
+  border: 1px solid var(--line-hairline);
+  border-radius: var(--radius-1);
+}
 .gks-cpay__error { color: var(--danger-fg); }
 
 .gks-cpay__totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); }

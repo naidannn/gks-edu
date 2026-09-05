@@ -7,6 +7,17 @@ export function formatAmount(value: DecimalLike): string {
 }
 
 /**
+ * The same number with the two decimals the signed contract prints:
+ * `5,000,000.00`.
+ */
+export function formatAmountExact(value: DecimalLike): string {
+  const n = toNumber(value);
+  const [whole, fraction = '00'] = Math.abs(n).toFixed(2).split('.');
+  const grouped = whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${n < 0 ? '-' : ''}${grouped}.${fraction}`;
+}
+
+/**
  * Substitutes `{{token}}` placeholders with case-specific data (1C-06). Tokens
  * with no entry in `data` — the legal boilerplate an admin writes directly
  * into the template body (obligations, refund terms, …) — are left as-is so

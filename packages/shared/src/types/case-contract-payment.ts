@@ -71,6 +71,8 @@ export interface ContractDetail {
   id: string;
   caseId: string;
   userId: string;
+  /** `СГ/26/001` — the number printed on the signed paper. */
+  number: string;
   type: ContractType;
   status: ContractStatus;
   totalAmountSnapshot: string;

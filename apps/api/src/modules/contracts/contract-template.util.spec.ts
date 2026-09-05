@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAmount, renderContractBody } from './contract-template.util.js';
+import { formatAmount, formatAmountExact, renderContractBody } from './contract-template.util.js';
 
 describe('formatAmount', () => {
   it('groups thousands', () => {
@@ -24,5 +24,13 @@ describe('renderContractBody', () => {
   it('leaves unresolved tokens as-is (admin still needs to fill them in)', () => {
     const result = renderContractBody('Нөхцөл: {{refundTerms}}', {});
     expect(result).toBe('Нөхцөл: {{refundTerms}}');
+  });
+});
+
+describe('formatAmountExact', () => {
+  it('keeps the two decimals the contract prints', () => {
+    expect(formatAmountExact(5_000_000)).toBe('5,000,000.00');
+    expect(formatAmountExact('1500000')).toBe('1,500,000.00');
+    expect(formatAmountExact(1_234.5)).toBe('1,234.50');
   });
 });

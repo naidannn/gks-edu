@@ -5,7 +5,7 @@
 # other applications, and a Nuxt build there would swap hard enough to hurt
 # them. Only compiled output is shipped.
 #
-#   .deploy-build/api/   dist/ + prisma/ + the manifests pnpm needs on the server
+#   .deploy-build/api/   dist/ + prisma/ + assets/ + the manifests pnpm needs
 #   .deploy-build/web/   Nuxt .output/ — self-contained, no node_modules needed
 
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
@@ -31,6 +31,9 @@ pnpm --filter @gks/api build
 log "Staging API artefacts"
 cp -R apps/api/dist                "$BUILD_DIR/api/dist"
 cp -R apps/api/prisma              "$BUILD_DIR/api/prisma"
+# The contract PDF reads its font and letterhead from `assets/` relative to the
+# working directory, so they ship beside dist/ rather than inside it.
+cp -R apps/api/assets              "$BUILD_DIR/api/assets"
 cp    apps/api/package.json        "$BUILD_DIR/api/package.json"
 cp    apps/api/prisma.config.ts    "$BUILD_DIR/api/prisma.config.ts"
 # `prisma generate` runs as apps/api's postinstall; the server installs with

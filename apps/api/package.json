@@ -22,8 +22,10 @@
     "universities:import": "tsx prisma/import-universities.ts",
     "ranking:import": "tsx prisma/import-the-ranking.ts",
     "clients:import": "tsx prisma/import-clients.ts",
+    "contract:template:import": "tsx prisma/import-contract-template.ts",
     "postinstall": "prisma generate",
-    "email:preview": "tsx scripts/preview-emails.ts"
+    "email:preview": "tsx scripts/preview-emails.ts",
+    "contract:preview": "tsx scripts/preview-contract.ts"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",

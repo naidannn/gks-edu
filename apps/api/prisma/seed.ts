@@ -18,6 +18,7 @@ import {
   ServiceType,
 } from '../src/generated/prisma/client.js';
 import { buildCaseFlowDefinitions } from '../src/modules/cases/case-flow.js';
+import { CONTRACT_BODY_TEMPLATE } from '../src/modules/contracts/contract-body.template.js';
 import { NOTIFICATION_TEMPLATES } from '../src/modules/notifications/notification-templates.data.js';
 
 loadEnv({ path: ['.env', '../../.env'], quiet: true });
@@ -82,44 +83,15 @@ async function seedCaseFlowDefinitions(): Promise<void> {
 }
 
 /** Draft body per service (gksedu.md §5.4 field list) — admin edits the text via 1C-06. */
-function defaultContractBody(serviceLabel: string): string {
-  return `ЗУУЧЛАЛЫН ГЭРЭЭ
-
-Огноо: {{contractDate}}
-Хэрэглэгч: {{userName}} (РД: {{userRegister}})
-Байгууллага: Жи Кэй Эс Эдү Групп ХХК
-
-1. Үйлчилгээ: ${serviceLabel}
-2. Зорилтот сургууль: {{universityName}}
-3. Үйлчилгээний нийт төлбөр: {{totalAmount}}₮
-4. Урьдчилгаа төлбөр: {{prepaymentAmount}}₮
-5. Үлдэгдэл төлбөр: {{balanceAmount}}₮
-6. Төлбөрийн хуваарь: {{paymentSchedule}}
-7. Байгууллагын хүлээх үүрэг: {{companyObligations}}
-8. Хэрэглэгчийн хүлээх үүрэг: {{clientObligations}}
-9. Материал бүрдүүлэх хугацаа: {{documentDeadline}}
-10. Буцаалтын нөхцөл: {{refundTerms}}
-11. Виз татгалзсан үеийн нөхцөл: {{visaRejectionTerms}}
-12. Үйлчилгээ дуусах нөхцөл: {{serviceEndTerms}}
-13. Нэмэлт үйлчилгээний нөхцөл: {{extraServiceTerms}}
-
-Талууд дээрх нөхцөлийг зөвшөөрч гарын үсэг зурав.`;
-}
-
-const CONTRACT_TEMPLATE_LABELS: Record<ServiceType, string> = {
-  [ServiceType.LANGUAGE_PREP]: 'Солонгос хэлний бэлтгэлийн зуучлал',
-  [ServiceType.BACHELOR]: 'Бакалаврын зэргийн зуучлал',
-  [ServiceType.MASTER]: 'Магистрын зэргийн зуучлал',
-  [ServiceType.PHD]: 'Докторын зэргийн зуучлал',
-  [ServiceType.GKS_SCHOLARSHIP]: 'БНСУ-ын Засгийн газрын тэтгэлгийн зуучлал',
-};
 
 async function seedContractTemplates(): Promise<void> {
-  for (const [serviceType, label] of Object.entries(CONTRACT_TEMPLATE_LABELS) as [ServiceType, string][]) {
+  // One body for every service — `docs/geree.docx` is written to cover all of
+  // them, and the amounts come from `ServicePricing` at issue time.
+  for (const serviceType of Object.values(ServiceType)) {
     const exists = await prisma.contractTemplate.findFirst({ where: { serviceType } });
     if (exists) continue;
     await prisma.contractTemplate.create({
-      data: { serviceType, version: 1, isActive: true, bodyMn: defaultContractBody(label) },
+      data: { serviceType, version: 1, isActive: true, bodyMn: CONTRACT_BODY_TEMPLATE },
     });
   }
 }

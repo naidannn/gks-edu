@@ -52,6 +52,7 @@ if [[ $DO_API -eq 1 ]]; then
   # them are left untouched.
   push "$BUILD_DIR/api/dist/"        "$API_DIR/dist/"
   push "$BUILD_DIR/api/prisma/"      "$API_DIR/prisma/"
+  push "$BUILD_DIR/api/assets/"      "$API_DIR/assets/"
   push "$BUILD_DIR/api/_workspace/"  "$API_DIR/_workspace/"
   scp -q -i "$SSH_KEY" "$BUILD_DIR/api/package.json"     "$SSH_USER@$SSH_HOST:$API_DIR/package.json"
   scp -q -i "$SSH_KEY" "$BUILD_DIR/api/prisma.config.ts" "$SSH_USER@$SSH_HOST:$API_DIR/prisma.config.ts"

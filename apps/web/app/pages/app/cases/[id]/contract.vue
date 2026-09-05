@@ -110,6 +110,7 @@ function formatDate(value: string | null): string {
     <template v-else>
       <DsCard title="Гэрээний үндсэн нөхцөл">
         <dl class="gks-contract__terms">
+          <div><dt>Гэрээний дугаар</dt><dd class="gks-tnum">{{ contract.number }}</dd></div>
           <div><dt>Гэрээний төрөл</dt><dd>{{ CONTRACT_TYPE_LABELS[contract.type] }}</dd></div>
           <div><dt>Төлөв</dt><dd>{{ CONTRACT_STATUS_LABELS[contract.status] }}</dd></div>
           <div><dt>Нийт төлбөр</dt><dd class="gks-tnum">{{ formatMntAmount(contract.totalAmountSnapshot) }}</dd></div>
@@ -121,8 +122,12 @@ function formatDate(value: string | null): string {
         </dl>
       </DsCard>
 
-      <DsCard title="Гэрээний бүрэн эх">
-        <pre class="gks-contract__body">{{ contract.bodyMn }}</pre>
+      <DsCard title="Гэрээний бүрэн эх" class="gks-contract__sheet">
+        <ContractDocument
+          :body="contract.bodyMn"
+          :number="contract.number"
+          :date="contract.createdAt"
+        />
       </DsCard>
 
       <DsCard v-if="isSigned" title="Гэрээ баталгаажсан">
@@ -186,15 +191,7 @@ function formatDate(value: string | null): string {
 .gks-contract__terms dt { font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-contract__terms dd { margin-top: 2px; font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--text-strong); }
 
-.gks-contract__body {
-  max-height: 460px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  font-family: var(--font-sans);
-  font-size: var(--fs-body-sm);
-  line-height: var(--lh-body);
-  color: var(--text-body);
-}
+.gks-contract__sheet :deep(.gks-doc) { max-height: 520px; overflow-y: auto; }
 .gks-contract__unknown { color: var(--text-subtle); font-style: italic; }
 .gks-contract__signed { display: flex; align-items: center; gap: var(--sp-2); color: var(--success-fg); font-weight: var(--fw-medium); margin-bottom: var(--sp-4); }
 .gks-contract__hint { font-size: var(--fs-body-sm); color: var(--text-muted); margin-bottom: var(--sp-4); line-height: var(--lh-body); }
