@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { UserRole } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -170,7 +169,7 @@ async function submit() {
     closeForm();
     await load();
   } catch (error) {
-    errorMsg.value = error instanceof ApiError ? error.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Хадгалж чадсангүй');
   } finally {
     submitting.value = false;
   }
@@ -189,7 +188,7 @@ async function patch(row: StaffRow, changes: { role?: UserRole; isActive?: boole
     await api.patch(`/users/staff/${row.id}`, changes);
     await load();
   } catch (error) {
-    errorMsg.value = error instanceof ApiError ? error.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Хадгалж чадсангүй');
   } finally {
     busyId.value = null;
   }
@@ -232,7 +231,7 @@ async function savePassword(row: StaffRow) {
     passwordValue.value = '';
     await load();
   } catch (error) {
-    errorMsg.value = error instanceof ApiError ? error.message : 'Нууц үг солиж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Нууц үг солиж чадсангүй');
   } finally {
     busyId.value = null;
   }
@@ -259,7 +258,7 @@ async function remove(row: StaffRow) {
     if (editingId.value === row.id) closeForm();
     await load();
   } catch (error) {
-    errorMsg.value = error instanceof ApiError ? error.message : 'Устгаж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Устгаж чадсангүй');
   } finally {
     busyId.value = null;
   }

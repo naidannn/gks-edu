@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ContractType, PaymentItem, PaymentKind, PaymentMethod, WorkspaceCase } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Payments tab (1G-17) — the money side of one case in one place: the contract
@@ -30,7 +29,7 @@ async function act(action: () => Promise<unknown>) {
     await action();
     emit('changed');
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Үйлдэл амжилтгүй боллоо';
+    errorMsg.value = apiErrorMessage(err, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }

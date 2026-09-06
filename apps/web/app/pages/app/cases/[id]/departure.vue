@@ -36,7 +36,7 @@ async function toggle(itemId: string, isDone: boolean) {
     await api.patch(`/departure-items/${itemId}`, { isDone });
     await load();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Хадгалж чадсангүй';
+    error.value = apiErrorMessage(e, 'Хадгалж чадсангүй');
   }
 }
 
@@ -52,7 +52,7 @@ async function saveFlight() {
     });
     await load();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Хадгалж чадсангүй';
+    error.value = apiErrorMessage(e, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }

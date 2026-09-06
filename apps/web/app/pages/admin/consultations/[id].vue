@@ -8,7 +8,6 @@ import type {
   ServiceType,
 } from '@gks/shared';
 import { LEAD_STAGE_TRANSITIONS } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -201,7 +200,7 @@ async function mergeInto(source: DuplicateLead) {
     await api.post(`/leads/${id.value}/merge`, { sourceId: source.id });
     await Promise.all([loadLead(), loadActivities(1), loadDuplicates()]);
   } catch (error) {
-    mergeError.value = error instanceof ApiError ? error.message : 'Нэгтгэж чадсангүй';
+    mergeError.value = apiErrorMessage(error, 'Нэгтгэж чадсангүй');
   } finally {
     merging.value = null;
   }

@@ -1,9 +1,44 @@
+import type { ApiErrorBody } from '@gks/shared';
+
 /**
- * Pulls the message out of a failed `$fetch`. Nest's ValidationPipe answers
- * with `message` as an array of field errors, everything else with a string.
+ * A failed API call, with the server's own reply kept intact.
+ *
+ * Lives here rather than beside `useApi()` because it is a plain class that
+ * anything may catch, and because {@link apiErrorMessage} — the only thing most
+ * callers want from it — has to be usable without pulling in a composable.
+ */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly body: ApiErrorBody | undefined,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+    this.name = 'ApiError';
+  }
+}
+
+/**
+ * What to show a person when a request failed.
+ *
+ * The API answers in Mongolian, so a server-supplied message is shown verbatim
+ * — including Nest's `ValidationPipe`, which replies with an array of field
+ * errors rather than a string. Anything else gets the caller's fallback: a
+ * `TypeError` from a bug, or `$fetch`'s own English "Failed to fetch … <url>"
+ * when the API never answered at all, is a log line and not something to put in
+ * front of staff.
+ *
+ * Two failure shapes reach this. `useApi()` has already normalised its own into
+ * an {@link ApiError}; `useFetch` and a bare `$fetch` hand back the raw error
+ * with the parsed body on `.data`. Reading only the second was a quiet bug:
+ * every screen that fetched through `useApi()` — changing a password, asking
+ * for a reset link — swallowed the server's reason and showed its fallback.
  */
 export function apiErrorMessage(error: unknown, fallback: string): string {
-  const data = (error as { data?: { message?: string | string[] } }).data;
-  if (Array.isArray(data?.message)) return data.message.join(', ');
-  return data?.message ?? fallback;
+  if (error instanceof ApiError) return error.message;
+
+  const body = (error as { data?: ApiErrorBody } | null | undefined)?.data;
+  if (Array.isArray(body?.message)) return body.message.join(', ');
+  return body?.message || fallback;
 }

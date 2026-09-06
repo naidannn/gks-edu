@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { CaseStage, WorkTask, WorkspaceCase } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Process tab (1G-17) — the whole service lifecycle for one case: the stages
@@ -44,7 +43,7 @@ async function act(action: () => Promise<unknown>) {
     await loadSide();
     emit('changed');
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Үйлдэл амжилтгүй боллоо';
+    errorMsg.value = apiErrorMessage(err, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }

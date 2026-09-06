@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ActivityKind, ClientActivityEntry, ClientDetail, LeadActivityType } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import type { BadgeTone } from '~/utils/labels';
 
 /**
@@ -67,7 +66,7 @@ async function addNote() {
     noteBody.value = '';
     emit('changed');
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Тэмдэглэл нэмж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Тэмдэглэл нэмж чадсангүй');
   } finally {
     saving.value = false;
   }

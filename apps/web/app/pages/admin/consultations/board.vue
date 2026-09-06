@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LeadListItem, LeadStage } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
+import { ApiError } from '~/utils/api-error';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -102,7 +102,7 @@ async function onDrop(stage: LeadStage) {
     await api.post(`/leads/${id}/transitions`, { stage });
   } catch (error) {
     lead.stage = previous;
-    errorMsg.value = error instanceof ApiError ? error.message : 'Үе шатыг өөрчилж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Үе шатыг өөрчилж чадсангүй');
   }
 }
 

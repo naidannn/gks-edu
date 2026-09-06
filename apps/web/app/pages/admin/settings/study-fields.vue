@@ -6,7 +6,6 @@ import type {
   RematchResult,
   StudyField,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * The canonical subject list, and the loop that keeps it useful.
@@ -64,7 +63,7 @@ async function saveField() {
     editingId.value = null;
     await studyFields.load();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     savingId.value = null;
   }
@@ -117,7 +116,7 @@ async function assign() {
     selected.value = new Set();
     await Promise.all([loadUnclassified(), studyFields.load()]);
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Ангилж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Ангилж чадсангүй');
   } finally {
     assigning.value = false;
   }
@@ -135,7 +134,7 @@ async function runRematch(dryRun: boolean) {
     rematch.value = await api.post<RematchResult>('/admin/study-fields/rematch', { dryRun });
     if (!dryRun) await Promise.all([loadUnclassified(), studyFields.load()]);
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Дахин ангилж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Дахин ангилж чадсангүй');
   } finally {
     rematching.value = false;
   }

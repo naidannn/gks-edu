@@ -23,7 +23,7 @@ async function load() {
   try {
     gksCase.value = await api.get<PortalCaseDetail>(`/me/cases/${id.value}`);
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : 'Үйлчилгээг ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Үйлчилгээг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }

@@ -6,7 +6,6 @@ import type {
   ProgramLevel,
   ProgramResearchRun,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Add or edit one programme, by hand or with Gemini's help.
@@ -66,7 +65,7 @@ async function loadExisting(id: string) {
     existing.value = program;
     fillProgramForm(form, program);
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Хөтөлбөрийн мэдээллийг ачаалж чадсангүй';
+    saveError.value = apiErrorMessage(err, 'Хөтөлбөрийн мэдээллийг ачаалж чадсангүй');
   } finally {
     loading.value = false;
   }
@@ -98,7 +97,7 @@ async function save() {
     }
     await navigateTo('/admin/programs');
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    saveError.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -112,7 +111,7 @@ async function remove() {
     await api.delete(`/admin/programs/${editingId.value}`);
     await navigateTo('/admin/programs');
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Устгаж чадсангүй';
+    saveError.value = apiErrorMessage(err, 'Устгаж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -185,7 +184,7 @@ async function startResearch() {
     startPolling();
   } catch (err) {
     researching.value = false;
-    researchError.value = err instanceof ApiError ? err.message : 'Судалгааг эхлүүлж чадсангүй';
+    researchError.value = apiErrorMessage(err, 'Судалгааг эхлүүлж чадсангүй');
   }
 }
 
@@ -244,7 +243,7 @@ async function savePicked() {
     });
     picked.value = new Set();
   } catch (err) {
-    researchError.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    researchError.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     bulkSaving.value = false;
   }

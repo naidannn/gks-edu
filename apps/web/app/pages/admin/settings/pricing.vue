@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { BalanceTrigger, PrepaymentMode, ServiceType, ServicePricing } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /** Service pricing + prepayment configuration (1C-19). */
 definePageMeta({ middleware: 'admin', layout: 'admin' });
@@ -59,7 +58,7 @@ async function submit() {
     form.prepaymentValue = '';
     await load();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     submitting.value = false;
   }

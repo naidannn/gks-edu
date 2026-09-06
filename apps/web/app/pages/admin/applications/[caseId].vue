@@ -63,7 +63,7 @@ async function act(action: () => Promise<unknown>) {
     await action();
     await load();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Үйлдэл амжилтгүй боллоо';
+    error.value = apiErrorMessage(e, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }

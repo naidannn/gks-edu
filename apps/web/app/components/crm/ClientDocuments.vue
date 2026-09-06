@@ -8,7 +8,6 @@ import type {
   SignedFile,
   WorkspaceCase,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Documents tab (1G-17) — this client's checklist, in place.
@@ -40,7 +39,7 @@ async function load() {
       query: { stage: stage.value },
     });
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Материалыг ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Материалыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -56,7 +55,7 @@ async function act(action: () => Promise<unknown>) {
     await load();
     emit('changed');
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Үйлдэл амжилтгүй боллоо';
+    errorMsg.value = apiErrorMessage(err, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }
@@ -107,7 +106,7 @@ async function printChecklist() {
     });
     openPdfBlob(blob, `Бүрдүүлэх материал-${props.workspaceCase.code}.pdf`);
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Жагсаалтыг хэвлэхэд алдаа гарлаа';
+    errorMsg.value = apiErrorMessage(err, 'Жагсаалтыг хэвлэхэд алдаа гарлаа');
   } finally {
     busy.value = false;
   }

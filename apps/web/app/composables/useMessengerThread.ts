@@ -77,7 +77,7 @@ export function useMessengerThread() {
       otherReadAt.value = null;
       void stream.refreshUnread();
     } catch (cause) {
-      error.value = cause instanceof Error ? cause.message : 'Чатыг нээж чадсангүй';
+      error.value = apiErrorMessage(cause, 'Чатыг нээж чадсангүй');
       conversation.value = null;
     } finally {
       pending.value = false;

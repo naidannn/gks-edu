@@ -85,7 +85,7 @@ async function submitNew(payload: {
     composingNew.value = false;
     await select(created.conversation.id);
   } catch (error) {
-    startError.value = error instanceof Error ? error.message : 'Илгээж чадсангүй. Дахин оролдоно уу.';
+    startError.value = apiErrorMessage(error, 'Илгээж чадсангүй. Дахин оролдоно уу.');
   } finally {
     starting.value = false;
   }

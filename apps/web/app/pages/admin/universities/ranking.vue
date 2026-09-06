@@ -5,7 +5,6 @@ import type {
   GksRankingRecomputeSummary,
   GksScoreParts,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * GKS ranking configuration (1A-29 … 1A-31).
@@ -135,7 +134,7 @@ async function runPreview() {
       query: { ...numeric.value, limit: 25 },
     });
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Урьдчилсан тооцоо амжилтгүй';
+    errorMsg.value = apiErrorMessage(err, 'Урьдчилсан тооцоо амжилтгүй');
   } finally {
     busy.value = null;
   }
@@ -150,7 +149,7 @@ async function save() {
     okMsg.value = 'Хадгаллаа — бүх сургуулийн эрэмбэ дахин тооцоологдлоо.';
     await runPreview();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     busy.value = null;
   }
@@ -167,7 +166,7 @@ async function recompute() {
     okMsg.value = `${summary.scored} сургуулийг дахин эрэмблэлээ (${summary.durationMs} мс).`;
     await runPreview();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Тооцоолж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Тооцоолж чадсангүй');
   } finally {
     busy.value = null;
   }

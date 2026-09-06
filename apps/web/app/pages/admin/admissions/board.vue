@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { AdmissionBoardCase, AdmissionBoardGroup } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * The intake board (1H-08) — cases lined up under the round they are racing.
@@ -34,7 +33,7 @@ async function load() {
       },
     });
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Элсэлтийн самбарыг ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Элсэлтийн самбарыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }

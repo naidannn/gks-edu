@@ -73,7 +73,7 @@ async function load() {
     universities.value = [...uniPage1.items, ...uniPage2.items];
     selectedId.value ??= templateList[0]?.id ?? null;
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Ачаалж чадсангүй';
+    error.value = apiErrorMessage(e, 'Ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -114,7 +114,7 @@ async function createTemplate() {
     await load();
     selectedId.value = created.id;
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Хадгалж чадсангүй';
+    error.value = apiErrorMessage(e, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -130,7 +130,7 @@ async function saveTemplate() {
     });
     await load();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Хадгалж чадсангүй';
+    error.value = apiErrorMessage(e, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -156,7 +156,7 @@ async function addRule() {
     Object.assign(ruleDraft, blankRule());
     await load();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Дүрэм нэмж чадсангүй';
+    error.value = apiErrorMessage(e, 'Дүрэм нэмж чадсангүй');
   } finally {
     saving.value = false;
   }

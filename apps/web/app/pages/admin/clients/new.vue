@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ClientDetail, LeadDetail } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
-import { ApiError } from '~/composables/useApi';
 import { clientPayload, emptyClientForm, fillFromLead, validateClientForm } from '~/utils/client-form';
 
 /**
@@ -58,7 +57,7 @@ async function submit() {
     });
     await navigateTo(`/admin/clients/${created.id}`);
   } catch (err) {
-    submitError.value = err instanceof ApiError ? err.message : 'Хадгалахад алдаа гарлаа.';
+    submitError.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа.');
   } finally {
     submitting.value = false;
   }

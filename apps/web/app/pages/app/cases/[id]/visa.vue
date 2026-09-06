@@ -36,7 +36,7 @@ async function withBusy(action: () => Promise<unknown>) {
   try {
     await action();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Үйлдэл амжилтгүй боллоо';
+    error.value = apiErrorMessage(e, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }

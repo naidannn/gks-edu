@@ -28,7 +28,7 @@ export function useClientWorkspace(clientId: Ref<string>) {
         selectedCaseId.value = result.activeCaseId;
       }
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Мэдээллийг ачаалж чадсангүй';
+      error.value = apiErrorMessage(err, 'Мэдээллийг ачаалж чадсангүй');
     } finally {
       pending.value = false;
     }

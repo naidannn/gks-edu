@@ -6,7 +6,6 @@ import type {
   PaginatedResult,
   ProgramLevel,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Staff admissions list (1H-05).
@@ -82,7 +81,7 @@ async function load() {
     rows.value = result.items;
     meta.value = result.meta;
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Элсэлтийн жагсаалтыг ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Элсэлтийн жагсаалтыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }

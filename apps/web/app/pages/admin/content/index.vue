@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { BannerItem, BannerPlacement, FaqCategory, FaqEntry, PostDetail, PostStatus } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * 1G-14 — content management: news posts, FAQ entries and the dated promo
@@ -28,7 +27,7 @@ const errorMsg = ref<string | null>(null);
 const notice = ref<string | null>(null);
 
 function fail(error: unknown, fallback: string) {
-  errorMsg.value = error instanceof ApiError ? error.message : fallback;
+  errorMsg.value = apiErrorMessage(error, fallback);
 }
 
 // ── Posts ──────────────────────────────────────────────────────────────────

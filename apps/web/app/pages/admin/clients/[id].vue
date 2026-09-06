@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ClientStatus } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import { clientPayload, emptyClientForm, fillFromClient, fillChoicesFromCase, validateClientForm } from '~/utils/client-form';
 
 /**
@@ -85,7 +84,7 @@ async function save() {
     editing.value = false;
     await workspace.refresh();
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Хадгалахад алдаа гарлаа.';
+    saveError.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа.');
   } finally {
     saving.value = false;
   }

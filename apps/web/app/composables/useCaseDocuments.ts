@@ -39,7 +39,7 @@ export function useCaseDocuments(caseId: Ref<string> | string) {
       checklist.value = list;
       conditions.value = answers;
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Материалын жагсаалтыг ачаалж чадсангүй';
+      error.value = apiErrorMessage(e, 'Материалын жагсаалтыг ачаалж чадсангүй');
     } finally {
       pending.value = false;
     }

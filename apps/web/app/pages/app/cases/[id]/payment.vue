@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { PaymentItem, PaymentKind, PortalCaseDetail } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /** Prepayment/balance invoice creation + QPay QR + status polling (1C-17). */
 definePageMeta({ middleware: 'auth', layout: 'portal' });
@@ -30,7 +29,7 @@ async function create(kind: PaymentKind) {
     await api.post(`/cases/${gksCase.value.id}/payments`, { kind });
     await reload();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Төлбөр үүсгэж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Төлбөр үүсгэж чадсангүй');
   } finally {
     creating.value = null;
   }

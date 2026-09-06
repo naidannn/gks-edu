@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { PortalCaseDetail } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * The client's own contract screen (1C-08, 1C-23): read the terms → agree →
@@ -35,7 +34,7 @@ async function accept() {
     await api.post(`/contracts/${contract.value.id}/accept`, { phone: phone.value.trim() });
     await reload();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хүсэлт амжилтгүй боллоо';
+    errorMsg.value = apiErrorMessage(err, 'Хүсэлт амжилтгүй боллоо');
   } finally {
     accepting.value = false;
   }
@@ -55,7 +54,7 @@ async function verify() {
     await reload();
     await refresh();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Код буруу байна';
+    errorMsg.value = apiErrorMessage(err, 'Код буруу байна');
   } finally {
     verifying.value = false;
   }
@@ -68,7 +67,7 @@ async function resend() {
   try {
     await api.post(`/contracts/${contract.value.id}/accept`, { phone: phone.value.trim() });
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Код дахин илгээж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Код дахин илгээж чадсангүй');
   } finally {
     accepting.value = false;
   }
@@ -83,7 +82,7 @@ async function downloadPdf() {
     const base = String(config.public.apiBase).replace(/\/api\/v1$/, '');
     window.open(`${base}${downloadUrl}`, '_blank', 'noopener');
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'PDF татаж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'PDF татаж чадсангүй');
   } finally {
     downloading.value = false;
   }

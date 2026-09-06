@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { AdminUniversityDetail } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import { emptyUniversityForm, universityPayload, validateUniversityForm } from '~/utils/university-form';
 
 /**
@@ -43,7 +42,7 @@ async function submit() {
     const created = await api.post<AdminUniversityDetail>('/admin/universities', universityPayload(form));
     await navigateTo(`/admin/universities/${created.id}`);
   } catch (err) {
-    submitError.value = err instanceof ApiError ? err.message : 'Хадгалахад алдаа гарлаа.';
+    submitError.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа.');
   } finally {
     submitting.value = false;
   }

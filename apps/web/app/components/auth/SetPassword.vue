@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ApiError } from '~/composables/useApi';
+import { ApiError } from '~/utils/api-error';
 
 /**
  * The screen at the end of an emailed link: take the token out of the query,
@@ -67,7 +67,7 @@ async function submit() {
       dead.value = true;
       return;
     }
-    error.value = err instanceof ApiError ? err.message : 'Хадгалахад алдаа гарлаа. Дараа дахин оролдоно уу.';
+    error.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа. Дараа дахин оролдоно уу.');
   } finally {
     pending.value = false;
   }

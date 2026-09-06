@@ -72,7 +72,7 @@ async function act(action: () => Promise<unknown>) {
     await select(selectedCaseId.value!);
     data.value = await api.get<Paginated>('/visa-cases', { query: query.value });
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Үйлдэл амжилтгүй боллоо';
+    error.value = apiErrorMessage(e, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }

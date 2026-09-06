@@ -6,7 +6,6 @@ import type {
   IntakeResearchRun,
   ProgramLevel,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Add or edit one intake round (1H-05), by hand or with Gemini's help (1H-10).
@@ -60,7 +59,7 @@ async function loadExisting(id: string) {
     existing.value = intake;
     fillIntakeForm(form, intake);
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Элсэлтийн мэдээллийг ачаалж чадсангүй';
+    saveError.value = apiErrorMessage(err, 'Элсэлтийн мэдээллийг ачаалж чадсангүй');
   } finally {
     loading.value = false;
   }
@@ -103,7 +102,7 @@ async function save() {
     }
     await navigateTo('/admin/admissions');
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    saveError.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -117,7 +116,7 @@ async function remove() {
     await api.delete(`/admin/admissions/${editingId.value}`);
     await navigateTo('/admin/admissions');
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Устгаж чадсангүй';
+    saveError.value = apiErrorMessage(err, 'Устгаж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -168,7 +167,7 @@ async function startResearch() {
     startPolling();
   } catch (err) {
     researching.value = false;
-    researchError.value = err instanceof ApiError ? err.message : 'Судалгааг эхлүүлж чадсангүй';
+    researchError.value = apiErrorMessage(err, 'Судалгааг эхлүүлж чадсангүй');
   }
 }
 

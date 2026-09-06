@@ -59,7 +59,7 @@ async function load() {
     upcoming.value = due;
     if (!selectedId.value && list.items[0]) await select(list.items[0].id);
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Дарааллыг ачаалж чадсангүй';
+    error.value = apiErrorMessage(e, 'Дарааллыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -83,7 +83,7 @@ async function act(action: () => Promise<unknown>) {
     await action();
     await refreshSelected();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Үйлдэл амжилтгүй боллоо';
+    error.value = apiErrorMessage(e, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }

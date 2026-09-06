@@ -7,7 +7,6 @@ import type {
   IntakeStatus,
   ProgramLevel,
 } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import { useAuthStore } from '~/stores/auth';
 import { emptyUniversityForm, fillFromUniversity, universityPayload, validateUniversityForm } from '~/utils/university-form';
 
@@ -65,7 +64,7 @@ async function save() {
     slugLocked.value = true;
     saved.value = true;
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Хадгалахад алдаа гарлаа.';
+    saveError.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа.');
   } finally {
     saving.value = false;
   }
@@ -83,7 +82,7 @@ async function togglePublished() {
     university.value = updated;
     form.isPublished = updated.isPublished;
   } catch (err) {
-    saveError.value = err instanceof ApiError ? err.message : 'Төлөв солиход алдаа гарлаа.';
+    saveError.value = apiErrorMessage(err, 'Төлөв солиход алдаа гарлаа.');
   } finally {
     saving.value = false;
   }
@@ -173,7 +172,7 @@ async function saveIntake() {
     intakeFormOpen.value = false;
     await load();
   } catch (err) {
-    intakeError.value = err instanceof ApiError ? err.message : 'Элсэлтийн улирал хадгалж чадсангүй.';
+    intakeError.value = apiErrorMessage(err, 'Элсэлтийн улирал хадгалж чадсангүй.');
   } finally {
     intakeSaving.value = false;
   }
@@ -185,7 +184,7 @@ async function removeIntake(intake: AdminIntakeTerm) {
     await api.delete(`/admin/universities/${id.value}/intakes/${intake.id}`);
     await load();
   } catch (err) {
-    intakeError.value = err instanceof ApiError ? err.message : 'Элсэлтийн улирал устгаж чадсангүй.';
+    intakeError.value = apiErrorMessage(err, 'Элсэлтийн улирал устгаж чадсангүй.');
   }
 }
 
@@ -208,7 +207,7 @@ async function remove() {
     await api.delete(`/admin/universities/${id.value}`);
     await navigateTo('/admin/universities');
   } catch (err) {
-    deleteError.value = err instanceof ApiError ? err.message : 'Устгаж чадсангүй.';
+    deleteError.value = apiErrorMessage(err, 'Устгаж чадсангүй.');
     confirmDelete.value = false;
   } finally {
     deleting.value = false;

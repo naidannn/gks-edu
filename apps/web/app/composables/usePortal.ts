@@ -28,7 +28,7 @@ export function usePortal() {
       try {
         overview.value = await api.get<PortalOverview>('/me/overview');
       } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Мэдээллийг ачаалж чадсангүй';
+        error.value = apiErrorMessage(err, 'Мэдээллийг ачаалж чадсангүй');
       } finally {
         pending.value = false;
         inFlight.value = null;

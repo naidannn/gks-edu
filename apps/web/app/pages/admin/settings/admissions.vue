@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { AdmissionConfig } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Admissions configuration (1H-02).
@@ -42,7 +41,7 @@ async function load() {
     config.value = result;
     fill(result);
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Тохиргоог ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Тохиргоог ачаалж чадсангүй');
   } finally {
     loading.value = false;
   }
@@ -89,7 +88,7 @@ async function save() {
     fill(result);
     savedAt.value = Date.now();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { AdminProgram, AdminProgramStats, PaginatedResult, ProgramLevel } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Programmes and tuition across every school.
@@ -116,7 +115,7 @@ async function load() {
     rows.value = result.items;
     meta.value = result.meta;
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хөтөлбөрийн жагсаалтыг ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хөтөлбөрийн жагсаалтыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }

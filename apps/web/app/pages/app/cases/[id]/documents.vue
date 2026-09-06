@@ -36,7 +36,7 @@ async function withBusy(action: () => Promise<unknown>) {
   try {
     await action();
   } catch (error) {
-    docs.error.value = error instanceof Error ? error.message : 'Үйлдэл амжилтгүй боллоо';
+    docs.error.value = apiErrorMessage(error, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }
@@ -69,7 +69,7 @@ async function print() {
   try {
     await docs.printChecklist(caseCode.value);
   } catch (error) {
-    docs.error.value = error instanceof Error ? error.message : 'Жагсаалтыг хэвлэхэд алдаа гарлаа';
+    docs.error.value = apiErrorMessage(error, 'Жагсаалтыг хэвлэхэд алдаа гарлаа');
   } finally {
     printing.value = false;
   }
@@ -83,7 +83,7 @@ async function book() {
     bookingAt.value = '';
     await loadAppointments();
   } catch (error) {
-    bookingError.value = error instanceof Error ? error.message : 'Товлолт үүсгэж чадсангүй';
+    bookingError.value = apiErrorMessage(error, 'Товлолт үүсгэж чадсангүй');
   }
 }
 

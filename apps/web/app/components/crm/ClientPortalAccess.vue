@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ClientDetail, ClientPortalStatus } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * 1B-19 — can this client actually get into their own cabinet?
@@ -75,7 +74,7 @@ async function resend() {
     sent.value = true;
     emit('changed');
   } catch (err) {
-    error.value = err instanceof ApiError ? err.message : 'Урилга илгээхэд алдаа гарлаа.';
+    error.value = apiErrorMessage(err, 'Урилга илгээхэд алдаа гарлаа.');
   } finally {
     sending.value = false;
   }

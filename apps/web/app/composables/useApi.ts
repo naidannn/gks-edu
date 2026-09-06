@@ -1,20 +1,9 @@
 import type { ApiErrorBody } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
+import { ApiError } from '~/utils/api-error';
 
 type RequestOptions = Parameters<typeof $fetch>[1];
 type RequestBody = NonNullable<RequestOptions>['body'];
-
-export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly body: ApiErrorBody | undefined,
-    message: string,
-    options?: ErrorOptions,
-  ) {
-    super(message, options);
-    this.name = 'ApiError';
-  }
-}
 
 /**
  * `$fetch` bound to the NestJS API: attaches the bearer token, retries once

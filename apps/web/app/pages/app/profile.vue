@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { MyProfileResponse } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import { emptyClientForm, fillFromClient, myProfilePayload, validateMyProfileForm } from '~/utils/client-form';
 
 /**
@@ -34,7 +33,7 @@ onMounted(async () => {
       form.phone = profile.value.account.phone ?? '';
     }
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Мэдээллийг ачаалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Мэдээллийг ачаалж чадсангүй');
   } finally {
     loading.value = false;
   }
@@ -57,7 +56,7 @@ async function save() {
     savedAt.value = new Date();
     await refresh();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }

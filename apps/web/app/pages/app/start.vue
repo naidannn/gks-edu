@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { IntakeTerm, PortalCaseDetail, ServiceOption, ServiceType } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /**
  * Self-service: the client picks a service, confirms what it costs, and the
@@ -145,7 +144,7 @@ async function submit() {
     await refresh();
     await navigateTo(`/app/cases/${created.id}/contract`);
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Үйлчилгээ эхлүүлж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Үйлчилгээ эхлүүлж чадсангүй');
   } finally {
     submitting.value = false;
   }

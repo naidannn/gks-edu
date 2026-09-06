@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { NotificationChannel, NotificationEvent, NotificationTemplateItem, SmsUsage } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 import {
   NOTIFICATION_CHANNEL_LABELS,
   NOTIFICATION_EVENT_GROUPS,
@@ -73,7 +72,7 @@ async function save(row: NotificationTemplateItem) {
     editingId.value = null;
     notice.value = 'Загвар хадгалагдлаа.';
   } catch (error) {
-    errorMsg.value = error instanceof ApiError ? error.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }
@@ -86,7 +85,7 @@ async function toggleActive(row: NotificationTemplateItem) {
     });
     Object.assign(row, updated);
   } catch (error) {
-    errorMsg.value = error instanceof ApiError ? error.message : 'Өөрчилж чадсангүй';
+    errorMsg.value = apiErrorMessage(error, 'Өөрчилж чадсангүй');
   }
 }
 

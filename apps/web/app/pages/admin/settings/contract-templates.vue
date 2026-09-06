@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ContractTemplate, ServiceType } from '@gks/shared';
-import { ApiError } from '~/composables/useApi';
 
 /** Contract template text per service — `{{placeholder}}` tokens (1C-06). */
 definePageMeta({ middleware: 'admin', layout: 'admin' });
@@ -50,7 +49,7 @@ async function submit() {
     await api.post('/contracts/templates', { serviceType: selectedService.value, bodyMn: draft.value });
     await load();
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хадгалж чадсангүй';
+    errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
     submitting.value = false;
   }
