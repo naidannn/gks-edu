@@ -148,7 +148,11 @@ export class StudyPlanService {
       ]);
 
     const serviceType = SERVICE_FOR_LEVEL[goal];
-    const stages = this.buildStages({ goal, topik, targetTopik, needsPrep, firstMonth, now });
+    // Nothing at this level in the catalogue at all is a third state, and it
+    // must not be worded as either of the other two: with no programmes to
+    // qualify for, "you already qualify" is a claim we cannot make.
+    const catalogueEmpty = gateTotal === 0;
+    const stages = this.buildStages({ goal, topik, targetTopik, needsPrep, catalogueEmpty, firstMonth, now });
     const departure = stages[0]?.start ?? null;
 
     const cost = this.buildCost({
@@ -170,7 +174,7 @@ export class StudyPlanService {
       departure,
       stages,
       timeline: this.buildTimeline(stages),
-      requirements: this.buildRequirements({ goal, topik, targetTopik, needsPrep, total, budgetKrw }),
+      requirements: this.buildRequirements({ goal, topik, targetTopik, needsPrep, catalogueEmpty, total, budgetKrw }),
       schools: {
         gate: needsPrep ? ('AFTER_PREP' as const) : ('NOW' as const),
         total,
@@ -390,10 +394,12 @@ export class StudyPlanService {
     topik: number;
     targetTopik: number;
     needsPrep: boolean;
+    /** No programme at the goal level is published yet — see `build`. */
+    catalogueEmpty: boolean;
     firstMonth: Awaited<ReturnType<AdmissionsService['earliestOpenMonth']>>;
     now: Date;
   }) {
-    const { goal, topik, targetTopik, needsPrep, firstMonth, now } = options;
+    const { goal, topik, targetTopik, needsPrep, catalogueEmpty, firstMonth, now } = options;
 
     const firstLevel = needsPrep ? ProgramLevel.LANGUAGE_PREP : goal;
     const start = this.toIntake(firstMonth, firstLevel, now, null);
@@ -405,7 +411,9 @@ export class StudyPlanService {
       titleMn: needsPrep ? 'Хэлний бэлтгэл' : LEVEL_LABELS[goal],
       reasonMn: needsPrep
         ? `Мэргэжлийн ангид элсэхэд дор хаяж TOPIK ${targetTopik} шаардлагатай тул эхлээд хэлний бэлтгэлд суралцана.`
-        : 'Одоогийн боловсрол, хэлний түвшинд тохирох ангиуд байгаа тул шууд мэдүүлж болно.',
+        : catalogueEmpty
+          ? 'Энэ түвшний ангиудын мэдээлэл шинэчлэгдэж байна. Огноо, зардлын тооцоо хүчинтэй — сургууль сонголтыг зөвлөхтэй хамт тодруулна.'
+          : 'Одоогийн боловсрол, хэлний түвшинд тохирох ангиуд байгаа тул шууд мэдүүлж болно.',
       durationMonths: needsPrep ? prepMonths(topik, targetTopik) : null,
       start,
     };
@@ -541,10 +549,11 @@ export class StudyPlanService {
     topik: number;
     targetTopik: number;
     needsPrep: boolean;
+    catalogueEmpty: boolean;
     total: number;
     budgetKrw: number | null;
   }) {
-    const { goal, topik, targetTopik, needsPrep, total, budgetKrw } = options;
+    const { goal, topik, targetTopik, needsPrep, catalogueEmpty, total, budgetKrw } = options;
 
     return [
       {
@@ -558,10 +567,13 @@ export class StudyPlanService {
         labelMn: 'Солонгос хэл',
         valueMn: needsPrep
           ? `Одоо TOPIK ${topik || 0} — ${targetTopik} түвшин хэрэгтэй`
-          : topik > 0
-            ? `TOPIK ${topik} — хангалттай`
-            : 'Англи хэлээр эсвэл хэлний шаардлагагүй ангиуд боломжтой',
-        met: !needsPrep,
+          : catalogueEmpty
+            ? 'Ангиудын шаардлага бүртгэгдсэний дараа тодорхой болно'
+            : topik > 0
+              ? `TOPIK ${topik} — хангалттай`
+              : 'Англи хэлээр эсвэл хэлний шаардлагагүй ангиуд боломжтой',
+        // Unknown, not satisfied: there is nothing yet to have qualified for.
+        met: catalogueEmpty ? null : !needsPrep,
       },
       {
         key: 'BUDGET' as const,

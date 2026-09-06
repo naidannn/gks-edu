@@ -35,7 +35,6 @@ read -r -d '' PROXY_COMMON <<'EOF' || true
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 300;
 EOF
 
 BODY=$(cat <<EOF
@@ -58,10 +57,12 @@ BODY=$(cat <<EOF
 
     # NestJS API. The app sets its own global prefix (/api) and URI versioning
     # (/v1), so the path is passed through unchanged.
-    # Чатын шууд урсгал (SSE, 1J). nginx нь proxy хариуг анхдагчаар буферлэдэг
+    # Чатын шууд урсгал (SSE, 1K). nginx нь proxy хариуг анхдагчаар буферлэдэг
     # тул мессеж бүр буфер дүүрэх хүртэл хүлээгддэг — "шууд" чат болохгүй.
     # Апп өөрөө X-Accel-Buffering: no илгээдэг ч энэ нь тодорхой баталгаа.
-    # Exact match (`=`) тул доорх /api/ prefix-ээс түрүүнд тохирно.
+    # Яг тэнцүү (exact match) тул доорх /api/ prefix-ээс түрүүнд тохирно.
+    # Анхаар: энэ бол хашилтгүй heredoc — тайлбарт ч гэсэн backtick бичиж
+    # болохгүй, shell түүнийг команд болгон ажиллуулна.
     location = /api/v1/messenger/stream {
         proxy_pass http://gksedu_api;
 $PROXY_COMMON
@@ -74,12 +75,14 @@ $PROXY_COMMON
     location /api/ {
         proxy_pass http://gksedu_api;
 $PROXY_COMMON
+        proxy_read_timeout 300;
     }
 
     # Nuxt 4 SSR.
     location / {
         proxy_pass http://gksedu_web;
 $PROXY_COMMON
+        proxy_read_timeout 300;
     }
 
     # Nuxt's hashed build assets — immutable, so let the browser keep them.
