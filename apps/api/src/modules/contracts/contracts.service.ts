@@ -205,6 +205,35 @@ export class ContractsService {
     return { downloadUrl: `/api/v1/files/${token}` };
   }
 
+  /**
+   * The paper copy (1C-25). A physical contract is signed with a pen, so the
+   * office needs the sheet *before* there is anything to scan back in, and
+   * `pdfPath` is only written once a contract is signed. This renders the body
+   * frozen at issue through the same `ContractPdfService` the archived copy
+   * goes through, and stores nothing — the file worth keeping is the scan.
+   *
+   * The e-signature audit line is carried only by a signed electronic
+   * contract: an unsigned one prints blank signature lines to sign on, and a
+   * physical one was signed by hand, so stamping it "цахимаар баталгаажсан"
+   * would be a lie on paper.
+   */
+  async renderPrintable(id: string): Promise<{ buffer: Buffer; filename: string }> {
+    const contract = await this.getOrThrow(id);
+    const isESigned = contract.type === ContractType.ELECTRONIC && Boolean(contract.signedAt);
+
+    const buffer = await this.pdf.render({
+      title: CONTRACT_TITLE,
+      subtitle: CONTRACT_SUBTITLE,
+      number: contract.number,
+      contractDate: contract.createdAt,
+      bodyMn: contract.bodyMn,
+      signedAt: isESigned ? contract.signedAt : null,
+      signedIp: isESigned ? contract.signedIp : null,
+    });
+
+    return { buffer, filename: `Гэрээ-${contract.number.replace(/\//g, '-')}.pdf` };
+  }
+
   // ─── Electronic e-sign flow (1C-08) ────────────────────────────────────────
 
   async accept(id: string, dto: AcceptContractDto, user: AuthenticatedUser) {

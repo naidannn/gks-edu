@@ -8,13 +8,15 @@ import {
   Put,
   Query,
   Req,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
+import type { Request, Response } from 'express';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -84,6 +86,21 @@ export class ContractsController {
   @ApiOperation({ summary: 'Short-lived signed download link for the contract PDF' })
   downloadUrl(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.contracts.downloadUrl(id, user);
+  }
+
+  @Get(':id/print')
+  @Roles(...STAFF_ROLES)
+  @ApiProduces('application/pdf')
+  @ApiOperation({ summary: 'Print-ready contract PDF, rendered on demand and never stored (1C-25)' })
+  async print(@Param('id', ParseUUIDPipe) id: string, @Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+    const { buffer, filename } = await this.contracts.renderPrintable(id);
+    // The number is Cyrillic, so the quoted form is an ASCII fallback and
+    // `filename*` carries the real name (RFC 5987).
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="contract-${id}.pdf"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    );
+    return new StreamableFile(buffer, { type: 'application/pdf' });
   }
 
   @Post(':id/accept')

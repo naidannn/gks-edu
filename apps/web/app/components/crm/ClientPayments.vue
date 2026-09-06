@@ -49,6 +49,29 @@ async function downloadPdf(contractId: string) {
   });
 }
 
+/**
+ * A paper contract is signed with a pen, so the sheet has to leave the system
+ * before anything can be scanned back into it (1C-25). The PDF is rendered on
+ * demand and never stored, so it is fetched with the bearer token and opened
+ * from a blob rather than through a signed storage link.
+ */
+async function printContract(contractId: string) {
+  await act(async () => {
+    const blob = await api.get<Blob>(`/contracts/${contractId}/print`, { responseType: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const tab = window.open(url, '_blank');
+    if (!tab) {
+      // Popup blocked — hand the file over as a download instead of failing silently.
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Гэрээ-${contract.value?.number.replace(/\//g, '-') ?? contractId}.pdf`;
+      link.click();
+    }
+    // The new tab still needs the blob to render; revoking it now would blank the page.
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  });
+}
+
 const physicalSignedAt = ref('');
 const physicalFile = ref<File | null>(null);
 function registerPhysical(contractId: string) {
@@ -177,6 +200,15 @@ const needsPhysicalRegistration = computed(
           >
             PDF татах
           </DsButton>
+          <DsButton
+            size="sm"
+            variant="secondary"
+            icon-left="printer"
+            :loading="busy"
+            @click="printContract(contract.id)"
+          >
+            Хэвлэх
+          </DsButton>
           <DsButton size="sm" variant="ghost" @click="showBody = !showBody">
             {{ showBody ? 'Эхийг хаах' : 'Гэрээний эх харах' }}
           </DsButton>
@@ -188,6 +220,7 @@ const needsPhysicalRegistration = computed(
 
         <div v-if="needsPhysicalRegistration" class="gks-cpay__subform">
           <h3 class="gks-cpay__subtitle">Биет гэрээ бүртгэх</h3>
+          <p class="gks-cpay__muted">Гэрээг хэвлэж, талууд гарын үсэг зурсны дараа сканыг нь эндээс хавсаргана.</p>
           <DsInput v-model="physicalSignedAt" type="date" label="Гарын үсэг зурсан огноо" />
           <input
             type="file"
