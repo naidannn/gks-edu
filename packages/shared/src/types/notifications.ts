@@ -28,7 +28,8 @@ export type NotificationEvent =
   | 'DEPARTURE_NEAR'
   | 'FLIGHT_INFO_UPDATED'
   | 'LEAD_CREATED'
-  | 'LEAD_FOLLOW_UP_DUE';
+  | 'LEAD_FOLLOW_UP_DUE'
+  | 'SUPPORT_REPLY';
 
 export type NotificationChannel = 'IN_APP' | 'EMAIL' | 'SMS' | 'PUSH';
 export type NotificationStatus = 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED';

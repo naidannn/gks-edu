@@ -571,4 +571,29 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
       'Элсэлтийн самбар: {{link}}',
     linkMn: ADMIN_ADMISSIONS_BOARD,
   },
+
+  // ── Чат: зөвлөхийн хариу (1K) ───────────────────────────────────────────
+  //
+  // Only ever raised for a client who is *not* looking at the thread — the
+  // live stream has already put the message on the screen of anyone who is.
+  // Email only, no SMS: a chat reply is a conversation, not a deadline.
+  {
+    event: NotificationEvent.SUPPORT_REPLY,
+    channel: NotificationChannel.IN_APP,
+    titleMn: '{{staffName}} хариу бичлээ',
+    bodyMn: '{{subject}} — "{{preview}}"',
+    linkMn: '/messages?c={{conversationId}}',
+  },
+  {
+    event: NotificationEvent.SUPPORT_REPLY,
+    channel: NotificationChannel.EMAIL,
+    titleMn: 'Таны асуултад хариу ирлээ — {{subject}}',
+    bodyMn:
+      'Сайн байна уу, {{clientName}}.\n\n' +
+      'Таны {{conversationCode}} дугаартай чатад {{staffName}} хариу бичлээ:\n\n' +
+      '"{{preview}}"\n\n' +
+      'Үргэлжлүүлэн ярилцах: {{link}}\n\n' +
+      'GKS EDU GROUP',
+    linkMn: '/messages?c={{conversationId}}',
+  },
 ];

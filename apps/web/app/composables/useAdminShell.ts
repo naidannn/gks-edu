@@ -42,6 +42,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: null,
     items: [
       { to: '/admin', label: 'Хяналтын самбар', icon: 'layout-dashboard', keywords: 'dashboard нүүр' },
+      { to: '/admin/messages', label: 'Чат', icon: 'message-circle', keywords: 'chat messenger мессеж чат харилцагчийн асуулт' },
       { to: '/admin/consultations', label: 'Зөвлөгөө хүсэлт', icon: 'message-square', exact: true, keywords: 'lead сэжим enquiry' },
       { to: '/admin/consultations/board', label: 'Борлуулалтын самбар', icon: 'kanban', keywords: 'kanban pipeline' },
       { to: '/admin/clients', label: 'Үйлчлүүлэгч', icon: 'users', keywords: 'client хэрэглэгч' },

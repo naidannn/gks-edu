@@ -18,6 +18,15 @@ const route = useRoute();
 
 const { rail, density, paletteOpen, restore, toggleRail, toggleDensity } = useAdminShell();
 
+/**
+ * The shared chat inbox is the one queue in the CRM that is measured in
+ * minutes, so its count belongs in the sidebar on every screen — not only on
+ * the screen that shows it. The live connection is opened here for the same
+ * reason (1J).
+ */
+const messenger = useMessengerStream();
+const unreadFor = (to: string): number => (to === '/admin/messages' ? messenger.unread.value.threads : 0);
+
 const sidebarOpen = ref(false);
 watch(() => route.fullPath, () => { sidebarOpen.value = false; });
 
@@ -104,8 +113,13 @@ function onKeydown(event: KeyboardEvent) {
 onMounted(() => {
   restore();
   window.addEventListener('keydown', onKeydown);
+  messenger.connect();
+  messenger.refreshUnread();
 });
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown);
+  messenger.disconnect();
+});
 
 async function onLogout() {
   await auth.logout();
@@ -157,6 +171,11 @@ async function onLogout() {
             >
               <DsIcon :name="item.icon" :size="18" />
               <span class="gks-admin__nav-label">{{ item.label }}</span>
+              <span
+                v-if="unreadFor(item.to)"
+                class="gks-admin__nav-count gks-tnum"
+                :title="`${unreadFor(item.to)} хариу хүлээж буй чат`"
+              >{{ unreadFor(item.to) > 99 ? '99+' : unreadFor(item.to) }}</span>
             </NuxtLink>
           </template>
 
@@ -345,7 +364,32 @@ async function onLogout() {
   color: var(--brand-700);
   font-weight: var(--fw-semibold);
 }
-.gks-admin--rail .gks-admin__nav-link { justify-content: center; padding: var(--sp-3) 0; }
+.gks-admin__nav-count {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--red-700);
+  color: var(--text-inverse);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+}
+/* Folded to the rail there is no label to sit beside, so the count becomes a
+   corner dot on the icon rather than disappearing with the text. */
+.gks-admin--rail .gks-admin__nav-link { justify-content: center; padding: var(--sp-3) 0; position: relative; }
+.gks-admin--rail .gks-admin__nav-count {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  margin: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+}
 .gks-admin--rail .gks-admin__nav-label,
 .gks-admin--rail .gks-admin__brand-text,
 .gks-admin--rail .gks-admin__user-info { display: none; }

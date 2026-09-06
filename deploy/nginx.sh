@@ -58,6 +58,19 @@ BODY=$(cat <<EOF
 
     # NestJS API. The app sets its own global prefix (/api) and URI versioning
     # (/v1), so the path is passed through unchanged.
+    # Чатын шууд урсгал (SSE, 1J). nginx нь proxy хариуг анхдагчаар буферлэдэг
+    # тул мессеж бүр буфер дүүрэх хүртэл хүлээгддэг — "шууд" чат болохгүй.
+    # Апп өөрөө X-Accel-Buffering: no илгээдэг ч энэ нь тодорхой баталгаа.
+    # Exact match (`=`) тул доорх /api/ prefix-ээс түрүүнд тохирно.
+    location = /api/v1/messenger/stream {
+        proxy_pass http://gksedu_api;
+$PROXY_COMMON
+        proxy_buffering off;
+        proxy_cache off;
+        # Урсгал нээлттэй байх ёстой; апп 25 секунд тутам heartbeat илгээнэ.
+        proxy_read_timeout 3600;
+    }
+
     location /api/ {
         proxy_pass http://gksedu_api;
 $PROXY_COMMON

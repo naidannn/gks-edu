@@ -22,6 +22,7 @@ import { FxModule } from './modules/fx/fx.module.js';
 import { FaqModule } from './modules/faq/faq.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
 import { MeModule } from './modules/me/me.module.js';
+import { MessengerModule } from './modules/messenger/messenger.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { PostsModule } from './modules/posts/posts.module.js';
@@ -71,6 +72,7 @@ import { StorageModule } from './storage/storage.module.js';
     ContractsModule,
     PaymentsModule,
     MeModule,
+    MessengerModule,
     DocumentsModule,
     FxModule,
     DepartureModule,

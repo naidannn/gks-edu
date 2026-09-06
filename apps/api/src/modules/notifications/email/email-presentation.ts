@@ -123,6 +123,13 @@ export const EVENT_PRESENTATION: Record<NotificationEvent, EventPresentation> = 
     ctaLabel: 'CRM дээр нээх',
   },
 
+  // Чат (1K)
+  [NotificationEvent.SUPPORT_REPLY]: {
+    eyebrow: 'Чат',
+    tone: 'info',
+    ctaLabel: 'Чатаа үргэлжлүүлэх',
+  },
+
   // Ажилтны талын мэдэгдэл
   [NotificationEvent.LEAD_CREATED]: { eyebrow: 'Шинэ сэжим', tone: 'info', ctaLabel: 'CRM дээр нээх' },
   [NotificationEvent.LEAD_FOLLOW_UP_DUE]: {

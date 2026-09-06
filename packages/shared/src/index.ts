@@ -16,3 +16,4 @@ export * from './types/visa-departure';
 export * from './types/portal';
 export * from './types/client-workspace';
 export * from './types/notifications';
+export * from './types/messenger';

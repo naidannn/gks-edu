@@ -3,26 +3,39 @@ import { useAuthStore } from '~/stores/auth';
 
 /**
  * Client cabinet shell (1G-15). Every `/app/*` screen lives here: a fixed
- * sidebar with the four things a client ever needs, and nothing from the
- * marketing site or the CRM.
+ * sidebar with the things a client ever needs, and nothing from the marketing
+ * site or the CRM.
  *
- * ≤900px the same four entries become a bottom tab bar instead of a drawer —
- * four is exactly the count a tab bar carries well, and it costs no tap to
- * open. `short` is the tab-bar wording: the sidebar can afford "Хяналтын
- * самбар", a 25%-wide tab cannot.
+ * ≤900px the same entries become a bottom tab bar instead of a drawer, which
+ * costs no tap to open. `short` is the tab-bar wording: the sidebar can afford
+ * "Хяналтын самбар", a 20%-wide tab cannot. Five is the ceiling — the chat
+ * (1J) took the last slot, and anything after it goes inside a screen rather
+ * than into this bar.
  */
 const auth = useAuthStore();
 const route = useRoute();
 const { overview, load, needsProfile } = usePortal();
+const messenger = useMessengerStream();
 
-onMounted(() => load());
+onMounted(() => {
+  load();
+  // The badge has to be right on every screen, not only on /messages, so the
+  // live connection belongs to the shell.
+  messenger.connect();
+  messenger.refreshUnread();
+});
+onBeforeUnmount(() => messenger.disconnect());
 
 const NAV = [
   { to: '/app', label: 'Хяналтын самбар', short: 'Самбар', icon: 'layout-dashboard' },
+  { to: '/messages', label: 'Зөвлөхтэй чатлах', short: 'Чат', icon: 'message-circle' },
   { to: '/app/cases', label: 'Миний үйлчилгээ', short: 'Үйлчилгээ', icon: 'folder-open' },
   { to: '/app/profile', label: 'Миний мэдээлэл', short: 'Мэдээлэл', icon: 'user-round' },
   { to: '/account/saved', label: 'Хадгалсан сургууль', short: 'Хадгалсан', icon: 'bookmark' },
 ];
+
+/** The chat is the only entry that carries a count; the rest carry a dot or nothing. */
+const unreadFor = (to: string): number => (to === '/messages' ? messenger.unread.value.threads : 0);
 
 function isActive(to: string): boolean {
   if (to === '/app') return route.path === '/app';
@@ -59,7 +72,10 @@ async function onLogout() {
         >
           <DsIcon :name="item.icon" :size="18" />
           <span>{{ item.label }}</span>
-          <span v-if="item.to === '/app/profile' && needsProfile" class="gks-portal__dot" aria-label="Дутуу мэдээлэл" />
+          <span v-if="unreadFor(item.to)" class="gks-portal__count gks-tnum" :aria-label="`${unreadFor(item.to)} шинэ мессеж`">
+            {{ unreadFor(item.to) }}
+          </span>
+          <span v-else-if="item.to === '/app/profile' && needsProfile" class="gks-portal__dot" aria-label="Дутуу мэдээлэл" />
         </NuxtLink>
       </nav>
 
@@ -111,7 +127,7 @@ async function onLogout() {
         </button>
       </header>
 
-      <main class="gks-portal__main">
+      <main class="gks-portal__main" :class="{ 'gks-portal__main--flush': route.meta.flush }">
         <slot />
       </main>
     </div>
@@ -127,7 +143,10 @@ async function onLogout() {
       >
         <span class="gks-portal__tab-icon">
           <DsIcon :name="item.icon" :size="21" />
-          <span v-if="item.to === '/app/profile' && needsProfile" class="gks-portal__tab-dot" aria-label="Дутуу мэдээлэл" />
+          <span v-if="unreadFor(item.to)" class="gks-portal__tab-count gks-tnum">
+            {{ unreadFor(item.to) > 9 ? '9+' : unreadFor(item.to) }}
+          </span>
+          <span v-else-if="item.to === '/app/profile' && needsProfile" class="gks-portal__tab-dot" aria-label="Дутуу мэдээлэл" />
         </span>
         <span class="gks-portal__tab-label">{{ item.short }}</span>
       </NuxtLink>
@@ -183,6 +202,20 @@ async function onLogout() {
 .gks-portal__nav-link:hover { background: var(--surface-hover); color: var(--text-strong); }
 .gks-portal__nav-link--active { background: var(--surface-selected); color: var(--brand-700); font-weight: var(--fw-semibold); }
 .gks-portal__dot { margin-left: auto; width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--red-700); }
+.gks-portal__count {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--brand-600);
+  color: var(--text-inverse);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+}
+.gks-portal__nav-link--active .gks-portal__count { background: var(--brand-700); }
 
 .gks-portal__sidebar-foot {
   padding: var(--sp-4);
@@ -269,6 +302,22 @@ async function onLogout() {
   padding: var(--sp-6);
 }
 
+/* An app-shaped screen (the messenger) rather than a document-shaped one:
+   no reading-width column, no padding, and a fixed height so the page can
+   own its own scroll region instead of growing the window's. */
+.gks-portal__main--flush {
+  max-width: none;
+  padding: 0;
+  height: calc(100vh - 56px);
+  min-height: 0;
+  overflow: hidden;
+  /* A flex column, not just a fixed height: `main` is itself a flex item, so
+     its height is not a base a percentage child can resolve against. The
+     page stretches into it instead. */
+  display: flex;
+  flex-direction: column;
+}
+
 /* ---- Mobile bottom tabs (≤900px) ---- */
 .gks-portal__tabbar {
   display: none;
@@ -319,6 +368,22 @@ async function onLogout() {
   background: var(--red-700);
   box-shadow: 0 0 0 2px var(--surface-card);
 }
+.gks-portal__tab-count {
+  position: absolute;
+  top: -5px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--brand-600);
+  color: var(--text-inverse);
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  box-shadow: 0 0 0 2px var(--surface-card);
+}
 
 @media (max-width: 900px) {
   .gks-portal__sidebar { display: none; }
@@ -332,6 +397,13 @@ async function onLogout() {
   .gks-portal__main {
     padding: var(--sp-5) var(--gutter-mobile)
       calc(var(--sp-8) + 58px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* A flush screen clears the tab bar with height rather than padding — its
+     own scroll region has to end above the bar, not run behind it. */
+  .gks-portal__main--flush {
+    padding: 0;
+    height: calc(100vh - 56px - 58px - env(safe-area-inset-bottom, 0px));
   }
 }
 </style>

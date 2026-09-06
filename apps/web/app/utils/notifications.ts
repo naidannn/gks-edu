@@ -25,6 +25,7 @@ export const NOTIFICATION_EVENT_LABELS: Record<NotificationEvent, string> = {
   FLIGHT_INFO_UPDATED: 'Онгоцны мэдээлэл шинэчлэгдсэн',
   LEAD_CREATED: 'Шинэ сэжим ирсэн',
   LEAD_FOLLOW_UP_DUE: 'Холбогдох өдөр болсон',
+  SUPPORT_REPLY: 'Зөвлөх хариу бичсэн',
 };
 
 export const NOTIFICATION_EVENT_ICONS: Record<NotificationEvent, string> = {
@@ -46,6 +47,7 @@ export const NOTIFICATION_EVENT_ICONS: Record<NotificationEvent, string> = {
   FLIGHT_INFO_UPDATED: 'ticket',
   LEAD_CREATED: 'user-plus',
   LEAD_FOLLOW_UP_DUE: 'phone-call',
+  SUPPORT_REPLY: 'message-circle',
 };
 
 export const NOTIFICATION_CHANNEL_LABELS: Record<NotificationChannel, string> = {
@@ -65,6 +67,7 @@ export const NOTIFICATION_EVENT_GROUPS: { title: string; events: NotificationEve
   { title: 'Мэдүүлэг', events: ['APPLICATION_RESULT', 'APPLICATION_EXTRA_DOCS', 'INVITATION_RECEIVED'] },
   { title: 'Виз', events: ['VISA_STAGE_STARTED', 'VISA_APPOINTMENT_DUE', 'VISA_RESULT', 'VISA_RENEWAL_NEAR'] },
   { title: 'Явах бэлтгэл', events: ['DEPARTURE_NEAR', 'FLIGHT_INFO_UPDATED'] },
+  { title: 'Чат', events: ['SUPPORT_REPLY'] },
   { title: 'Ажилтны мэдэгдэл', events: ['LEAD_CREATED', 'LEAD_FOLLOW_UP_DUE'] },
 ];
 

@@ -95,6 +95,11 @@ model User {
   notificationPreferences NotificationPreference[]
   gksRankingConfigs       GksRankingConfig[]
 
+  conversations         Conversation[] @relation("ConversationClient")
+  assignedConversations Conversation[] @relation("ConversationAssignee")
+  resolvedConversations Conversation[] @relation("ConversationResolver")
+  messages              Message[]
+
   verifiedIntakes     IntakeTerm[]
   admissionConfigs    AdmissionConfig[]
   intakeResearchRuns  IntakeResearchRun[]
@@ -1144,6 +1149,7 @@ model Case {
   visaCase       VisaCase?
   departurePlan  DeparturePlan?
   notifications  Notification[]
+  conversations  Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2032,6 +2038,11 @@ enum NotificationEvent {
   /// To the assigned consultant and document officer: this case will miss its
   /// intake unless someone moves. The answer to "ажилтан хэрэглэгчээ мартах".
   INTAKE_CASE_AT_RISK
+  // Messenger (1K)
+  /// To the client: a consultant answered a thread they are not currently
+  /// watching. Raised only when the reader is away — the live thread already
+  /// shows the message, and a bell for something on screen is noise.
+  SUPPORT_REPLY
 }
 
 enum NotificationChannel {
@@ -2168,4 +2179,140 @@ model Banner {
 
   @@index([placement, isPublished, sortOrder])
   @@map("banners")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Messenger (1K) — the client writes to a real consultant, not to a bot.
+//
+// A shared inbox, not a per-consultant queue: a question arrives before anyone
+// is assigned to the person asking it (a brand-new account has no contract, no
+// case and no consultant), so the thread lands in one room every staff member
+// can see and any of them can claim. `assigneeId` is the claim, and it is
+// nullable for exactly as long as nobody has taken it.
+//
+// Deliberately not the AI assistant of `gksedu.md` §13 — that one gets its own
+// `ChatSession`/`ChatMessage` in phase 2 and answers from the knowledge base.
+// This is human-to-human, and the two must never share a thread table.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ConversationStatus {
+  /// Live: somebody still owes somebody an answer.
+  OPEN
+  /// Staff closed it. The client can reopen by writing again.
+  RESOLVED
+}
+
+/// What the client says the thread is about, picked when they open it. Drives
+/// the inbox filter and nothing else — it is a hint, never a routing rule.
+enum ConversationTopic {
+  GENERAL
+  /// Сургууль сонголт, элсэлтийн хугацаа.
+  ADMISSION
+  /// Материал, бичиг баримт.
+  DOCUMENTS
+  /// Гэрээ, төлбөр.
+  CONTRACT
+  VISA
+  /// Явахын өмнөх бэлтгэл.
+  DEPARTURE
+  OTHER
+}
+
+model Conversation {
+  id   String @id @default(uuid()) @db.Uuid
+  /// Human-readable, e.g. CH-2026-0042 — what the office quotes on the phone.
+  code String @unique
+
+  /// The person who opened it. Always the client side of the thread: staff
+  /// never start a conversation with themselves, so this is not nullable.
+  clientUserId String @db.Uuid
+  clientUser   User   @relation("ConversationClient", fields: [clientUserId], references: [id], onDelete: Cascade)
+
+  /// Set when the question is about one service cycle, which lets the CRM show
+  /// the thread inside that case. A general enquiry has no case and never will.
+  caseId String? @db.Uuid
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  subject String             @db.VarChar(160)
+  topic   ConversationTopic  @default(GENERAL)
+  status  ConversationStatus @default(OPEN)
+
+  /// The claim. Null means "in the shared inbox, nobody has taken it" — the
+  /// state the inbox sorts to the top.
+  assigneeId String?   @db.Uuid
+  assignee   User?     @relation("ConversationAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assignedAt DateTime?
+
+  // ── Denormalised thread head. The inbox and the client's thread list both
+  //    sort by last activity and show the last line; recomputing that from
+  //    `messages` would join the largest table in the schema on every open.
+  lastMessageAt        DateTime @default(now())
+  lastMessagePreview   String?  @db.VarChar(200)
+  /// Which side spoke last — the inbox's "waiting on us" filter.
+  lastMessageFromStaff Boolean  @default(false)
+
+  /// Unread counts per side, maintained on write. Staff share one count
+  /// because they share the inbox: what one of them reads, all of them have.
+  clientUnread Int @default(0)
+  staffUnread  Int @default(0)
+
+  clientReadAt DateTime?
+  staffReadAt  DateTime?
+
+  /// First staff reply — the only response-time number worth reporting on.
+  firstResponseAt DateTime?
+
+  resolvedAt   DateTime?
+  resolvedById String?   @db.Uuid
+  resolvedBy   User?     @relation("ConversationResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  /// The inbox's default order, and its "unassigned first" view.
+  @@index([status, lastMessageAt])
+  @@index([assigneeId, status, lastMessageAt])
+  @@index([clientUserId, lastMessageAt])
+  @@index([caseId])
+  @@map("conversations")
+}
+
+enum MessageKind {
+  TEXT
+  /// A line the system wrote: claimed, resolved, reopened. Rendered centred
+  /// and greyed, never as somebody's bubble.
+  SYSTEM
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  /// Null for a SYSTEM line, which nobody wrote.
+  senderId String? @db.Uuid
+  sender   User?   @relation(fields: [senderId], references: [id], onDelete: SetNull)
+
+  /// Which side of the thread this came from, frozen at write time. A
+  /// consultant who later becomes an admin — or a staff account that is
+  /// demoted — must not move their old bubbles across the thread.
+  fromStaff Boolean @default(false)
+
+  kind MessageKind @default(TEXT)
+  body String      @db.VarChar(4000)
+
+  /// The sender's own id for this send, so a retried request after a dropped
+  /// connection reuses the row instead of posting the line twice.
+  clientToken String? @db.VarChar(64)
+
+  editedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([conversationId, clientToken])
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
 }
