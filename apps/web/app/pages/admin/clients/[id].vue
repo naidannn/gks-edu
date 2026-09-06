@@ -157,6 +157,7 @@ useHead({
           :workspace-case="activeCase"
           :alerts="alerts"
           @open="openTab"
+          @changed="workspace.refresh()"
         />
 
         <template v-else-if="activeCase">

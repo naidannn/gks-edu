@@ -81,6 +81,10 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
       <p v-else class="gks-page__hint">
         Сэжимгүйгээр шууд бүртгэнэ. Гэрээ байгуулахад шаардлагатай мэдээллийг бүрэн авна.
       </p>
+      <p class="gks-page__hint">
+        <DsIcon name="mail" :size="14" />
+        Имэйл хаяг бөглөвөл кабинет идэвхжүүлэх урилга бүртгэмэгц тэр хаяг руу илгээгдэнэ — холбоос 7 хоног хүчинтэй.
+      </p>
     </header>
 
     <form class="gks-form-body" @submit.prevent="submit">

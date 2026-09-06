@@ -19,6 +19,7 @@ import { renderEmail, type EmailMessage } from '../src/modules/notifications/ema
 import { presentationFor } from '../src/modules/notifications/email/email-presentation.js';
 import {
   accountClaimEmail,
+  clientWelcomeEmail,
   leadReceivedEmail,
   passwordChangedEmail,
   passwordResetEmail,
@@ -103,7 +104,13 @@ function transactionalPreviews(): Preview[] {
   const url = (path: string) => `${APP_URL}${path}`;
 
   return [
-    ['account-claim', 'Бүртгэл идэвхжүүлэх урилга', accountClaimEmail({
+    ['client-welcome', 'Тавтай морил + кабинет идэвхжүүлэх', clientWelcomeEmail({
+      name: 'Батбаярын Тэмүүлэн',
+      email: 'temuulen@example.mn',
+      link: url('/claim?token=sample-token'),
+      consultantName: 'Дорж Оюунчимэг',
+    })],
+    ['account-claim', 'Бүртгэл идэвхжүүлэх урилга (дахин илгээх)', accountClaimEmail({
       name: 'Батбаярын Тэмүүлэн',
       email: 'temuulen@example.mn',
       link: url('/claim?token=sample-token'),

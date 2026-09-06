@@ -4,7 +4,7 @@ import type { EmailMessage } from './email-template.js';
  * The mails that are not notifications.
  *
  * A notification is something an admin may reword and a recipient may switch
- * off; these five carry a credential or a promise, so their copy lives in code
+ * off; these six carry a credential or a promise, so their copy lives in code
  * and they are sent directly rather than through the dispatcher. Keeping them
  * here — as pure functions from data to message — also means the preview
  * script renders exactly what production sends, instead of a copy that drifts.
@@ -16,11 +16,71 @@ function greeting(name?: string | null): string {
   return `Сайн байна уу${name ? `, ${name}` : ''}.`;
 }
 
-/** 1B-17 — staff created the account; the client sets the password. */
+/**
+ * Every credential mail ends the same way: if the link is dead, a human fixes
+ * it. Naming the consultant when we know them turns "холбогдоно уу" from a
+ * brush-off into an address.
+ */
+function contactLine(consultantName: string | null | undefined, lead: string): string {
+  const who = consultantName ? `хариуцсан зөвлөх ${consultantName}` : 'хариуцсан зөвлөхтэйгээ';
+  return `${lead} ${who} эсвэл ${PHONE} дугаараар холбогдоно уу — шинэ холбоос илгээж өгнө.`;
+}
+
+/**
+ * 1B-19 — the first mail a staff-registered client ever gets.
+ *
+ * It is deliberately one mail rather than two: a "тавтай морил" that says an
+ * account exists, and a separate invitation to activate it, would arrive
+ * together and compete. So the welcome carries the link — the only way into
+ * the cabinet for a row that has no password.
+ */
+export function clientWelcomeEmail(input: {
+  name?: string | null;
+  email: string;
+  link: string;
+  /** Whoever the client should ring when the link has died. */
+  consultantName?: string | null;
+}): EmailMessage {
+  return {
+    subject: 'GKSedu.mn — тавтай морил, бүртгэлээ идэвхжүүлнэ үү',
+    eyebrow: 'Тавтай морил',
+    tone: 'success',
+    heading: 'Кабинет тань бэлэн боллоо',
+    preheader: 'Нууц үгээ тохируулаад үйлчилгээнийхээ явцыг онлайнаар хөтлөөрэй.',
+    body: [
+      greeting(input.name),
+      '',
+      'GKS EDU GROUP таны нэр дээр үйлчилгээний бүртгэл нээлээ. Доорх товчоор нууц үгээ ' +
+        'тохируулснаар gksedu.mn дээрх хувийн кабинет тань нээгдэнэ.',
+      '',
+      'Кабинетаараа юу хийх вэ:',
+      '- Бүрдүүлэх материалынхаа жагсаалтыг харж, онлайнаар илгээх',
+      '- Мэдүүлэг, урилга, визний явцаа алхам алхмаар хөтлөх',
+      '- Төлбөрөө QPay-ээр төлж, төлбөрийн түүхээ харах',
+      '- Хариуцсан зөвлөхтэйгээ шууд бичиж харилцах',
+      '',
+      `Нэвтрэх имэйл: ${input.email}`,
+      'Холбоос хүчинтэй: 7 хоног',
+      '',
+      'Хэрэв энэ хаяг тань Google бүртгэлтэй бол нууц үг тохируулахгүйгээр «Google-ээр ' +
+        'нэвтрэх» товчийг ашиглаж бас орж болно.',
+      '',
+      contactLine(input.consultantName, 'Холбоос хүчингүй болсон эсвэл асуух зүйл гарвал'),
+    ].join('\n'),
+    cta: { label: 'Нууц үгээ тохируулах', url: input.link },
+    footerNote: 'Энэ захидал танд хамаагүй бол үл тоомсорлоно уу — холбоос 7 хоногийн дараа хүчингүй болно.',
+  };
+}
+
+/**
+ * 1B-17 — staff created the account; the client sets the password. Also the
+ * mail a consultant re-sends after the first link has expired (1B-19).
+ */
 export function accountClaimEmail(input: {
   name?: string | null;
   email: string;
   link: string;
+  consultantName?: string | null;
 }): EmailMessage {
   return {
     subject: 'GKSedu.mn — бүртгэлээ идэвхжүүлнэ үү',
@@ -38,6 +98,8 @@ export function accountClaimEmail(input: {
       '',
       `Бүртгэлийн имэйл: ${input.email}`,
       'Холбоос хүчинтэй: 7 хоног',
+      '',
+      contactLine(input.consultantName, 'Холбоос хүчингүй болсон эсвэл асуух зүйл гарвал'),
     ].join('\n'),
     cta: { label: 'Нууц үгээ тохируулах', url: input.link },
     footerNote: 'Энэ урилга танд хамаагүй бол үл тоомсорлоно уу — 7 хоногийн дараа хүчингүй болно.',

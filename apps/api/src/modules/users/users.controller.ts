@@ -112,9 +112,13 @@ export class UsersController {
 
   @Post(':id/claim-invite')
   @Roles(Role.ADMIN, Role.CONSULTANT)
-  @ApiOperation({ summary: 'Бүртгэл эзэмших урилга илгээх (1B-17)' })
+  @Audit({ action: 'user.claim_invite', entity: 'User' })
+  @ApiOperation({
+    summary: 'Бүртгэл эзэмших урилга (дахин) илгээх (1B-17, 1B-19)',
+    description: 'Хугацаа нь дууссан урилгыг сэргээх зам — шинэ токен 7 хоног хүчинтэй.',
+  })
   invite(@Param('id', ParseUUIDPipe) id: string, @Body('email') email?: string) {
-    return this.claims.invite(id, email);
+    return this.claims.invite(id, { email, kind: 'invite' });
   }
 
   @Public()

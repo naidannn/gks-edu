@@ -15,7 +15,7 @@ const props = defineProps<{
 }>();
 
 type Tab = 'overview' | 'process' | 'documents' | 'payments' | 'activity';
-const emit = defineEmits<{ open: [tab: Tab] }>();
+const emit = defineEmits<{ open: [tab: Tab]; changed: [] }>();
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return '—';
@@ -140,6 +140,8 @@ const summary = computed(() => {
             </NuxtLink>
           </DsCard>
 
+          <CrmClientPortalAccess :client="client" @changed="emit('changed')" />
+
           <DsCard v-if="client.note" title="Тэмдэглэл">
             <p class="gks-cov__note">{{ client.note }}</p>
           </DsCard>
@@ -147,11 +149,17 @@ const summary = computed(() => {
       </div>
     </template>
 
-    <DsCard v-else title="Үйлчилгээ эхлээгүй">
-      <p class="gks-cov__empty">
-        Энэ үйлчлүүлэгч дээр зуучлалын үйлчилгээ эхлээгүй тул явц, төлбөр, материал хараахан үүсээгүй байна.
-      </p>
-    </DsCard>
+    <div v-else class="gks-cov__cols">
+      <DsCard title="Үйлчилгээ эхлээгүй">
+        <p class="gks-cov__empty">
+          Энэ үйлчлүүлэгч дээр зуучлалын үйлчилгээ эхлээгүй тул явц, төлбөр, материал хараахан үүсээгүй байна.
+        </p>
+      </DsCard>
+
+      <aside class="gks-cov__side">
+        <CrmClientPortalAccess :client="client" @changed="emit('changed')" />
+      </aside>
+    </div>
   </div>
 </template>
 

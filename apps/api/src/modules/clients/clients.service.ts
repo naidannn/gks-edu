@@ -17,6 +17,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
+import { AccountClaimService } from '../users/account-claim.service.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
 import type { ConvertLeadDto } from './dto/convert-lead.dto.js';
 import type { CreateClientDto } from './dto/create-client.dto.js';
@@ -78,6 +79,44 @@ const CASE_SUMMARY_SELECT = {
   contract: { select: { id: true, status: true, type: true, signedAt: true, createdAt: true } },
 } satisfies Prisma.CaseSelect;
 
+/**
+ * What the client's login is worth today (1B-19). Staff open a client and need
+ * one honest line — invited, expired, activated, or "no address, so nothing was
+ * ever sent" — and the answer only exists on the backing `User` row.
+ */
+const PORTAL_USER_SELECT = {
+  email: true,
+  password: true,
+  googleId: true,
+  claimTokenHash: true,
+  claimTokenExpiresAt: true,
+  claimedAt: true,
+} satisfies Prisma.UserSelect;
+
+type PortalUser = Prisma.UserGetPayload<{ select: typeof PORTAL_USER_SELECT }>;
+
+function portalAccess(user: PortalUser) {
+  const invitedUntil = user.claimTokenHash ? user.claimTokenExpiresAt : null;
+  const status = !user.email
+    ? 'NO_EMAIL'
+    : user.password || user.googleId
+      ? 'ACTIVE'
+      : !invitedUntil
+        ? 'NOT_INVITED'
+        : invitedUntil > new Date()
+          ? 'INVITED'
+          : 'EXPIRED';
+
+  return {
+    email: user.email,
+    status,
+    // Never the hash itself — only whether one is outstanding, and until when.
+    invitedUntil,
+    claimedAt: user.claimedAt,
+    viaGoogle: Boolean(user.googleId),
+  } as const;
+}
+
 const LIST_SELECT = {
   id: true,
   code: true,
@@ -111,6 +150,7 @@ export class ClientsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cases: CasesService,
+    private readonly claims: AccountClaimService,
   ) {}
 
   // ─── Create ───────────────────────────────────────────────────────────────
@@ -151,6 +191,8 @@ export class ClientsService {
 
       return client;
     });
+
+    await this.invitePortal(created.userId, dto);
 
     return this.findOne(created.id);
   }
@@ -242,7 +284,31 @@ export class ClientsService {
       return client;
     });
 
+    await this.invitePortal(created.userId, merged);
+
     return this.findOne(created.id);
+  }
+
+  /**
+   * 1B-19 — the welcome mail goes out the moment a client is registered.
+   *
+   * Before this, a staff-created row owned the client's address without ever
+   * telling them: they could not register (the address is taken), could not log
+   * in (there is no password), and the process mails that followed pointed at a
+   * cabinet they had no way into. Sending the invitation with the registration
+   * closes that gap at the only moment we are certain to remember.
+   */
+  private async invitePortal(userId: string, dto: Pick<CreateClientDto, 'email' | 'assignedConsultantId'>) {
+    if (!dto.email) return;
+
+    const consultant = dto.assignedConsultantId
+      ? await this.prisma.user.findUnique({
+          where: { id: dto.assignedConsultantId },
+          select: { name: true },
+        })
+      : null;
+
+    await this.claims.inviteQuietly(userId, { kind: 'welcome', consultantName: consultant?.name });
   }
 
   // ─── Read ─────────────────────────────────────────────────────────────────
@@ -490,6 +556,13 @@ export class ClientsService {
         leadId: true,
         lead: { select: { id: true, stage: true, source: true, createdAt: true } },
         createdBy: { select: { id: true, name: true, email: true } },
+        user: {
+          select: {
+            id: true,
+            cases: { select: CASE_SUMMARY_SELECT, orderBy: { createdAt: 'desc' } },
+            ...PORTAL_USER_SELECT,
+          },
+        },
       },
     });
     if (!client) throw new NotFoundException('Хэрэглэгч олдсонгүй');
@@ -500,6 +573,7 @@ export class ClientsService {
       ...this.caseSummary(user.cases),
       userId: user.id,
       cases: user.cases,
+      portal: portalAccess(user),
       isMinor: ageOn(client.birthDate) < ADULT_AGE,
     };
   }
@@ -539,6 +613,16 @@ export class ClientsService {
         });
       }
     });
+
+    // An address typed in later is the same moment as registering with one:
+    // it is the first time the invitation can go anywhere (1B-19). A client who
+    // already has a login is left alone — `inviteQuietly` refuses those.
+    if (dto.email && dto.email !== existing.email) {
+      await this.invitePortal(existing.userId, {
+        email: dto.email,
+        assignedConsultantId: dto.assignedConsultantId ?? existing.assignedConsultantId ?? undefined,
+      });
+    }
 
     return this.findOne(id);
   }

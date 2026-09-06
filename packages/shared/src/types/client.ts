@@ -87,7 +87,31 @@ export interface ClientCaseSummary {
   } | null;
 }
 
+/**
+ * Whether the client can actually get into their own cabinet (1B-19).
+ *
+ * `NO_EMAIL`      — no address on file, so nothing was ever sent.
+ * `NOT_INVITED`   — an address, but no invitation outstanding.
+ * `INVITED`       — a live invitation; `invitedUntil` says how long.
+ * `EXPIRED`       — the invitation lapsed; staff re-send from the client page.
+ * `ACTIVE`        — a password (or Google) they own; they are already in.
+ */
+export type ClientPortalStatus = 'NO_EMAIL' | 'NOT_INVITED' | 'INVITED' | 'EXPIRED' | 'ACTIVE';
+
+export interface ClientPortalAccess {
+  /** The address on the login itself, which staff may have corrected. */
+  email: string | null;
+  status: ClientPortalStatus;
+  /** When the outstanding invitation dies. Null unless one is outstanding. */
+  invitedUntil: string | null;
+  claimedAt: string | null;
+  viaGoogle: boolean;
+}
+
 export interface ClientDetail extends ClientListItem {
+  /** Cabinet access — read-only here; the invitation is re-sent from `/users`. */
+  portal: ClientPortalAccess;
+
   gender: Gender | null;
   phoneAlt: string | null;
   address: string | null;

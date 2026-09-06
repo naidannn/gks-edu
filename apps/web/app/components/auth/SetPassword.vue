@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ApiError } from '~/composables/useApi';
+
 /**
  * The screen at the end of an emailed link: take the token out of the query,
  * take a new password, post both.
@@ -17,6 +19,15 @@ const props = defineProps<{
   successText: string;
   /** Shown when the link carries no token at all. */
   missingTokenText: string;
+  /**
+   * Shown when the server rejects the token — expired or never valid. The API
+   * answers the same way for both on purpose, so this text has to cover both
+   * and, more importantly, say how to get a working link.
+   */
+  deadTokenTitle: string;
+  deadTokenText: string;
+  /** Where "get me a new link" goes. */
+  retry: { label: string; to: string };
 }>();
 
 const api = useApi();
@@ -27,6 +38,8 @@ const token = computed(() => (route.query.token as string | undefined)?.trim() ?
 const password = ref('');
 const passwordRepeat = ref('');
 const done = ref(false);
+/** The token itself was refused — no amount of retyping the password helps. */
+const dead = ref(false);
 const error = ref<string | null>(null);
 const pending = ref(false);
 
@@ -47,7 +60,14 @@ async function submit() {
     await api.post(props.endpoint, { token: token.value, password: password.value });
     done.value = true;
   } catch (err) {
-    error.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа. Дараа дахин оролдоно уу.');
+    // 400 is the one answer the form cannot recover from: the link is spent.
+    // Leaving the form on screen under a red line invites a second attempt
+    // that will fail the same way, so the page changes into a way forward.
+    if (err instanceof ApiError && err.status === 400) {
+      dead.value = true;
+      return;
+    }
+    error.value = err instanceof ApiError ? err.message : 'Хадгалахад алдаа гарлаа. Дараа дахин оролдоно уу.';
   } finally {
     pending.value = false;
   }
@@ -70,7 +90,15 @@ async function submit() {
       <h1 class="gks-auth__title">Холбоос буруу байна</h1>
       <p class="gks-auth__lede">{{ missingTokenText }}</p>
       <p class="gks-auth__switch">
-        <NuxtLink to="/forgot-password">Шинэ холбоос хүсэх</NuxtLink>
+        <NuxtLink :to="retry.to">{{ retry.label }}</NuxtLink>
+      </p>
+    </template>
+
+    <template v-else-if="dead">
+      <h1 class="gks-auth__title">{{ deadTokenTitle }}</h1>
+      <p class="gks-auth__lede">{{ deadTokenText }}</p>
+      <p class="gks-auth__switch">
+        <NuxtLink :to="retry.to">{{ retry.label }}</NuxtLink>
       </p>
     </template>
 

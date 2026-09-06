@@ -108,7 +108,8 @@ STORAGE_SIGNING_SECRET=$(secret)
 # --- Web --------------------------------------------------------------------
 NUXT_PUBLIC_API_BASE=https://$DOMAIN/api/v1
 NUXT_PUBLIC_SITE_URL=https://$DOMAIN
-# NUXT_PUBLIC_GA_ID=
+# GA4 property for gksedu.mn.
+NUXT_PUBLIC_GA_ID=G-CZ24PGBE0Q
 EOF
 
 chmod 600 "$ENV_FILE"

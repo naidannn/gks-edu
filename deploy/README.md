@@ -151,7 +151,9 @@ failing:
 | `GOOGLE_CLIENT_ID` / `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | the "Google-ээр нэвтрэх" button does not render; `POST /auth/google` returns 503 |
 | `RESEND_API_KEY` | emails are written to the log instead of sent |
 | SMS gateway | not chosen yet (`ARCHITECTURE.md` §18 q.10) — messages are logged |
-| `NUXT_PUBLIC_GA_ID` | no analytics script |
+
+`NUXT_PUBLIC_GA_ID` **is** set (2026-09-06) to the `G-CZ24PGBE0Q` GA4 property.
+Development leaves it empty on purpose, so no local reload is counted.
 
 `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` **are** set (2026-09-06): a consultation
 request, a new account, a signed contract and a received payment post to the

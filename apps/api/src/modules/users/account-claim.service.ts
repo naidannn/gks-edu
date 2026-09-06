@@ -1,14 +1,29 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { hash } from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { EmailService } from '../notifications/email.service.js';
-import { accountClaimEmail } from '../notifications/email/transactional.js';
+import { accountClaimEmail, clientWelcomeEmail } from '../notifications/email/transactional.js';
 
 /** How long an invitation link stays valid. */
-const CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const BCRYPT_ROUNDS = 12;
+
+/**
+ * Which mail carries the link. `welcome` is the one a staff-registered client
+ * gets at the moment of registration — their first contact with us in writing,
+ * so it introduces the cabinet rather than just handing over a token (1B-19).
+ * `invite` is the plainer re-send, and the one staff accounts get.
+ */
+export type ClaimInviteKind = 'welcome' | 'invite';
+
+export interface InviteOptions {
+  /** Sets (or corrects) the address the invitation goes to. */
+  email?: string;
+  kind?: ClaimInviteKind;
+  /** Named in the mail as the human to ring once the link has expired. */
+  consultantName?: string | null;
+}
 
 /**
  * 1B-17 — a staff-created `User` row has no email or password (§4a). This turns
@@ -23,20 +38,22 @@ export class AccountClaimService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
     private readonly email: EmailService,
   ) {}
 
   /** Issues (or re-issues) an invitation and emails the link. */
-  async invite(userId: string, email?: string): Promise<{ expiresAt: Date; emailed: boolean }> {
+  async invite(userId: string, options: InviteOptions = {}): Promise<{ expiresAt: Date; emailed: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, password: true },
+      select: { id: true, email: true, name: true, password: true, googleId: true },
     });
     if (!user) throw new NotFoundException('Хэрэглэгч олдсонгүй');
     if (user.password) throw new BadRequestException('Энэ бүртгэл аль хэдийн нууц үгтэй байна');
+    // A Google sign-in already owns the row; a "set your password" link would
+    // invite them to solve a problem they do not have.
+    if (user.googleId) throw new BadRequestException('Энэ бүртгэл Google-ээр идэвхжсэн байна');
 
-    const target = (email ?? user.email)?.trim().toLowerCase();
+    const target = (options.email ?? user.email)?.trim().toLowerCase();
     if (!target) throw new BadRequestException('Урилга илгээх имэйл хаяг байхгүй байна');
 
     const token = randomBytes(32).toString('base64url');
@@ -47,17 +64,33 @@ export class AccountClaimService {
       data: { email: target, claimTokenHash: sha256(token), claimTokenExpiresAt: expiresAt },
     });
 
-    const base = (this.config.get<string>('notifications.appUrl') ?? '').replace(/\/$/, '');
-    const link = `${base}/claim?token=${token}`;
+    const link = this.email.link(`/claim?token=${token}`);
+    const message = { name: user.name, email: target, link, consultantName: options.consultantName };
 
     await this.email.send(
       target,
-      accountClaimEmail({ name: user.name, email: target, link }),
-      'account_claim',
+      options.kind === 'welcome' ? clientWelcomeEmail(message) : accountClaimEmail(message),
+      options.kind === 'welcome' ? 'account_welcome' : 'account_claim',
     );
 
     this.logger.log(`Бүртгэл эзэмших урилга илгээлээ: ${target}`);
     return { expiresAt, emailed: true };
+  }
+
+  /**
+   * The same invitation, sent as a side effect of registering a client (1B-19).
+   *
+   * Registration must survive a mail outage — the client row is the record of a
+   * signed-up person, the invitation is a convenience — so every failure here is
+   * logged and swallowed. Staff see the outcome on the client's portal card and
+   * can re-send from there.
+   */
+  async inviteQuietly(userId: string, options: InviteOptions = {}): Promise<void> {
+    try {
+      await this.invite(userId, options);
+    } catch (error) {
+      this.logger.warn(`Урилга илгээгдсэнгүй (${userId}): ${String(error)}`);
+    }
   }
 
   /** Consumes the token and sets the password. */
@@ -68,7 +101,8 @@ export class AccountClaimService {
     });
 
     // One message for "wrong token" and "expired token": distinguishing them
-    // tells an attacker which half of the guess was right.
+    // tells an attacker which half of the guess was right. The page that shows
+    // it offers the way back for both — ask your consultant for a new link.
     if (!user || !user.claimTokenExpiresAt || user.claimTokenExpiresAt < new Date()) {
       throw new BadRequestException('Урилгын холбоос хүчингүй эсвэл хугацаа нь дууссан байна');
     }
