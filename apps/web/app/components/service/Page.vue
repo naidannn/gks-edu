@@ -42,9 +42,6 @@ const { data: pricing } = await useApiFetch<PublicServicePricing[]>('/pricing/pu
 
 const price = computed(() => pricing.value?.find((row) => row.serviceType === props.service) ?? null);
 
-function mnt(value: number): string {
-  return formatMnt(value) ?? '—';
-}
 </script>
 
 <template>
@@ -87,9 +84,9 @@ function mnt(value: number): string {
     <section v-if="price" class="svc__section svc__price">
       <div>
         <h2 class="svc__h2">Үйлчилгээний хөлс</h2>
-        <p class="svc__price-total gks-tnum">{{ mnt(price.totalAmount) }}</p>
+        <p class="svc__price-total gks-tnum">{{ formatMntOrDash(price.totalAmount) }}</p>
         <p class="svc__price-note">
-          Эхний төлбөр <strong class="gks-tnum">{{ mnt(price.prepaymentAmount) }}</strong> —
+          Эхний төлбөр <strong class="gks-tnum">{{ formatMntOrDash(price.prepaymentAmount) }}</strong> —
           үлдэгдлийг гэрээнд заасан үе шатанд төлнө.
         </p>
       </div>

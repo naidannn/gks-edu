@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { AgentContractStatus, UniversityType } from '@gks/shared';
 import type { UniversityForm } from '~/utils/university-form';
 
 /**
@@ -18,10 +17,8 @@ defineProps<{
   slugLocked?: boolean;
 }>();
 
-const TYPE_OPTIONS = (Object.entries(UNIVERSITY_TYPE_LABELS) as [UniversityType, string][])
-  .map(([value, label]) => ({ value, label }));
-const AGENT_OPTIONS = (Object.entries(AGENT_CONTRACT_STATUS_LABELS) as [AgentContractStatus, string][])
-  .map(([value, label]) => ({ value, label }));
+const TYPE_OPTIONS = selectOptions(UNIVERSITY_TYPE_LABELS);
+const AGENT_OPTIONS = selectOptions(AGENT_CONTRACT_STATUS_LABELS);
 const TRISTATE_OPTIONS = [
   { value: '', label: 'Тодорхойгүй' },
   { value: 'true', label: 'Тийм' },

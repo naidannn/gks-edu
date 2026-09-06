@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import type { CaseListItem, CaseStage, ServiceType } from '@gks/shared';
+import type { CaseListItem, CaseStage, PaginatedResult, ServiceType } from '@gks/shared';
 
 /** Staff case list — search, filter by stage/service, pagination (1C-18 groundwork). */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type Paginated = { items: CaseListItem[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<CaseListItem>;
 
-const STAGE_OPTIONS: { value: CaseStage | ''; label: string }[] = [
-  { value: '', label: 'Бүх үе шат' },
-  ...(Object.entries(CASE_STAGE_LABELS) as [CaseStage, string][]).map(([value, label]) => ({ value, label })),
-];
-const SERVICE_OPTIONS: { value: ServiceType | ''; label: string }[] = [
-  { value: '', label: 'Бүх үйлчилгээ' },
-  ...(Object.entries(SERVICE_LABELS) as [ServiceType, string][]).map(([value, label]) => ({ value, label })),
-];
+const STAGE_OPTIONS = selectOptions(CASE_STAGE_LABELS, 'Бүх үе шат');
+const SERVICE_OPTIONS = selectOptions(SERVICE_LABELS, 'Бүх үйлчилгээ');
 
 const api = useApi();
 const q = ref('');
@@ -126,11 +120,7 @@ useHead({ title: 'Үйлчилгээ · CRM' });
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 

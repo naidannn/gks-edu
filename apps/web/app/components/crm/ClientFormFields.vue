@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EducationLevel, Gender, LeadSource, ServiceType, UniversityCard } from '@gks/shared';
+import type { UniversityCard } from '@gks/shared';
 import type { ClientForm } from '~/utils/client-form';
 import { clientAge, defaultChoiceTrack, isMinorForm, reconcileChoices } from '~/utils/client-form';
 
@@ -26,20 +26,10 @@ const props = withDefaults(
   { variant: 'staff' },
 );
 
-const GENDER_OPTIONS = [
-  { value: '', label: 'Сонгоогүй' },
-  ...(Object.entries(GENDER_LABELS) as [Gender, string][]).map(([value, label]) => ({ value, label })),
-];
-const EDUCATION_OPTIONS = [
-  { value: '', label: 'Сонгоогүй' },
-  ...(Object.entries(EDUCATION_LEVEL_LABELS) as [EducationLevel, string][]).map(([value, label]) => ({ value, label })),
-];
-const SERVICE_OPTIONS = [
-  { value: '', label: 'Үйлчилгээ сонгоно уу' },
-  ...(Object.entries(SERVICE_LABELS) as [ServiceType, string][]).map(([value, label]) => ({ value, label })),
-];
-const SOURCE_OPTIONS = (Object.entries(LEAD_SOURCE_LABELS) as [LeadSource, string][])
-  .map(([value, label]) => ({ value, label }));
+const GENDER_OPTIONS = selectOptions(GENDER_LABELS, 'Сонгоогүй');
+const EDUCATION_OPTIONS = selectOptions(EDUCATION_LEVEL_LABELS, 'Сонгоогүй');
+const SERVICE_OPTIONS = selectOptions(SERVICE_LABELS, 'Үйлчилгээ сонгоно уу');
+const SOURCE_OPTIONS = selectOptions(LEAD_SOURCE_LABELS);
 
 const universityOptions = computed(() => toUniversityOptions(props.universities));
 

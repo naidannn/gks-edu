@@ -181,9 +181,6 @@ const totals = computed(() => {
   return { total, paid, refunded, pending, remaining: Math.max(0, total - paid) };
 });
 
-function mnt(value: string | number): string {
-  return formatMntAmount(value) ?? '—';
-}
 /**
  * A QPay payment happened at a moment we recorded, so it is shown to the
  * minute. A manual registration is a *date* somebody typed — stored as UTC
@@ -211,19 +208,19 @@ const needsPhysicalRegistration = computed(
     <div class="gks-cpay__totals">
       <DsCard class="gks-cpay__tile">
         <p class="gks-cpay__tile-label">Гэрээний дүн</p>
-        <p class="gks-cpay__tile-value gks-tnum">{{ totals.total ? mnt(totals.total) : '—' }}</p>
+        <p class="gks-cpay__tile-value gks-tnum">{{ totals.total ? formatMntOrDash(totals.total) : '—' }}</p>
       </DsCard>
       <DsCard class="gks-cpay__tile">
         <p class="gks-cpay__tile-label">Төлөгдсөн</p>
-        <p class="gks-cpay__tile-value gks-tnum">{{ mnt(totals.paid) }}</p>
+        <p class="gks-cpay__tile-value gks-tnum">{{ formatMntOrDash(totals.paid) }}</p>
       </DsCard>
       <DsCard class="gks-cpay__tile" :accent="totals.pending > 0">
         <p class="gks-cpay__tile-label">Хүлээгдэж буй</p>
-        <p class="gks-cpay__tile-value gks-tnum">{{ mnt(totals.pending) }}</p>
+        <p class="gks-cpay__tile-value gks-tnum">{{ formatMntOrDash(totals.pending) }}</p>
       </DsCard>
       <DsCard class="gks-cpay__tile">
         <p class="gks-cpay__tile-label">Үлдэгдэл</p>
-        <p class="gks-cpay__tile-value gks-tnum">{{ totals.total ? mnt(totals.remaining) : '—' }}</p>
+        <p class="gks-cpay__tile-value gks-tnum">{{ totals.total ? formatMntOrDash(totals.remaining) : '—' }}</p>
       </DsCard>
     </div>
 
@@ -241,8 +238,8 @@ const needsPhysicalRegistration = computed(
           <CommonDataValue label="Дугаар" :value="contract.number" />
           <CommonDataValue label="Төрөл" :value="CONTRACT_TYPE_LABELS[contract.type]" />
           <CommonDataValue label="Төлөв" :value="CONTRACT_STATUS_LABELS[contract.status]" />
-          <CommonDataValue label="Нийт төлбөр" :value="mnt(contract.totalAmountSnapshot)" />
-          <CommonDataValue label="Урьдчилгаа" :value="mnt(contract.prepaymentValueSnapshot)" />
+          <CommonDataValue label="Нийт төлбөр" :value="formatMntOrDash(contract.totalAmountSnapshot)" />
+          <CommonDataValue label="Урьдчилгаа" :value="formatMntOrDash(contract.prepaymentValueSnapshot)" />
           <CommonDataValue label="Үлдэгдлийн нөхцөл" :value="BALANCE_TRIGGER_LABELS[contract.balanceTriggerSnapshot]" />
           <CommonDataValue label="Гарын үсэг зурсан" :value="formatDateTime(contract.signedAt)" />
         </dl>
@@ -366,7 +363,7 @@ const needsPhysicalRegistration = computed(
             <tr v-for="payment in payments" :key="payment.id">
               <td>{{ PAYMENT_KIND_LABELS[payment.kind] }}</td>
               <td :title="payment.note ?? undefined">{{ methodDetail(payment) }}</td>
-              <td class="gks-tnum">{{ mnt(payment.amountMnt) }}</td>
+              <td class="gks-tnum">{{ formatMntOrDash(payment.amountMnt) }}</td>
               <td><DsBadge :tone="PAYMENT_STATUS_TONE[payment.status]">{{ PAYMENT_STATUS_LABELS[payment.status] }}</DsBadge></td>
               <td class="gks-tnum">{{ formatPaymentDate(payment) }}</td>
               <td class="gks-cpay__row-actions">

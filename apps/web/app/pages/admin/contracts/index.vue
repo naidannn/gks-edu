@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import type { ContractListItem, ContractStats, ContractStatus, ContractType } from '@gks/shared';
+import type { ContractListItem, ContractStats, ContractStatus, ContractType, PaginatedResult } from '@gks/shared';
 
 /** Dense contracts workspace for staff handling signing and follow-up work (1C-18). */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type Paginated = { items: ContractListItem[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<ContractListItem>;
 
-const STATUS_OPTIONS: { value: ContractStatus | ''; label: string }[] = [
-  { value: '', label: 'Бүх төлөв' },
-  ...(Object.entries(CONTRACT_STATUS_LABELS) as [ContractStatus, string][]).map(([value, label]) => ({ value, label })),
-];
-const TYPE_OPTIONS: { value: ContractType | ''; label: string }[] = [
-  { value: '', label: 'Бүх төрөл' },
-  ...(Object.entries(CONTRACT_TYPE_LABELS) as [ContractType, string][]).map(([value, label]) => ({ value, label })),
-];
+const STATUS_OPTIONS = selectOptions(CONTRACT_STATUS_LABELS, 'Бүх төлөв');
+const TYPE_OPTIONS = selectOptions(CONTRACT_TYPE_LABELS, 'Бүх төрөл');
 const STATUS_SUMMARY: ContractStatus[] = ['DRAFT', 'SENT', 'SIGNED', 'ACTIVE', 'COMPLETED', 'TERMINATED'];
 
 const api = useApi();
@@ -71,7 +65,6 @@ watch(q, () => {
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; }
 function contractDate(c: ContractListItem): string { return formatDate(c.signedAt ?? c.createdAt); }
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
@@ -186,7 +179,7 @@ useHead({ title: 'Гэрээ · CRM' });
                   </span>
                 </span>
               </td>
-              <td class="gks-table__num contracts__amount" data-label="Нийт дүн">{{ mnt(c.totalAmountSnapshot) }}</td>
+              <td class="gks-table__num contracts__amount" data-label="Нийт дүн">{{ formatMntOrDash(c.totalAmountSnapshot) }}</td>
               <td class="contracts__open"><DsIcon name="chevron-right" :size="18" /></td>
             </tr>
           </tbody>
@@ -194,11 +187,7 @@ useHead({ title: 'Гэрээ · CRM' });
       </div>
     </template>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 

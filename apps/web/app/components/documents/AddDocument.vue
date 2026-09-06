@@ -39,7 +39,7 @@ onMounted(async () => {
   }
 });
 
-const NECESSITY_OPTIONS = (Object.entries(NECESSITY_LABELS) as [Necessity, string][]).map(([value, label]) => ({ value, label }));
+const NECESSITY_OPTIONS = selectOptions(NECESSITY_LABELS);
 
 /** Alphabetical: the picker is scanned by name, never by code. */
 const TEMPLATE_OPTIONS = computed(() =>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { WorkTask, WorkTaskStatus, WorkTaskType } from '@gks/shared';
+import type { PaginatedResult, WorkTask, WorkTaskStatus, WorkTaskType } from '@gks/shared';
 
 /**
  * 1D-10 — translation and other back-office work (gksedu.md §6.4): who is doing
@@ -7,15 +7,12 @@ import type { WorkTask, WorkTaskStatus, WorkTaskType } from '@gks/shared';
  */
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 
-type Paginated = { items: WorkTask[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<WorkTask>;
 type StaffMember = { id: string; name: string | null; email: string | null; role: string };
 type Workload = { rows: { assigneeId: string | null; status: WorkTaskStatus; _count: { _all: number } }[]; overdue: number };
 
-const STATUS_OPTIONS: { value: WorkTaskStatus | ''; label: string }[] = [
-  { value: '', label: 'Бүх төлөв' },
-  ...(Object.entries(WORK_TASK_STATUS_LABELS) as [WorkTaskStatus, string][]).map(([value, label]) => ({ value, label })),
-];
-const TYPE_OPTIONS = (Object.entries(WORK_TASK_TYPE_LABELS) as [WorkTaskType, string][]).map(([value, label]) => ({ value, label }));
+const STATUS_OPTIONS = selectOptions(WORK_TASK_STATUS_LABELS, 'Бүх төлөв');
+const TYPE_OPTIONS = selectOptions(WORK_TASK_TYPE_LABELS);
 
 const api = useApi();
 const status = ref<WorkTaskStatus | ''>('');
@@ -193,11 +190,7 @@ useHead({ title: 'Материалын ажил · CRM' });
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 

@@ -89,8 +89,7 @@ async function togglePublished() {
 }
 
 // ── Programmes (1A-27) ─────────────────────────────────────────────────────
-const LEVEL_OPTIONS = (Object.entries(PROGRAM_LEVEL_LABELS) as [ProgramLevel, string][])
-  .map(([value, label]) => ({ value, label }));
+const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS);
 
 /**
  * Programmes are edited on their own screen, not inline here.
@@ -118,8 +117,7 @@ const text = (value: string) => (value.trim() ? value.trim() : null);
 
 // ── Intake terms (1A-27) ───────────────────────────────────────────────────
 const MONTH_OPTIONS = [3, 6, 9, 12].map((m) => ({ value: String(m), label: INTAKE_MONTH_LABELS[m] as string }));
-const INTAKE_STATUS_OPTIONS = (Object.entries(INTAKE_STATUS_LABELS) as [IntakeStatus, string][])
-  .map(([value, label]) => ({ value, label }));
+const INTAKE_STATUS_OPTIONS = selectOptions(INTAKE_STATUS_LABELS);
 
 const blankIntake = () => ({
   level: 'BACHELOR' as ProgramLevel,

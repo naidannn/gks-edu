@@ -3,6 +3,7 @@ import type {
   AdminUniversityRow,
   AdminUniversityStats,
   AgentContractStatus,
+  PaginatedResult,
   ProgramLevel,
   UniversityRegionOption,
   UniversityType,
@@ -16,26 +17,14 @@ import { useAuthStore } from '~/stores/auth';
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type Paginated = {
-  items: AdminUniversityRow[];
-  meta: { page: number; limit: number; total: number; totalPages: number };
-};
+type Paginated = PaginatedResult<AdminUniversityRow>;
 
 const auth = useAuthStore();
 const api = useApi();
 
-const TYPE_OPTIONS: { value: UniversityType | ''; label: string }[] = [
-  { value: '', label: 'Бүх төрөл' },
-  ...(Object.entries(UNIVERSITY_TYPE_LABELS) as [UniversityType, string][]).map(([value, label]) => ({ value, label })),
-];
-const LEVEL_OPTIONS: { value: ProgramLevel | ''; label: string }[] = [
-  { value: '', label: 'Бүх түвшин' },
-  ...(Object.entries(PROGRAM_LEVEL_LABELS) as [ProgramLevel, string][]).map(([value, label]) => ({ value, label })),
-];
-const AGENT_OPTIONS: { value: AgentContractStatus | ''; label: string }[] = [
-  { value: '', label: 'Агентын гэрээ: бүгд' },
-  ...(Object.entries(AGENT_CONTRACT_STATUS_LABELS) as [AgentContractStatus, string][]).map(([value, label]) => ({ value, label })),
-];
+const TYPE_OPTIONS = selectOptions(UNIVERSITY_TYPE_LABELS, 'Бүх төрөл');
+const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS, 'Бүх түвшин');
+const AGENT_OPTIONS = selectOptions(AGENT_CONTRACT_STATUS_LABELS, 'Агентын гэрээ: бүгд');
 const SORT_OPTIONS = [
   { value: 'gks', label: 'GKS эрэмбээр' },
   { value: 'rank', label: 'THE рэйтингээр' },
@@ -304,11 +293,7 @@ useHead({ title: 'Сургууль · CRM' });
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 

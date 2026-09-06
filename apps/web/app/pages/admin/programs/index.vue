@@ -300,21 +300,7 @@ function annual(program: AdminProgram): string {
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="ghost" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">
-        Өмнөх
-      </DsButton>
-      <span class="gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton
-        variant="ghost"
-        size="sm"
-        icon-right="chevron-right"
-        :disabled="page >= totalPages"
-        @click="page += 1"
-      >
-        Дараах
-      </DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" variant="ghost" />
   </div>
 </template>
 

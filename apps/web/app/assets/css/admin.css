@@ -421,17 +421,6 @@ a.gks-stat:hover, button.gks-stat:hover { border-color: var(--line-strong); back
   font-weight: var(--fw-bold);
 }
 
-/* ================================================================== pager */
-
-.gks-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-4);
-  flex-wrap: wrap;
-}
-.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-
 /* =========================================================== empty + loading */
 
 .gks-empty { text-align: center; color: var(--text-muted); }

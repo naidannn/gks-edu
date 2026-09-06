@@ -83,8 +83,8 @@ onMounted(load);
 const selected = computed(() => templates.value.find((t) => t.id === selectedId.value) ?? null);
 const selectedRules = computed(() => rules.value.filter((rule) => rule.templateId === selectedId.value));
 
-const STAGE_OPTIONS = (Object.entries(DOC_STAGE_LABELS) as [DocStage, string][]).map(([value, label]) => ({ value, label }));
-const NECESSITY_OPTIONS = (Object.entries(NECESSITY_LABELS) as [Necessity, string][]).map(([value, label]) => ({ value, label }));
+const STAGE_OPTIONS = selectOptions(DOC_STAGE_LABELS);
+const NECESSITY_OPTIONS = selectOptions(NECESSITY_LABELS);
 const SERVICE_OPTIONS = Object.entries(SERVICE_LABELS) as [ServiceType, string][];
 const EDUCATION_OPTIONS = Object.entries(EDUCATION_LEVEL_LABELS) as [EducationLevel, string][];
 const GUARANTOR_OPTIONS = Object.entries(GUARANTOR_TYPE_LABELS) as [GuarantorType, string][];

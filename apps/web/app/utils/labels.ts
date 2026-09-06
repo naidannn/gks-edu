@@ -443,6 +443,30 @@ export const INTAKE_MONTH_LABELS: Record<number, string> = {
   12: '12-р сар (өвөл)',
 };
 
+/**
+ * A `<select>`'s options, in the order the label map declares them.
+ *
+ * `Object.entries` widens its keys back to `string`, so every screen that built
+ * a dropdown from a label map wrote the same cast to the enum before mapping —
+ * twenty-odd copies of a claim that is really about `Record<K, string>` itself.
+ * Made once here, it is also the only place that can get it wrong.
+ *
+ * `allLabel` prepends the blank row a filter needs ("Бүх төлөв"); a form that
+ * must land on one of the values omits it and gets no blank option at all.
+ */
+export function selectOptions<K extends string>(labels: Record<K, string>): { value: K; label: string }[];
+export function selectOptions<K extends string>(
+  labels: Record<K, string>,
+  allLabel: string,
+): { value: K | ''; label: string }[];
+export function selectOptions<K extends string>(
+  labels: Record<K, string>,
+  allLabel?: string,
+): { value: K | ''; label: string }[] {
+  const options = (Object.entries(labels) as [K, string][]).map(([value, label]) => ({ value, label }));
+  return allLabel === undefined ? options : [{ value: '', label: allLabel }, ...options];
+}
+
 const numberFormat = new Intl.NumberFormat('mn-MN');
 
 /** Groups digits; returns null so callers can decide how to show "unknown". */
@@ -712,4 +736,16 @@ export function formatKrwAmount(value: string | number | null | undefined): stri
 export function formatMntAmount(value: string | number | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   return formatMnt(Number(value));
+}
+
+/**
+ * The same figure, already given up on: `'—'` where there is no amount.
+ *
+ * The `format*` family returns `null` so a caller can decide how to say
+ * "unknown" — a card shows {@link UNKNOWN_LABEL}, a table shows a dash. Six
+ * screens had each written that dash out as their own one-line `mnt()`, which
+ * is the decision being made six times rather than a decision at all.
+ */
+export function formatMntOrDash(value: string | number | null | undefined): string {
+  return formatMntAmount(value) ?? '—';
 }

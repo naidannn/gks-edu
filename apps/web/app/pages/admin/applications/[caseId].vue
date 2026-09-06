@@ -173,8 +173,8 @@ function recordInvitation() {
   return act(() => api.post(`/cases/${caseId.value}/invitation`, body));
 }
 
-const KIND_OPTIONS = (Object.entries(INVOICE_ITEM_KIND_LABELS) as [InvoiceItemKind, string][]).map(([value, label]) => ({ value, label }));
-const DECISION_OPTIONS = (Object.entries(APPLICATION_DECISION_LABELS) as [ApplicationDecision, string][]).map(([value, label]) => ({ value, label }));
+const KIND_OPTIONS = selectOptions(INVOICE_ITEM_KIND_LABELS);
+const DECISION_OPTIONS = selectOptions(APPLICATION_DECISION_LABELS);
 
 useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 </script>

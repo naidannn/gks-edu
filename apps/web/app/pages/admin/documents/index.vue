@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CaseDocument, DocStage, DocumentStatus, ReviewQueueItem, SignedFile } from '@gks/shared';
+import type { CaseDocument, DocStage, DocumentStatus, PaginatedResult, ReviewQueueItem, SignedFile } from '@gks/shared';
 
 /**
  * 1D-16 — the review workspace. A queue on the left (oldest submission first,
@@ -8,16 +8,10 @@ import type { CaseDocument, DocStage, DocumentStatus, ReviewQueueItem, SignedFil
  */
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 
-type Paginated = { items: ReviewQueueItem[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<ReviewQueueItem>;
 
-const STAGE_OPTIONS: { value: DocStage | ''; label: string }[] = [
-  { value: '', label: 'Бүх шат' },
-  ...(Object.entries(DOC_STAGE_LABELS) as [DocStage, string][]).map(([value, label]) => ({ value, label })),
-];
-const STATUS_OPTIONS: { value: DocumentStatus | ''; label: string }[] = [
-  { value: '', label: 'Шалгах дараалал' },
-  ...(Object.entries(DOCUMENT_STATUS_LABELS) as [DocumentStatus, string][]).map(([value, label]) => ({ value, label })),
-];
+const STAGE_OPTIONS = selectOptions(DOC_STAGE_LABELS, 'Бүх шат');
+const STATUS_OPTIONS = selectOptions(DOCUMENT_STATUS_LABELS, 'Шалгах дараалал');
 
 const api = useApi();
 const config = useRuntimeConfig();
@@ -181,11 +175,7 @@ useHead({ title: 'Материал шалгах · CRM' });
           </span>
         </button>
 
-        <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-          <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-          <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-          <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-        </nav>
+        <DsPager v-model:page="page" :total-pages="totalPages" />
       </aside>
 
       <section class="gks-review__detail">

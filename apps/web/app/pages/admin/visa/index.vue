@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VisaCase, VisaStatus, VisaView } from '@gks/shared';
+import type { PaginatedResult, VisaCase, VisaStatus, VisaView } from '@gks/shared';
 
 /**
  * 1F-10 — the visa desk. The list on the left, the picked case on the right with
@@ -7,12 +7,9 @@ import type { VisaCase, VisaStatus, VisaView } from '@gks/shared';
  */
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 
-type Paginated = { items: VisaCase[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<VisaCase>;
 
-const STATUS_OPTIONS: { value: VisaStatus | ''; label: string }[] = [
-  { value: '', label: 'Бүх төлөв' },
-  ...(Object.entries(VISA_STATUS_LABELS) as [VisaStatus, string][]).map(([value, label]) => ({ value, label })),
-];
+const STATUS_OPTIONS = selectOptions(VISA_STATUS_LABELS, 'Бүх төлөв');
 
 /** Only the moves the API accepts from each state (1F-01). */
 const NEXT: Record<VisaStatus, VisaStatus[]> = {
@@ -160,11 +157,7 @@ useHead({ title: 'Виз · CRM' });
           <DsBadge :tone="VISA_STATUS_TONE[item.status]">{{ VISA_STATUS_LABELS[item.status] }}</DsBadge>
         </button>
 
-        <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-          <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-          <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-          <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-        </nav>
+        <DsPager v-model:page="page" :total-pages="totalPages" />
       </aside>
 
       <section v-if="current" class="gks-visadm__detail">

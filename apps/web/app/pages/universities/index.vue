@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import type { UniversityCard, UniversityFacets, UniversityType } from '@gks/shared';
+import type { PaginatedResult, UniversityCard, UniversityFacets, UniversityType } from '@gks/shared';
 
 /** Catalogue of the 135 Korean partner universities (1A-06). */
-type Paginated = {
-  items: UniversityCard[];
-  meta: { page: number; limit: number; total: number; totalPages: number };
-};
+type Paginated = PaginatedResult<UniversityCard>;
 
 const route = useRoute();
 const router = useRouter();
@@ -194,27 +191,7 @@ useListingSeo('/universities');
         </li>
       </ul>
 
-      <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-        <DsButton
-          variant="secondary"
-          size="sm"
-          icon-left="chevron-left"
-          :disabled="filters.page <= 1"
-          @click="apply({ page: filters.page - 1 }, false)"
-        >
-          Өмнөх
-        </DsButton>
-        <span class="gks-pager__status gks-tnum">{{ filters.page }} / {{ totalPages }}</span>
-        <DsButton
-          variant="secondary"
-          size="sm"
-          icon-right="chevron-right"
-          :disabled="filters.page >= totalPages"
-          @click="apply({ page: filters.page + 1 }, false)"
-        >
-          Дараах
-        </DsButton>
-      </nav>
+      <DsPager :page="filters.page" :total-pages="totalPages" @update:page="apply({ page: $event }, false)" />
     </template>
 
     <DsCard v-else>
@@ -275,14 +252,7 @@ useListingSeo('/universities');
   color: var(--text-muted);
 }
 
-.gks-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-4);
-  padding-top: var(--sp-4);
-}
-.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); }
+.gks-pager { padding-top: var(--sp-4); }
 
 /* A phone gets to the first card sooner: a smaller headline, a tighter lede. */
 @media (max-width: 640px) {

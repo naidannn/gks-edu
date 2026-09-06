@@ -52,7 +52,6 @@ watch(pendingPayment, (payment) => {
 }, { immediate: true });
 onBeforeUnmount(() => clearInterval(pollTimer));
 
-function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; }
 </script>
 
 <template>
@@ -78,7 +77,7 @@ function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; 
     <template v-else>
       <DsCard title="Урьдчилгаа">
         <template v-if="prepayment">
-          <p class="gks-payment__amount gks-tnum">{{ mnt(prepayment.amountMnt) }}</p>
+          <p class="gks-payment__amount gks-tnum">{{ formatMntOrDash(prepayment.amountMnt) }}</p>
           <DsBadge :tone="prepayment.status === 'PAID' ? 'success' : 'warning'">{{ PAYMENT_STATUS_LABELS[prepayment.status] }}</DsBadge>
           <div v-if="prepayment.status === 'PENDING'" class="gks-payment__qr">
             <img v-if="prepayment.qrImage" :src="`data:image/png;base64,${prepayment.qrImage}`" alt="QPay QR" class="gks-payment__qr-img">
@@ -91,7 +90,7 @@ function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; 
 
       <DsCard v-if="prepayment?.status === 'PAID'" title="Үлдэгдэл">
         <template v-if="balance">
-          <p class="gks-payment__amount gks-tnum">{{ mnt(balance.amountMnt) }}</p>
+          <p class="gks-payment__amount gks-tnum">{{ formatMntOrDash(balance.amountMnt) }}</p>
           <DsBadge :tone="balance.status === 'PAID' ? 'success' : 'warning'">{{ PAYMENT_STATUS_LABELS[balance.status] }}</DsBadge>
           <div v-if="balance.status === 'PENDING'" class="gks-payment__qr">
             <img v-if="balance.qrImage" :src="`data:image/png;base64,${balance.qrImage}`" alt="QPay QR" class="gks-payment__qr-img">

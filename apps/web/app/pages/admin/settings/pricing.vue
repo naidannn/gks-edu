@@ -64,7 +64,6 @@ async function submit() {
   }
 }
 
-function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; }
 
 useHead({ title: 'Үнийн тохиргоо · CRM' });
 </script>
@@ -97,15 +96,15 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
     <DsCard v-for="s in SERVICE_TYPES" v-else :key="s" :title="SERVICE_LABELS[s]">
       <template v-if="activeByService.get(s)">
         <dl class="gks-settings__facts">
-          <CommonDataValue label="Нийт төлбөр" :value="mnt(activeByService.get(s)!.totalAmount)" />
-          <CommonDataValue label="Урьдчилгаа" :value="activeByService.get(s)!.prepaymentMode === 'PERCENT' ? `${activeByService.get(s)!.prepaymentValue}%` : mnt(activeByService.get(s)!.prepaymentValue)" />
+          <CommonDataValue label="Нийт төлбөр" :value="formatMntOrDash(activeByService.get(s)!.totalAmount)" />
+          <CommonDataValue label="Урьдчилгаа" :value="activeByService.get(s)!.prepaymentMode === 'PERCENT' ? `${activeByService.get(s)!.prepaymentValue}%` : formatMntOrDash(activeByService.get(s)!.prepaymentValue)" />
           <CommonDataValue label="Үлдэгдэл нөхцөл" :value="BALANCE_TRIGGER_LABELS[activeByService.get(s)!.balanceTrigger]" />
         </dl>
         <details v-if="historyFor(s).length" class="gks-settings__history">
           <summary>Түүх ({{ historyFor(s).length }})</summary>
           <ul>
             <li v-for="h in historyFor(s)" :key="h.id" class="gks-tnum">
-              {{ mnt(h.totalAmount) }} · {{ formatNumericDate(h.effectiveFrom) }} – {{ formatNumericDate(h.effectiveTo) }}
+              {{ formatMntOrDash(h.totalAmount) }} · {{ formatNumericDate(h.effectiveFrom) }} – {{ formatNumericDate(h.effectiveTo) }}
             </li>
           </ul>
         </details>

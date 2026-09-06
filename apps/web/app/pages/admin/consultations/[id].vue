@@ -5,6 +5,7 @@ import type {
   LeadActivityType,
   LeadDetail,
   LeadStage,
+  PaginatedResult,
   ServiceType,
 } from '@gks/shared';
 import { LEAD_STAGE_TRANSITIONS } from '@gks/shared';
@@ -19,7 +20,6 @@ import { useAuthStore } from '~/stores/auth';
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type Paginated<T> = { items: T[]; meta: { page: number; limit: number; total: number; totalPages: number } };
 
 const route = useRoute();
 const auth = useAuthStore();
@@ -52,7 +52,7 @@ const activitiesPending = ref(true);
 async function loadActivities(page = 1) {
   activitiesPending.value = true;
   try {
-    const result = await api.get<Paginated<LeadActivityItem>>(`/leads/${id.value}/activities`, {
+    const result = await api.get<PaginatedResult<LeadActivityItem>>(`/leads/${id.value}/activities`, {
       query: { page, limit: 20 },
     });
     activities.value = page === 1 ? result.items : [...activities.value, ...result.items];

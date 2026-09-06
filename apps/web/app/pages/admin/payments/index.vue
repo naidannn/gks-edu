@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import type { PaymentKind, PaymentListItem, PaymentMethod, PaymentStats, PaymentStatus } from '@gks/shared';
+import type {
+  PaginatedResult,
+  PaymentKind,
+  PaymentListItem,
+  PaymentMethod,
+  PaymentStats,
+  PaymentStatus,
+} from '@gks/shared';
 
 /** All payments across cases + a receivables summary (1C-18). */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type Paginated = { items: PaymentListItem[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<PaymentListItem>;
 
-const STATUS_OPTIONS: { value: PaymentStatus | ''; label: string }[] = [
-  { value: '', label: 'Бүх төлөв' },
-  ...(Object.entries(PAYMENT_STATUS_LABELS) as [PaymentStatus, string][]).map(([value, label]) => ({ value, label })),
-];
-const KIND_OPTIONS: { value: PaymentKind | ''; label: string }[] = [
-  { value: '', label: 'Бүх төрөл' },
-  ...(Object.entries(PAYMENT_KIND_LABELS) as [PaymentKind, string][]).map(([value, label]) => ({ value, label })),
-];
-const METHOD_OPTIONS: { value: PaymentMethod | ''; label: string }[] = [
-  { value: '', label: 'Бүх суваг' },
-  ...(Object.entries(PAYMENT_METHOD_LABELS) as [PaymentMethod, string][]).map(([value, label]) => ({ value, label })),
-];
+const STATUS_OPTIONS = selectOptions(PAYMENT_STATUS_LABELS, 'Бүх төлөв');
+const KIND_OPTIONS = selectOptions(PAYMENT_KIND_LABELS, 'Бүх төрөл');
+const METHOD_OPTIONS = selectOptions(PAYMENT_METHOD_LABELS, 'Бүх суваг');
 
 const api = useApi();
 const q = ref('');
@@ -63,7 +61,6 @@ watch(q, () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { pag
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-function mnt(value: string | number): string { return formatMnt(Number(value)) ?? '—'; }
 /** Manually registered rows carry a date, not a moment — read it back in UTC (1C-27). */
 function formatPaymentDate(payment: PaymentListItem): string {
   if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
@@ -96,7 +93,7 @@ useHead({ title: 'Төлбөр · CRM' });
     <div v-if="stats" class="gks-receivables">
       <DsCard v-for="row in stats.pendingByKind" :key="row.kind" class="gks-receivables__card">
         <p class="gks-receivables__label">{{ PAYMENT_KIND_LABELS[row.kind] }} · хүлээгдэж буй</p>
-        <p class="gks-receivables__value gks-tnum">{{ mnt(row.totalMnt) }}</p>
+        <p class="gks-receivables__value gks-tnum">{{ formatMntOrDash(row.totalMnt) }}</p>
         <p class="gks-receivables__count gks-tnum">{{ row.count }} гүйлгээ</p>
       </DsCard>
       <DsCard class="gks-receivables__card">
@@ -137,7 +134,7 @@ useHead({ title: 'Төлбөр · CRM' });
             <td data-label="Хэрэглэгч">{{ p.case.user.name ?? p.case.user.email }}</td>
             <td data-label="Төрөл">{{ PAYMENT_KIND_LABELS[p.kind] }}</td>
             <td data-label="Суваг">{{ PAYMENT_METHOD_LABELS[p.method] }}</td>
-            <td class="gks-tnum" data-label="Дүн">{{ mnt(p.amountMnt) }}</td>
+            <td class="gks-tnum" data-label="Дүн">{{ formatMntOrDash(p.amountMnt) }}</td>
             <td data-label="Төлөв"><DsBadge :tone="PAYMENT_STATUS_TONE[p.status]">{{ PAYMENT_STATUS_LABELS[p.status] }}</DsBadge></td>
             <td class="gks-tnum" data-label="Огноо">{{ formatPaymentDate(p) }}</td>
           </tr>
@@ -145,11 +142,7 @@ useHead({ title: 'Төлбөр · CRM' });
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 

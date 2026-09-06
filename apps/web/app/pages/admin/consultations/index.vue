@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LeadListItem, LeadSource, LeadStage } from '@gks/shared';
+import type { LeadListItem, LeadSource, LeadStage, PaginatedResult } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -12,16 +12,10 @@ import { useAuthStore } from '~/stores/auth';
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type Paginated = { items: LeadListItem[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<LeadListItem>;
 
-const STAGE_OPTIONS: { value: LeadStage | ''; label: string }[] = [
-  { value: '', label: 'Бүх үе шат' },
-  ...(Object.entries(LEAD_STAGE_LABELS) as [LeadStage, string][]).map(([value, label]) => ({ value, label })),
-];
-const SOURCE_OPTIONS: { value: LeadSource | ''; label: string }[] = [
-  { value: '', label: 'Бүх суваг' },
-  ...(Object.entries(LEAD_SOURCE_LABELS) as [LeadSource, string][]).map(([value, label]) => ({ value, label })),
-];
+const STAGE_OPTIONS = selectOptions(LEAD_STAGE_LABELS, 'Бүх үе шат');
+const SOURCE_OPTIONS = selectOptions(LEAD_SOURCE_LABELS, 'Бүх суваг');
 const SORT_OPTIONS = [
   { value: 'createdAt', label: 'Үүсгэсэн огноогоор' },
   { value: 'nextContactAt', label: 'Дараагийн холбогдох огноогоор' },
@@ -166,11 +160,7 @@ useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 

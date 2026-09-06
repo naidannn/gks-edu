@@ -57,8 +57,7 @@ const saveError = ref<string | null>(null);
 
 const { universities, loading: universitiesLoading, load: loadUniversities } = useUniversityCatalogue();
 
-const STATUS_OPTIONS = (Object.entries(CLIENT_STATUS_LABELS) as [ClientStatus, string][])
-  .map(([value, label]) => ({ value, label }));
+const STATUS_OPTIONS = selectOptions(CLIENT_STATUS_LABELS);
 
 async function startEditing() {
   if (!client.value) return;

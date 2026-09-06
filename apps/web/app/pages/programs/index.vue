@@ -375,27 +375,7 @@ useListingSeo('/programs');
       </li>
     </ul>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton
-        variant="ghost"
-        size="sm"
-        icon-left="chevron-left"
-        :disabled="filters.page <= 1"
-        @click="apply({ page: filters.page - 1 }, false)"
-      >
-        Өмнөх
-      </DsButton>
-      <span class="gks-tnum">{{ filters.page }} / {{ totalPages }}</span>
-      <DsButton
-        variant="ghost"
-        size="sm"
-        icon-right="chevron-right"
-        :disabled="filters.page >= totalPages"
-        @click="apply({ page: filters.page + 1 }, false)"
-      >
-        Дараах
-      </DsButton>
-    </nav>
+    <DsPager :page="filters.page" :total-pages="totalPages" @update:page="apply({ page: $event }, false)" variant="ghost" />
   </div>
 </template>
 

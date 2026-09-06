@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { PostCard } from '@gks/shared';
+import type { PaginatedResult, PostCard } from '@gks/shared';
 
 /** Public blog/news list (1A-12). */
-type Paginated = { items: PostCard[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<PostCard>;
 
 const route = useRoute();
 const router = useRouter();
@@ -63,15 +63,7 @@ useListingSeo('/blog');
         </li>
       </ul>
 
-      <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-        <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="goToPage(page - 1)">
-          Өмнөх
-        </DsButton>
-        <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-        <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="goToPage(page + 1)">
-          Дараах
-        </DsButton>
-      </nav>
+      <DsPager :page="page" :total-pages="totalPages" @update:page="goToPage($event)" />
     </template>
 
     <DsCard v-else>
@@ -122,6 +114,5 @@ useListingSeo('/blog');
 .gks-post-card__excerpt { font-size: var(--fs-body-sm); color: var(--text-muted); line-height: var(--lh-body); }
 .gks-post-card__tags { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
 
-.gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); padding-top: var(--sp-4); }
-.gks-pager__status { font-size: var(--fs-body-sm); color: var(--text-muted); }
+.gks-pager { padding-top: var(--sp-4); }
 </style>

@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { Application, ApplicationStatus, ServiceType, UniversityApplicationReportRow } from '@gks/shared';
+import type {
+  Application,
+  ApplicationStatus,
+  PaginatedResult,
+  ServiceType,
+  UniversityApplicationReportRow,
+} from '@gks/shared';
 
 /** 1E-11/1E-12 — every school application, plus the per-university outcome report. */
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 
-type Paginated = { items: Application[]; meta: { page: number; limit: number; total: number; totalPages: number } };
+type Paginated = PaginatedResult<Application>;
 
-const STATUS_OPTIONS: { value: ApplicationStatus | ''; label: string }[] = [
-  { value: '', label: 'Бүх төлөв' },
-  ...(Object.entries(APPLICATION_STATUS_LABELS) as [ApplicationStatus, string][]).map(([value, label]) => ({ value, label })),
-];
-const SERVICE_OPTIONS: { value: ServiceType | ''; label: string }[] = [
-  { value: '', label: 'Бүх үйлчилгээ' },
-  ...(Object.entries(SERVICE_LABELS) as [ServiceType, string][]).map(([value, label]) => ({ value, label })),
-];
+const STATUS_OPTIONS = selectOptions(APPLICATION_STATUS_LABELS, 'Бүх төлөв');
+const SERVICE_OPTIONS = selectOptions(SERVICE_LABELS, 'Бүх үйлчилгээ');
 
 const api = useApi();
 const q = ref('');
@@ -147,11 +147,7 @@ useHead({ title: 'Мэдүүлэг · CRM' });
       </table>
     </div>
 
-    <nav v-if="totalPages > 1" class="gks-pager" aria-label="Хуудаслалт">
-      <DsButton variant="secondary" size="sm" icon-left="chevron-left" :disabled="page <= 1" @click="page -= 1">Өмнөх</DsButton>
-      <span class="gks-pager__status gks-tnum">{{ page }} / {{ totalPages }}</span>
-      <DsButton variant="secondary" size="sm" icon-right="chevron-right" :disabled="page >= totalPages" @click="page += 1">Дараах</DsButton>
-    </nav>
+    <DsPager v-model:page="page" :total-pages="totalPages" />
   </div>
 </template>
 
