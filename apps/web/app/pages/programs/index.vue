@@ -215,71 +215,61 @@ useSeoMeta({
       </p>
     </header>
 
-    <DsCard>
-      <div class="gks-prog__filters">
-        <DsInput
-          v-model="searchInput"
-          type="search"
-          icon-left="search"
-          placeholder="Мэргэжил эсвэл сургуулийн нэрээр хайх"
-          aria-label="Мэргэжил эсвэл сургуулийн нэрээр хайх"
-        />
-        <DsSelect
-          :model-value="filters.field"
-          :options="fieldOptions"
-          aria-label="Мэргэжлийн чиглэл"
-          @update:model-value="apply({ field: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.level"
-          :options="levelOptions"
-          aria-label="Түвшин"
-          @update:model-value="apply({ level: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.region"
-          :options="regionOptions"
-          aria-label="Бүс нутаг"
-          @update:model-value="apply({ region: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.language"
-          :options="languageOptions"
-          aria-label="Хичээлийн хэл"
-          @update:model-value="apply({ language: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.tuitionMax"
-          :options="TUITION_OPTIONS"
-          aria-label="Төлбөрийн дээд хязгаар"
-          @update:model-value="apply({ tuitionMax: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.topikMax"
-          :options="TOPIK_OPTIONS"
-          aria-label="TOPIK шаардлага"
-          @update:model-value="apply({ topikMax: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.sort"
-          :options="SORTS"
-          aria-label="Эрэмбэ"
-          @update:model-value="apply({ sort: String($event) })"
-        />
-      </div>
-      <div class="gks-prog__filter-foot">
-        <span class="gks-tnum">{{ total }} хөтөлбөр</span>
-        <DsButton
-          v-if="activeFilterCount || filters.q"
-          variant="ghost"
-          size="sm"
-          icon-left="x"
-          @click="router.push({ query: {} })"
-        >
-          Шүүлтүүр цэвэрлэх
-        </DsButton>
-      </div>
-    </DsCard>
+    <CatalogFilterBar
+      v-model:search="searchInput"
+      search-placeholder="Мэргэжил эсвэл сургуулийн нэрээр хайх"
+      search-label="Мэргэжил эсвэл сургуулийн нэрээр хайх"
+      :active-count="activeFilterCount"
+      :count="total"
+      count-noun="хөтөлбөр"
+      :loading="status === 'pending' && !items.length"
+      :failed="!!error"
+      :can-clear="activeFilterCount > 0 || !!filters.q"
+      @clear="router.push({ query: {} })"
+    >
+      <DsSelect
+        :model-value="filters.field"
+        :options="fieldOptions"
+        aria-label="Мэргэжлийн чиглэл"
+        @update:model-value="apply({ field: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.level"
+        :options="levelOptions"
+        aria-label="Түвшин"
+        @update:model-value="apply({ level: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.region"
+        :options="regionOptions"
+        aria-label="Бүс нутаг"
+        @update:model-value="apply({ region: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.language"
+        :options="languageOptions"
+        aria-label="Хичээлийн хэл"
+        @update:model-value="apply({ language: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.tuitionMax"
+        :options="TUITION_OPTIONS"
+        aria-label="Төлбөрийн дээд хязгаар"
+        @update:model-value="apply({ tuitionMax: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.topikMax"
+        :options="TOPIK_OPTIONS"
+        aria-label="TOPIK шаардлага"
+        @update:model-value="apply({ topikMax: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.sort"
+        :options="SORTS"
+        aria-label="Эрэмбэ"
+        @update:model-value="apply({ sort: String($event) })"
+      />
+    </CatalogFilterBar>
 
     <DsCard v-if="error" accent class="gks-prog__state">
       Хөтөлбөрийн мэдээллийг ачаалахад алдаа гарлаа. Хуудсаа дахин ачаална уу.
@@ -412,8 +402,6 @@ useSeoMeta({
 .gks-prog__title { margin-top: var(--sp-2); font-size: var(--fs-h1); font-weight: var(--fw-bold); }
 .gks-prog__lede { max-width: 62ch; margin-top: var(--sp-3); color: var(--text-muted); line-height: 1.7; }
 .gks-prog__stat { display: inline-flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-2); background: var(--surface-sunken); color: var(--text-muted); font-size: var(--fs-body-sm); }
-.gks-prog__filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); }
-.gks-prog__filter-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--line-soft); color: var(--text-subtle); font-size: var(--fs-body-sm); }
 .gks-prog__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: var(--sp-4); list-style: none; }
 .gks-prog__skeleton { height: 320px; border-radius: var(--radius-1); background: var(--surface-sunken); }
 .gks-prog__state { text-align: center; }
@@ -564,4 +552,14 @@ useSeoMeta({
   text-decoration: none;
 }
 .gks-prog-card__foot a:hover { color: var(--text-link-hover); }
+
+/* A phone gets to the first card sooner: a smaller headline, a tighter lede. */
+@media (max-width: 640px) {
+  .gks-prog { gap: var(--sp-4); padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .gks-prog__title { font-size: var(--fs-h2); }
+  .gks-prog__lede { margin-top: var(--sp-2); font-size: var(--fs-body-sm); line-height: 1.6; }
+  /* Label, then figure: squeezed into one row the label wrapped mid-phrase. */
+  .gks-prog__stat { flex-wrap: wrap; margin-top: var(--sp-3); font-size: var(--fs-caption); }
+  .gks-prog__grid { grid-template-columns: 1fr; }
+}
 </style>

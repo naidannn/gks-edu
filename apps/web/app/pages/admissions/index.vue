@@ -170,59 +170,49 @@ useSeoMeta({
       </p>
     </header>
 
-    <DsCard>
-      <div class="gks-adm__filters">
-        <DsInput
-          v-model="searchInput"
-          type="search"
-          icon-left="search"
-          placeholder="Сургуулийн нэрээр хайх"
-          aria-label="Сургуулийн нэрээр хайх"
-        />
-        <DsSelect
-          :model-value="filters.level"
-          :options="levelOptions"
-          aria-label="Түвшин"
-          @update:model-value="apply({ level: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.month"
-          :options="monthOptions"
-          aria-label="Элсэлтийн улирал"
-          @update:model-value="apply({ month: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.year"
-          :options="yearOptions"
-          aria-label="Жил"
-          @update:model-value="apply({ year: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.region"
-          :options="regionOptions"
-          aria-label="Бүс нутаг"
-          @update:model-value="apply({ region: String($event) })"
-        />
-        <DsSelect
-          :model-value="filters.sort"
-          :options="SORTS"
-          aria-label="Эрэмбэ"
-          @update:model-value="apply({ sort: String($event) })"
-        />
-      </div>
-      <div class="gks-adm__filter-foot">
-        <span class="gks-tnum">{{ total }} элсэлт</span>
-        <DsButton
-          v-if="activeFilterCount || filters.q"
-          variant="ghost"
-          size="sm"
-          icon-left="x"
-          @click="router.push({ query: {} })"
-        >
-          Шүүлтүүр цэвэрлэх
-        </DsButton>
-      </div>
-    </DsCard>
+    <CatalogFilterBar
+      v-model:search="searchInput"
+      search-placeholder="Сургуулийн нэрээр хайх"
+      search-label="Сургуулийн нэрээр хайх"
+      :active-count="activeFilterCount"
+      :count="total"
+      count-noun="элсэлт"
+      :loading="status === 'pending' && !items.length"
+      :failed="!!error"
+      :can-clear="activeFilterCount > 0 || !!filters.q"
+      @clear="router.push({ query: {} })"
+    >
+      <DsSelect
+        :model-value="filters.level"
+        :options="levelOptions"
+        aria-label="Түвшин"
+        @update:model-value="apply({ level: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.month"
+        :options="monthOptions"
+        aria-label="Элсэлтийн улирал"
+        @update:model-value="apply({ month: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.year"
+        :options="yearOptions"
+        aria-label="Жил"
+        @update:model-value="apply({ year: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.region"
+        :options="regionOptions"
+        aria-label="Бүс нутаг"
+        @update:model-value="apply({ region: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.sort"
+        :options="SORTS"
+        aria-label="Эрэмбэ"
+        @update:model-value="apply({ sort: String($event) })"
+      />
+    </CatalogFilterBar>
 
     <DsCard v-if="error" accent class="gks-adm__state">
       Элсэлтийн мэдээллийг ачаалахад алдаа гарлаа. Хуудсаа дахин ачаална уу.
@@ -318,8 +308,6 @@ useSeoMeta({
 .gks-adm__alert { display: inline-flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line-soft); border-radius: var(--radius-2); color: var(--text-muted); font-size: var(--fs-body-sm); }
 .gks-adm__alert strong { color: var(--text-body); }
 
-.gks-adm__filters { display: grid; grid-template-columns: 2fr repeat(5, 1fr); gap: var(--sp-3); }
-.gks-adm__filter-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-top: var(--sp-4); color: var(--text-subtle); font-size: var(--fs-body-sm); }
 
 .gks-adm__state { color: var(--text-subtle); }
 .gks-adm__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--sp-4); list-style: none; }
@@ -349,10 +337,12 @@ useSeoMeta({
 
 .gks-pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
 
-@media (max-width: 900px) {
-  .gks-adm__filters { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 560px) {
-  .gks-adm__filters { grid-template-columns: 1fr; }
+/* A phone gets to the first card sooner: a smaller headline, a tighter lede. */
+@media (max-width: 640px) {
+  .gks-adm { gap: var(--sp-4); padding-block: var(--sp-5); }
+  .gks-adm__title { font-size: var(--fs-h2); }
+  .gks-adm__lede { margin-top: var(--sp-2); font-size: var(--fs-body-sm); }
+  .gks-adm__alert { margin-top: var(--sp-3); }
+  .gks-adm__grid { grid-template-columns: 1fr; }
 }
 </style>
