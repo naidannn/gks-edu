@@ -5,3 +5,8 @@ dist
 coverage
 pnpm-lock.yaml
 apps/api/src/generated
+
+# Task tables are hand-packed; prettier pads every cell to the widest one,
+# which was 38% of TASKS.md in pure whitespace.
+docs/TASKS.md
+docs/TASKS-DONE.md

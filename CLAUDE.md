@@ -1,6 +1,7 @@
 # CLAUDE.md — GKSedu.mn
 
-Guidance for Claude Code sessions in this repository. Read this before touching code.
+Guidance for coding-agent sessions in this repository (`AGENTS.md` is a symlink to this
+file — one source of truth). Read this before touching code.
 
 ## What this project is
 
@@ -10,7 +11,8 @@ payment → document collection → university application → invitation → vi
 
 The business spec lives in `docs/gksedu.md` (Mongolian, authoritative). The technical
 design derived from it is `docs/ARCHITECTURE.md`. Work is tracked in `docs/ROADMAP.md`
-(phases) and `docs/TASKS.md` (individual tasks + status).
+(phases) and `docs/TASKS.md` (open tasks + status); finished ones are archived in
+`docs/TASKS-DONE.md`, so read that only when you need the history.
 
 ### Scope rule — read this before adding a feature
 
@@ -146,9 +148,11 @@ other, so the whole catalogue is always rescored together — there is no rescor
 
 ## Working on tasks
 
-1. Find the task in `docs/TASKS.md` (IDs like `1D-04`).
-2. Set its status to `wip` **before** you start, `done` when it is merged and verified.
-3. `pnpm tasks` prints progress per epic — run it after editing statuses.
+1. Find the task in `docs/TASKS.md` (IDs like `1D-04`). Only open work lives there.
+2. Set its status to `wip` **before** you start. When it is merged and verified, set it to
+   `done` and **move the row to `docs/TASKS-DONE.md`**, under the same epic heading.
+3. `pnpm tasks` reads both files and prints progress per epic — run it after editing statuses.
+   Both are in `.prettierignore`: keep the tables unpadded, `| a | b |`, not column-aligned.
 4. A task that turns out to need a decision from the business goes to `blocked`, with the
    question added to `docs/ARCHITECTURE.md` §18 (Нээлттэй асуултууд).
 5. Don't invent scope. If the spec is silent, ask — `gksedu.md` §24 already lists five

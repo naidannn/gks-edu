@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Roadmap progress. Parses docs/TASKS.md — the table rows are the source of truth,
- * so a status only changes by editing that file.
+ * Roadmap progress. Parses docs/TASKS.md (open work) and docs/TASKS-DONE.md (the
+ * archive) — the table rows are the source of truth, so a status only changes by
+ * editing those files. Epics are merged by heading, TASKS.md fixing the order.
  *
  *   pnpm tasks            # every epic
  *   pnpm tasks 1D         # one epic, listing its open tasks
@@ -10,7 +11,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const TASKS_MD = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'TASKS.md');
+const DOCS = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
+const FILES = ['TASKS.md', 'TASKS-DONE.md'].map((f) => join(DOCS, f));
 
 const STATUSES = ['done', 'review', 'wip', 'todo', 'blocked', 'deferred'];
 // Status column 3 of `| `ID` | title | status | ... |`.
@@ -22,21 +24,27 @@ const c = process.stdout.isTTY
 
 const COLOR = { done: c.green, review: c.blue, wip: c.yellow, todo: c.dim, blocked: c.red, deferred: c.dim };
 
-const epics = [];
-let current = null;
-for (const line of readFileSync(TASKS_MD, 'utf8').split('\n')) {
-  const heading = line.match(/^##\s+(.+?)\s*$/);
-  if (heading) {
-    current = { name: heading[1].replace(/[`*]/g, ''), tasks: [] };
-    epics.push(current);
-    continue;
+// TASKS.md is read first so the open-work file fixes the order epics print in;
+// TASKS-DONE.md then merges its rows into the epic of the same name.
+const byName = new Map();
+for (const file of FILES) {
+  let current = null;
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    const heading = line.match(/^##\s+(.+?)\s*$/);
+    if (heading) {
+      const name = heading[1].replace(/[`*]/g, '');
+      current = byName.get(name);
+      if (!current) byName.set(name, (current = { name, tasks: [] }));
+      continue;
+    }
+    const row = line.match(ROW);
+    if (!row || !current) continue;
+    const [, id, title, status] = row;
+    if (!STATUSES.includes(status)) continue;
+    current.tasks.push({ id, title, status });
   }
-  const row = line.match(ROW);
-  if (!row || !current) continue;
-  const [, id, title, status] = row;
-  if (!STATUSES.includes(status)) continue;
-  current.tasks.push({ id, title, status });
 }
+const epics = [...byName.values()];
 
 const filter = process.argv[2]?.toUpperCase();
 const shown = filter ? epics.filter((e) => e.tasks.some((t) => t.id.toUpperCase().startsWith(filter))) : epics;

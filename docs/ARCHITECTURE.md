@@ -6,6 +6,36 @@
 
 ---
 
+## Агуулга
+
+Бүтэн файл 21 бүлэг — хэрэгтэй бүлгээ шууд нээ, бүхлээр нь уншихгүй.
+
+| Бүлэг | Юу байгаа |
+|---|---|
+| [0. Хамрах хүрээ](#0-хамрах-хүрээ) | юу хамаарах, юу хамаарахгүй (хэлний сургалтын төв) |
+| [1. Систем түвшний бүтэц](#1-систем-түвшний-бүтэц) | apps/web · apps/api · Postgres/Redis/storage/гадаад үйлчилгээ |
+| [2. Технологийн шийдвэрүүд](#2-технологийн-шийдвэрүүд) | ESM, Prisma driver adapter, pgvector, BullMQ — яагаад |
+| [3. Сургуулийн мэдээллийн сан](#3-сургуулийн-мэдээллийн-сан) | `University`, импорт, §3.1 хоёр эрэмбэ · §3.2 элсэлтийн хугацаа · §3.3 хөтөлбөр ба төлбөр |
+| [3.4 Суралцах төлөвлөгөө (1J)](#34-суралцах-төлөвлөгөө-1j) | `/plan` — хэзээ, хаана, хэдэн төгрөгөөр (1J) |
+| [4. CRM — боломжит харилцагч (Lead)](#4-crm--боломжит-харилцагч-lead) | `Lead`, борлуулалтын үе шат, давхардал нэгтгэх |
+| [4a. `Client` — гэрээт харилцагч (1B-14)](#4a-client--гэрээт-харилцагч-1b-14) | `Client` — гэрээт харилцагч, асран хамгаалагч, жагсаалтын харагдац |
+| [5. `Case` — гол агрегат](#5-case--гол-агрегат) | `Case` — хэрэглэгч × үйлчилгээ × сургууль × улирал; үе шатны урсгал |
+| [6. Гэрээ ба төлбөр](#6-гэрээ-ба-төлбөр) | `ServicePricing` · `Contract` · `Payment` · QPay урсгал |
+| [7. Материалын шаардлагын хөдөлгүүр (хамгийн чухал модуль)](#7-материалын-шаардлагын-хөдөлгүүр-хамгийн-чухал-модуль) | `DocumentTemplate` / `RequirementRule` — дүрмийн хөдөлгүүр, 12 төлөв |
+| [8. Мэдүүлэг → урилга → виз](#8-мэдүүлэг--урилга--виз) | `Application` → `Invitation` → `VisaCase` |
+| [9. Файл хадгалалт](#9-файл-хадгалалт) | private bucket, signed URL, хувилбарлалт |
+| [10. Мэдэгдэл ба автоматжуулалт (§16) — **хийгдсэн (1G-01…1G-07, 1G-25)**](#10-мэдэгдэл-ба-автоматжуулалт-16--хийгдсэн-1g-011g-07-1g-25) | §16-гийн 18 үйл явдал × in-app/email/SMS, хуваарьт ажил |
+| [11. Эрхийн загвар](#11-эрхийн-загвар) | дүр, `JwtAuthGuard`, `@Roles` |
+| [12. AI чат туслах ба мэдээллийн эрхийн түвшин (§13)](#12-ai-чат-туслах-ба-мэдээллийн-эрхийн-түвшин-13) | RAG, `Document.accessLevel` — 2-р үе шат, хараахан баригдаагүй |
+| [13. Тайлан (§19) — **хийгдсэн (1G-08…1G-11)**](#13-тайлан-19--хийгдсэн-1g-081g-11) | §19 хяналтын самбар, материалжуулсан харагдац |
+| [14. API конвенц](#14-api-конвенц) | `/api/v1`, алдааны нэг бүтэц, хуудаслалт |
+| [15. Frontend бүтэц](#15-frontend-бүтэц) | Nuxt хавтасны бүтэц, дизайн систем |
+| [16. Аюулгүй байдал](#16-аюулгүй-байдал) | JWT rotation, throttler, нууц бичиг баримт |
+| [17. Орчин](#17-орчин) | `.env`, орчин бүрийн ялгаа |
+| [18. Нээлттэй асуултууд](#18-нээлттэй-асуултууд) | **шийдэгдээгүй 14 асуулт** — шинэ асуултыг энд нэмнэ |
+
+---
+
 ## 0. Хамрах хүрээ
 
 **Хамаарна (Үе шат 1–4):** зуучлалын бүх процесс — сэжим → гэрээ → төлбөр → материал →
@@ -70,60 +100,22 @@ route бүлгээр тусгаарлагдана (тусдаа апп болг�
 Эх сурвалж: `/Users/user/korean-universities-data` (135 бичлэг, 108 стандарт лого).
 Гараар дахин оруулахгүй — seed скриптээр импортлоно.
 
-```prisma
-model University {
-  id            String   @id @default(uuid()) @db.Uuid
-  slug          String   @unique          // ajou-university
-  nameKo        String
-  nameEn        String
-  nameMn        String
-  type          UniversityType            // NATIONAL | PUBLIC | PRIVATE
-  foundedYear   Int?
-  cityEn        String
-  cityMn        String
-  regionEn      String
-  regionMn      String
-  address       String?
-  lat           Float?
-  lon           Float?
-  logoPath      String?
-  coverPath     String?
-  shortIntroMn  String?
-  detailedIntroMn String?
-  studentsTotal Int?
-  internationalStudents Int?    // датад бөглөгдөөгүй — "мэдээлэл шинэчлэгдэж байна"
-  mongolianStudents     Int?
-  numCampuses           Int?
-  campusInfo            String?
-  distanceFromSeoulKm   Float?
-  travelTimeFromSeoul   String?
-  nearestTransit        String?  // датад бөглөгдөөгүй
-  advantages    String[]                  // 3–6 монгол өгүүлбэр
-  livingCost    Json?                     // tier, min/max, задаргаа, isEstimate
-  dormitory     Json?                     // ихэвчлэн null — "мэдээлэл шинэчлэгдэж байна"
-  links         Json                      // officialWebsite, wikipedia, wikidata
-  quality       Json                      // талбар бүрийн эх сурвалж
-  // --- зуучлалд шаардлагатай, дата сангаас ИРЭХГҮЙ, гараар бөглөнө ---
-  acceptsLanguagePrep   Boolean @default(false)   // §4.1 бүх сургууль МУ-аас авдаггүй
-  acceptsFromMongolia   Boolean @default(true)
-  isGksEligible         Boolean @default(false)   // §4.3
-  agentContractStatus   AgentContractStatus @default(NONE)
-  commissionNote        String?                   // дотоод, §15.5
-  internalNote          String?                   // дотоод
-  isPublished           Boolean @default(false)
-  // --- Эрэмбэ (§3.1) ---
-  theKoreaRank  Int?                      // THE-ийн Солонгосын эрэмбэ; null = рэйтингд ороогүй
-  theWorldRank  String?                   // "=58", "251–300", "1501+" — интервал тул текст
-  theRankYear   Int?                      // 2026
-  gksScore      Float?                    // манай 0–100 оноо; зөвхөн систем бичнэ
-  gksRank       Int?                      // gksScore-оор гаргасан эрэмбэ, 1 = эхэнд
-  gksRankBoost  Float @default(0)         // ажилтны гар засвар, -25…+25 оноо
-  gksScoreParts Json?                     // задаргаа: base/partnership/fit/demand/practical
-  gksScoredAt   DateTime?
-  programs      UniversityProgram[]
-  intakes       IntakeTerm[]
-}
-```
+`model University` → `apps/api/prisma/schema.prisma`. Гурван бүлэг талбар, гарал үүслээрээ
+ялгаатай — энэ ялгаа нь загварын гол шийдвэр:
+
+- **Reference dataset-ээс импортлогддог** — нэр (`nameKo/En/Mn`), `type`, байршил, танилцуулга,
+  `advantages` (3–6 монгол өгүүлбэр), `livingCost` / `dormitory` / `links` / `quality` (Json).
+  `internationalStudents`, `nearestTransit`, `dormitory` нь датад **зориудаар бөглөгдөөгүй** —
+  `null`-ыг "мэдээлэл шинэчлэгдэж байна" гэж харуулна, итгэлтэй тэг гэж хэзээ ч биш.
+- **Зуучлалд хэрэгтэй, датад ОГТ БАЙХГҮЙ, гараар бөглөнө** — `acceptsLanguagePrep` (§4.1: бүх
+  сургууль МУ-аас авдаггүй), `acceptsFromMongolia`, `isGksEligible` (§4.3), `agentContractStatus`,
+  `commissionNote` / `internalNote` (дотоод, §15.5), `isPublished`.
+- **Эрэмбийн тооцоолсон багана** (§3.1) — `theKoreaRank` (`null` = рэйтингд ороогүй, хамгийн
+  муу нь БИШ), `theWorldRank` (`"=58"`, `"251–300"` гэх интервал тул текст), `theRankYear`,
+  `gksScore` / `gksRank` / `gksScoreParts` / `gksScoredAt`. Эдгээрийг **зөвхөн
+  `GksRankingService` бичнэ**; ажилтны цорын ганц бариул нь `gksRankBoost` (−25…+25).
+
+**Холбоотой загварууд:**
 
 - `UniversityProgram` — түвшин (`LANGUAGE_PREP|BACHELOR|MASTER|PHD`), мэргэжил, хэлний
   шаардлага (TOPIK/IELTS), сургалтын төлбөр, элсэлтийн шаардлага.
@@ -401,28 +393,16 @@ URL-д байдаг тул холбоосыг хуваалцах, дахин а�
 
 ## 4. CRM — боломжит харилцагч (Lead)
 
-```prisma
-model Lead {
-  id              String     @id @default(uuid()) @db.Uuid
-  userId          String?    @db.Uuid        // бүртгүүлсэн бол холбогдоно
-  firstName String;  lastName String
-  phone     String;  email String?
-  age Int?;  educationLevel EducationLevel?
-  gpa Float?;  gpaScale String?              // §24 асуулт 1 — шаталбар тодорхойгүй
-  koreanLevel String?;  englishLevel String?
-  interestedServices  ServiceType[]
-  interestedUniversityIds String[] @db.Uuid
-  interestedMajor String?
-  plannedIntakeId String?  @db.Uuid
-  source          LeadSource                 // WEBSITE|AI_CHAT|PHONE|SOCIAL|OFFICE|LANGUAGE_CENTER|REFERRAL
-  stage           LeadStage  @default(NEW)
-  assignedToId    String?    @db.Uuid
-  nextContactAt   DateTime?
-  winProbability  Int?                       // §15.1 "гэрээ болох магадлал", 0–100
-  lostReason      String?
-  activities      LeadActivity[]
-}
-```
+`model Lead` → `apps/api/prisma/schema.prisma`. Шийдвэр агуулсан талбарууд:
+
+- `userId` — nullable. Сэжим бүртгэлгүй хүн байж болно; бүртгүүлбэл хойшоо холбогдоно.
+- `source` (`LeadSource`) — `WEBSITE | AI_CHAT | PHONE | SOCIAL | OFFICE | LANGUAGE_CENTER |
+  REFERRAL | OTHER`.
+  `LANGUAGE_CENTER` нь хойшлуулсан хэлний сургалтын төвийн энэ системд үлдсэн **цорын ганц ул мөр**.
+- `gpa` / `gpaScale` — шаталбар нь тодорхойгүй (`gksedu.md` §24 асуулт 1), тул дүнг задлахгүй
+  хадгална.
+- `interestedServices` (`ServiceType[]`) ба `interestedUniversityIds` — сонирхол нь олон байж болно.
+- `winProbability` — §15.1-ийн "гэрээ болох магадлал", 0–100.
 
 **Борлуулалтын үе шат (`LeadStage`):**
 
@@ -448,36 +428,16 @@ NEW → CONTACTED → CONSULTED → PROPOSAL_SENT → CONTRACT_PENDING → WON
 **Хэрэглэгчийг сэжимгүйгээр шууд үүсгэж болно** — оффисоор ирсэн хүнийг эхлээд сэжим
 болгож бүртгэх шаардлагагүй (`POST /clients`).
 
-```prisma
-model Client {
-  id     String  @id @default(uuid()) @db.Uuid
-  code   String  @unique                       // KH-2026-0042
-  userId String  @unique @db.Uuid              // Case/Contract/Payment-ийн заадаг account
-  leadId String? @unique @db.Uuid              // хөрвүүлсэн сэжим (1B-10)
+`model Client` → `apps/api/prisma/schema.prisma`. Шийдвэр агуулсан талбарууд:
 
-  lastName String;  firstName String
-  birthDate DateTime @db.Date
-  registerNumber String @unique                // регистрийн дугаар — гэрээнд бичигдэнэ
-  gender Gender?;  phone String;  phoneAlt String?
-  email String?;   address String?
-
-  // Төлөөлөн гэрээ байгуулагч — 18 нас хүрээгүй үед заавал (§6.2)
-  guardianLastName String?;  guardianFirstName String?
-  guardianRegisterNumber String?;  guardianPhone String?;  guardianRelation String?
-
-  educationLevel EducationLevel?;  schoolName String?
-  gpa Float?;  gpaScale String?;  koreanLevel String?;  englishLevel String?
-  passportNumber String?;  passportExpiry DateTime?
-
-  primaryServiceType ServiceType                // бүртгэх үед сонгосон үйлчилгээ
-  targetUniversityId String? @db.Uuid
-  targetMajor String?;  plannedIntakeId String? @db.Uuid
-
-  source LeadSource;  status ClientStatus @default(ACTIVE);  note String?
-  assignedConsultantId String? @db.Uuid
-  createdById String? @db.Uuid
-}
-```
+- `code` — `KH-2026-0042`, хүн уншихад.
+- `userId` — **unique, заавал**. `Case` / `Contract` / `Payment` гурав нь `userId` дээр тогтдог.
+- `leadId` — unique, nullable. Хөрвүүлсэн сэжим (1B-10); сэжимгүй шууд бүртгэсэн бол `null`.
+- `registerNumber` — unique. Гэрээнд шууд бичигдэх тул хүний бүртгэлийн түлхүүр.
+- `guardianLastName` / `guardianFirstName` / `guardianRegisterNumber` / `guardianPhone` /
+  `guardianRelation` — 18 нас хүрээгүй үед **заавал** (§6.2).
+- `primaryServiceType`, `targetUniversityId`, `targetMajor`, `plannedIntakeId` — бүртгэх үеийн
+  зорилго; хэрэг нээгдэхэд `Case` рүү хуулагдана.
 
 **Яагаад `User` мөр заавал үүсдэг вэ.** `Case`, `Contract`, `Payment` гурав нь `userId`
 дээр тогтдог тул хэрэглэгч бүр `User` мөртэй. Ажилтны бүртгэсэн хүний тэр мөрөнд **нууц
@@ -501,26 +461,16 @@ model Client {
 Нэг `Case` = нэг хэрэглэгч × нэг үйлчилгээ × нэг зорилтот сургууль × нэг элсэлтийн улирал.
 Хэрэглэгч дараа нь бакалаврт дахин зуучлуулбал шинэ `Case` үүснэ (§20).
 
-```prisma
-model Case {
-  id            String @id @default(uuid()) @db.Uuid
-  code          String @unique                 // GKS-2026-0417 — хүн уншихад
-  userId        String @db.Uuid
-  serviceType   ServiceType                    // LANGUAGE_PREP|BACHELOR|MASTER|PHD|GKS_SCHOLARSHIP
-  universityId  String? @db.Uuid
-  programId     String? @db.Uuid
-  intakeId      String? @db.Uuid
-  stage         CaseStage @default(CONTRACT_DRAFT)
-  assignedConsultantId String? @db.Uuid
-  assignedDocOfficerId String? @db.Uuid
-  contract      Contract?
-  documents     CaseDocument[]
-  application   Application?
-  visaCase      VisaCase?
-  payments      Payment[]
-  transitions   CaseTransition[]
-}
-```
+`model Case` → `apps/api/prisma/schema.prisma`. Шийдвэр агуулсан талбарууд:
+
+- `code` — `GKS-2026-0417`, хүн уншихад.
+- `serviceType` — `LANGUAGE_PREP|BACHELOR|MASTER|PHD|GKS_SCHOLARSHIP`.
+- `universityId` / `programId` / `intakeId` — бүгд nullable: гэрээ байгуулах үед сургууль нь
+  хараахан сонгогдоогүй байж болно.
+- `assignedConsultantId` ба `assignedDocOfficerId` — **хоёр өөр хариуцагч**. Зөвлөх борлуулалт,
+  материалын ажилтан бүрдүүлэлтийг хариуцна (§11).
+- `stage` (`CaseStage`) — доорх урсгал. `transitions` (`CaseTransition[]`) шилжилт бүрийг
+  хэн, хэзээ хийснийг хадгална.
 
 **Үе шатны урсгал** (`CaseStage`) — үйлчилгээний төрлөөс хамааран **төлбөрийн байрлал ялгаатай**:
 
@@ -550,17 +500,14 @@ CONTRACT_DRAFT → CONTRACT_SIGNED → PREPAYMENT_PAID → DOCUMENTS → APPLICA
 
 ### 6.1. Үйлчилгээний үнэ
 
-```prisma
-model ServicePricing {
-  serviceType     ServiceType
-  totalAmount     Decimal        // 1,200,000₮ / 5,000,000₮ — ОДООГИЙН утга
-  prepaymentMode  PrepaymentMode // PERCENT | FIXED   (§5.4)
-  prepaymentValue Decimal
-  balanceTrigger  BalanceTrigger // AFTER_VISA_APPROVED | AFTER_SCHOLARSHIP_RESULT  (§9)
-  effectiveFrom   DateTime
-  effectiveTo     DateTime?
-}
-```
+`model ServicePricing` → `apps/api/prisma/schema.prisma`. Шийдвэр агуулсан талбарууд:
+
+- `totalAmount` — 1,200,000₮ / 5,000,000₮ нь **одоогийн утга**, тогтмол биш (§5.4).
+- `prepaymentMode` (`PERCENT | FIXED`) + `prepaymentValue` — урьдчилгааг хувиар ч, тогтмол
+  дүнгээр ч тавьж болно.
+- `balanceTrigger` — `AFTER_VISA_APPROVED | AFTER_SCHOLARSHIP_RESULT`. Үлдэгдлийн дараалал
+  үйлчилгээнээс хамаарна, хэзээ ч кодод хатууруулж бичихгүй (§9).
+- `effectiveFrom` / `effectiveTo` — үнэ хувилбартай.
 
 Үнэ **хувилбартай** (`effectiveFrom/To`). Гэрээ үүсэхдээ тухайн үеийн pricing-ийн snapshot-ыг
 `Contract` дээр хуулж авна — дараа үнэ өөрчлөгдөхөд хуучин гэрээ өөрчлөгдөхгүй
@@ -609,21 +556,14 @@ model ServicePricing {
 
 ### 6.3. Төлбөр
 
-```prisma
-model Payment {
-  caseId      String @db.Uuid
-  kind        PaymentKind    // PREPAYMENT | BALANCE | SCHOOL_TUITION | TRANSFER_FEE | EXTRA_SERVICE | REFUND
-  amountMnt   Decimal
-  amountKrw   Decimal?       // сургуулийн төлбөрт (§8)
-  fxRate      Decimal?
-  status      PaymentStatus  // PENDING | PAID | FAILED | EXPIRED | REFUNDED
-  qpayInvoiceId String?
-  qpayPaymentId String?
-  paidAt      DateTime?
-  receiptPath String?
-  dueAt       DateTime?
-}
-```
+`model Payment` → `apps/api/prisma/schema.prisma`. Шийдвэр агуулсан талбарууд:
+
+- `kind` — `PREPAYMENT | BALANCE | SCHOOL_TUITION | TRANSFER_FEE | EXTRA_SERVICE | REFUND`.
+- `amountMnt` заавал, `amountKrw` + `fxRate` нь сургуулийн төлбөрт (§8) — ханшийг гүйлгээний
+  үед царцаана.
+- `status` — `PENDING | PAID | FAILED | EXPIRED | REFUNDED`.
+- `qpayInvoiceId` — **unique**, идемпотентын түлхүүр (доорх QPay урсгалыг үз). `qpayPaymentId`,
+  `paidAt`, `receiptPath`, `dueAt`.
 
 **QPay урсгал:** нэхэмжлэл үүсгэх → QR/deeplink буцаах → (a) webhook callback, (b) 10 сек
 тутам 15 минутын турш polling (BullMQ давтагдах ажил). Хоёулаа **идемпотент** —
@@ -642,37 +582,22 @@ model Payment {
 
 ### 7.1. Загвар ба дүрэм
 
-```prisma
-model DocumentTemplate {
-  code            String @unique       // PASSPORT, ID_REF_EN, HS_TRANSCRIPT …
-  nameMn          String
-  descriptionMn   String?
-  sourceHint      String?              // "E-Mongolia-аас"
-  issuerHint      String?              // ямар байгууллагаар баталгаажуулах
-  validityDays    Int?                 // хүчинтэй хугацаа
-  needsTranslation Boolean @default(false)
-  needsNotary      Boolean @default(false)
-  needsApostille   Boolean @default(false)
-  needsPhysicalOriginal Boolean @default(false)   // "эх хувиар авчрах"
-  acceptedFileTypes String[]           // pdf, docx, jpg
-  sampleFilePath  String?
-  tipsMn          String?
-}
+`model DocumentTemplate` ба `model RequirementRule` →
+`apps/api/prisma/schema.prisma`. Хоёулаа хөдөлгүүрийн гол бүтэц:
 
-model RequirementRule {
-  templateId     String @db.Uuid
-  stage          DocStage        // ADMISSION | VISA          (§6, §10)
-  serviceTypes   ServiceType[]   @default([])   // хоосон = бүгд
-  educationLevels EducationLevel[] @default([])
-  universityId   String? @db.Uuid // null = бүх сургууль
-  guarantorTypes GuarantorType[] @default([])  // EMPLOYEE | COMPANY_DIRECTOR | SELF_EMPLOYED | NONE
-  // Батлан даагч эцэг эх биш үед төрөл садангийн лавлагаа нэмэгддэг (§6.1 III).
-  guarantorRelations GuarantorRelation[] @default([]) // PARENT | SIBLING | UNCLE_AUNT | OTHER
-  necessity      Necessity       // REQUIRED | CONDITIONAL | OPTIONAL
-  conditionNote  String?         // "байгаа тохиолдолд", "манай байгууллагаас шаардсан үед"
-  sortOrder      Int
-}
-```
+**`DocumentTemplate`** — материалын **төрөл** (instance биш). `code` (`PASSPORT`, `ID_REF_EN`,
+`HS_TRANSCRIPT` …) unique. Боловсруулалтын дөрвөн туг нь орчуулга/нотариатын ажлыг үүсгэдэг:
+`needsTranslation`, `needsNotary`, `needsApostille`, `needsPhysicalOriginal` ("эх хувиар
+авчрах"). Хэрэглэгчид туслах: `sourceHint` ("E-Mongolia-аас"), `issuerHint`, `validityDays`,
+`acceptedFileTypes`, `sampleFilePath`, `tipsMn`.
+
+**`RequirementRule`** — дүрмийн **тулгах хэмжээсүүд**, доорх шийдэлт яг эдгээрээр шүүнэ:
+`stage` (`ADMISSION | VISA`, §6/§10), `serviceTypes`, `educationLevels`, `universityId`
+(`null` = бүх сургууль), `guarantorTypes` (`EMPLOYEE | COMPANY_DIRECTOR | SELF_EMPLOYED |
+NONE`), `guarantorRelations` (`PARENT | SIBLING | UNCLE_AUNT | OTHER` — батлан даагч эцэг эх
+биш үед төрөл садангийн лавлагаа нэмэгдэнэ, §6.1 III). Үр дүнг `necessity`
+(`REQUIRED | CONDITIONAL | OPTIONAL`), `conditionNote` ("байгаа тохиолдолд") ба `sortOrder`
+тодорхойлно. **Массив талбар бүр `@default([])`** — шалтгааныг доор.
 
 > **`@default([])` нь заавал.** Массив баганыг орхивол Postgres-д `NULL` бичигдэж,
 > Prisma-гийн `isEmpty` шүүлтүүрт таарахаа болино — "хоосон = бүгдэд хамаарна" гэсэн
@@ -930,9 +855,11 @@ apps/web/app/pages/
 
 | Орчин | Зориулалт |
 |---|---|
-| local | Docker Redis + Supabase (эсвэл `pnpm db:up:local`) |
-| staging | бүрэн хуулбар, QPay sandbox, туршилтын өгөгдөл |
-| production | Supabase + тусдаа Redis, өдөр тутмын backup |
+| local | Docker Redis + Supabase pooler (эсвэл бүрэн локал: `pnpm db:up:local`) |
+| production | AWS EC2, `ap-southeast-1` — сервер дээрээ PostgreSQL 17 + pgvector + Redis, nginx + Let's Encrypt, PM2. **Supabase БИШ** (2026-09-05-нд нүүсэн, `deploy/migrate-from-supabase.sh`) |
+
+Staging орчин **байхгүй** (`0-16`-гийн өмнөх нээлттэй ажил). Деплойн бүх дэлгэрэнгүй,
+скриптүүд ба хязгаарлалт → `deploy/README.md`; энд давтахгүй.
 
 CI: `pnpm typecheck && pnpm lint && pnpm test` + `prisma migrate deploy` release дээр.
 
