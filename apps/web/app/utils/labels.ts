@@ -35,6 +35,7 @@ import type {
   LeadStage,
   Necessity,
   PaymentKind,
+  PaymentMethod,
   PaymentStatus,
   PostStatus,
   PrepaymentMode,
@@ -415,6 +416,13 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   FAILED: 'Амжилтгүй',
   EXPIRED: 'Хугацаа дууссан',
   REFUNDED: 'Буцаагдсан',
+};
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  QPAY: 'QPay',
+  BANK_TRANSFER: 'Дансаар',
+  CARD: 'Картаар',
+  CASH: 'Бэлэн мөнгө',
 };
 
 export const PREPAYMENT_MODE_LABELS: Record<PrepaymentMode, string> = {

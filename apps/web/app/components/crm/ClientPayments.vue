@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContractType, PaymentKind, WorkspaceCase } from '@gks/shared';
+import type { ContractType, PaymentItem, PaymentKind, PaymentMethod, WorkspaceCase } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
 /**
@@ -110,6 +110,69 @@ function invoice(kind: PaymentKind) {
 function markPaid(paymentId: string) {
   return act(() => api.post(`/payments/${paymentId}/dev-mark-paid`));
 }
+
+/**
+ * Money that arrived outside QPay (1C-27). The amount is not asked for: it comes
+ * from the contract snapshot on the server, so a typo at the desk cannot leave
+ * the case owing a figure nobody agreed to.
+ */
+const MANUAL_METHOD_OPTIONS: { value: PaymentMethod; label: string }[] = ['BANK_TRANSFER', 'CARD', 'CASH'].map(
+  (value) => ({ value: value as PaymentMethod, label: PAYMENT_METHOD_LABELS[value as PaymentMethod] }),
+);
+
+const manualOpen = ref(false);
+const manual = reactive({
+  kind: 'PREPAYMENT' as PaymentKind,
+  method: 'BANK_TRANSFER' as PaymentMethod,
+  paidAt: new Date().toISOString().slice(0, 10),
+  reference: '',
+  note: '',
+});
+const manualReceipt = ref<File | null>(null);
+const manualReceiptInput = ref<HTMLInputElement | null>(null);
+
+/** Only the kinds still unpaid — the form must not offer to re-collect the prepayment. */
+const manualKindOptions = computed(() =>
+  (['PREPAYMENT', 'BALANCE'] as PaymentKind[])
+    .filter((kind) => !payments.value.some((row) => row.kind === kind && row.status === 'PAID'))
+    .map((kind) => ({ value: kind, label: PAYMENT_KIND_LABELS[kind] })),
+);
+
+watch(manualKindOptions, (options) => {
+  if (options.length && !options.some((o) => o.value === manual.kind)) manual.kind = options[0]!.value;
+}, { immediate: true });
+
+async function registerManual() {
+  const body = new FormData();
+  body.append('kind', manual.kind);
+  body.append('method', manual.method);
+  body.append('paidAt', new Date(manual.paidAt).toISOString());
+  if (manual.reference.trim()) body.append('reference', manual.reference.trim());
+  if (manual.note.trim()) body.append('note', manual.note.trim());
+  if (manualReceipt.value) body.append('receipt', manualReceipt.value);
+
+  await act(() => api.post(`/cases/${props.workspaceCase.id}/payments/manual`, body));
+  if (errorMsg.value) return;
+
+  manualOpen.value = false;
+  manual.reference = '';
+  manual.note = '';
+  manualReceipt.value = null;
+  if (manualReceiptInput.value) manualReceiptInput.value.value = '';
+}
+
+async function openReceipt(paymentId: string) {
+  await act(async () => {
+    const signed = await api.get<{ token: string }>(`/payments/${paymentId}/receipt-url`);
+    window.open(`${config.public.apiBase}/files/${signed.token}`, '_blank', 'noopener');
+  });
+}
+
+/** The channel plus whatever identifies the transaction, on one line. */
+function methodDetail(payment: PaymentItem): string {
+  const label = PAYMENT_METHOD_LABELS[payment.method];
+  return payment.reference ? `${label} · ${payment.reference}` : label;
+}
 function refund(paymentId: string) {
   return act(() => api.post(`/payments/${paymentId}/refund`));
 }
@@ -135,6 +198,18 @@ function mnt(value: string | number): string {
 function formatDateTime(value: string | null): string {
   if (!value) return '—';
   return new Date(value).toLocaleString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * A QPay payment happened at a moment we recorded, so it is shown to the
+ * minute. A manual registration is a *date* somebody typed — stored as UTC
+ * midnight, and so read back in UTC. Formatting it locally would print an
+ * 08:00 nobody entered, and west of UTC it would print the day before.
+ */
+function formatPaymentDate(payment: PaymentItem): string {
+  if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
+  const date = new Date(payment.paidAt);
+  return date.toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
 const needsPhysicalRegistration = computed(
@@ -263,19 +338,54 @@ const needsPhysicalRegistration = computed(
       <div class="gks-cpay__buttons">
         <DsButton size="sm" :loading="busy" @click="invoice('PREPAYMENT')">Урьдчилгаа нэхэмжлэх</DsButton>
         <DsButton size="sm" variant="secondary" :loading="busy" @click="invoice('BALANCE')">Үлдэгдэл нэхэмжлэх</DsButton>
+        <DsButton
+          v-if="manualKindOptions.length"
+          size="sm"
+          variant="ghost"
+          icon-left="plus"
+          @click="manualOpen = !manualOpen"
+        >
+          {{ manualOpen ? 'Болих' : 'Гараар бүртгэх' }}
+        </DsButton>
+      </div>
+
+      <!-- QPay-аас гадуур ирсэн төлбөр: данс, карт, бэлэн мөнгө (1C-27). -->
+      <div v-if="manualOpen && manualKindOptions.length" class="gks-cpay__subform gks-cpay__subform--flush">
+        <h3 class="gks-cpay__subtitle">QPay-аас гадуур төлсөн төлбөр бүртгэх</h3>
+        <p class="gks-cpay__muted">
+          Дүнг гэрээнээс автоматаар авна. Бүртгэсний дараа үйлчилгээний явц урагшилж, харилцагчид мэдэгдэл очно.
+        </p>
+        <div class="gks-cpay__grid">
+          <DsSelect v-model="manual.kind" label="Төлбөрийн төрөл" :options="manualKindOptions" />
+          <DsSelect v-model="manual.method" label="Төлсөн суваг" :options="MANUAL_METHOD_OPTIONS" />
+          <DsInput v-model="manual.paidAt" type="date" label="Мөнгө орсон огноо" :max="new Date().toISOString().slice(0, 10)" />
+          <DsInput v-model="manual.reference" label="Гүйлгээний дугаар" placeholder="Дансны гүйлгээ / баримтын дугаар" />
+        </div>
+        <DsTextarea v-model="manual.note" label="Тэмдэглэл" :rows="2" placeholder="Хэн, аль данснаас төлсөн г.м." />
+        <label class="gks-cpay__file">
+          <span class="gks-cpay__muted">Баримт (заавал биш) — PDF, JPG, PNG</span>
+          <input
+            ref="manualReceiptInput"
+            type="file"
+            accept="application/pdf,image/jpeg,image/png"
+            @change="manualReceipt = ($event.target as HTMLInputElement).files?.[0] ?? null"
+          >
+        </label>
+        <DsButton size="sm" :disabled="!manual.paidAt" :loading="busy" @click="registerManual()">Төлбөр бүртгэх</DsButton>
       </div>
 
       <div v-if="payments.length" class="gks-cpay__table-wrap">
         <table class="gks-table">
           <thead>
-            <tr><th>Төрөл</th><th>Дүн</th><th>Төлөв</th><th>Огноо</th><th /></tr>
+            <tr><th>Төрөл</th><th>Суваг</th><th>Дүн</th><th>Төлөв</th><th>Огноо</th><th /></tr>
           </thead>
           <tbody>
             <tr v-for="payment in payments" :key="payment.id">
               <td>{{ PAYMENT_KIND_LABELS[payment.kind] }}</td>
+              <td :title="payment.note ?? undefined">{{ methodDetail(payment) }}</td>
               <td class="gks-tnum">{{ mnt(payment.amountMnt) }}</td>
               <td><DsBadge :tone="PAYMENT_STATUS_TONE[payment.status]">{{ PAYMENT_STATUS_LABELS[payment.status] }}</DsBadge></td>
-              <td class="gks-tnum">{{ formatDateTime(payment.paidAt ?? payment.createdAt) }}</td>
+              <td class="gks-tnum">{{ formatPaymentDate(payment) }}</td>
               <td class="gks-cpay__row-actions">
                 <DsButton
                   v-if="payment.status === 'PENDING'"
@@ -285,6 +395,16 @@ const needsPhysicalRegistration = computed(
                   @click="markPaid(payment.id)"
                 >
                   Төлөгдсөн (dev)
+                </DsButton>
+                <DsButton
+                  v-if="payment.receiptPath"
+                  size="sm"
+                  variant="ghost"
+                  icon-left="download"
+                  :loading="busy"
+                  @click="openReceipt(payment.id)"
+                >
+                  Баримт
                 </DsButton>
                 <DsButton
                   v-if="payment.status === 'PAID' && payment.kind !== 'REFUND'"
@@ -328,6 +448,10 @@ const needsPhysicalRegistration = computed(
 .gks-cpay__subtitle { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gks-cpay__checkbox { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); }
 .gks-cpay__muted { font-size: var(--fs-body-sm); color: var(--text-subtle); }
+.gks-cpay__subform--flush { align-items: flex-start; margin-top: 0; padding-top: 0; border-top: none; }
+.gks-cpay__subform--flush > .gks-cpay__grid, .gks-cpay__subform--flush > .gks-field { align-self: stretch; }
+.gks-cpay__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3); }
+.gks-cpay__file { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
 .gks-cpay__link { font-size: var(--fs-caption); color: var(--brand-700); text-decoration: none; }
 
 .gks-cpay__table-wrap { overflow-x: auto; }

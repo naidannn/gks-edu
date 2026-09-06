@@ -30,6 +30,8 @@ export type ContractType = 'ELECTRONIC' | 'PHYSICAL';
 export type ContractStatus = 'DRAFT' | 'SENT' | 'SIGNED' | 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
 export type PaymentKind = 'PREPAYMENT' | 'BALANCE' | 'SCHOOL_TUITION' | 'TRANSFER_FEE' | 'EXTRA_SERVICE' | 'REFUND';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'REFUNDED';
+/** How the money reached us (1C-27) — everything but `QPAY` is registered by staff. */
+export type PaymentMethod = 'QPAY' | 'BANK_TRANSFER' | 'CARD' | 'CASH';
 
 export interface PersonRef {
   id: string;
@@ -108,6 +110,9 @@ export interface PaymentItem {
   kind: PaymentKind;
   amountMnt: string;
   status: PaymentStatus;
+  method: PaymentMethod;
+  /** Bank transaction / POS slip number, on a manually registered payment. */
+  reference: string | null;
   qpayInvoiceId: string | null;
   qrText: string | null;
   qrImage: string | null;
@@ -116,7 +121,18 @@ export interface PaymentItem {
   createdAt: string;
 }
 
-export interface PaymentListItem extends PaymentItem {
+/**
+ * What staff screens see on top of the client's own view (1C-27). `note` is an
+ * internal remark written at the desk and `receiptPath` is a storage path, so
+ * neither is ever selected into a `/me/*` payload.
+ */
+export interface StaffPaymentItem extends PaymentItem {
+  note: string | null;
+  /** Never fetched directly — `GET /payments/:id/receipt-url` mints the token (§9). */
+  receiptPath: string | null;
+}
+
+export interface PaymentListItem extends StaffPaymentItem {
   case: { id: string; code: string; user: PersonRef };
 }
 
@@ -153,7 +169,7 @@ export interface CaseDetail extends CaseListItem {
   assignedConsultant: { id: string; name: string | null } | null;
   assignedDocOfficer: { id: string; name: string | null } | null;
   contract: ContractDetail | null;
-  payments: PaymentItem[];
+  payments: StaffPaymentItem[];
   transitions: CaseTransitionItem[];
 }
 

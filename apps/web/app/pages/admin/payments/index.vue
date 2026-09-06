@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PaymentKind, PaymentListItem, PaymentStats, PaymentStatus } from '@gks/shared';
+import type { PaymentKind, PaymentListItem, PaymentMethod, PaymentStats, PaymentStatus } from '@gks/shared';
 
 /** All payments across cases + a receivables summary (1C-18). */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
@@ -14,11 +14,16 @@ const KIND_OPTIONS: { value: PaymentKind | ''; label: string }[] = [
   { value: '', label: 'Бүх төрөл' },
   ...(Object.entries(PAYMENT_KIND_LABELS) as [PaymentKind, string][]).map(([value, label]) => ({ value, label })),
 ];
+const METHOD_OPTIONS: { value: PaymentMethod | ''; label: string }[] = [
+  { value: '', label: 'Бүх суваг' },
+  ...(Object.entries(PAYMENT_METHOD_LABELS) as [PaymentMethod, string][]).map(([value, label]) => ({ value, label })),
+];
 
 const api = useApi();
 const q = ref('');
 const status = ref<PaymentStatus | ''>('');
 const kind = ref<PaymentKind | ''>('');
+const method = ref<PaymentMethod | ''>('');
 const page = ref(1);
 
 const query = computed(() => ({
@@ -27,6 +32,7 @@ const query = computed(() => ({
   ...(q.value ? { q: q.value } : {}),
   ...(status.value ? { status: status.value } : {}),
   ...(kind.value ? { kind: kind.value } : {}),
+  ...(method.value ? { method: method.value } : {}),
 }));
 
 const data = ref<Paginated | null>(null);
@@ -50,7 +56,7 @@ async function load() {
     pending.value = false;
   }
 }
-watch([status, kind], () => { page.value = 1; load(); });
+watch([status, kind, method], () => { page.value = 1; load(); });
 watch(page, load);
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 watch(q, () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { page.value = 1; load(); }, 350); });
@@ -63,6 +69,12 @@ function formatDateTime(value: string | null): string {
   return new Date(value).toLocaleString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+/** Manually registered rows carry a date, not a moment — read it back in UTC (1C-27). */
+function formatPaymentDate(payment: PaymentListItem): string {
+  if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
+  return new Date(payment.paidAt).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 /* Filters live in the URL: a filtered queue can be bookmarked, shared and
    survives a refresh. */
@@ -70,6 +82,7 @@ useUrlFilters({
   q,
   status: [status, STATUS_OPTIONS.map((o) => o.value)],
   kind: [kind, KIND_OPTIONS.map((o) => o.value)],
+  method: [method, METHOD_OPTIONS.map((o) => o.value)],
 });
 
 useHead({ title: 'Төлбөр · CRM' });
@@ -108,6 +121,7 @@ useHead({ title: 'Төлбөр · CRM' });
         />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
         <DsSelect v-model="kind" :options="KIND_OPTIONS" aria-label="Төрөл" />
+        <DsSelect v-model="method" :options="METHOD_OPTIONS" aria-label="Суваг" />
       </div>
     </DsCard>
 
@@ -120,16 +134,17 @@ useHead({ title: 'Төлбөр · CRM' });
     <div v-else class="gks-table-wrap">
       <table class="gks-table gks-table--cards">
         <thead>
-          <tr><th>Хэрэг</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Дүн</th><th>Төлөв</th><th>Огноо</th></tr>
+          <tr><th>Хэрэг</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Суваг</th><th>Дүн</th><th>Төлөв</th><th>Огноо</th></tr>
         </thead>
         <tbody>
           <tr v-for="p in data.items" :key="p.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/cases/${p.case.id}`)" @keydown.enter="navigateTo(`/admin/cases/${p.case.id}`)">
             <td class="gks-tnum" data-label="Үйлчилгээ">{{ p.case.code }}</td>
             <td data-label="Хэрэглэгч">{{ p.case.user.name ?? p.case.user.email }}</td>
             <td data-label="Төрөл">{{ PAYMENT_KIND_LABELS[p.kind] }}</td>
+            <td data-label="Суваг">{{ PAYMENT_METHOD_LABELS[p.method] }}</td>
             <td class="gks-tnum" data-label="Дүн">{{ mnt(p.amountMnt) }}</td>
             <td data-label="Төлөв"><DsBadge :tone="PAYMENT_STATUS_TONE[p.status]">{{ PAYMENT_STATUS_LABELS[p.status] }}</DsBadge></td>
-            <td class="gks-tnum" data-label="Огноо">{{ formatDateTime(p.paidAt ?? p.createdAt) }}</td>
+            <td class="gks-tnum" data-label="Огноо">{{ formatPaymentDate(p) }}</td>
           </tr>
         </tbody>
       </table>

@@ -3,8 +3,9 @@ import type { ConfigService } from '@nestjs/config';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { CaseStage, ContractStatus, PaymentKind, PaymentStatus, Role, ServiceType } from '../../prisma/client.js';
+import { CaseStage, ContractStatus, PaymentKind, PaymentMethod, PaymentStatus, Role, ServiceType } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
+import type { StorageService } from '../../storage/storage.service.js';
 import type { CasesService } from '../cases/cases.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
@@ -71,8 +72,13 @@ function buildHarness(options: {
 
   const slack = { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
 
-  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, slack, pollQueue);
-  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications };
+  const storage = {
+    upload: vi.fn().mockResolvedValue({ path: 'cases/case-1/PAYMENT_RECEIPT/1-abc.pdf' }),
+    sign: vi.fn().mockReturnValue({ token: 'signed-token', expiresAt: new Date() }),
+  } as unknown as StorageService;
+
+  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, slack, storage, pollQueue);
+  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications, storage };
 }
 
 const student: AuthenticatedUser = { id: 'student-1', email: 's@gks.edu', role: Role.USER };
@@ -180,7 +186,7 @@ describe('PaymentsService.confirmPayment (1C-15 — payment confirmed advances t
       case: makeCase(),
     });
 
-    await harness.service.confirmPayment('payment-1', 'qpay-payment-9');
+    await harness.service.confirmPayment('payment-1', { qpayPaymentId: 'qpay-payment-9' });
 
     expect(harness.prisma.payment.update).toHaveBeenCalledWith({
       where: { id: 'payment-1' },
@@ -207,6 +213,115 @@ describe('PaymentsService.confirmPayment (1C-15 — payment confirmed advances t
 
     expect(harness.prisma.contract.update).not.toHaveBeenCalled();
     expect(harness.cases.applySystemTransition).toHaveBeenCalledWith(expect.anything(), 'case-1', CaseStage.BALANCE_PAID);
+  });
+});
+
+describe('PaymentsService.registerManual (1C-27 — money that never went through QPay)', () => {
+  const bankTransfer = {
+    kind: PaymentKind.PREPAYMENT,
+    method: PaymentMethod.BANK_TRANSFER,
+    paidAt: '2026-09-01T00:00:00.000Z',
+    reference: 'TRX-88',
+  } as const;
+
+  it('creates a row on the chosen channel and confirms it through the QPay path', async () => {
+    const harness = buildHarness({ existingPayment: null });
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+
+    await harness.service.registerManual('case-1', { ...bankTransfer }, 'staff-1');
+
+    expect(harness.prisma.payment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        caseId: 'case-1',
+        kind: PaymentKind.PREPAYMENT,
+        method: PaymentMethod.BANK_TRANSFER,
+        reference: 'TRX-88',
+        createdById: 'staff-1',
+        // Born PENDING so `confirmPayment` runs the one path that advances the case.
+        status: PaymentStatus.PENDING,
+      }),
+    });
+    // The amount is the contract's, never the operator's.
+    expect(harness.prisma.payment.create.mock.calls[0]![0].data.amountMnt).toBe(200_000);
+    expect(harness.cases.applySystemTransition).toHaveBeenCalledWith(expect.anything(), 'case-1', CaseStage.PREPAYMENT_PAID);
+    expect(harness.qpay.createInvoice).not.toHaveBeenCalled();
+  });
+
+  it('records the date the money arrived, not the date it was typed in', async () => {
+    const harness = buildHarness({ existingPayment: null });
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+
+    await harness.service.registerManual('case-1', { ...bankTransfer }, 'staff-1');
+
+    expect(harness.prisma.payment.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: expect.objectContaining({ status: PaymentStatus.PAID, paidAt: new Date('2026-09-01T00:00:00.000Z') }),
+    });
+  });
+
+  it('converts a pending QPay invoice instead of billing the client twice', async () => {
+    const harness = buildHarness({ existingPayment: { id: 'payment-1', status: PaymentStatus.PENDING, kind: PaymentKind.PREPAYMENT } });
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+
+    await harness.service.registerManual('case-1', { ...bankTransfer, method: PaymentMethod.CASH }, 'staff-1');
+
+    expect(harness.prisma.payment.create).not.toHaveBeenCalled();
+    expect(harness.prisma.payment.update).toHaveBeenCalledWith({
+      where: { id: 'payment-1' },
+      data: expect.objectContaining({ method: PaymentMethod.CASH }),
+    });
+    expect(harness.pollQueue.removeJobScheduler).toHaveBeenCalledWith('payment-1');
+  });
+
+  it('refuses a kind that is already paid', async () => {
+    const harness = buildHarness({ existingPayment: { id: 'payment-1', status: PaymentStatus.PAID, kind: PaymentKind.PREPAYMENT } });
+
+    await expect(harness.service.registerManual('case-1', { ...bankTransfer }, 'staff-1')).rejects.toThrow(BadRequestException);
+  });
+
+  it('refuses a future date', async () => {
+    const harness = buildHarness({ existingPayment: null });
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString();
+
+    await expect(
+      harness.service.registerManual('case-1', { ...bankTransfer, paidAt: tomorrow }, 'staff-1'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('will not let a bank transfer skip a stage the case flow does not allow', async () => {
+    const harness = buildHarness({ existingPayment: null, flowRule: null });
+
+    await expect(harness.service.registerManual('case-1', { ...bankTransfer }, 'staff-1')).rejects.toThrow(BadRequestException);
+    expect(harness.prisma.payment.create).not.toHaveBeenCalled();
+  });
+
+  it('stores the receipt before confirming, so a rejected file leaves no paid row', async () => {
+    const harness = buildHarness({ existingPayment: null });
+    harness.storage.upload = vi.fn().mockRejectedValue(new BadRequestException('Зөвшөөрөгдөөгүй файлын төрөл'));
+
+    await expect(
+      harness.service.registerManual('case-1', { ...bankTransfer }, 'staff-1', Buffer.from('not-a-pdf')),
+    ).rejects.toThrow(BadRequestException);
+    expect(harness.prisma.payment.create).not.toHaveBeenCalled();
+    expect(harness.cases.applySystemTransition).not.toHaveBeenCalled();
   });
 });
 

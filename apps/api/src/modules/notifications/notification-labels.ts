@@ -3,6 +3,7 @@ import {
   LeadSource,
   LeadStage,
   PaymentKind,
+  PaymentMethod,
   ServiceType,
   VisaStatus,
   VisaType,
@@ -31,6 +32,13 @@ export const PAYMENT_KIND_LABELS: Record<PaymentKind, string> = {
   [PaymentKind.TRANSFER_FEE]: 'Шилжүүлгийн шимтгэл',
   [PaymentKind.EXTRA_SERVICE]: 'Нэмэлт үйлчилгээний төлбөр',
   [PaymentKind.REFUND]: 'Буцаалт',
+};
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  [PaymentMethod.QPAY]: 'QPay',
+  [PaymentMethod.BANK_TRANSFER]: 'Дансаар',
+  [PaymentMethod.CARD]: 'Картаар',
+  [PaymentMethod.CASH]: 'Бэлэн мөнгө',
 };
 
 export const APPLICATION_DECISION_LABELS: Record<ApplicationDecision, string> = {

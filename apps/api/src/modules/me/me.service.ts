@@ -36,7 +36,29 @@ const CASE_INCLUDE = {
     },
   },
   contract: true,
-  payments: { orderBy: { createdAt: 'desc' } },
+  /**
+   * Explicitly selected, not `true`: `note` is an internal remark staff write
+   * when they register a payment by hand, and `receiptPath` is a storage path.
+   * Neither belongs in a payload the client receives (1C-27).
+   */
+  payments: {
+    select: {
+      id: true,
+      caseId: true,
+      kind: true,
+      amountMnt: true,
+      status: true,
+      method: true,
+      reference: true,
+      qpayInvoiceId: true,
+      qrText: true,
+      qrImage: true,
+      paidAt: true,
+      refundOfId: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' as const },
+  },
 } satisfies Prisma.CaseInclude;
 
 /**

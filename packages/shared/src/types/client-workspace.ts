@@ -4,8 +4,8 @@ import type {
   CaseStage,
   CaseTransitionItem,
   ContractDetail,
-  PaymentItem,
   PersonRef,
+  StaffPaymentItem,
 } from './case-contract-payment';
 import type { ClientDetail, UniversityRef } from './client';
 import type { StageProgress } from './documents';
@@ -58,7 +58,7 @@ export interface WorkspaceCase {
   university: UniversityRef | null;
   intake: { id: string; year: number; month: number } | null;
   contract: ContractDetail | null;
-  payments: PaymentItem[];
+  payments: StaffPaymentItem[];
   assignedConsultant: PersonRef | null;
   assignedDocOfficer: PersonRef | null;
   application: { id: string; status: ApplicationStatus; submittedAt: string | null; interviewAt: string | null } | null;

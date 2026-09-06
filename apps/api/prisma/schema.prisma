@@ -1095,6 +1095,15 @@ enum PaymentStatus {
   REFUNDED
 }
 
+/// Payment channel (gksedu.md §24 q5). QPay is the self-service one; the other three
+/// only ever appear on a row a staff member registered by hand (1C-27).
+enum PaymentMethod {
+  QPAY
+  BANK_TRANSFER
+  CARD
+  CASH
+}
+
 /// Versioned service pricing (gksedu.md §5.4) — admin-configurable, never a constant.
 model ServicePricing {
   id              String         @id @default(uuid()) @db.Uuid
@@ -1281,6 +1290,13 @@ model Payment {
   amountKrw Decimal?      @db.Decimal(14, 2)
   fxRate    Decimal?      @db.Decimal(10, 4)
   status    PaymentStatus @default(PENDING)
+  /// How the money reached us. QPAY rows carry a QR; the rest are registered by staff (1C-27).
+  method    PaymentMethod @default(QPAY)
+
+  /// Bank transaction number / POS slip number a manual registration was matched against.
+  reference String?
+  /// Staff note on a manual registration — who handed the cash over, which account, etc.
+  note      String?
 
   qpayInvoiceId String? @unique
   qpayPaymentId String?
@@ -1304,6 +1320,7 @@ model Payment {
 
   @@index([caseId])
   @@index([status])
+  @@index([method])
   @@map("payments")
 }
 

@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
@@ -8,7 +9,10 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { CreatePaymentDto } from './dto/create-payment.dto.js';
 import { QueryPaymentsDto } from './dto/query-payments.dto.js';
+import { RegisterManualPaymentDto } from './dto/register-manual-payment.dto.js';
 import { PaymentsService } from './payments.service.js';
+
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 @ApiTags('payments')
 @Controller()
@@ -21,6 +25,22 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Create a QPay invoice for a case`s prepayment/balance — self-service by the owning user, or staff (1C-12)' })
   create(@Param('caseId', ParseUUIDPipe) caseId: string, @Body() dto: CreatePaymentDto, @CurrentUser() user: AuthenticatedUser) {
     return this.payments.createForCase(caseId, dto, user);
+  }
+
+  @Post('cases/:caseId/payments/manual')
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @Roles(...STAFF_ROLES)
+  @UseInterceptors(FileInterceptor('receipt', { limits: { fileSize: MAX_UPLOAD_BYTES } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Register a payment that arrived outside QPay — bank transfer, card or cash (1C-27)' })
+  registerManual(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Body() dto: RegisterManualPaymentDto,
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() receipt?: Express.Multer.File,
+  ) {
+    return this.payments.registerManual(caseId, dto, user.id, receipt?.buffer);
   }
 
   @Get('payments')
@@ -47,6 +67,14 @@ export class PaymentsController {
   @ApiOperation({ summary: 'One payment (staff, or the owning user) — poll this for QPay status' })
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.payments.findOne(id, user);
+  }
+
+  @Get('payments/:id/receipt-url')
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Signed download token for a manually registered payment`s receipt (§9)' })
+  receiptUrl(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.payments.receiptUrl(id, user);
   }
 
   @Post('payments/:id/refund')
