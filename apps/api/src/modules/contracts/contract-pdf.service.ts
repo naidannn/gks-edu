@@ -22,6 +22,9 @@ const CONTENT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const LOGO_WIDTH = 90.75;
 const HEADER_TOP = CM;
 const FOOTER_BASELINE = PAGE.height - CM - 10;
+/** The running head sits in the band the letterhead occupies on page one. */
+const CONTINUATION_BASELINE = HEADER_TOP + 6;
+const CONTINUATION_RULE = HEADER_TOP + 22;
 
 const FONT_SIZE = 10;
 const LINE_GAP = 1.5;
@@ -29,6 +32,13 @@ const LINE_GAP = 1.5;
 const FIRST_LINE_INDENT = 18;
 const CELL_PADDING = 6;
 const BORDER = 0.5;
+/**
+ * Word's "keep with next": a heading travels with the block under it rather
+ * than being left alone at the foot of a page. A paragraph only has to bring
+ * its first few lines along; a signature table never splits, so it counts
+ * whole.
+ */
+const KEEP_WITH_NEXT_LINES = 3;
 
 function withoutTugrikSign(text: string): string {
   return text.replace(/₮/g, ' төгрөг');
@@ -68,18 +78,18 @@ export class ContractPdfService {
       doc.registerFont('body', FONT_REGULAR);
       doc.registerFont('bold', FONT_BOLD);
 
-      // The letterhead sits above the text column on every page. Word leaves it
-      // off page one because the office prints that sheet on headed paper; a
-      // PDF has no such sheet, so it is branded throughout.
-      doc.on('pageAdded', () => drawLetterhead(doc));
+      // The letterhead brands the sheet the contract opens on, and only that
+      // one — repeated on every page it reads as stationery rather than as a
+      // document. What the following sheets carry instead is `drawRunningMarks`.
       drawLetterhead(doc);
 
       this.drawTitleBlock(doc, params);
-      for (const block of parseContractBody(withoutTugrikSign(params.bodyMn))) {
-        this.drawBlock(doc, block);
-      }
+      // Each block is drawn knowing the one after it, so a heading can refuse
+      // to be the last thing on a page.
+      const blocks = parseContractBody(withoutTugrikSign(params.bodyMn));
+      blocks.forEach((block, index) => this.drawBlock(doc, block, blocks[index + 1]));
       this.drawSignatureStamp(doc, params);
-      drawPageNumbers(doc);
+      drawRunningMarks(doc, params);
 
       doc.end();
     });
@@ -110,10 +120,11 @@ export class ContractPdfService {
     doc.moveDown(2);
   }
 
-  private drawBlock(doc: PDFKit.PDFDocument, block: ContractBlock): void {
+  private drawBlock(doc: PDFKit.PDFDocument, block: ContractBlock, next?: ContractBlock): void {
     switch (block.kind) {
       case 'heading':
         doc.moveDown(1);
+        this.breakBeforeStrandedHeading(doc, block, next);
         doc.font('bold').fontSize(FONT_SIZE).fillColor('#000000').text(block.text, MARGIN.left, doc.y, {
           width: CONTENT_WIDTH,
           align: 'center',
@@ -128,6 +139,49 @@ export class ContractPdfService {
 
       case 'parties':
         this.drawParties(doc, block.columns);
+    }
+  }
+
+  /**
+   * §10 is a heading followed by a signature table that never splits, so
+   * without this the heading closes one page and the table opens the next on
+   * its own. Moving both to a fresh page keeps the signatures under the clause
+   * that introduces them.
+   */
+  private breakBeforeStrandedHeading(doc: PDFKit.PDFDocument, heading: { text: string }, next?: ContractBlock): void {
+    if (!next) return;
+
+    doc.font('bold').fontSize(FONT_SIZE);
+    const headingHeight =
+      doc.heightOfString(heading.text, { width: CONTENT_WIDTH, align: 'center', lineGap: LINE_GAP })
+      + doc.currentLineHeight() * 0.6;
+
+    const following =
+      next.kind === 'parties'
+        ? partiesHeight(doc, next.columns) + doc.currentLineHeight()
+        : Math.min(this.measureBlock(doc, next), doc.currentLineHeight() * KEEP_WITH_NEXT_LINES);
+
+    if (strandsHeading(doc.y, headingHeight, following)) doc.addPage();
+  }
+
+  /** How tall a block would be if it were drawn at the current position. */
+  private measureBlock(doc: PDFKit.PDFDocument, block: ContractBlock): number {
+    switch (block.kind) {
+      case 'heading':
+        doc.font('bold').fontSize(FONT_SIZE);
+        return doc.heightOfString(block.text, { width: CONTENT_WIDTH, align: 'center', lineGap: LINE_GAP });
+
+      case 'paragraph':
+        doc.font('body').fontSize(FONT_SIZE);
+        return doc.heightOfString(block.lines.join(' '), {
+          width: CONTENT_WIDTH,
+          align: 'justify',
+          indent: FIRST_LINE_INDENT,
+          lineGap: LINE_GAP,
+        });
+
+      case 'parties':
+        return partiesHeight(doc, block.columns);
     }
   }
 
@@ -155,16 +209,13 @@ export class ContractPdfService {
     const columnWidth = CONTENT_WIDTH / 2;
     const textWidth = columnWidth - CELL_PADDING * 2;
 
-    doc.font('body').fontSize(FONT_SIZE);
-    const heights = columns.map((lines) =>
-      lines.reduce((sum, line) => sum + doc.heightOfString(line || ' ', { width: textWidth, lineGap: LINE_GAP }), 0),
-    );
-    const tableHeight = Math.max(...heights) + CELL_PADDING * 2;
+    const tableHeight = partiesHeight(doc, columns);
 
     doc.moveDown(1);
     if (doc.y + tableHeight > PAGE.height - MARGIN.bottom) doc.addPage();
 
     const top = doc.y;
+    doc.font('body').fontSize(FONT_SIZE);
     doc.lineWidth(BORDER).strokeColor('#000000');
     doc.rect(MARGIN.left, top, CONTENT_WIDTH, tableHeight).stroke();
     doc
@@ -211,20 +262,67 @@ function drawLetterhead(doc: PDFKit.PDFDocument): void {
   doc.image(LOGO, MARGIN.left, HEADER_TOP, { width: LOGO_WIDTH });
 }
 
-/** Word numbers every page but the first; `bufferPages` lets us fill them in last. */
-function drawPageNumbers(doc: PDFKit.PDFDocument): void {
+/**
+ * Whether a heading drawn at `y` would be cut off from the block beneath it.
+ * A heading already at the top of its page is never moved — there is nothing
+ * above it to escape, and breaking again would only emit a blank sheet.
+ */
+export function strandsHeading(y: number, headingHeight: number, followingHeight: number): boolean {
+  if (y <= MARGIN.top) return false;
+  return y + headingHeight + followingHeight > PAGE.height - MARGIN.bottom;
+}
+
+/** The two columns of the signature table are the same height; the taller one sets it. */
+function partiesHeight(doc: PDFKit.PDFDocument, columns: [string[], string[]]): number {
+  const textWidth = CONTENT_WIDTH / 2 - CELL_PADDING * 2;
+  doc.font('body').fontSize(FONT_SIZE);
+  const heights = columns.map((lines) =>
+    lines.reduce((sum, line) => sum + doc.heightOfString(line || ' ', { width: textWidth, lineGap: LINE_GAP }), 0),
+  );
+  return Math.max(...heights) + CELL_PADDING * 2;
+}
+
+/**
+ * What every sheet after the first carries in place of the letterhead: the
+ * contract it continues, and where it sits in the whole. A signature page can
+ * legitimately hold little more than the signature table, so on its own it
+ * proves nothing — `Хуудас 5 / 5` beside the contract number is what makes a
+ * page pulled out, swapped or appended visible on the paper itself.
+ *
+ * `bufferPages` is what lets this run last, once the total is known.
+ */
+function drawRunningMarks(doc: PDFKit.PDFDocument, params: ContractPdfParams): void {
   const { start, count } = doc.bufferedPageRange();
-  for (let i = 1; i < count; i += 1) {
+  for (let i = 0; i < count; i += 1) {
     doc.switchToPage(start + i);
     // The footer sits below the text column, and pdfkit would answer that by
     // starting yet another page — so the bottom margin is lifted for the write.
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
+
+    if (i > 0) {
+      doc
+        .font('body')
+        .fontSize(8.5)
+        .fillColor('#555555')
+        .text(`${params.title} №: ${params.number} — үргэлжлэл`, MARGIN.left, CONTINUATION_BASELINE, {
+          width: CONTENT_WIDTH,
+          lineBreak: false,
+        });
+      doc
+        .lineWidth(BORDER)
+        .strokeColor('#bbbbbb')
+        .moveTo(MARGIN.left, CONTINUATION_RULE)
+        .lineTo(MARGIN.left + CONTENT_WIDTH, CONTINUATION_RULE)
+        .stroke();
+    }
+
     doc
       .font('body')
       .fontSize(9)
       .fillColor('#000000')
-      .text(`Хуудас ${i + 1}`, MARGIN.left, FOOTER_BASELINE, { width: CONTENT_WIDTH, align: 'center' });
+      .text(`Хуудас ${i + 1} / ${count}`, MARGIN.left, FOOTER_BASELINE, { width: CONTENT_WIDTH, align: 'center' });
+
     doc.page.margins.bottom = bottom;
   }
 }
