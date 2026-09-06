@@ -36,8 +36,9 @@ const PROCESS = [
   { number: '03', title: 'Хугацаанд нь мэдүүлнэ', note: 'Элчин эсвэл сургууль' },
 ];
 
-const requestUrl = useRequestURL();
-const socialImage = `${requestUrl.origin}/img/gks-scholarship-og.png`;
+// Absolute, and off the canonical origin rather than the request's: a share
+// scraped from the EC2 host's own address must still point at gksedu.mn.
+const socialImage = `${useSiteUrl()}/img/gks-scholarship-og.png`;
 
 useHead({ title: 'GKS · БНСУ-ын Засгийн газрын тэтгэлэг' });
 useSeoMeta({

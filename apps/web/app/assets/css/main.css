@@ -1,8 +1,12 @@
 /* GKS EDU GROUP webfonts — Golos Text (Cyrillic UI/display), Noto Sans KR
    (Hangul fallback), IBM Plex Mono (tabular figures). See tokens.css / the
    design system readme for the substitution note (no licensed brand face
-   was supplied yet). */
-@import url("https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700;900&display=swap");
+   was supplied yet).
+
+   The Google Fonts stylesheet is linked from `nuxt.config.ts`, not @import-ed
+   here: an @import inside the bundled CSS makes the font a third hop — app CSS,
+   then Google's CSS, then the woff2 — and the text spends that whole chain
+   unstyled. Linked in the head it downloads alongside the app CSS. */
 @import 'tailwindcss';
 @import './tokens.css';
 @import './admin.css';

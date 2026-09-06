@@ -1,6 +1,5 @@
 <script setup lang="ts">
 /** 1A-10 — бакалаврын зуучлал (gksedu.md §4.2). */
-const requestUrl = useRequestURL();
 
 useHead({ title: 'Бакалаврын зуучлал' });
 useSeoMeta({
@@ -9,7 +8,6 @@ useSeoMeta({
   ogTitle: 'Солонгост бакалаврт суралц',
   ogDescription: 'Мэргэжил сонголтоос виз хүртэл нэг платформ дээр.',
   ogType: 'website',
-  ogUrl: `${requestUrl.origin}/services/bachelor`,
 });
 </script>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' });
 useHead({ title: 'Векторын хайлт' });
+useNoIndex();
 
 interface SearchHit {
   chunkId: string;

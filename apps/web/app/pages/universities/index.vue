@@ -114,6 +114,8 @@ useSeoMeta({
   ogTitle: 'Солонгосын их, дээд сургуулиуд · GKS Edu',
   ogType: 'website',
 });
+// Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
+useListingSeo('/universities');
 </script>
 
 <template>

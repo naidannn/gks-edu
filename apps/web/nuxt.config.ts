@@ -48,6 +48,27 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        // The Android address bar and the PWA splash; matches --brand-950.
+        { name: 'theme-color', content: '#0f1f4a' },
+      ],
+      link: [
+        // Google renders the favicon beside the domain in every mobile result,
+        // and asks for 48px or a multiple of it — `favicon.ico` carries 16/32/48.
+        { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
+        { rel: 'icon', type: 'image/png', href: '/icon-192.png', sizes: '192x192' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
+        // Webfonts: linked here rather than @import-ed from main.css, so the
+        // stylesheet and the app CSS download in parallel (see main.css).
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href:
+            'https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900' +
+            '&family=IBM+Plex+Mono:wght@400;500;600' +
+            '&family=Noto+Sans+KR:wght@400;500;700;900&display=swap',
+        },
       ],
     },
   },

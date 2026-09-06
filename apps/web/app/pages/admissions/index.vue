@@ -152,6 +152,8 @@ useSeoMeta({
   ogTitle: 'Сургуулиудын элсэлтийн хугацаа · GKS Edu',
   ogType: 'website',
 });
+// Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
+useListingSeo('/admissions');
 </script>
 
 <template>

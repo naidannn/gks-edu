@@ -152,7 +152,54 @@ const FAQ = [
   },
 ];
 
-useHead({ title: 'Солонгост суралцах зуучлал' });
+/**
+ * The landing page is where `Organization` belongs — one copy for the site, on
+ * the URL every other page's canonical eventually leads back to. `WebSite`
+ * carries no `SearchAction`: the only search here is the logged-in vector one,
+ * and a sitelinks search box that lands visitors on a login is worse than none.
+ *
+ * Everything asserted is checkable off the footer of this same page; there is
+ * no rating, no review count and no founding date, because we have none.
+ */
+const siteUrl = useSiteUrl();
+
+useHead({
+  title: 'Солонгост суралцах зуучлал',
+  script: [
+    jsonLdScript({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': `${siteUrl}/#organization`,
+          name: COMPANY.name,
+          legalName: COMPANY.legalName,
+          url: siteUrl,
+          logo: `${siteUrl}/icon-512.png`,
+          image: `${siteUrl}/img/og-default.jpg`,
+          description: COMPANY.tagline,
+          telephone: COMPANY.phone,
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: `${COMPANY.landmark}, ${COMPANY.street}`,
+            addressLocality: COMPANY.city,
+            addressCountry: COMPANY.countryCode,
+          },
+          areaServed: { '@type': 'Country', name: 'Mongolia' },
+          knowsLanguage: ['mn', 'ko', 'en'],
+        },
+        {
+          '@type': 'WebSite',
+          '@id': `${siteUrl}/#website`,
+          url: siteUrl,
+          name: COMPANY.name,
+          inLanguage: 'mn',
+          publisher: { '@id': `${siteUrl}/#organization` },
+        },
+      ],
+    }),
+  ],
+});
 useSeoMeta({
   description:
     'GKS EDU GROUP — Солонгосын их, дээд сургуульд суралцах зуучлалын үйлчилгээ. Хэлний ' +

@@ -5,6 +5,7 @@
  */
 definePageMeta({ layout: 'default' });
 useHead({ title: 'Бүртгэл идэвхжүүлэх' });
+useNoIndex();
 </script>
 
 <template>

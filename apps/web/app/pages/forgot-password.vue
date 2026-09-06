@@ -6,6 +6,7 @@
  */
 definePageMeta({ layout: 'default' });
 useHead({ title: 'Нууц үг сэргээх' });
+useNoIndex();
 
 const api = useApi();
 

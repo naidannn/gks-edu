@@ -19,32 +19,60 @@ function formatDate(value: string | null): string {
 const title = computed(() => post.value?.seoTitle || post.value?.title || 'Нийтлэл');
 const description = computed(() => post.value?.seoDescription || post.value?.excerpt || undefined);
 
-useHead({
-  title,
+const siteUrl = useSiteUrl();
+const absoluteUrl = useAbsoluteUrl();
+const coverImage = computed(() => absoluteUrl(post.value?.coverImagePath));
+
+useHead(() => ({
+  title: title.value,
   script: post.value
     ? [
-        {
-          type: 'application/ld+json',
-          innerHTML: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: post.value.title,
-            datePublished: post.value.publishedAt ?? undefined,
-            dateModified: post.value.updatedAt,
-            author: post.value.author?.name ? { '@type': 'Person', name: post.value.author.name } : undefined,
-            image: post.value.coverImagePath ?? undefined,
-            description: description.value,
-          }),
-        },
+        jsonLdScript({
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Article',
+              headline: post.value.title,
+              datePublished: post.value.publishedAt ?? undefined,
+              dateModified: post.value.updatedAt,
+              author: post.value.author?.name
+                ? { '@type': 'Person', name: post.value.author.name }
+                : undefined,
+              // Without a publisher the article is an orphan: nothing ties it to
+              // the Organization the landing page declares.
+              publisher: { '@id': `${siteUrl}/#organization` },
+              image: coverImage.value,
+              description: description.value,
+              inLanguage: 'mn',
+              mainEntityOfPage: `${siteUrl}/blog/${slug.value}`,
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Нүүр', item: siteUrl },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'Мэдээ, нийтлэл',
+                  item: `${siteUrl}/blog`,
+                },
+                { '@type': 'ListItem', position: 3, name: post.value.title },
+              ],
+            },
+          ],
+        }),
       ]
     : [],
-});
+}));
 useSeoMeta({
   description,
   ogTitle: title,
   ogDescription: description,
   ogType: 'article',
-  ogImage: post.value?.coverImagePath ?? undefined,
+  // Absent, the site-wide campus card stands in — better than no preview at all.
+  ogImage: () => coverImage.value,
+  articlePublishedTime: () => post.value?.publishedAt ?? undefined,
+  articleModifiedTime: () => post.value?.updatedAt,
 });
 </script>
 

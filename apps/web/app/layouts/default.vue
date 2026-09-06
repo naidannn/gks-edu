@@ -239,10 +239,7 @@ async function onLogout() {
       <div class="gks-footer__inner">
         <div class="gks-footer__brand-col">
           <img src="~/assets/img/gks-logo-full-knockout.png" alt="GKS EDU GROUP" class="gks-footer__logo">
-          <p class="gks-footer__tagline">
-            Монгол оюутнуудад зориулсан Солонгост суралцах зуучлалын платформ.
-            Зөвлөгөөнөөс виз хүртэлх бүх алхам нэг дор.
-          </p>
+          <p class="gks-footer__tagline">{{ COMPANY.tagline }}</p>
         </div>
 
         <nav class="gks-footer__col" aria-label="Үйлчилгээ">
@@ -262,12 +259,14 @@ async function onLogout() {
         <div class="gks-footer__col">
           <h2 class="gks-footer__col-title">Холбоо барих</h2>
           <address class="gks-footer__address">
-            <span class="gks-footer__text">«Жи Кэй Эс Эдү Групп» ХХК</span>
+            <span class="gks-footer__text">{{ COMPANY.legalName }}</span>
             <span class="gks-footer__text">
-              Улаанбаатар, Төв шуудангийн урд талд,<br>
-              Eco International Tower, 17 давхар, 1707 тоот
+              {{ COMPANY.city }}, {{ COMPANY.landmark }},<br>
+              {{ COMPANY.street }}
             </span>
-            <a href="tel:+97677109000" class="gks-footer__link gks-tnum">7710-9000</a>
+            <a :href="`tel:${COMPANY.phone}`" class="gks-footer__link gks-tnum">
+              {{ COMPANY.phoneLabel }}
+            </a>
           </address>
           <DsButton
             variant="accent"

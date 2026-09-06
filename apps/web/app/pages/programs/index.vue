@@ -191,6 +191,8 @@ useSeoMeta({
   ogTitle: 'Хөтөлбөр, сургалтын төлбөр · GKS Edu',
   ogType: 'website',
 });
+// Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
+useListingSeo('/programs');
 </script>
 
 <template>

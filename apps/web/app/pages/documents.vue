@@ -3,6 +3,7 @@ import type { PaginatedResult } from '@gks/shared';
 
 definePageMeta({ middleware: 'auth' });
 useHead({ title: 'Баримт' });
+useNoIndex();
 
 interface DocumentListItem {
   id: string;

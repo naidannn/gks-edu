@@ -9,6 +9,7 @@ import { useAuthStore } from '~/stores/auth';
  */
 definePageMeta({ layout: 'default' });
 useHead({ title: 'Бүртгүүлэх' });
+useNoIndex();
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -95,6 +96,18 @@ async function submitGoogle(idToken: string) {
       <DsButton type="submit" variant="accent" block :disabled="pending" :loading="pending">
         {{ pending ? 'Түр хүлээнэ үү…' : 'Бүртгүүлэх' }}
       </DsButton>
+
+      <!--
+        Consent is stated, not ticked. A checkbox in front of the button only
+        adds a click: the two documents are one tap away either way, and a
+        mandatory box nobody can decline is not a choice, it is friction.
+      -->
+      <p class="gks-auth__consent">
+        Бүртгүүлснээр та
+        <NuxtLink to="/terms">Үйлчилгээний нөхцөл</NuxtLink>,
+        <NuxtLink to="/privacy">Нууцлалын бодлого</NuxtLink>-той танилцаж,
+        зөвшөөрсөнд тооцно.
+      </p>
     </form>
 
     <div v-if="googleEnabled" class="gks-auth__alt">
@@ -162,6 +175,14 @@ async function submitGoogle(idToken: string) {
   height: 1px;
   background: var(--line-hairline);
 }
+
+.gks-auth__consent {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-body);
+  color: var(--text-subtle);
+  text-align: center;
+}
+.gks-auth__consent a { color: var(--brand-600); text-decoration: underline; text-underline-offset: 3px; }
 
 .gks-auth__switch { margin-top: var(--sp-5); font-size: var(--fs-body-sm); color: var(--text-muted); }
 .gks-auth__switch a { color: var(--brand-600); text-decoration: underline; text-underline-offset: 3px; }

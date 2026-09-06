@@ -13,6 +13,9 @@ import { useAuthStore } from '~/stores/auth';
  * touching the mouse. The nav map itself lives in `useAdminShell` because the
  * command palette searches the same list the sidebar renders.
  */
+
+// Nothing behind the login belongs in a search index (`useSeo.ts`).
+useNoIndex();
 const auth = useAuthStore();
 const route = useRoute();
 

@@ -34,6 +34,7 @@ useSeoMeta({
   ogTitle: 'Мэдээ, нийтлэл · GKS Edu',
   ogType: 'website',
 });
+useListingSeo('/blog');
 </script>
 
 <template>

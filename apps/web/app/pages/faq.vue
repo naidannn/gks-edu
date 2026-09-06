@@ -25,7 +25,32 @@ function toggle(id: string) {
   openId.value = openId.value === id ? null : id;
 }
 
-useHead({ title: 'Түгээмэл асуулт хариулт' });
+/**
+ * `FAQPage` markup, and the reason the answers below render with `v-show`
+ * rather than `v-if`: structured data has to describe text that is actually on
+ * the page. An answer that only enters the DOM when someone clicks is not on
+ * the page as far as a crawler is concerned, and marking it up anyway is the
+ * mismatch Google penalises. Collapsed-but-present is fine; absent is not.
+ *
+ * Emitted only when there are entries — an `FAQPage` with an empty
+ * `mainEntity` is invalid, and the list is still being filled (1A-22).
+ */
+useHead(() => ({
+  title: 'Түгээмэл асуулт хариулт',
+  script: (data.value ?? []).length
+    ? [
+        jsonLdScript({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: (data.value ?? []).map((item) => ({
+            '@type': 'Question',
+            name: item.question,
+            acceptedAnswer: { '@type': 'Answer', text: item.answer },
+          })),
+        }),
+      ]
+    : [],
+}));
 useSeoMeta({
   description: 'GKS EDU GROUP-ийн үйлчилгээ, үнэ, материал, визтэй холбоотой түгээмэл асуултын хариулт.',
   ogTitle: 'Түгээмэл асуулт хариулт · GKS Edu',
@@ -62,7 +87,7 @@ useSeoMeta({
               <span>{{ item.question }}</span>
               <DsIcon :name="openId === item.id ? 'minus' : 'plus'" :size="18" />
             </button>
-            <p v-if="openId === item.id" class="gks-faq__answer">{{ item.answer }}</p>
+            <p v-show="openId === item.id" class="gks-faq__answer">{{ item.answer }}</p>
           </li>
         </ul>
       </section>

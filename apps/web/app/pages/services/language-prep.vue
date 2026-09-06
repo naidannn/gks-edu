@@ -5,7 +5,6 @@
  * Copy is the office's factual description of the service; the final marketing
  * text is 1A-22 and lands through the content screens, not through this file.
  */
-const requestUrl = useRequestURL();
 
 useHead({ title: 'Хэлний бэлтгэлийн зуучлал' });
 useSeoMeta({
@@ -14,7 +13,6 @@ useSeoMeta({
   ogTitle: 'Хэлний бэлтгэлээс эхлээрэй',
   ogDescription: 'Сургууль сонголтоос виз хүртэл бүх алхмыг нэг дор.',
   ogType: 'website',
-  ogUrl: `${requestUrl.origin}/services/language-prep`,
 });
 </script>
 

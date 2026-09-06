@@ -84,34 +84,54 @@ function formatIntakeDate(value: string | null): string {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
 
-useHead({
+const siteUrl = useSiteUrl();
+const absoluteUrl = useAbsoluteUrl();
+
+useHead(() => ({
   // Schools are named in English across the whole public site — the Mongolian
   // transliteration varies between sources, while the English name is what a
   // visitor can match against the school's own site and paperwork.
-  title: () => uni.value.nameEn,
-  // JSON-LD (1A-19) — one university per page, so a static computed script is enough.
+  title: uni.value.nameEn,
+  // JSON-LD (1A-19): the school itself, plus the trail the visible breadcrumb
+  // above the <h1> already draws. `url` is this page, not the school's own site
+  // — the entity being described here is our page about it; the school's site
+  // is a `sameAs`, which is what tells Google the two are the same institution.
   script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: () =>
-        JSON.stringify({
-          '@context': 'https://schema.org',
+    jsonLdScript({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
           '@type': 'EducationalOrganization',
           // `name` tracks the visible <h1>; the other two are alternates.
           name: uni.value.nameEn,
-          alternateName: [uni.value.nameMn, uni.value.nameKo],
+          alternateName: [uni.value.nameMn, uni.value.nameKo].filter(Boolean),
           address: {
             '@type': 'PostalAddress',
             addressLocality: uni.value.cityEn,
             addressRegion: uni.value.regionEn,
             addressCountry: 'KR',
           },
-          url: uni.value.links?.officialWebsite ?? undefined,
-          logo: uni.value.logoPath ?? undefined,
-        }),
-    },
+          url: `${siteUrl}/universities/${slug.value}`,
+          sameAs: [uni.value.links?.officialWebsite].filter(Boolean),
+          logo: absoluteUrl(uni.value.logoPath),
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Нүүр', item: siteUrl },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Их сургуулиуд',
+              item: `${siteUrl}/universities`,
+            },
+            { '@type': 'ListItem', position: 3, name: uni.value.nameEn },
+          ],
+        },
+      ],
+    }),
   ],
-});
+}));
 useSeoMeta({
   description: () =>
     uni.value.shortIntroMn ??

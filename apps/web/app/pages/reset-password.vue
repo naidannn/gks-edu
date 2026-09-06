@@ -2,6 +2,7 @@
 /** Step two of "нууц үгээ мартсан" — the link from the reset email lands here. */
 definePageMeta({ layout: 'default' });
 useHead({ title: 'Шинэ нууц үг' });
+useNoIndex();
 </script>
 
 <template>

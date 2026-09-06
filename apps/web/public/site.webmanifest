@@ -1,0 +1,22 @@
+{
+  "name": "GKS EDU GROUP",
+  "short_name": "GKS Edu",
+  "description": "Солонгост суралцах зуучлалын платформ — сургууль, элсэлт, тэтгэлэг, виз.",
+  "lang": "mn",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f1f4a",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

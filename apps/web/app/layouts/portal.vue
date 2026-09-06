@@ -12,6 +12,9 @@ import { useAuthStore } from '~/stores/auth';
  * (1J) took the last slot, and anything after it goes inside a screen rather
  * than into this bar.
  */
+
+// Nothing behind the login belongs in a search index (`useSeo.ts`).
+useNoIndex();
 const auth = useAuthStore();
 const route = useRoute();
 const { overview, load, needsProfile } = usePortal();

@@ -1,5 +1,17 @@
 <script setup lang="ts">
+/**
+ * The catch-all that renders a branded 404 instead of Nuxt's default error page.
+ *
+ * Because it is a *page*, the server would otherwise answer 200 with "хуудас
+ * олдсонгүй" in the body — a soft 404, which a crawler files as a real page and
+ * keeps revisiting. The status has to be set by hand for the response to say
+ * what the page says.
+ */
+const event = useRequestEvent();
+if (event) setResponseStatus(event, 404);
+
 useHead({ title: 'Олдсонгүй' });
+useNoIndex();
 </script>
 
 <template>

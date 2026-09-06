@@ -6,7 +6,6 @@
  * page shows the master's price and says so; a doctoral applicant is quoted by
  * their consultant.
  */
-const requestUrl = useRequestURL();
 
 useHead({ title: 'Магистр, докторын зуучлал' });
 useSeoMeta({
@@ -15,7 +14,6 @@ useSeoMeta({
   ogTitle: 'Магистр, докторын хөтөлбөрт элс',
   ogDescription: 'Судалгааны төлөвлөгөөнөөс виз хүртэл.',
   ogType: 'website',
-  ogUrl: `${requestUrl.origin}/services/graduate`,
 });
 </script>
 

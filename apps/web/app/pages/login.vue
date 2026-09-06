@@ -5,6 +5,7 @@ import { useAuthStore } from '~/stores/auth';
 /** Sign in. New accounts are created on `/register`. */
 definePageMeta({ layout: 'default' });
 useHead({ title: 'Нэвтрэх' });
+useNoIndex();
 
 const auth = useAuthStore();
 const route = useRoute();
