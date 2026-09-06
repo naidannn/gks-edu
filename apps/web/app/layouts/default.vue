@@ -28,6 +28,7 @@ const SERVICES: NavLink[] = [
 ];
 
 const NAV: NavItem[] = [
+  { to: '/plan', label: 'Төлөвлөгөө' },
   { to: '/universities', label: 'Их сургуулиуд' },
   { to: '/admissions', label: 'Элсэлт' },
   { label: 'Үйлчилгээ', children: SERVICES },
@@ -53,7 +54,7 @@ const FOOTER_SERVICES = [
 const FOOTER_EXPLORE = [
   { to: '/universities', label: 'Их сургуулиуд' },
   { to: '/admissions', label: 'Элсэлтийн хуанли' },
-  { to: '/#planner', label: 'Сурах замын төлөвлөгч' },
+  { to: '/plan', label: 'Суралцах төлөвлөгөө' },
   { to: '/blog', label: 'Мэдээ' },
   { to: '/faq', label: 'Түгээмэл асуулт' },
 ];

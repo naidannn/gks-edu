@@ -38,6 +38,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { QueueModule } from './queue/queue.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { SmsModule } from './sms/sms.module.js';
+import { StudyPlanModule } from './modules/study-plan/study-plan.module.js';
 import { StorageModule } from './storage/storage.module.js';
 
 @Module({
@@ -63,6 +64,7 @@ import { StorageModule } from './storage/storage.module.js';
     UniversitiesModule,
     AdmissionsModule,
     ProgramsModule,
+    StudyPlanModule,
     SavedUniversitiesModule,
     LeadsModule,
     PricingModule,
