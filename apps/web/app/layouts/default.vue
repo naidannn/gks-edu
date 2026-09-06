@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { BannerItem } from '@gks/shared';
+import logoFull from '~/assets/img/gks-logo-full.png';
+import logoMark from '~/assets/img/gks-logo-mark.png';
 import { useAuthStore } from '~/stores/auth';
 
 const auth = useAuthStore();
@@ -213,7 +215,31 @@ async function onLogout() {
     <header class="gks-appbar">
       <nav class="gks-appbar__nav">
         <NuxtLink to="/" class="gks-appbar__brand">
-          <img src="~/assets/img/gks-logo-mark.png" alt="GKS EDU GROUP" class="gks-appbar__logo">
+          <!--
+            The full lockup is 200px wide against the mark's 74, so it only goes
+            in where the bar can spare the width: the burger band, where the
+            links have collapsed, and the full 1180px bar. In between (1025-1180)
+            the links are back but the bar is not yet wide enough — that band
+            already ran within ~27px of overflowing — and below 640px the phone
+            bar has no room either, so both fall back to the mark. `<picture>`
+            fetches only the source that matches.
+          -->
+          <picture>
+            <source
+              :srcset="logoFull"
+              media="(min-width: 641px) and (max-width: 1024px), (min-width: 1181px)"
+              width="200"
+              height="40"
+            >
+            <img
+              :src="logoMark"
+              alt="GKS EDU GROUP"
+              class="gks-appbar__logo"
+              width="74"
+              height="32"
+              decoding="async"
+            >
+          </picture>
         </NuxtLink>
 
         <div class="gks-appbar__links">
@@ -329,7 +355,15 @@ async function onLogout() {
     <footer class="gks-footer">
       <div class="gks-footer__inner">
         <div class="gks-footer__brand-col">
-          <img src="~/assets/img/gks-logo-full-knockout.png" alt="GKS EDU GROUP" class="gks-footer__logo">
+          <img
+            src="~/assets/img/gks-logo-full-knockout.png"
+            alt="GKS EDU GROUP"
+            class="gks-footer__logo"
+            width="130"
+            height="26"
+            loading="lazy"
+            decoding="async"
+          >
           <p class="gks-footer__tagline">{{ COMPANY.tagline }}</p>
         </div>
 
@@ -463,7 +497,12 @@ async function onLogout() {
   gap: var(--sp-6);
 }
 .gks-appbar__brand { display: flex; align-items: center; text-decoration: none; flex: none; }
-.gks-appbar__logo { height: 30px; width: auto; display: block; }
+.gks-appbar__logo { height: 32px; width: auto; display: block; }
+/* Kept in step with the <picture> media above: the lockup's height, the mark's
+   below it. */
+@media (min-width: 641px) and (max-width: 1024px), (min-width: 1181px) {
+  .gks-appbar__logo { height: 40px; }
+}
 
 .gks-appbar__links { display: flex; align-items: center; gap: var(--sp-6); margin-inline: auto; }
 .gks-appbar__link {
@@ -567,6 +606,14 @@ async function onLogout() {
 
 .gks-appbar__actions { display: flex; align-items: center; gap: var(--sp-3); flex: none; }
 .gks-appbar__user { font-size: var(--fs-caption); color: var(--text-subtle); }
+/* The lockup claims 200px of the 1180px bar, and a signed-in staff account
+   adds "Миний булан", "CRM" and this address chip on top of the five public
+   links. The chip is the only one of them that says nothing "Гарах" does not
+   already imply, so it is the first to go whenever the bar is not at its
+   widest. */
+@media (max-width: 1440px) {
+  .gks-appbar__user { display: none; }
+}
 .gks-appbar__login {
   display: inline-flex;
   align-items: center;
@@ -771,6 +818,5 @@ async function onLogout() {
   .gks-footer__bottom-inner {
     padding: var(--sp-4) var(--gutter-mobile) calc(var(--sp-4) + 58px + env(safe-area-inset-bottom, 0px));
   }
-  .gks-appbar__user { display: none; }
 }
 </style>
