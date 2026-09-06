@@ -187,16 +187,6 @@ useSeoMeta({
         >
           {{ isSaved(uni.id) ? 'Хадгалсан' : 'Хадгалах' }}
         </DsButton>
-        <a
-          v-if="uni.links?.officialWebsite"
-          :href="uni.links.officialWebsite"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="gks-uni__link"
-        >
-          Албан ёсны вебсайт
-          <DsIcon name="external-link" :size="14" />
-        </a>
       </div>
     </header>
 
