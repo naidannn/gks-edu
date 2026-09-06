@@ -268,6 +268,61 @@ export class AdmissionsService {
     return rows.map((row) => this.serialize(row, now));
   }
 
+  /**
+   * The soonest month a new applicant could still register for at this level —
+   * the headline of the study planner (ARCHITECTURE.md §3.4).
+   *
+   * It lives here rather than in the planner because "which rounds are still
+   * catchable" is this module's rule, and a second copy of it is how the
+   * planner ends up advertising a round the calendar has already closed. What
+   * comes back is a *month*, not a round: a plan is made in months, and the one
+   * date attached to it is the earliest deadline in that month — after it the
+   * schools start dropping out of the list one by one.
+   *
+   * Returns `null` when no round at this level is entered yet, which is not an
+   * error: the planner then falls back to the academic calendar and says so.
+   */
+  async earliestOpenMonth(
+    level: ProgramLevel,
+    options: { region?: string | null; notBefore?: Date | null } = {},
+  ): Promise<{
+    year: number;
+    month: number;
+    registerBy: Date | null;
+    classStartDate: Date | null;
+    intakeCount: number;
+  } | null> {
+    const now = new Date();
+    const groups = await this.prisma.intakeTerm.groupBy({
+      by: ['year', 'month'],
+      where: {
+        ...this.publishedWhere(now),
+        level,
+        ...(options.region ? { university: { isPublished: true, regionEn: options.region } } : {}),
+      },
+      _count: { _all: true },
+      _min: { internalDeadline: true, classStartDate: true },
+      orderBy: [{ year: 'asc' }, { month: 'asc' }],
+    });
+
+    const floor = options.notBefore ?? null;
+    for (const group of groups) {
+      // Compare on the first of the month at noon UTC, the same instant the
+      // planner's calendar fallback uses, so the two agree on "after".
+      const monthStart = new Date(Date.UTC(group.year, group.month - 1, 1, 12));
+      if (floor && monthStart.getTime() <= floor.getTime()) continue;
+      return {
+        year: group.year,
+        month: group.month,
+        registerBy: group._min.internalDeadline,
+        classStartDate: group._min.classStartDate,
+        intakeCount: group._count._all,
+      };
+    }
+
+    return null;
+  }
+
   /* --------------------------------------------------------------------- *
    * Staff CRUD
    * --------------------------------------------------------------------- */

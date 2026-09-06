@@ -2,7 +2,6 @@
 import {
   buildRoadmap,
   formatFullDate,
-  formatMonthYear,
   nextIntakeDates,
   ROADMAP_RULES,
   ROADMAP_SERVICE_LABELS,
@@ -55,12 +54,18 @@ function shiftIntake(delta: number) {
   intakeIndex.value = Math.min(max, Math.max(0, intakeIndex.value + delta));
 }
 
-const ctaHref = computed(() => {
-  const label = ROADMAP_SERVICE_LABELS[service.value];
-  const note = `Төлөвлөгөөнөөс үүссэн хүсэлт: ${label}, ${formatMonthYear(targetDate.value)}-д Солонгост очих зорилготой.`;
-  const params = new URLSearchParams({ service: service.value, note });
-  return `/consultation?${params.toString()}`;
-});
+/**
+ * The teaser hands off to the real planner rather than straight to the lead
+ * form.
+ *
+ * The dates on this widget come from the general academic calendar
+ * (`utils/roadmap.ts`); `/plan` answers the same question from the actual
+ * intake calendar, the catalogue and today's prices. Two answers to "хэзээ явж
+ * болох вэ" is how they drift, so this one is deliberately the shallow end of
+ * the same funnel: the service choice carries across and the planner finishes
+ * the question.
+ */
+const ctaHref = computed(() => `/plan?goal=${service.value}`);
 </script>
 
 <template>
@@ -159,7 +164,7 @@ const ctaHref = computed(() => {
 
     <div class="gks-plan__action">
       <DsButton variant="accent" icon-right="arrow-right" @click="navigateTo(ctaHref)">
-        Үнэгүй зөвлөгөө авах
+        Бүрэн төлөвлөгөө гаргах
       </DsButton>
     </div>
   </section>

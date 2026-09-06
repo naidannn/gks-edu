@@ -473,20 +473,54 @@ export function tuitionYearLabel(tuitionYear: number | null | undefined): string
   return tuitionYear ? `${tuitionYear} оны үнэ` : 'Он тодорхойгүй';
 }
 
-/** "₩810,000 – ₩1,270,000"; falls back to whichever end is known. */
+/**
+ * "₩810,000 – ₩1,270,000"; falls back to whichever end is known.
+ *
+ * A range whose ends are equal collapses to one figure: "₩3,400,000 – ₩3,400,000"
+ * reads as two prices that happen to match rather than as the one price it is.
+ */
 export function formatKrwRange(
   min: number | null | undefined,
   max: number | null | undefined,
 ): string | null {
   const from = formatKrw(min);
   const to = formatKrw(max);
-  if (from && to) return `${from} – ${to}`;
+  if (from && to) return from === to ? from : `${from} – ${to}`;
   return from ?? to;
 }
 
 export function formatMnt(value: number | null | undefined): string | null {
   const formatted = formatNumber(value);
   return formatted === null ? null : `${formatted}₮`;
+}
+
+export function formatMntRange(
+  min: number | null | undefined,
+  max: number | null | undefined,
+): string | null {
+  const from = formatMnt(min);
+  const to = formatMnt(max);
+  if (from && to) return from === to ? from : `${from} – ${to}`;
+  return from ?? to;
+}
+
+/**
+ * "32 – 45 сая₮" — a first-year budget at the size a family discusses it.
+ *
+ * Full digits are right in a table of line items and wrong in a headline: eight
+ * of them read as a precision this figure does not have, and the range is the
+ * honest part of the answer.
+ */
+export function formatMntMillions(
+  min: number | null | undefined,
+  max: number | null | undefined,
+): string | null {
+  const round = (value: number) => (value >= 10_000_000 ? Math.round(value / 1e6) : Math.round(value / 1e5) / 10);
+  const from = typeof min === 'number' && Number.isFinite(min) ? round(min) : null;
+  const to = typeof max === 'number' && Number.isFinite(max) ? round(max) : null;
+  if (from !== null && to !== null) return from === to ? `${from} сая ₮` : `${from} – ${to} сая ₮`;
+  const only = from ?? to;
+  return only === null ? null : `${only} сая ₮`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
