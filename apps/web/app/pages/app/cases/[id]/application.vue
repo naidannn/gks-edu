@@ -38,10 +38,6 @@ async function openInvitation() {
   const signed = await api.get<SignedFile>(`/cases/${caseId.value}/invitation/url`);
   window.open(`${config.public.apiBase}/files/${signed.token}`, '_blank', 'noopener');
 }
-
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
-}
 </script>
 
 <template>
@@ -64,7 +60,7 @@ function formatDate(value: string | null): string {
         </div>
         <div>
           <dt>Илгээсэн</dt>
-          <dd class="gks-tnum">{{ formatDate(application.submittedAt) }}</dd>
+          <dd class="gks-tnum">{{ formatLongDate(application.submittedAt) }}</dd>
         </div>
         <div v-if="application.applicationNo">
           <dt>Бүртгэлийн дугаар</dt>
@@ -74,7 +70,7 @@ function formatDate(value: string | null): string {
 
       <div v-if="application.interviewAt" class="gks-app-stage__interview">
         <h3><DsIcon name="calendar-clock" :size="16" /> Ярилцлага</h3>
-        <p class="gks-tnum">{{ formatDate(application.interviewAt) }}</p>
+        <p class="gks-tnum">{{ formatLongDate(application.interviewAt) }}</p>
         <p v-if="application.interviewNote">{{ application.interviewNote }}</p>
       </div>
 
@@ -84,7 +80,7 @@ function formatDate(value: string | null): string {
           <DsBadge :tone="result.decision === 'PASSED' ? 'success' : result.decision === 'FAILED' ? 'danger' : 'warning'">
             {{ APPLICATION_DECISION_LABELS[result.decision] }}
           </DsBadge>
-          <span class="gks-tnum">{{ formatDate(result.decidedAt) }}</span>
+          <span class="gks-tnum">{{ formatLongDate(result.decidedAt) }}</span>
         </li>
       </ul>
     </DsCard>
@@ -138,7 +134,7 @@ function formatDate(value: string | null): string {
         </tfoot>
       </table>
 
-      <p v-if="invoice.dueAt" class="gks-app-stage__due gks-tnum">Эцсийн хугацаа: {{ formatDate(invoice.dueAt) }}</p>
+      <p v-if="invoice.dueAt" class="gks-app-stage__due gks-tnum">Эцсийн хугацаа: {{ formatLongDate(invoice.dueAt) }}</p>
       <p v-if="invoice.receivedBySchoolAt" class="gks-app-stage__ok">
         <DsIcon name="check" :size="14" /> Сургууль төлбөрийг хүлээн авсан
       </p>
@@ -148,7 +144,7 @@ function formatDate(value: string | null): string {
       <p class="gks-app-stage__invitation">
         <DsIcon name="mail-check" :size="16" />
         <span>
-          {{ invitation.number ? `Дугаар ${invitation.number} · ` : '' }}{{ formatDate(invitation.issuedAt ?? invitation.receivedAt) }}
+          {{ invitation.number ? `Дугаар ${invitation.number} · ` : '' }}{{ formatLongDate(invitation.issuedAt ?? invitation.receivedAt) }}
         </span>
       </p>
       <p v-if="invitation.note" class="gks-app-stage__note">{{ invitation.note }}</p>

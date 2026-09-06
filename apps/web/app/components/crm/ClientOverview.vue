@@ -17,11 +17,6 @@ const props = defineProps<{
 type Tab = 'overview' | 'process' | 'documents' | 'payments' | 'activity';
 const emit = defineEmits<{ open: [tab: Tab]; changed: [] }>();
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
 const admission = computed(() => props.workspaceCase?.documents.admission ?? null);
 
 /** Only a GKS case splits its schools into two tracks worth labelling. */

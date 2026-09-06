@@ -127,10 +127,6 @@ function stageState(index: number): 'done' | 'current' | 'todo' {
   return index === currentIndex.value ? 'current' : 'todo';
 }
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
-}
 function isOverdue(task: WorkTask): boolean {
   return Boolean(task.dueAt) && task.status !== 'DONE' && new Date(task.dueAt!).getTime() < Date.now();
 }

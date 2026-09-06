@@ -64,15 +64,10 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
 function mnt(value: string | number): string { return formatMnt(Number(value)) ?? '—'; }
-function formatDateTime(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
 /** Manually registered rows carry a date, not a moment — read it back in UTC (1C-27). */
 function formatPaymentDate(payment: PaymentListItem): string {
   if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
-  return new Date(payment.paidAt).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return formatDateUtc(payment.paidAt);
 }
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);

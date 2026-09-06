@@ -87,5 +87,5 @@ export function formatRelativeMn(iso: string): string {
   const days = Math.round(hours / 24);
   if (days < 30) return `${days} хоногийн өмнө`;
 
-  return new Date(iso).toLocaleDateString('mn-MN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  return formatNumericDate(iso);
 }

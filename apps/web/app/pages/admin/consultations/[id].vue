@@ -212,11 +212,6 @@ function matchLabel(matchedOn: string[]): string {
   return parts.join(', ');
 }
 
-function formatDateTime(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
 useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstName}` : 'Зөвлөгөө хүсэлт') });
 </script>
 

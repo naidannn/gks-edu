@@ -261,10 +261,6 @@ onMounted(() => {
   void loadFaqs();
   void loadBanners();
 });
-
-function formatDay(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN') : '—';
-}
 </script>
 
 <template>
@@ -323,7 +319,7 @@ function formatDay(value: string | null): string {
             <div class="gks-content__item-main">
               <p class="gks-content__item-title">{{ post.title }}</p>
               <p class="gks-content__item-meta gks-tnum">
-                /{{ post.slug }} · {{ formatDay(post.publishedAt) }}
+                /{{ post.slug }} · {{ formatNumericDate(post.publishedAt) }}
               </p>
             </div>
             <DsBadge :tone="post.status === 'PUBLISHED' ? 'success' : 'neutral'">
@@ -403,7 +399,7 @@ function formatDay(value: string | null): string {
               <p class="gks-content__item-title">{{ banner.titleMn }}</p>
               <p class="gks-content__item-meta gks-tnum">
                 {{ BANNER_PLACEMENT_LABELS[banner.placement] }} ·
-                {{ formatDay(banner.startsAt) }} – {{ formatDay(banner.endsAt) }}
+                {{ formatNumericDate(banner.startsAt) }} – {{ formatNumericDate(banner.endsAt) }}
               </p>
             </div>
             <DsBadge :tone="banner.isPublished ? 'success' : 'neutral'">

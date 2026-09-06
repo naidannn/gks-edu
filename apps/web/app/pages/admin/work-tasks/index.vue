@@ -110,9 +110,6 @@ function assign(task: WorkTask, personId: string) {
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) : '—';
-}
 function isOverdue(task: WorkTask): boolean {
   return Boolean(task.dueAt) && task.status !== 'DONE' && new Date(task.dueAt!).getTime() < Date.now();
 }
@@ -185,7 +182,7 @@ useHead({ title: 'Материалын ажил · CRM' });
                 @update:model-value="assign(task, $event)"
               />
             </td>
-            <td class="gks-tnum" :class="{ 'gks-tasks__overdue': isOverdue(task) }" data-label="Хугацаа">{{ formatDate(task.dueAt) }}</td>
+            <td class="gks-tnum" :class="{ 'gks-tasks__overdue': isOverdue(task) }" data-label="Хугацаа">{{ formatDayMonth(task.dueAt) }}</td>
             <td data-label="Төлөв"><DsBadge :tone="task.status === 'DONE' ? 'success' : task.status === 'CANCELLED' ? 'neutral' : 'info'">{{ WORK_TASK_STATUS_LABELS[task.status] }}</DsBadge></td>
             <td>
               <DsButton v-if="task.status === 'TODO'" size="sm" variant="ghost" @click="setStatus(task, 'IN_PROGRESS')">Эхлүүлэх</DsButton>

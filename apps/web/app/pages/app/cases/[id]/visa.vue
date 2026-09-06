@@ -52,10 +52,6 @@ const GUIDE = [
   { icon: 'messages-square', title: 'Ярилцлагын бэлтгэл', body: 'Суралцах шалтгаан, сургууль, төлбөрөө хэн санхүүжүүлэх талаар товч, тодорхой хариулна. Бид урьдчилан дадлага хийлгэнэ.' },
 ];
 
-function formatDateTime(value: string | null): string {
-  return value ? new Date(value).toLocaleString('mn-MN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-}
-
 function onUpload(documentId: string, files: File[]) {
   return withBusy(() => docs.upload(documentId, files));
 }
@@ -81,7 +77,7 @@ function onTransition(documentId: string, status: DocumentStatus) {
         </div>
         <div>
           <dt>Цаг захиалга</dt>
-          <dd class="gks-tnum">{{ formatDateTime(visaCase.appointmentAt) }}</dd>
+          <dd class="gks-tnum">{{ formatLongDateTime(visaCase.appointmentAt) }}</dd>
         </div>
         <div v-if="visaCase.visaNumber">
           <dt>Визний дугаар</dt>

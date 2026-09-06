@@ -1,0 +1,84 @@
+/**
+ * Every date the UI writes out, in one place.
+ *
+ * Before this file, thirty-odd pages and components each carried their own
+ * `formatDate` — same locale, same options, copied. The cost was not the
+ * duplication itself but that the copies had quietly diverged: some rendered a
+ * missing date as `'—'`, some as `''`, some crashed on an invalid one, and two
+ * read their date in UTC while the rest read it locally. A reader could not
+ * tell which by looking at the call.
+ *
+ * The shapes below are the ones the app actually uses; anything genuinely
+ * one-off (a relative "3 өдрийн өмнө", a countdown) stays where it is used,
+ * because it is presentation logic and not a date format.
+ */
+
+/** Anything an API payload hands us for a date, including "we don't have one". */
+export type DateLike = string | number | Date | null | undefined;
+
+/** The house placeholder for a date that is absent or unreadable. */
+export const NO_DATE = '—';
+
+function parse(value: DateLike): Date | null {
+  if (value === null || value === undefined || value === '') return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function render(value: DateLike, options: Intl.DateTimeFormatOptions): string {
+  const date = parse(value);
+  return date === null ? NO_DATE : date.toLocaleString('mn-MN', options);
+}
+
+const DATE = { year: 'numeric', month: 'short', day: 'numeric' } as const;
+const LONG_DATE = { year: 'numeric', month: 'long', day: 'numeric' } as const;
+const DAY_MONTH = { month: 'short', day: 'numeric' } as const;
+const TIME = { hour: '2-digit', minute: '2-digit' } as const;
+
+/** `2026 1-р сар 24` — the default for a table cell or a detail row. */
+export function formatDate(value: DateLike): string {
+  return render(value, DATE);
+}
+
+/** The month spelled out; for prose and for dates a client reads once. */
+export function formatLongDate(value: DateLike): string {
+  return render(value, LONG_DATE);
+}
+
+/** No year — for a queue where everything is within weeks either way. */
+export function formatDayMonth(value: DateLike): string {
+  return render(value, DAY_MONTH);
+}
+
+/** `2026 1-р сар 24 09:30` — when the hour is part of the record. */
+export function formatDateTime(value: DateLike): string {
+  return render(value, { ...DATE, ...TIME });
+}
+
+export function formatLongDateTime(value: DateLike): string {
+  return render(value, { ...LONG_DATE, ...TIME });
+}
+
+export function formatDayMonthTime(value: DateLike): string {
+  return render(value, { ...DAY_MONTH, ...TIME });
+}
+
+/** `2026.01.24` — fixed width, for a list where dates line up in a column. */
+export function formatNumericDate(value: DateLike): string {
+  return render(value, { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+/**
+ * The same day as {@link formatDate}, read in UTC rather than locally.
+ *
+ * Two kinds of value need it. A date the API stamped as the end of its day in
+ * UTC (`23:59:59Z`) — an intake deadline, a payment confirmed by hand — reads
+ * as *the next day* in Ulaanbaatar's +08, and for a deadline that is the
+ * expensive direction to be wrong in. Which of the two readings the whole app
+ * should adopt is an open question (`ARCHITECTURE.md` §18, task `1J-11`); until
+ * it is settled the two live side by side and the call site says which it meant.
+ * That is the point of the separate name.
+ */
+export function formatDateUtc(value: DateLike): string {
+  return render(value, { ...DATE, timeZone: 'UTC' });
+}

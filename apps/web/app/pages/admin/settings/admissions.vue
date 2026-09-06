@@ -169,7 +169,7 @@ async function save() {
 
       <footer class="gks-form-actions">
         <p v-if="config" class="gks-adm-config__hint">
-          Сүүлд шинэчилсэн: {{ new Date(config.updatedAt).toLocaleString('mn-MN') }}
+          Сүүлд шинэчилсэн: {{ formatDateTime(config.updatedAt) }}
           <span v-if="config.updatedBy?.name"> · {{ config.updatedBy.name }}</span>
         </p>
         <span v-if="savedAt" class="gks-adm-config__saved">Хадгаллаа</span>
@@ -193,6 +193,5 @@ async function save() {
 .gks-adm-config__error { color: var(--red-700); font-size: var(--fs-body-sm); }
 .gks-form-actions .gks-adm-config__hint { margin: 0; margin-right: auto; }
 .gks-adm-config__saved { color: var(--green-700); font-size: var(--fs-body-sm); }
-
 
 </style>

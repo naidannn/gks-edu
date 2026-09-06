@@ -105,7 +105,7 @@ useHead({ title: 'Гэрээний загвар · CRM' });
 
     <DsCard v-if="history.length" title="Хуучин хувилбарууд">
       <details v-for="t in history" :key="t.id" class="gks-settings__history-item">
-        <summary>v{{ t.version }} — {{ new Date(t.updatedAt).toLocaleDateString('mn-MN') }}</summary>
+        <summary>v{{ t.version }} — {{ formatNumericDate(t.updatedAt) }}</summary>
         <pre class="gks-settings__pre">{{ t.bodyMn }}</pre>
       </details>
     </DsCard>

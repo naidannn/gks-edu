@@ -106,7 +106,7 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
           <summary>Түүх ({{ historyFor(s).length }})</summary>
           <ul>
             <li v-for="h in historyFor(s)" :key="h.id" class="gks-tnum">
-              {{ mnt(h.totalAmount) }} · {{ new Date(h.effectiveFrom).toLocaleDateString('mn-MN') }} – {{ new Date(h.effectiveTo!).toLocaleDateString('mn-MN') }}
+              {{ mnt(h.totalAmount) }} · {{ formatNumericDate(h.effectiveFrom) }} – {{ formatNumericDate(h.effectiveTo) }}
             </li>
           </ul>
         </details>

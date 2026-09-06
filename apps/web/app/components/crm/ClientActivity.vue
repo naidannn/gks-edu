@@ -102,16 +102,6 @@ function bodyOf(entry: ClientActivityEntry): string | null {
   }
   return entry.body;
 }
-
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString('mn-MN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 </script>
 
 <template>

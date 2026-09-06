@@ -22,7 +22,7 @@ function detailText(alert: ClientAlert): string | null {
   if (!alert.detail) return null;
   const asDate = new Date(alert.detail);
   if (!Number.isNaN(asDate.getTime()) && alert.detail.includes('-')) {
-    return asDate.toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' });
+    return formatDayMonth(asDate);
   }
   return alert.detail;
 }

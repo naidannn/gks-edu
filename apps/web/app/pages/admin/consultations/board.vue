@@ -109,10 +109,6 @@ async function onDrop(stage: LeadStage) {
 function isOverdue(lead: LeadListItem): boolean {
   return Boolean(lead.nextContactAt && new Date(lead.nextContactAt) <= new Date());
 }
-
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) : '—';
-}
 </script>
 
 <template>
@@ -173,7 +169,7 @@ function formatDate(value: string | null): string {
               class="gks-board__card-due gks-tnum"
               :class="{ 'gks-board__card-due--overdue': isOverdue(lead) }"
             >
-              {{ formatDate(lead.nextContactAt) }}
+              {{ formatDayMonth(lead.nextContactAt) }}
             </span>
           </div>
         </article>

@@ -117,10 +117,6 @@ const queues = computed(() => [
   },
 ]);
 
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' });
-}
 function isLate(value: string | null): boolean {
   return Boolean(value) && new Date(value!) < new Date();
 }
@@ -187,7 +183,7 @@ useHead({ title: 'Хяналтын самбар · CRM' });
                 <span class="gks-dash__row-name">{{ lead.lastName }} {{ lead.firstName }}</span>
                 <span class="gks-dash__row-sub gks-tnum">{{ lead.phone }}</span>
                 <DsBadge :tone="LEAD_STAGE_TONE[lead.stage]">{{ LEAD_STAGE_LABELS[lead.stage] }}</DsBadge>
-                <span class="gks-dash__row-date gks-tnum">{{ formatDate(lead.createdAt) }}</span>
+                <span class="gks-dash__row-date gks-tnum">{{ formatDayMonth(lead.createdAt) }}</span>
               </NuxtLink>
             </li>
           </ul>
@@ -207,7 +203,7 @@ useHead({ title: 'Хяналтын самбар · CRM' });
                 <DsBadge :tone="isLate(document.dueAt) ? 'danger' : 'warning'">
                   {{ isLate(document.dueAt) ? 'Хэтэрсэн' : 'Дөхсөн' }}
                 </DsBadge>
-                <span class="gks-dash__row-date gks-tnum">{{ formatDate(document.dueAt) }}</span>
+                <span class="gks-dash__row-date gks-tnum">{{ formatDayMonth(document.dueAt) }}</span>
               </NuxtLink>
             </li>
           </ul>

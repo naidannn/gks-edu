@@ -70,7 +70,7 @@ const dueLabel = computed(() => {
   if (!props.document.dueAt) return null;
   const due = new Date(props.document.dueAt);
   const days = Math.ceil((due.getTime() - Date.now()) / 86_400_000);
-  const date = due.toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' });
+  const date = formatDayMonth(due);
   if (days < 0) return { text: `${date} — хугацаа хэтэрсэн`, urgent: true };
   if (days <= 7) return { text: `${date} — ${days} хоног үлдсэн`, urgent: true };
   return { text: date, urgent: false };
@@ -90,10 +90,6 @@ function submitNote() {
 
 function formatSize(bytes: number): string {
   return bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)}MB` : `${Math.ceil(bytes / 1024)}KB`;
-}
-
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString('mn-MN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 </script>
 
@@ -204,7 +200,7 @@ function formatDateTime(value: string): string {
           <li v-for="note in visibleNotes" :key="note.id" class="gks-doc__note">
             <p class="gks-doc__note-body">{{ note.body }}</p>
             <p class="gks-doc__note-meta">
-              {{ note.author?.name ?? 'Систем' }} · {{ formatDateTime(note.createdAt) }}
+              {{ note.author?.name ?? 'Систем' }} · {{ formatDayMonthTime(note.createdAt) }}
               <template v-if="note.isInternal"> · дотоод</template>
             </p>
           </li>

@@ -74,10 +74,6 @@ const byUniversity = computed(() => {
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
-}
-
 /* Filters live in the URL: a filtered queue can be bookmarked, shared and
    survives a refresh. */
 useUrlFilters({

@@ -88,10 +88,6 @@ async function downloadPdf() {
     downloading.value = false;
   }
 }
-
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
-}
 </script>
 
 <template>
@@ -118,7 +114,7 @@ function formatDate(value: string | null): string {
             <dt>Үлдэгдлийн нөхцөл</dt>
             <dd>{{ BALANCE_TRIGGER_LABELS[contract.balanceTriggerSnapshot] }}</dd>
           </div>
-          <div v-if="contract.signedAt"><dt>Гарын үсэг зурсан</dt><dd>{{ formatDate(contract.signedAt) }}</dd></div>
+          <div v-if="contract.signedAt"><dt>Гарын үсэг зурсан</dt><dd>{{ formatLongDate(contract.signedAt) }}</dd></div>
         </dl>
       </DsCard>
 

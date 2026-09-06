@@ -79,11 +79,6 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 
 onMounted(load);
 
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 
 /* Filters live in the URL: a filtered queue can be bookmarked, shared and

@@ -209,7 +209,7 @@ useHead({ title: 'Материал шалгах · CRM' });
               <NuxtLink :to="`/admin/cases/${item.case.id}`" class="gks-review__due-link">{{ item.case.code }}</NuxtLink>
               <span>{{ item.template.nameMn }}</span>
               <span class="gks-review__due-date gks-tnum">
-                {{ item.dueAt ? new Date(item.dueAt).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) : '—' }}
+                {{ formatDayMonth(item.dueAt) }}
               </span>
             </li>
           </ul>

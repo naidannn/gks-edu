@@ -72,9 +72,6 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
 function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; }
-function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' });
-}
 function contractDate(c: ContractListItem): string { return formatDate(c.signedAt ?? c.createdAt); }
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);

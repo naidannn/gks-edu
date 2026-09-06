@@ -6,12 +6,6 @@ definePageMeta({ middleware: 'auth', layout: 'portal' });
 
 const { gksCase } = inject('caseDetail') as { gksCase: Ref<PortalCaseDetail | null>; reload: () => Promise<void> };
 
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString('mn-MN', {
-    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-  });
-}
-
 function transitionLabel(transition: CaseTransitionItem): string {
   return `${CASE_STAGE_LABELS[transition.fromStage]} → ${CASE_STAGE_LABELS[transition.toStage]}`;
 }

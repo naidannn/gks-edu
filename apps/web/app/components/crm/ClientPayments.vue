@@ -185,11 +185,6 @@ const totals = computed(() => {
 function mnt(value: string | number): string {
   return formatMntAmount(value) ?? '—';
 }
-function formatDateTime(value: string | null): string {
-  if (!value) return '—';
-  return new Date(value).toLocaleString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
 /**
  * A QPay payment happened at a moment we recorded, so it is shown to the
  * minute. A manual registration is a *date* somebody typed — stored as UTC
@@ -198,8 +193,7 @@ function formatDateTime(value: string | null): string {
  */
 function formatPaymentDate(payment: PaymentItem): string {
   if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
-  const date = new Date(payment.paidAt);
-  return date.toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return formatDateUtc(payment.paidAt);
 }
 
 const needsPhysicalRegistration = computed(

@@ -60,10 +60,6 @@ async function saveFlight() {
 
 const pendingItems = computed(() => plan.value?.items.filter((item) => !item.isDone) ?? []);
 const doneItems = computed(() => plan.value?.items.filter((item) => item.isDone) ?? []);
-
-function formatDue(value: string | null): string | null {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) : null;
-}
 </script>
 
 <template>
@@ -95,7 +91,7 @@ function formatDue(value: string | null): string | null {
           <li v-for="item in pendingItems" :key="item.id" class="gks-dep__item">
             <DsCheckbox :model-value="item.isDone" :label="item.titleMn" :description="item.descriptionMn ?? undefined" @update:model-value="toggle(item.id, $event)" />
             <div class="gks-dep__item-meta">
-              <span v-if="formatDue(item.dueAt)" class="gks-dep__due gks-tnum">{{ formatDue(item.dueAt) }}</span>
+              <span v-if="item.dueAt" class="gks-dep__due gks-tnum">{{ formatDayMonth(item.dueAt) }}</span>
               <a v-if="item.guideUrl" :href="item.guideUrl" target="_blank" rel="noopener" class="gks-dep__link">Гарын авлага</a>
               <a v-if="item.videoUrl" :href="item.videoUrl" target="_blank" rel="noopener" class="gks-dep__link">Видео</a>
             </div>

@@ -11,11 +11,6 @@ if (error.value) {
   throw createError({ statusCode: 404, statusMessage: 'Нийтлэл олдсонгүй' });
 }
 
-function formatDate(value: string | null): string {
-  if (!value) return '';
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
 const title = computed(() => post.value?.seoTitle || post.value?.title || 'Нийтлэл');
 const description = computed(() => post.value?.seoDescription || post.value?.excerpt || undefined);
 
@@ -83,7 +78,7 @@ useSeoMeta({
     </NuxtLink>
 
     <header class="gks-post__head">
-      <p v-if="post.publishedAt" class="gks-post__date gks-tnum">{{ formatDate(post.publishedAt) }}</p>
+      <p v-if="post.publishedAt" class="gks-post__date gks-tnum">{{ formatLongDate(post.publishedAt) }}</p>
       <h1 class="gks-post__title">{{ post.title }}</h1>
       <div v-if="post.tags.length" class="gks-post__tags">
         <DsTag v-for="tag in post.tags" :key="tag">{{ tag }}</DsTag>

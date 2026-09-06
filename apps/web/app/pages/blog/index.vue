@@ -23,11 +23,6 @@ function goToPage(next: number) {
   router.push({ query: { ...route.query, page: String(next) } });
 }
 
-function formatDate(value: string | null): string {
-  if (!value) return '';
-  return new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
 useHead({ title: 'Мэдээ, нийтлэл' });
 useSeoMeta({
   description: 'Солонгост суралцах, элсэлт, виз, тэтгэлэгтэй холбоотой зөвлөгөө, мэдээ, нийтлэл.',
@@ -57,7 +52,7 @@ useListingSeo('/blog');
               <img :src="post.coverImagePath" :alt="post.title" loading="lazy">
             </div>
             <div class="gks-post-card__body">
-              <p v-if="post.publishedAt" class="gks-post-card__date gks-tnum">{{ formatDate(post.publishedAt) }}</p>
+              <p v-if="post.publishedAt" class="gks-post-card__date gks-tnum">{{ formatLongDate(post.publishedAt) }}</p>
               <h2 class="gks-post-card__title">{{ post.title }}</h2>
               <p v-if="post.excerpt" class="gks-post-card__excerpt">{{ post.excerpt }}</p>
               <div v-if="post.tags.length" class="gks-post-card__tags">

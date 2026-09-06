@@ -176,10 +176,6 @@ function recordInvitation() {
 const KIND_OPTIONS = (Object.entries(INVOICE_ITEM_KIND_LABELS) as [InvoiceItemKind, string][]).map(([value, label]) => ({ value, label }));
 const DECISION_OPTIONS = (Object.entries(APPLICATION_DECISION_LABELS) as [ApplicationDecision, string][]).map(([value, label]) => ({ value, label }));
 
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('mn-MN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
-}
-
 useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 </script>
 
@@ -335,7 +331,6 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 .gks-page__back { align-self: flex-start; }
 .gks-appadm__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
 .gks-muted { font-size: var(--fs-caption); }
-
 
 .gks-appadm__gate { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-3); border-radius: var(--radius-2); background: var(--warning-bg); border: var(--border-hair) solid var(--warning-line); color: var(--warning-fg); font-size: var(--fs-body-sm); }
 .gks-appadm__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }

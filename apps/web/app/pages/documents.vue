@@ -81,7 +81,7 @@ async function remove(id: string) {
             <div>
               <p class="gks-doc-row__title">{{ doc.title }}</p>
               <p class="gks-doc-row__meta gks-tnum">
-                {{ doc._count.chunks }} chunk · {{ new Date(doc.createdAt).toLocaleString('mn-MN') }}
+                {{ doc._count.chunks }} chunk · {{ formatDateTime(doc.createdAt) }}
               </p>
             </div>
             <DsButton variant="danger" size="sm" icon-left="trash-2" @click="remove(doc.id)">Устгах</DsButton>
