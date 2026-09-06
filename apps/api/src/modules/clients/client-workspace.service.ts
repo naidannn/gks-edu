@@ -35,6 +35,13 @@ const DEADLINE_WARNING_DAYS = 7;
 
 const WORKSPACE_CASE_INCLUDE = {
   university: { select: { id: true, nameMn: true, nameEn: true } },
+  universityChoices: {
+    orderBy: { sortOrder: 'asc' },
+    include: {
+      university: { select: { id: true, nameMn: true, nameEn: true } },
+      program: { select: { id: true, nameMn: true, nameKo: true, level: true } },
+    },
+  },
   intake: { select: { id: true, year: true, month: true } },
   contract: { include: { collateralContract: true } },
   payments: { orderBy: { createdAt: 'desc' } },

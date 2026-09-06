@@ -3,6 +3,7 @@ import type { ApplicationStatus } from './applications';
 import type {
   CaseStage,
   CaseTransitionItem,
+  CaseUniversityChoice,
   ContractDetail,
   PersonRef,
   StaffPaymentItem,
@@ -56,6 +57,8 @@ export interface WorkspaceCase {
   createdAt: string;
   updatedAt: string;
   university: UniversityRef | null;
+  /** Every school this case names, first preference first (§5.1). */
+  universityChoices: CaseUniversityChoice[];
   intake: { id: string; year: number; month: number } | null;
   contract: ContractDetail | null;
   payments: StaffPaymentItem[];

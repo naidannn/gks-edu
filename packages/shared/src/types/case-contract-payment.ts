@@ -150,6 +150,42 @@ export interface CaseTransitionItem {
   createdAt: string;
 }
 
+/**
+ * Which side of a case a chosen school sits on. A GKS case runs the scholarship
+ * application on `SCHOLARSHIP` schools and the one free ordinary-brokerage
+ * school the contract grants (§3.11) on `REGULAR`; every other service is
+ * `REGULAR` throughout.
+ */
+export type CaseChoiceTrack = 'SCHOLARSHIP' | 'REGULAR';
+
+/** One school picked on a case, in preference order (§5.1). */
+export interface CaseUniversityChoice {
+  id: string;
+  universityId: string;
+  university: { id: string; nameMn: string; nameEn: string; slug?: string } | null;
+  programId: string | null;
+  program: { id: string; nameMn: string; nameKo: string | null; level: string } | null;
+  track: CaseChoiceTrack;
+  /** 0 is the first preference, and mirrors the case's own `universityId`. */
+  sortOrder: number;
+  major: string | null;
+  note: string | null;
+}
+
+/** How many schools one case may name, per track — the server decides, the form obeys. */
+export interface CaseChoiceLimits {
+  scholarship: number;
+  regular: number;
+}
+
+export const GKS_SCHOLARSHIP_CHOICE_LIMITS: CaseChoiceLimits = { scholarship: 2, regular: 1 };
+export const REGULAR_CHOICE_LIMITS: CaseChoiceLimits = { scholarship: 0, regular: 3 };
+
+/** Mirrors `choiceLimits()` on the API — kept here so the form can size itself. */
+export function caseChoiceLimits(serviceType: ServiceType): CaseChoiceLimits {
+  return serviceType === 'GKS_SCHOLARSHIP' ? GKS_SCHOLARSHIP_CHOICE_LIMITS : REGULAR_CHOICE_LIMITS;
+}
+
 export interface CaseListItem {
   id: string;
   code: string;
@@ -163,6 +199,7 @@ export interface CaseListItem {
   updatedAt: string;
   user: PersonRef;
   university: { id: string; nameMn: string; nameEn: string } | null;
+  universityChoices: CaseUniversityChoice[];
 }
 
 export interface CaseDetail extends CaseListItem {

@@ -321,6 +321,8 @@ model University {
   cases    Case[]
   clients  Client[]
 
+  caseChoices CaseUniversityChoice[]
+
   requirementRules    RequirementRule[]
   applications        Application[]
   researchRuns        IntakeResearchRun[]
@@ -480,6 +482,7 @@ model UniversityProgram {
   cases           Case[]
   applications    Application[]
   intakeOverrides IntakeProgramOverride[]
+  caseChoices     CaseUniversityChoice[]
 
   @@unique([universityId, level, nameMn])
   @@index([universityId])
@@ -1144,6 +1147,11 @@ model Case {
   assignedDocOfficerId String? @db.Uuid
   assignedDocOfficer   User?   @relation("CaseDocOfficer", fields: [assignedDocOfficerId], references: [id], onDelete: SetNull)
 
+  /// Every school picked on this case, in preference order (§5.1). `universityId`
+  /// above is the first of them, kept as a column so every screen and query that
+  /// only ever needs "the school" is unchanged.
+  universityChoices CaseUniversityChoice[]
+
   contract    Contract?
   payments    Payment[]
   transitions CaseTransition[]
@@ -1168,6 +1176,49 @@ model Case {
   @@index([assignedConsultantId])
   @@index([assignedDocOfficerId])
   @@map("cases")
+}
+
+/// Which side of a case a chosen school sits on.
+///
+/// A GKS case runs two tracks at once: the scholarship application itself, and
+/// the one ordinary-brokerage school the contract (§3.11) grants free of charge
+/// so the client still has somewhere to go if the scholarship is refused. Every
+/// other service has only `REGULAR` choices.
+enum CaseChoiceTrack {
+  SCHOLARSHIP
+  REGULAR
+}
+
+/// One school the client picked on one case, in preference order.
+///
+/// Choosing more than one school changes nothing about the money — the price is
+/// per service, never per school (`gksedu.md` §5.4) — so this table carries no
+/// pricing of its own. How many rows a case may hold, and on which track, is
+/// decided in `university-choice.rules.ts`, not here.
+model CaseUniversityChoice {
+  id     String @id @default(uuid()) @db.Uuid
+  caseId String @db.Uuid
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  universityId String             @db.Uuid
+  university   University         @relation(fields: [universityId], references: [id], onDelete: Restrict)
+  /// The school's own programme, once staff have narrowed it down.
+  programId    String?            @db.Uuid
+  program      UniversityProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+
+  track     CaseChoiceTrack @default(REGULAR)
+  /// 0 is the client's first preference; the case's `universityId` mirrors it.
+  sortOrder Int             @default(0)
+  /// The subject as the client words it, when no `programId` is picked yet.
+  major     String?
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([caseId, universityId])
+  @@index([caseId, sortOrder])
+  @@map("case_university_choices")
 }
 
 model CaseTransition {

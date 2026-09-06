@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
-import { ClientStatus, LeadSource, LeadStage, ServiceType } from '../../prisma/client.js';
+import { CaseChoiceTrack, ClientStatus, LeadSource, LeadStage, ServiceType } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { CasesService } from '../cases/cases.service.js';
 import type { AccountClaimService } from '../users/account-claim.service.js';
@@ -9,6 +9,10 @@ import type { CreateClientDto } from './dto/create-client.dto.js';
 
 /** Someone comfortably over 18 on any plausible "today". */
 const ADULT_BIRTH_DATE = '1998-04-17';
+
+const SNU = '11111111-1111-1111-1111-111111111111';
+const KOREA = '22222222-2222-2222-2222-222222222222';
+const HANYANG = '33333333-3333-3333-3333-333333333333';
 
 function adultDto(overrides: Partial<CreateClientDto> = {}): CreateClientDto {
   return {
@@ -86,6 +90,51 @@ describe('ClientsService.create (1B-14)', () => {
 
     expect(tx.client.create).toHaveBeenCalled();
     expect(casesStub.createWithin).not.toHaveBeenCalled();
+  });
+
+  it('hands the whole school list to the case and keeps the first as the client`s own (§5.1)', async () => {
+    const { prisma, tx } = prismaStub();
+    const service = new ClientsService(prisma, casesStub, claimsStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+    (casesStub.createWithin as ReturnType<typeof vi.fn>).mockClear();
+
+    await service.create(
+      adultDto({
+        primaryServiceType: ServiceType.GKS_SCHOLARSHIP,
+        universityChoices: [
+          { universityId: SNU },
+          { universityId: KOREA },
+          { universityId: HANYANG, track: CaseChoiceTrack.REGULAR },
+        ],
+      }),
+      'staff-1',
+    );
+
+    expect(tx.client.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ targetUniversityId: SNU }) }),
+    );
+    expect(casesStub.createWithin).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        universityChoices: [
+          expect.objectContaining({ universityId: SNU, track: CaseChoiceTrack.SCHOLARSHIP, sortOrder: 0 }),
+          expect.objectContaining({ universityId: KOREA, track: CaseChoiceTrack.SCHOLARSHIP, sortOrder: 1 }),
+          expect.objectContaining({ universityId: HANYANG, track: CaseChoiceTrack.REGULAR, sortOrder: 2 }),
+        ],
+      }),
+    );
+  });
+
+  it('refuses extra schools when no case is opened — they would have nowhere to live', async () => {
+    const { prisma } = prismaStub();
+    const service = new ClientsService(prisma, casesStub, claimsStub);
+
+    await expect(
+      service.create(
+        adultDto({ openCase: false, universityChoices: [{ universityId: SNU }, { universityId: KOREA }] }),
+        'staff-1',
+      ),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('refuses a minor without a guardian — they cannot sign the contract (§6.2)', async () => {

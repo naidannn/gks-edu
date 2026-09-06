@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsDateString,
   IsEmail,
@@ -14,8 +16,10 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { ClientStatus, EducationLevel, Gender, LeadSource, ServiceType } from '../../../prisma/client.js';
+import { UniversityChoiceDto } from '../../cases/dto/university-choice.dto.js';
 import {
   PHONE_PATTERN,
   REGISTER_PATTERN,
@@ -177,6 +181,21 @@ export class CreateClientDto {
   @IsUUID()
   @IsOptional()
   targetUniversityId?: string;
+
+  /**
+   * Every school the client picked, in preference order — two for a GKS
+   * scholarship plus the one extra ordinary school the contract grants free of
+   * charge, or up to three for ordinary brokerage (§5.1). The first of them
+   * becomes `targetUniversityId`; `targetUniversityId` on its own still works
+   * as the one-school shorthand.
+   */
+  @ApiPropertyOptional({ type: [UniversityChoiceDto] })
+  @IsArray()
+  @ArrayMaxSize(4)
+  @ValidateNested({ each: true })
+  @Type(() => UniversityChoiceDto)
+  @IsOptional()
+  universityChoices?: UniversityChoiceDto[];
 
   @ApiPropertyOptional()
   @IsString()

@@ -26,3 +26,31 @@ export function formatAmountExact(value: DecimalLike): string {
 export function renderContractBody(template: string, data: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, token: string) => data[token] ?? match);
 }
+
+/** One school on the case's list, as the contract needs to read it. */
+export interface ContractUniversityChoice {
+  track: 'SCHOLARSHIP' | 'REGULAR';
+  university: { nameMn: string };
+}
+
+/**
+ * What `{{universityName}}` prints. A case may name several schools without
+ * costing a won more (§5.4), so the token is a list rather than one name — and
+ * on a GKS case the ordinary school §3.11 grants is called out as such, because
+ * on paper it is a different promise from the scholarship choices.
+ */
+export function universityNames(
+  choices: readonly ContractUniversityChoice[],
+  fallback: string | null,
+): string {
+  if (choices.length === 0) return fallback ?? 'Тодорхойгүй (сургууль сонголт хийгдээгүй)';
+
+  const scholarship = choices.filter((choice) => choice.track === 'SCHOLARSHIP');
+  const regular = choices.filter((choice) => choice.track === 'REGULAR');
+  const name = (list: readonly ContractUniversityChoice[]) =>
+    list.map((choice) => choice.university.nameMn).join(', ');
+
+  if (scholarship.length === 0) return name(regular);
+  if (regular.length === 0) return name(scholarship);
+  return `${name(scholarship)} (нэмэлт энгийн зуучлал: ${name(regular)})`;
+}

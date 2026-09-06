@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EducationLevel, Gender, LeadSource, ServiceType, UniversityCard } from '@gks/shared';
 import type { ClientForm } from '~/utils/client-form';
-import { clientAge, isMinorForm } from '~/utils/client-form';
+import { clientAge, defaultChoiceTrack, isMinorForm, reconcileChoices } from '~/utils/client-form';
 
 /**
  * Every field a client record carries, grouped the way the office collects
@@ -45,6 +45,18 @@ const universityOptions = computed(() => toUniversityOptions(props.universities)
 
 const age = computed(() => clientAge(form.value));
 const isMinor = computed(() => isMinorForm(form.value));
+
+/**
+ * Switching service changes how many schools may be picked and on which track,
+ * so the list is trimmed to the new rules rather than left for the API to
+ * reject on save.
+ */
+watch(() => form.value.primaryServiceType, () => reconcileChoices(form.value));
+
+/** The portal picks one school; it edits the first row of the same list. */
+function setSingleUniversity(universityId: string): void {
+  form.value.universityChoices = [{ universityId, track: defaultChoiceTrack(form.value.primaryServiceType) }];
+}
 </script>
 
 <template>
@@ -114,14 +126,26 @@ const isMinor = computed(() => isMinorForm(form.value));
         :error="errors.primaryServiceType"
       />
       <DsCombobox
-        v-model="form.targetUniversityId"
+        v-if="variant === 'self'"
+        :model-value="form.universityChoices[0]?.universityId ?? ''"
         label="Зорилтот сургууль"
         :options="universityOptions"
         :loading="loadingUniversities"
+        @update:model-value="setSingleUniversity"
       />
       <DsInput v-model="form.targetMajor" label="Зорьж буй мэргэжил" />
       <DsSelect v-if="variant === 'staff'" v-model="form.source" label="Хаанаас ирсэн" :options="SOURCE_OPTIONS" />
     </div>
+
+    <CrmUniversityChoices
+      v-if="variant === 'staff'"
+      v-model="form.universityChoices"
+      :service-type="form.primaryServiceType"
+      :universities="universities"
+      :loading="loadingUniversities"
+      :error="errors.universityChoices"
+      class="gks-client-form__choices"
+    />
     <DsTextarea
       v-if="variant === 'staff'"
       v-model="form.note"
@@ -140,6 +164,7 @@ const isMinor = computed(() => isMinorForm(form.value));
 .gks-client-form__age { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-4); font-size: var(--fs-body-sm); color: var(--text-muted); }
 .gks-client-form__note { margin-bottom: var(--sp-4); font-size: var(--fs-body-sm); color: var(--text-muted); }
 .gks-client-form__note-field { margin-top: var(--sp-4); }
+.gks-client-form__choices { margin-top: var(--sp-5); }
 
 @media (max-width: 900px) {
   .gks-grid { grid-template-columns: 1fr; }

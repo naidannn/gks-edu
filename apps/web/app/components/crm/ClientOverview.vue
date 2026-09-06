@@ -24,6 +24,9 @@ function formatDate(value: string | null | undefined): string {
 
 const admission = computed(() => props.workspaceCase?.documents.admission ?? null);
 
+/** Only a GKS case splits its schools into two tracks worth labelling. */
+const isScholarshipCase = computed(() => props.workspaceCase?.serviceType === 'GKS_SCHOLARSHIP');
+
 /** The paid/outstanding split, read off the payments the case already carries. */
 const money = computed(() => {
   const payments = props.workspaceCase?.payments ?? [];
@@ -109,6 +112,19 @@ const summary = computed(() => {
                 label="Визний материал"
               />
             </div>
+          </DsCard>
+          <DsCard v-if="workspaceCase.universityChoices.length > 0" title="Сонгосон сургууль">
+            <ol class="gks-cov__schools">
+              <li v-for="(choice, index) in workspaceCase.universityChoices" :key="choice.id">
+                <span class="gks-cov__school-rank">{{ index + 1 }}</span>
+                <span class="gks-cov__school-name">{{ universityName(choice.university) }}</span>
+                <DsTag v-if="isScholarshipCase && choice.track === 'REGULAR'">нэмэлт энгийн зуучлал</DsTag>
+                <span v-if="choice.program" class="gks-cov__school-program">{{ choice.program.nameMn }}</span>
+              </li>
+            </ol>
+            <p v-if="isScholarshipCase" class="gks-cov__note">
+              Тэтгэлгийн сонголтоос гадна нэг сургуульд нэмэлт төлбөргүй зуучилна (гэрээний 3.11).
+            </p>
           </DsCard>
         </div>
 
@@ -202,6 +218,12 @@ const summary = computed(() => {
 .gks-cov__dl { display: flex; flex-direction: column; gap: var(--sp-3); margin-bottom: var(--sp-3); }
 .gks-cov__dl dt { font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-cov__dl dd { margin-top: 2px; font-size: var(--fs-body-sm); color: var(--text-strong); }
+.gks-cov__schools { display: flex; flex-direction: column; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.gks-cov__schools li { display: flex; align-items: center; gap: var(--sp-2); }
+.gks-cov__school-rank { flex: 0 0 auto; width: 1.5rem; height: 1.5rem; display: grid; place-items: center; border-radius: 999px; background: var(--surface-hover); font-size: var(--fs-body-sm); color: var(--text-muted); }
+.gks-cov__school-name { font-weight: 500; }
+.gks-cov__school-program { color: var(--text-muted); font-size: var(--fs-body-sm); }
+
 .gks-cov__note { font-size: var(--fs-body-sm); white-space: pre-wrap; }
 .gks-cov__empty { font-size: var(--fs-body-sm); color: var(--text-muted); }
 

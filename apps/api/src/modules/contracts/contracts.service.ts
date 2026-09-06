@@ -22,7 +22,7 @@ import { PricingService } from '../pricing/pricing.service.js';
 import { amountInWordsMnCapitalized } from './amount-words.util.js';
 import { ContractPdfService } from './contract-pdf.service.js';
 import { ADULT_AGE, ageOn } from '../clients/dto/client-fields.js';
-import { formatAmount, formatAmountExact, renderContractBody } from './contract-template.util.js';
+import { formatAmount, formatAmountExact, renderContractBody, universityNames } from './contract-template.util.js';
 import type { AcceptContractDto } from './dto/accept-contract.dto.js';
 import type { CreateContractDto } from './dto/create-contract.dto.js';
 import type { CreateContractTemplateDto } from './dto/create-contract-template.dto.js';
@@ -96,7 +96,15 @@ export class ContractsService {
   async createForCase(dto: CreateContractDto) {
     const gksCase = await this.prisma.case.findUnique({
       where: { id: dto.caseId },
-      include: { user: { include: { client: true } }, university: true, contract: true },
+      include: {
+        user: { include: { client: true } },
+        university: true,
+        contract: true,
+        universityChoices: {
+          orderBy: { sortOrder: 'asc' },
+          select: { track: true, university: { select: { nameMn: true } } },
+        },
+      },
     });
     if (!gksCase) throw new NotFoundException(`Case ${dto.caseId} not found`);
     if (gksCase.contract) throw new BadRequestException('Энэ үйлчилгээнд аль хэдийн гэрээ үүссэн байна');
@@ -124,7 +132,7 @@ export class ContractsService {
       ...partyTokens(gksCase.user, client, signedForByGuardian),
       contractDate: contractDate.toLocaleDateString('en-CA'),
       signatureDate: formatSignatureDate(contractDate),
-      universityName: gksCase.university?.nameMn ?? 'Тодорхойгүй (сургууль сонголт хийгдээгүй)',
+      universityName: universityNames(gksCase.universityChoices, gksCase.university?.nameMn ?? null),
       totalAmount: formatAmountExact(pricing.totalAmount),
       totalAmountWords: amountInWordsMnCapitalized(pricing.totalAmount),
       prepaymentAmount: formatAmountExact(prepayment),

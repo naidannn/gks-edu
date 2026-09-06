@@ -16,6 +16,11 @@ import {
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
+import {
+  type NormalisedChoice,
+  type UniversityChoiceInput,
+  normaliseChoices,
+} from '../cases/university-choice.rules.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { AccountClaimService } from '../users/account-claim.service.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
@@ -162,6 +167,7 @@ export class ClientsService {
    * be logged into until the client claims it.
    */
   async create(dto: CreateClientDto, actorId: string) {
+    const choices = this.resolveChoices(dto);
     this.assertGuardianPresent(new Date(dto.birthDate), dto);
     await this.assertRegisterFree(dto.registerNumber);
     await this.assertEmailFree(dto.email);
@@ -173,6 +179,7 @@ export class ClientsService {
         data: {
           ...this.toClientData(dto),
           ...this.toRequiredClientData(dto),
+          targetUniversityId: choices[0]?.universityId,
           code: await this.generateCode(tx),
           userId: account.id,
           createdById: actorId,
@@ -184,7 +191,7 @@ export class ClientsService {
         await this.cases.createWithin(tx, {
           userId: client.userId,
           serviceType: dto.primaryServiceType,
-          universityId: dto.targetUniversityId,
+          universityChoices: choices,
           intakeId: dto.plannedIntakeId,
         });
       }
@@ -238,6 +245,7 @@ export class ClientsService {
       registerNumber: dto.registerNumber,
     };
 
+    const choices = this.resolveChoices(merged);
     this.assertGuardianPresent(new Date(merged.birthDate), merged);
     await this.assertRegisterFree(merged.registerNumber);
     await this.assertEmailFree(merged.email);
@@ -249,6 +257,7 @@ export class ClientsService {
         data: {
           ...this.toClientData(merged),
           ...this.toRequiredClientData(merged),
+          targetUniversityId: choices[0]?.universityId,
           code: await this.generateCode(tx),
           userId: account.id,
           leadId: lead.id,
@@ -261,7 +270,7 @@ export class ClientsService {
         await this.cases.createWithin(tx, {
           userId: client.userId,
           serviceType: merged.primaryServiceType,
-          universityId: merged.targetUniversityId,
+          universityChoices: choices,
           intakeId: merged.plannedIntakeId,
         });
       }
@@ -593,8 +602,21 @@ export class ClientsService {
     if (dto.email && dto.email !== existing.email) await this.assertEmailFree(dto.email, existing.userId);
     if (dto.assignedConsultantId) await this.assertStaff(dto.assignedConsultantId);
 
+    // The school list belongs to the live case, not to the client row, so it is
+    // written first: a list the service rejects must not leave a half-edited
+    // client behind.
+    const choices = dto.universityChoices
+      ? await this.applyChoicesToLiveCase(existing, dto.universityChoices, dto.primaryServiceType)
+      : null;
+
     await this.prisma.$transaction(async (tx) => {
-      await tx.client.update({ where: { id }, data: this.toClientData(dto) });
+      await tx.client.update({
+        where: { id },
+        data: {
+          ...this.toClientData(dto),
+          ...(choices ? { targetUniversityId: choices[0]?.universityId ?? null } : {}),
+        },
+      });
 
       // The backing account mirrors the display name, phone and email so staff
       // screens that read `case.user` stay in step with the client record.
@@ -630,6 +652,60 @@ export class ClientsService {
   // ─── Internals ────────────────────────────────────────────────────────────
 
   /** Shared column mapping — `undefined` keys are skipped by Prisma on update. */
+  /**
+   * Re-points the client's live case at a new school list. A client may have
+   * run several cases over the years (§20); the one being edited is the newest
+   * that has not ended, exactly as the list and the workspace pick it.
+   */
+  private async applyChoicesToLiveCase(
+    existing: { userId: string; primaryServiceType: ServiceType },
+    inputs: UniversityChoiceInput[],
+    serviceType?: ServiceType,
+  ): Promise<NormalisedChoice[]> {
+    const choices = normaliseChoices(serviceType ?? existing.primaryServiceType, inputs);
+    const liveCase = await this.prisma.case.findFirst({
+      where: { userId: existing.userId, stage: { notIn: TERMINAL_STAGES } },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+
+    if (!liveCase) {
+      if (choices.length > 1) {
+        throw new BadRequestException('Идэвхтэй үйлчилгээгүй тул нэгээс олон сургууль хадгалах боломжгүй');
+      }
+      return choices;
+    }
+
+    await this.cases.replaceUniversityChoices(liveCase.id, { universityChoices: choices });
+    return choices;
+  }
+
+  /**
+   * The schools chosen at registration, validated against what the service
+   * allows (§5.1). `targetUniversityId` remains the one-school shorthand every
+   * older caller sends; a `universityChoices` list, when present, is the whole
+   * answer and the first of it becomes `targetUniversityId`.
+   *
+   * The extra schools live on the `Case`, so refusing to open one leaves them
+   * nowhere to go — that is an error rather than a silent drop.
+   */
+  private resolveChoices(dto: Partial<CreateClientDto> & Pick<CreateClientDto, 'primaryServiceType'>): NormalisedChoice[] {
+    const inputs: UniversityChoiceInput[] =
+      dto.universityChoices && dto.universityChoices.length > 0
+        ? dto.universityChoices
+        : dto.targetUniversityId
+          ? [{ universityId: dto.targetUniversityId }]
+          : [];
+
+    const choices = normaliseChoices(dto.primaryServiceType, inputs);
+    if (dto.openCase === false && choices.length > 1) {
+      throw new BadRequestException(
+        'Нэгээс олон сургууль сонгосон бол зуучлалын үйлчилгээг шууд эхлүүлнэ үү — сонголтууд үйлчилгээн дээр хадгалагдана',
+      );
+    }
+    return choices;
+  }
+
   private toClientData(dto: Partial<CreateClientDto>) {
     return {
       lastName: dto.lastName?.trim(),

@@ -8,14 +8,52 @@ import type { AssignCaseDto } from './dto/assign-case.dto.js';
 import type { CreateCaseDto } from './dto/create-case.dto.js';
 import type { QueryCasesDto } from './dto/query-cases.dto.js';
 import type { TransitionCaseDto } from './dto/transition-case.dto.js';
+import {
+  type NormalisedChoice,
+  type UniversityChoiceInput,
+  normaliseChoices,
+  primaryChoice,
+} from './university-choice.rules.js';
 
 /** Either the app-wide `PrismaService` or an interactive `$transaction` callback client. */
 type Db = PrismaService | Prisma.TransactionClient;
+
+/**
+ * What `create`/`createWithin` actually need. Same shape as `CreateCaseDto`,
+ * with the school list widened so in-process callers (`ClientsService`) can
+ * hand over rows they have already normalised.
+ */
+export type CreateCaseInput = Omit<CreateCaseDto, 'universityChoices'> & {
+  universityChoices?: readonly UniversityChoiceInput[];
+};
+
+/** Same widening for the replace endpoint's body. */
+export type ReplaceUniversityChoicesInput = {
+  universityChoices: readonly UniversityChoiceInput[];
+};
 
 const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
 
 /** Ordering of the flow rows that make up the main line; escapes sit at 900+. */
 const MAIN_LINE_MAX_SORT = 900;
+
+/** Everything a screen needs to name a chosen school, in preference order. */
+const CHOICE_INCLUDE = {
+  orderBy: { sortOrder: 'asc' },
+  include: {
+    university: { select: { id: true, nameMn: true, nameEn: true, slug: true } },
+    program: { select: { id: true, nameMn: true, nameKo: true, level: true } },
+  },
+} satisfies Prisma.Case$universityChoicesArgs;
+
+/**
+ * `universityId` is the one-school shorthand every existing caller sends; a
+ * `universityChoices` list, when given, is the whole answer and replaces it.
+ */
+function choiceInputs(dto: CreateCaseInput): readonly UniversityChoiceInput[] {
+  if (dto.universityChoices && dto.universityChoices.length > 0) return dto.universityChoices;
+  return dto.universityId ? [{ universityId: dto.universityId, programId: dto.programId ?? null }] : [];
+}
 
 @Injectable()
 export class CasesService {
@@ -26,7 +64,7 @@ export class CasesService {
     private readonly admissions: AdmissionsService,
   ) {}
 
-  async create(dto: CreateCaseDto) {
+  async create(dto: CreateCaseInput) {
     const created = await this.createWithin(this.prisma, dto);
     // Outside `createWithin` so it also runs for the transactional callers,
     // after their transaction has committed.
@@ -42,9 +80,13 @@ export class CasesService {
    * went into the row unchecked, so a case could point at another school's
    * round, at the wrong level, or at one that closed months ago.
    */
-  async createWithin(db: Db, dto: CreateCaseDto) {
+  async createWithin(db: Db, dto: CreateCaseInput) {
+    const choices = normaliseChoices(dto.serviceType, choiceInputs(dto));
+    await this.assertChoicesExist(db, choices);
+    const primary = primaryChoice(choices);
+
     if (dto.intakeId) {
-      await this.admissions.assertSelectable(dto.intakeId, dto.universityId, dto.serviceType);
+      await this.admissions.assertSelectable(dto.intakeId, primary?.universityId, dto.serviceType);
     }
 
     return db.case.create({
@@ -52,18 +94,98 @@ export class CasesService {
         code: await this.generateCode(db),
         userId: dto.userId,
         serviceType: dto.serviceType,
-        universityId: dto.universityId,
-        programId: dto.programId,
+        // The first preference is mirrored onto the case so every screen and
+        // query that only ever needs "the school" keeps working unchanged.
+        universityId: primary?.universityId,
+        programId: primary?.programId ?? undefined,
         intakeId: dto.intakeId,
+        universityChoices: choices.length > 0 ? { create: choices } : undefined,
       },
     });
+  }
+
+  /**
+   * Replaces a case's school list (§5.1). Staff change their minds after the
+   * contract is drafted — a school stops taking Mongolian students, a second
+   * choice becomes the first — and the list is the one part of a case that is
+   * meant to move, so it is a whole-list write rather than per-row edits.
+   */
+  async replaceUniversityChoices(id: string, dto: ReplaceUniversityChoicesInput) {
+    const found = await this.getOrThrow(id);
+    const choices = normaliseChoices(found.serviceType, dto.universityChoices);
+    await this.assertChoicesExist(this.prisma, choices);
+    const primary = primaryChoice(choices);
+
+    if (found.intakeId && primary) {
+      await this.admissions.assertSelectable(found.intakeId, primary.universityId, found.serviceType);
+    }
+
+    // A case whose first choice moved has nothing to say about the old school's
+    // round, so the intake is dropped and re-picked on the admissions screen.
+    const universityChanged = (primary?.universityId ?? null) !== found.universityId;
+
+    await this.prisma.$transaction([
+      this.prisma.caseUniversityChoice.deleteMany({ where: { caseId: id } }),
+      ...(choices.length > 0
+        ? [this.prisma.caseUniversityChoice.createMany({ data: choices.map((choice) => ({ ...choice, caseId: id })) })]
+        : []),
+      this.prisma.case.update({
+        where: { id },
+        data: {
+          universityId: primary?.universityId ?? null,
+          programId: primary?.programId ?? null,
+          ...(universityChanged ? { intakeId: null } : {}),
+        },
+      }),
+    ]);
+
+    return this.prisma.case.findUnique({
+      where: { id },
+      include: {
+        university: { select: { id: true, nameMn: true, nameEn: true } },
+        universityChoices: CHOICE_INCLUDE,
+      },
+    });
+  }
+
+  /**
+   * The FKs are `Restrict`/`SetNull`, so an unknown id would surface as a
+   * Prisma error rather than a sentence staff can act on.
+   */
+  private async assertChoicesExist(db: Db, choices: readonly NormalisedChoice[]): Promise<void> {
+    if (choices.length === 0) return;
+
+    const [universities, programs] = await Promise.all([
+      db.university.findMany({
+        where: { id: { in: choices.map((choice) => choice.universityId) } },
+        select: { id: true },
+      }),
+      db.universityProgram.findMany({
+        where: { id: { in: choices.map((choice) => choice.programId).filter((id) => id !== null) } },
+        select: { id: true, universityId: true },
+      }),
+    ]);
+
+    if (universities.length !== choices.length) throw new BadRequestException('Сонгосон сургууль олдсонгүй');
+
+    const programUniversity = new Map(programs.map((program) => [program.id, program.universityId]));
+    for (const choice of choices) {
+      if (!choice.programId) continue;
+      const owner = programUniversity.get(choice.programId);
+      if (owner !== choice.universityId) {
+        throw new BadRequestException('Сонгосон хөтөлбөр тухайн сургуулийнх биш байна');
+      }
+    }
   }
 
   /** A logged-in user's own cases (1C-17) — there's no lead-conversion UI yet to link from, so this is the entry point. */
   async findMine(userId: string) {
     return this.prisma.case.findMany({
       where: { userId },
-      include: { university: { select: { id: true, nameMn: true, nameEn: true } } },
+      include: {
+        university: { select: { id: true, nameMn: true, nameEn: true } },
+        universityChoices: CHOICE_INCLUDE,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -76,6 +198,7 @@ export class CasesService {
         include: {
           user: { select: { id: true, name: true, email: true } },
           university: { select: { id: true, nameMn: true, nameEn: true } },
+          universityChoices: CHOICE_INCLUDE,
         },
         orderBy: { createdAt: 'desc' },
         skip: query.skip,
@@ -110,6 +233,7 @@ export class CasesService {
       // now owns these screens.
       user: { select: { id: true, name: true, email: true, client: { select: { id: true, code: true } } } },
       university: { select: { id: true, nameMn: true, nameEn: true } },
+      universityChoices: CHOICE_INCLUDE,
       assignedConsultant: { select: { id: true, name: true } },
       assignedDocOfficer: { select: { id: true, name: true } },
       contract: true,

@@ -9,6 +9,7 @@ import { CasesService } from './cases.service.js';
 import { AssignCaseDto } from './dto/assign-case.dto.js';
 import { CreateCaseDto } from './dto/create-case.dto.js';
 import { QueryCasesDto } from './dto/query-cases.dto.js';
+import { ReplaceUniversityChoicesDto } from './dto/replace-university-choices.dto.js';
 import { TransitionCaseDto } from './dto/transition-case.dto.js';
 
 @ApiTags('cases')
@@ -53,6 +54,13 @@ export class CasesController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.cases.transition(id, dto, user);
+  }
+
+  @Patch(':id/universities')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Replace the schools chosen on a case, in preference order (§5.1)' })
+  replaceUniversities(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReplaceUniversityChoicesDto) {
+    return this.cases.replaceUniversityChoices(id, dto);
   }
 
   @Patch(':id/assign')

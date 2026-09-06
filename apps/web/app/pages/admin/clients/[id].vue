@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ClientStatus } from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
-import { clientPayload, emptyClientForm, fillFromClient, validateClientForm } from '~/utils/client-form';
+import { clientPayload, emptyClientForm, fillFromClient, fillChoicesFromCase, validateClientForm } from '~/utils/client-form';
 
 /**
  * The client workspace (1G-17) — the one screen an admin runs a student from.
@@ -64,6 +64,9 @@ const STATUS_OPTIONS = (Object.entries(CLIENT_STATUS_LABELS) as [ClientStatus, s
 async function startEditing() {
   if (!client.value) return;
   fillFromClient(form, client.value);
+  // The client row remembers only the first preference; the whole school list
+  // belongs to the live case, which is what the edit form actually writes back.
+  fillChoicesFromCase(form, activeCase.value?.universityChoices ?? []);
   status.value = client.value.status;
   saveError.value = null;
   editing.value = true;
