@@ -279,7 +279,7 @@ useListingSeo('/admissions');
       </li>
     </ul>
 
-    <DsPager :page="filters.page" :total-pages="totalPages" @update:page="apply({ page: $event }, false)" variant="ghost" />
+    <DsPager :page="filters.page" :total-pages="totalPages" variant="ghost" @update:page="apply({ page: $event }, false)" />
   </div>
 </template>
 
