@@ -25,6 +25,7 @@ import { MeModule } from './modules/me/me.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { PostsModule } from './modules/posts/posts.module.js';
+import { ProgramsModule } from './modules/programs/programs.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { ReportsModule } from './modules/reports/reports.module.js';
 import { SavedUniversitiesModule } from './modules/saved-universities/saved-universities.module.js';
@@ -61,6 +62,7 @@ import { StorageModule } from './storage/storage.module.js';
     UsersModule,
     UniversitiesModule,
     AdmissionsModule,
+    ProgramsModule,
     SavedUniversitiesModule,
     LeadsModule,
     PricingModule,

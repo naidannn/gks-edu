@@ -6,6 +6,7 @@
  */
 
 import type { IntakePhase, IntakeProgramOverride } from './admissions';
+import type { InstructionLanguage, ProgramSource, StudyFieldRef } from './programs';
 
 export type UniversityType = 'NATIONAL' | 'PUBLIC' | 'PRIVATE';
 export type ProgramLevel = 'LANGUAGE_PREP' | 'BACHELOR' | 'MASTER' | 'PHD';
@@ -87,6 +88,10 @@ export interface UniversityCard {
   theRankYear: number | null;
 }
 
+/**
+ * A programme on a school's own page. The cross-school view of the same thing
+ * is `ProgramListItem` in `./programs`, which carries the university with it.
+ */
 export interface UniversityProgram {
   id: string;
   level: ProgramLevel;
@@ -94,11 +99,22 @@ export interface UniversityProgram {
   nameEn: string | null;
   faculty: string | null;
   durationYears: number | null;
-  tuitionPerYearKrw: number | null;
+  /** Per semester, KRW — the figure Korean schools publish. */
   tuitionPerTermKrw: number | null;
+  tuitionPerYearKrw: number | null;
+  /** 입학금 — the one-off entrance fee. */
+  admissionFeeKrw: number | null;
+  /** Which academic year the figures are from. Null = unknown, never "current". */
+  tuitionYear: number | null;
+  scholarshipMaxPercent: number | null;
+  scholarshipNote: string | null;
   topikLevel: number | null;
   ieltsScore: number | null;
   otherRequirements: string | null;
+  language: InstructionLanguage;
+  acceptsInternational: boolean;
+  /** The canonical subject this is filed under; null = not yet classified. */
+  studyField: StudyFieldRef | null;
 }
 
 /**
@@ -215,6 +231,13 @@ export interface AdminUniversityRow {
 export interface AdminUniversityProgram extends UniversityProgram {
   universityId: string;
   nameKo: string | null;
+  studyFieldId: string | null;
+  sourceUrl: string | null;
+  sourceType: ProgramSource;
+  /** No `verifiedAt` means nobody has checked this against the school. */
+  verifiedAt: string | null;
+  /** Internal — never on a public payload. */
+  internalNote: string | null;
   isPublished: boolean;
 }
 

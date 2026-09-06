@@ -95,9 +95,11 @@ model User {
   notificationPreferences NotificationPreference[]
   gksRankingConfigs       GksRankingConfig[]
 
-  verifiedIntakes    IntakeTerm[]
-  admissionConfigs   AdmissionConfig[]
-  intakeResearchRuns IntakeResearchRun[]
+  verifiedIntakes     IntakeTerm[]
+  admissionConfigs    AdmissionConfig[]
+  intakeResearchRuns  IntakeResearchRun[]
+  verifiedPrograms    UniversityProgram[]
+  programResearchRuns ProgramResearchRun[]
 
   @@index([createdAt])
   @@map("users")
@@ -209,6 +211,24 @@ enum IntakeSource {
   IMPORTED
 }
 
+/// Where a programme's tuition and requirements came from. Same three values as
+/// `IntakeSource` and the same rule behind them: `AI_ASSISTED` means a human
+/// read a research candidate and pressed save — the research never writes.
+enum ProgramSource {
+  MANUAL
+  AI_ASSISTED
+  IMPORTED
+}
+
+/// What language a programme is actually taught in. The filter a Mongolian
+/// applicant with no TOPIK asks for first.
+enum InstructionLanguage {
+  KOREAN
+  ENGLISH
+  /// Some courses in each — the school calls it a "track" or a "dual" option.
+  KOREAN_ENGLISH
+}
+
 model University {
   id     String         @id @default(uuid()) @db.Uuid
   slug   String         @unique
@@ -296,9 +316,10 @@ model University {
   cases    Case[]
   clients  Client[]
 
-  requirementRules RequirementRule[]
-  applications     Application[]
-  researchRuns     IntakeResearchRun[]
+  requirementRules    RequirementRule[]
+  applications        Application[]
+  researchRuns        IntakeResearchRun[]
+  programResearchRuns ProgramResearchRun[]
 
   @@index([isPublished])
   @@index([regionEn])
@@ -335,24 +356,117 @@ model GksRankingConfig {
   @@map("gks_ranking_config")
 }
 
+/// The canonical name of a subject, and the reason "маркетинг" can be one
+/// question rather than 135 (ARCHITECTURE.md §3.3).
+///
+/// Every school words the same subject differently — 경영학과 마케팅전공,
+/// Department of Marketing, "Маркетинг менежмент" — so a programme keeps the
+/// school's own wording in `UniversityProgram.nameMn/nameEn/nameKo` and is
+/// *filed* under one of these. Search and the public filters run on the
+/// canonical row; the school's wording is what gets displayed.
+///
+/// Two levels deep, no more: a group ("Бизнес, эдийн засаг") and the subjects
+/// inside it. `aliases` is how staff teach the matcher a new school's naming —
+/// adding one and re-running the match is the whole maintenance loop.
+model StudyField {
+  id     String  @id @default(uuid()) @db.Uuid
+  slug   String  @unique
+  nameMn String
+  nameEn String
+  nameKo String?
+
+  /// Every other wording seen for this subject, in any of the three languages.
+  /// `study-field.matcher.ts` normalises against these — a Korean entry needs
+  /// no 학과/학부/전공 suffix, the matcher strips those.
+  aliases String[] @default([])
+
+  /// The broad group this subject sits in. Null on a group itself.
+  parentId String?      @db.Uuid
+  parent   StudyField?  @relation("StudyFieldTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children StudyField[] @relation("StudyFieldTree")
+
+  /// Order inside its group on the filter panel; ties fall back to `nameMn`.
+  sortOrder Int     @default(100)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs UniversityProgram[]
+
+  @@index([parentId])
+  @@index([isActive])
+  @@map("study_fields")
+}
+
+/// One programme (анги) a university runs, with what it costs.
+///
+/// Tuition is the field this table exists for, and it is quoted the way Korean
+/// schools quote it: per semester (한 학기), in KRW, with the one-off entrance
+/// fee (입학금) separate. `tuitionYear` says which academic year the number was
+/// read off — a price with no year on it is the one that gets quoted to a
+/// client two years stale.
 model UniversityProgram {
-  id            String       @id @default(uuid()) @db.Uuid
-  universityId  String       @db.Uuid
-  university    University   @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  level         ProgramLevel
-  nameMn        String
-  nameEn        String?
-  nameKo        String?
-  /// Field of study, for filtering: "Инженерчлэл", "Бизнес" …
+  id           String       @id @default(uuid()) @db.Uuid
+  universityId String       @db.Uuid
+  university   University   @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  level        ProgramLevel
+
+  /// The school's own wording, kept as the school writes it.
+  nameMn String
+  nameEn String?
+  nameKo String?
+
+  /// The canonical subject this programme is filed under — what makes
+  /// "бүх сургуулийн маркетинг" one query. Null = not yet classified; the
+  /// admin screen lists those separately so they do not quietly go missing.
+  studyFieldId String?     @db.Uuid
+  studyField   StudyField? @relation(fields: [studyFieldId], references: [id], onDelete: SetNull)
+
+  /// The school's own college/faculty, as it appears in the prospectus
+  /// (경영대학, College of Engineering). Free text next to the canonical field,
+  /// not a substitute for it.
   faculty       String?
   durationYears Float?
 
-  tuitionPerYearKrw Int?
-  tuitionPerTermKrw Int?
+  // --- Tuition (the reason this module exists) ---
+  /// Per semester, KRW. The number Korean schools actually publish.
+  tuitionPerTermKrw     Int?
+  /// Per year, KRW. Usually `tuitionPerTermKrw × 2`, but entered, never derived —
+  /// some programmes run three terms and some publish only the annual figure.
+  tuitionPerYearKrw     Int?
+  /// 입학금 — the one-off entrance fee, paid in the first semester only.
+  admissionFeeKrw       Int?
+  /// The academic year these figures were read off. Null means unknown, which
+  /// the UI must show as "мэдээлэл шинэчлэгдэж байна" rather than as current.
+  tuitionYear           Int?
+  /// Best scholarship rate a foreign student can realistically get, in percent.
+  /// Korean schools discount 30-70% for international applicants and it moves
+  /// the real cost more than the sticker price does.
+  scholarshipMaxPercent Int?
+  /// What that discount depends on, in Mongolian — TOPIK level, grades, quota.
+  scholarshipNote       String?
+
+  // --- Admission requirements ---
   /// Minimum TOPIK level required for admission (1–6).
-  topikLevel        Int?
-  ieltsScore        Float?
-  otherRequirements String?
+  topikLevel           Int?
+  ieltsScore           Float?
+  otherRequirements    String?
+  language             InstructionLanguage @default(KOREAN)
+  /// False for a programme that does not take foreign students at all — it
+  /// stays in the catalogue so nobody re-researches it every quarter.
+  acceptsInternational Boolean             @default(true)
+
+  // --- Provenance, same contract as `IntakeTerm` ---
+  sourceUrl    String?
+  sourceType   ProgramSource @default(MANUAL)
+  /// Who last checked this against the school, and when. No `verifiedAt` means
+  /// unconfirmed, and the admin list flags it.
+  verifiedAt   DateTime?
+  verifiedById String?       @db.Uuid
+  verifiedBy   User?         @relation(fields: [verifiedById], references: [id], onDelete: SetNull)
+  /// Internal — staff notes, never exposed on a public endpoint.
+  internalNote String?
 
   isPublished Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -365,7 +479,53 @@ model UniversityProgram {
   @@unique([universityId, level, nameMn])
   @@index([universityId])
   @@index([level])
+  @@index([studyFieldId])
+  @@index([tuitionPerYearKrw])
   @@map("university_programs")
+}
+
+/// One run of "look this school's programmes and tuition up online" — the same
+/// arrangement as `IntakeResearchRun`, and the same hard rule: a run produces
+/// *candidates*, staff tick the ones they believe, and the save is a human's.
+/// Nothing here becomes a `UniversityProgram` on its own.
+model ProgramResearchRun {
+  id           String     @id @default(uuid()) @db.Uuid
+  universityId String     @db.Uuid
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  /// Empty = every level.
+  levels ProgramLevel[] @default([])
+  /// Academic year the tuition was asked for.
+  year   Int
+
+  status IntakeResearchStatus @default(QUEUED)
+  model  String
+
+  /// Validated `ProgramCandidate[]` — the shape lives in `packages/shared`.
+  candidates  Json?
+  /// Grounding citations Gemini returned, so staff can check the source.
+  sources     String[] @default([])
+  /// The unparsed model output, kept for debugging a failed parse.
+  rawResponse String?
+  error       String?
+
+  promptTokens   Int?
+  responseTokens Int?
+
+  /// How many candidates from this run a human went on to save.
+  acceptedCount Int @default(0)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  requestedById String? @db.Uuid
+  requestedBy   User?   @relation(fields: [requestedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([universityId, createdAt])
+  @@index([status])
+  @@map("program_research_runs")
 }
 
 /// Intake round. Language prep runs four a year, degree programmes two (§4.1, §4.2).

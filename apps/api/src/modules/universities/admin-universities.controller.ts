@@ -31,10 +31,11 @@ import { AdmissionsService } from '../admissions/admissions.service.js';
 import { CreateUniversityDto } from './dto/create-university.dto.js';
 import { QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
 import { UpdateUniversityDto } from './dto/update-university.dto.js';
+import { AdminProgramsService } from '../programs/admin-programs.service.js';
 import {
   CreateUniversityProgramDto,
-  UpdateUniversityProgramDto,
-} from './dto/university-program.dto.js';
+  UpdateProgramDto,
+} from '../programs/dto/university-program.dto.js';
 
 /**
  * Staff catalogue management (1A-25 … 1A-27). Kept apart from the `@Public()`
@@ -51,6 +52,7 @@ export class AdminUniversitiesController {
     private readonly universities: AdminUniversitiesService,
     private readonly ranking: GksRankingService,
     private readonly admissions: AdmissionsService,
+    private readonly programs: AdminProgramsService,
   ) {}
 
   @Get()
@@ -134,31 +136,38 @@ export class AdminUniversitiesController {
   }
 
   // --- Programmes ---
+  //
+  // Kept on this path because the catalogue detail page edits programmes
+  // inline (1A-27), but the work belongs to the programmes module: the tuition
+  // columns, the study-field matching, the cache invalidation and the delete
+  // guard all live there, and a second copy here is how the two drift apart.
+  // The same arrangement as the intake routes below.
 
   @Post(':id/programs')
   @ApiOperation({ summary: 'Add a programme (1A-27)' })
-  createProgram(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CreateUniversityProgramDto) {
-    return this.universities.createProgram(id, dto);
+  createProgram(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateUniversityProgramDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.programs.create({ ...dto, universityId: id }, user.id);
   }
 
   @Patch(':id/programs/:programId')
   @ApiOperation({ summary: 'Edit a programme (1A-27)' })
   updateProgram(
-    @Param('id', ParseUUIDPipe) id: string,
     @Param('programId', ParseUUIDPipe) programId: string,
-    @Body() dto: UpdateUniversityProgramDto,
+    @Body() dto: UpdateProgramDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.universities.updateProgram(id, programId, dto);
+    return this.programs.update(programId, dto, user.id);
   }
 
   @Delete(':id/programs/:programId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a programme no case or application uses' })
-  async removeProgram(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('programId', ParseUUIDPipe) programId: string,
-  ): Promise<void> {
-    await this.universities.removeProgram(id, programId);
+  async removeProgram(@Param('programId', ParseUUIDPipe) programId: string): Promise<void> {
+    await this.programs.remove(programId);
   }
 
   // --- Intake terms ---

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "NestJS API — Prisma + PostgreSQL 17 + pgvector + Redis",
+  "description": "NestJS API \u2014 Prisma + PostgreSQL 17 + pgvector + Redis",
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
@@ -25,7 +25,8 @@
     "contract:template:import": "tsx prisma/import-contract-template.ts",
     "postinstall": "prisma generate",
     "email:preview": "tsx scripts/preview-emails.ts",
-    "contract:preview": "tsx scripts/preview-contract.ts"
+    "contract:preview": "tsx scripts/preview-contract.ts",
+    "study-fields:import": "tsx prisma/import-study-fields.ts"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",

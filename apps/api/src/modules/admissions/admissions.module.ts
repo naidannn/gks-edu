@@ -28,6 +28,8 @@ import { IntakeResearchService } from './research/intake-research.service.js';
     IntakeResearchService,
     IntakeResearchProcessor,
   ],
-  exports: [AdmissionsService, AdmissionConfigService, AdmissionsBoardService],
+  // `GeminiService` is exported for the programme-research search, which is the
+  // same client against the same admin-configured model — see `ProgramsModule`.
+  exports: [AdmissionsService, AdmissionConfigService, AdmissionsBoardService, GeminiService],
 })
 export class AdmissionsModule {}

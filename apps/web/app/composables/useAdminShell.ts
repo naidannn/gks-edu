@@ -52,6 +52,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: 'Лавлах',
     items: [
       { to: '/admin/universities', label: 'Сургууль', icon: 'school', keywords: 'university их сургууль' },
+      { to: '/admin/programs', label: 'Хөтөлбөр, төлбөр', icon: 'book-open', exact: true, keywords: 'program tuition анги мэргэжил төлбөр сургалтын' },
       { to: '/admin/admissions', label: 'Элсэлт', icon: 'calendar-days', exact: true, keywords: 'intake admission хугацаа' },
       { to: '/admin/admissions/board', label: 'Элсэлтийн самбар', icon: 'calendar-clock', keywords: 'intake board' },
     ],
@@ -82,6 +83,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { to: '/admin/settings/document-templates', label: 'Материалын загвар', icon: 'folder-cog', keywords: 'document template' },
       { to: '/admin/settings/notifications', label: 'Мэдэгдлийн загвар', icon: 'bell-ring', keywords: 'notification email' },
       { to: '/admin/settings/admissions', label: 'Элсэлтийн тохиргоо', icon: 'calendar-cog', keywords: 'intake config' },
+      { to: '/admin/settings/study-fields', label: 'Судлах чиглэл', icon: 'tags', keywords: 'study field мэргэжил чиглэл нэршил' },
       { to: '/admin/content', label: 'Контент', icon: 'newspaper', keywords: 'blog content' },
       { to: '/admin/settings/staff', label: 'Системийн хэрэглэгч', icon: 'user-cog', keywords: 'staff user role ажилтан эрх хэрэглэгч' },
     ],
@@ -93,6 +95,7 @@ export const ADMIN_QUICK_ACTIONS: AdminNavItem[] = [
   { to: '/admin/clients/new', label: 'Шинэ үйлчлүүлэгч бүртгэх', icon: 'user-plus', keywords: 'new client add' },
   { to: '/admin/universities/new', label: 'Шинэ сургууль нэмэх', icon: 'plus', keywords: 'new university add' },
   { to: '/admin/admissions/new', label: 'Шинэ элсэлт нэмэх', icon: 'calendar-plus', keywords: 'new intake add' },
+  { to: '/admin/programs/new', label: 'Шинэ хөтөлбөр нэмэх', icon: 'book-plus', keywords: 'new program add анги төлбөр' },
   { to: '/admin/universities/ranking', label: 'GKS рэйтинг тооцоолол', icon: 'trending-up', keywords: 'ranking score' },
 ];
 

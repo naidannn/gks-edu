@@ -27,6 +27,7 @@ import type {
   IntakeCandidateConfidence,
   IntakePhase,
   IntakeResearchStatus,
+  InstructionLanguage,
   IntakeSource,
   IntakeStatus,
   LeadActivityType,
@@ -37,7 +38,9 @@ import type {
   PaymentStatus,
   PostStatus,
   PrepaymentMode,
+  ProgramCandidateConfidence,
   ProgramLevel,
+  ProgramSource,
   SchoolInvoiceStatus,
   ServiceType,
   UniversityType,
@@ -83,6 +86,41 @@ export const PROGRAM_LEVEL_LABELS: Record<ProgramLevel, string> = {
   BACHELOR: 'Бакалавр',
   MASTER: 'Магистр',
   PHD: 'Доктор',
+};
+
+/**
+ * The language a programme is taught in — the filter a Mongolian applicant with
+ * no TOPIK asks about first.
+ */
+export const INSTRUCTION_LANGUAGE_LABELS: Record<InstructionLanguage, string> = {
+  KOREAN: 'Солонгос хэл',
+  ENGLISH: 'Англи хэл',
+  KOREAN_ENGLISH: 'Солонгос / англи',
+};
+
+export const INSTRUCTION_LANGUAGE_TONE: Record<InstructionLanguage, BadgeTone> = {
+  KOREAN: 'neutral',
+  ENGLISH: 'info',
+  KOREAN_ENGLISH: 'accent',
+};
+
+export const PROGRAM_SOURCE_LABELS: Record<ProgramSource, string> = {
+  MANUAL: 'Гараар',
+  AI_ASSISTED: 'LLM-ээс хянагдсан',
+  IMPORTED: 'Импортлосон',
+};
+
+/** How far the model would stand behind a researched programme and its price. */
+export const PROGRAM_CONFIDENCE_LABELS: Record<ProgramCandidateConfidence, string> = {
+  HIGH: 'Өндөр',
+  MEDIUM: 'Дунд',
+  LOW: 'Бага',
+};
+
+export const PROGRAM_CONFIDENCE_TONE: Record<ProgramCandidateConfidence, BadgeTone> = {
+  HIGH: 'success',
+  MEDIUM: 'warning',
+  LOW: 'danger',
 };
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
@@ -407,6 +445,32 @@ export function formatNumber(value: number | null | undefined): string | null {
 export function formatKrw(value: number | null | undefined): string | null {
   const formatted = formatNumber(value);
   return formatted === null ? null : `₩${formatted}`;
+}
+
+/**
+ * A semester price as a year's, when the school only published the former.
+ *
+ * Two semesters is the Korean academic year, and it is stated here rather than
+ * in the database on purpose: the columns store what the school published, and
+ * a derived figure that got written down is a figure nobody can later question.
+ */
+export function annualTuitionKrw(program: {
+  tuitionPerYearKrw: number | null;
+  tuitionPerTermKrw: number | null;
+}): number | null {
+  if (program.tuitionPerYearKrw !== null) return program.tuitionPerYearKrw;
+  return program.tuitionPerTermKrw === null ? null : program.tuitionPerTermKrw * 2;
+}
+
+/**
+ * The house rule for a price with no year on it.
+ *
+ * Korean schools republish their fee table every year, so a figure whose
+ * `tuitionYear` we do not know is not "current" — it is unknown provenance, and
+ * saying so is what stops it being quoted to a family as this year's number.
+ */
+export function tuitionYearLabel(tuitionYear: number | null | undefined): string {
+  return tuitionYear ? `${tuitionYear} оны үнэ` : 'Он тодорхойгүй';
 }
 
 /** "₩810,000 – ₩1,270,000"; falls back to whichever end is known. */

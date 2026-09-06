@@ -145,7 +145,9 @@ export class UniversitiesService {
           select: {
             ...DETAIL_FIELDS,
             programs: {
-              where: { isPublished: true },
+              // A programme the school does not open to foreign students is
+              // not news to a Mongolian visitor.
+              where: { isPublished: true, acceptsInternational: true },
               orderBy: [{ level: 'asc' }, { nameMn: 'asc' }],
               select: {
                 id: true,
@@ -154,11 +156,20 @@ export class UniversitiesService {
                 nameEn: true,
                 faculty: true,
                 durationYears: true,
-                tuitionPerYearKrw: true,
                 tuitionPerTermKrw: true,
+                tuitionPerYearKrw: true,
+                admissionFeeKrw: true,
+                tuitionYear: true,
+                scholarshipMaxPercent: true,
+                scholarshipNote: true,
                 topikLevel: true,
                 ieltsScore: true,
                 otherRequirements: true,
+                language: true,
+                acceptsInternational: true,
+                studyField: {
+                  select: { id: true, slug: true, nameMn: true, nameEn: true, nameKo: true, parentId: true },
+                },
               },
             },
             // Drafts never reach a visitor; a cancelled round is not news either.

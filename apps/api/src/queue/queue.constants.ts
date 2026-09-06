@@ -42,3 +42,11 @@ export const GKS_RANKING_INTERVAL_MS = 24 * 60 * 60 * 1000;
  */
 export const INTAKE_RESEARCH_QUEUE = 'intake-research';
 export const INTAKE_RESEARCH_JOB = 'research-intakes';
+
+/**
+ * Gemini programme/tuition research. Same arrangement as the intake search
+ * above: not a scheduler, jobs are added when staff press "Интернэтээс судлах",
+ * and a grounded search runs 30-90s, which is why it is a job at all.
+ */
+export const PROGRAM_RESEARCH_QUEUE = 'program-research';
+export const PROGRAM_RESEARCH_JOB = 'research-programs';

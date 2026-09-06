@@ -93,97 +93,29 @@ async function togglePublished() {
 const LEVEL_OPTIONS = (Object.entries(PROGRAM_LEVEL_LABELS) as [ProgramLevel, string][])
   .map(([value, label]) => ({ value, label }));
 
-const blankProgram = () => ({
-  level: 'BACHELOR' as ProgramLevel,
-  nameMn: '',
-  nameEn: '',
-  nameKo: '',
-  faculty: '',
-  durationYears: '',
-  tuitionPerYearKrw: '',
-  tuitionPerTermKrw: '',
-  topikLevel: '',
-  ieltsScore: '',
-  otherRequirements: '',
-  isPublished: true,
-});
-const programDraft = reactive(blankProgram());
-const programFormOpen = ref(false);
-const editingProgramId = ref<string | null>(null);
-const programError = ref<string | null>(null);
-const programSaving = ref(false);
+/**
+ * Programmes are edited on their own screen, not inline here.
+ *
+ * A programme now carries tuition with the year it was read off, a canonical
+ * subject and a source link — more than fits in a sub-form, and it is the same
+ * record whether it is reached from this school or from the cross-school list.
+ * One editor for it means one set of rules about what a price without a year
+ * means (`/admin/programs`).
+ */
+function editProgram(program: AdminUniversityProgram) {
+  return navigateTo(`/admin/programs/new?id=${program.id}`);
+}
+
+function addProgram() {
+  return navigateTo(`/admin/programs/new?universityId=${id.value}`);
+}
+
+/** Straight into the Gemini mode, which is how an empty school gets filled. */
+function researchPrograms() {
+  return navigateTo(`/admin/programs/new?universityId=${id.value}&mode=research`);
+}
 
 const text = (value: string) => (value.trim() ? value.trim() : null);
-const number = (value: string) => (value.trim() ? Number(value) : null);
-
-function openProgramForm(program?: AdminUniversityProgram) {
-  Object.assign(programDraft, blankProgram());
-  programError.value = null;
-  editingProgramId.value = program?.id ?? null;
-  if (program) {
-    Object.assign(programDraft, {
-      level: program.level,
-      nameMn: program.nameMn,
-      nameEn: program.nameEn ?? '',
-      nameKo: program.nameKo ?? '',
-      faculty: program.faculty ?? '',
-      durationYears: program.durationYears === null ? '' : String(program.durationYears),
-      tuitionPerYearKrw: program.tuitionPerYearKrw === null ? '' : String(program.tuitionPerYearKrw),
-      tuitionPerTermKrw: program.tuitionPerTermKrw === null ? '' : String(program.tuitionPerTermKrw),
-      topikLevel: program.topikLevel === null ? '' : String(program.topikLevel),
-      ieltsScore: program.ieltsScore === null ? '' : String(program.ieltsScore),
-      otherRequirements: program.otherRequirements ?? '',
-      isPublished: program.isPublished,
-    });
-  }
-  programFormOpen.value = true;
-}
-
-async function saveProgram() {
-  if (!programDraft.nameMn.trim()) {
-    programError.value = 'Хөтөлбөрийн нэр заавал бөглөнө.';
-    return;
-  }
-  programSaving.value = true;
-  programError.value = null;
-  try {
-    const payload = {
-      level: programDraft.level,
-      nameMn: programDraft.nameMn.trim(),
-      nameEn: text(programDraft.nameEn),
-      nameKo: text(programDraft.nameKo),
-      faculty: text(programDraft.faculty),
-      durationYears: number(programDraft.durationYears),
-      tuitionPerYearKrw: number(programDraft.tuitionPerYearKrw),
-      tuitionPerTermKrw: number(programDraft.tuitionPerTermKrw),
-      topikLevel: number(programDraft.topikLevel),
-      ieltsScore: number(programDraft.ieltsScore),
-      otherRequirements: text(programDraft.otherRequirements),
-      isPublished: programDraft.isPublished,
-    };
-    if (editingProgramId.value) {
-      await api.patch(`/admin/universities/${id.value}/programs/${editingProgramId.value}`, payload);
-    } else {
-      await api.post(`/admin/universities/${id.value}/programs`, payload);
-    }
-    programFormOpen.value = false;
-    await load();
-  } catch (err) {
-    programError.value = err instanceof ApiError ? err.message : 'Хөтөлбөр хадгалж чадсангүй.';
-  } finally {
-    programSaving.value = false;
-  }
-}
-
-async function removeProgram(program: AdminUniversityProgram) {
-  programError.value = null;
-  try {
-    await api.delete(`/admin/universities/${id.value}/programs/${program.id}`);
-    await load();
-  } catch (err) {
-    programError.value = err instanceof ApiError ? err.message : 'Хөтөлбөр устгаж чадсангүй.';
-  }
-}
 
 // ── Intake terms (1A-27) ───────────────────────────────────────────────────
 const MONTH_OPTIONS = [3, 6, 9, 12].map((m) => ({ value: String(m), label: INTAKE_MONTH_LABELS[m] as string }));
@@ -378,40 +310,18 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
       </form>
 
       <!-- ── Programmes ────────────────────────────────────────────────── -->
-      <DsCard title="Хөтөлбөр" :eyebrow="`${university.programs.length} хөтөлбөр`">
+      <DsCard title="Хөтөлбөр, төлбөр" :eyebrow="`${university.programs.length} хөтөлбөр`">
         <template #action>
-          <DsButton variant="secondary" size="sm" icon-left="plus" @click="openProgramForm()">Хөтөлбөр нэмэх</DsButton>
+          <DsButton variant="ghost" size="sm" icon-left="sparkles" @click="researchPrograms">
+            Интернэтээс судлах
+          </DsButton>
+          <DsButton variant="secondary" size="sm" icon-left="plus" @click="addProgram">Хөтөлбөр нэмэх</DsButton>
         </template>
-
-        <p v-if="programError" class="gks-form-page__error">{{ programError }}</p>
-
-        <div v-if="programFormOpen" class="gks-sub-form">
-          <div class="gks-form-grid">
-            <DsSelect v-model="programDraft.level" label="Түвшин" :options="LEVEL_OPTIONS" />
-            <DsInput v-model="programDraft.nameMn" label="Нэр (монгол)" required />
-            <DsInput v-model="programDraft.nameEn" label="Нэр (англи)" />
-            <DsInput v-model="programDraft.nameKo" label="Нэр (солонгос)" />
-            <DsInput v-model="programDraft.faculty" label="Чиглэл" placeholder="Инженерчлэл" />
-            <DsInput v-model="programDraft.durationYears" label="Хугацаа (жил)" type="number" step="0.5" />
-            <DsInput v-model="programDraft.tuitionPerYearKrw" label="Жилийн төлбөр (₩)" type="number" />
-            <DsInput v-model="programDraft.tuitionPerTermKrw" label="Улирлын төлбөр (₩)" type="number" />
-            <DsInput v-model="programDraft.topikLevel" label="TOPIK шаардлага" type="number" min="1" max="6" />
-            <DsInput v-model="programDraft.ieltsScore" label="IELTS оноо" type="number" step="0.5" />
-          </div>
-          <DsTextarea v-model="programDraft.otherRequirements" label="Бусад шаардлага" :rows="2" />
-          <div class="gks-form-actions">
-            <DsSwitch v-model="programDraft.isPublished" label="Нийтэд харагдана" />
-            <span class="gks-form-actions__spacer" />
-            <DsButton variant="secondary" size="sm" @click="programFormOpen = false">Болих</DsButton>
-            <DsButton variant="accent" size="sm" icon-left="save" :loading="programSaving" @click="saveProgram">
-              {{ editingProgramId ? 'Хадгалах' : 'Нэмэх' }}
-            </DsButton>
-          </div>
-        </div>
 
         <p v-if="!university.programs.length" class="gks-form-page__empty">
           Хөтөлбөр бүртгэгдээгүй байна. Хөтөлбөргүй бол каталогийн «боловсролын түвшин» шүүлтүүр
-          энэ сургуулийг олохгүй.
+          энэ сургуулийг олохгүй, мэргэжлээр хайхад ч гарч ирэхгүй. «Интернэтээс судлах» дарвал
+          Gemini энэ сургуулийн ангиуд болон төлбөрийг олж санал болгоно.
         </p>
 
         <div v-else class="gks-table-wrap gks-table-wrap--auto">
@@ -421,7 +331,7 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
                 <th>Түвшин</th>
                 <th>Нэр</th>
                 <th>Чиглэл</th>
-                <th class="gks-table__num">Хугацаа</th>
+                <th class="gks-table__num">Улирлын төлбөр</th>
                 <th class="gks-table__num">Жилийн төлбөр</th>
                 <th class="gks-table__num">TOPIK</th>
                 <th>Төлөв</th>
@@ -433,20 +343,27 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
                 <td>{{ PROGRAM_LEVEL_LABELS[p.level] }}</td>
                 <td>
                   <span class="gks-cell-name">{{ p.nameMn }}</span>
-                  <span v-if="p.nameEn" class="gks-cell-sub">{{ p.nameEn }}</span>
+                  <span v-if="p.nameKo" class="gks-cell-sub">{{ p.nameKo }}</span>
+                  <span v-else-if="p.nameEn" class="gks-cell-sub">{{ p.nameEn }}</span>
                 </td>
-                <td>{{ p.faculty ?? '—' }}</td>
-                <td class="gks-tnum gks-table__num">{{ p.durationYears ?? '—' }}</td>
-                <td class="gks-tnum gks-table__num">{{ formatKrw(p.tuitionPerYearKrw) ?? '—' }}</td>
+                <td>
+                  <DsBadge v-if="p.studyField" tone="neutral">{{ p.studyField.nameMn }}</DsBadge>
+                  <DsBadge v-else tone="warning">Ангилаагүй</DsBadge>
+                </td>
+                <td class="gks-tnum gks-table__num">{{ formatKrw(p.tuitionPerTermKrw) ?? '—' }}</td>
+                <td class="gks-tnum gks-table__num">
+                  {{ formatKrw(annualTuitionKrw(p)) ?? '—' }}
+                  <span class="gks-cell-sub">{{ tuitionYearLabel(p.tuitionYear) }}</span>
+                </td>
                 <td class="gks-tnum gks-table__num">{{ p.topikLevel ?? '—' }}</td>
                 <td>
                   <DsBadge :tone="p.isPublished ? 'success' : 'neutral'">
                     {{ p.isPublished ? 'Нийтэд' : 'Нуусан' }}
                   </DsBadge>
+                  <DsBadge v-if="!p.verifiedAt" tone="warning">Хянагдаагүй</DsBadge>
                 </td>
                 <td class="gks-table__actions">
-                  <DsIconButton icon="pencil" label="Засах" size="sm" @click="openProgramForm(p)" />
-                  <DsIconButton icon="trash-2" label="Устгах" size="sm" @click="removeProgram(p)" />
+                  <DsIconButton icon="pencil" label="Засах" size="sm" @click="editProgram(p)" />
                 </td>
               </tr>
             </tbody>

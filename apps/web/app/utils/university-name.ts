@@ -43,6 +43,23 @@ export function universitySubName(university: NamedUniversity | null | undefined
   return parts.length ? parts.join(' · ') : null;
 }
 
+/**
+ * "Сөүл" or "Ансан, Кёнги" — where a school actually is.
+ *
+ * Korea's metropolitan cities are their own region, so `cityMn` and `regionMn`
+ * are the same word for Seoul, Busan, Daejeon and the rest. Printing both gives
+ * "Тэжон, Тэжон", which reads as a bug because it is one.
+ */
+export function universityPlace(
+  university: { cityMn?: string | null; regionMn?: string | null } | null | undefined,
+): string {
+  const city = university?.cityMn?.trim();
+  const region = university?.regionMn?.trim();
+  if (!city) return region ?? '';
+  if (!region || region === city) return city;
+  return `${city}, ${region}`;
+}
+
 /** Both lines in one string, for a `<option>` or a one-line cell. */
 export function universityLabel(university: NamedUniversity | null | undefined, fallback = '—'): string {
   const name = universityName(university, fallback);

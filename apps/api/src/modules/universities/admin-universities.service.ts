@@ -8,10 +8,6 @@ import { LIST_CACHE_PATTERN } from './universities.service.js';
 import type { CreateUniversityDto } from './dto/create-university.dto.js';
 import type { AdminUniversitySort, QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
 import type { UpdateUniversityDto } from './dto/update-university.dto.js';
-import type {
-  CreateUniversityProgramDto,
-  UpdateUniversityProgramDto,
-} from './dto/university-program.dto.js';
 
 /**
  * Row of the staff catalogue. Draft schools and the two internal notes are the
@@ -97,9 +93,21 @@ const PROGRAM_FIELDS = {
   durationYears: true,
   tuitionPerYearKrw: true,
   tuitionPerTermKrw: true,
+  admissionFeeKrw: true,
+  tuitionYear: true,
+  scholarshipMaxPercent: true,
+  scholarshipNote: true,
   topikLevel: true,
   ieltsScore: true,
   otherRequirements: true,
+  language: true,
+  acceptsInternational: true,
+  studyFieldId: true,
+  studyField: { select: { id: true, slug: true, nameMn: true, nameEn: true, nameKo: true, parentId: true } },
+  sourceUrl: true,
+  sourceType: true,
+  verifiedAt: true,
+  internalNote: true,
   isPublished: true,
 } satisfies Prisma.UniversityProgramSelect;
 
@@ -310,61 +318,6 @@ export class AdminUniversitiesService {
     await this.invalidate(university.slug);
   }
 
-  // --- Programmes (1A-24) ---
-
-  async createProgram(universityId: string, dto: CreateUniversityProgramDto) {
-    const slug = await this.requireSlug(universityId);
-
-    const duplicate = await this.prisma.universityProgram.findFirst({
-      where: { universityId, level: dto.level, nameMn: dto.nameMn },
-      select: { id: true },
-    });
-    if (duplicate) throw new ConflictException('Энэ түвшинд ижил нэртэй хөтөлбөр бүртгэгдсэн байна.');
-
-    const program = await this.prisma.universityProgram.create({
-      data: { ...this.stripUndefined(dto), universityId } as Prisma.UniversityProgramUncheckedCreateInput,
-      select: PROGRAM_FIELDS,
-    });
-
-    await this.invalidate(slug);
-    return program;
-  }
-
-  async updateProgram(universityId: string, programId: string, dto: UpdateUniversityProgramDto) {
-    const slug = await this.requireSlug(universityId);
-    await this.requireProgram(universityId, programId);
-
-    const program = await this.prisma.universityProgram.update({
-      where: { id: programId },
-      data: this.stripUndefined(dto) as Prisma.UniversityProgramUpdateInput,
-      select: PROGRAM_FIELDS,
-    });
-
-    await this.invalidate(slug);
-    return program;
-  }
-
-  async removeProgram(universityId: string, programId: string): Promise<void> {
-    const slug = await this.requireSlug(universityId);
-    await this.requireProgram(universityId, programId);
-
-    // Cases and applications point at a programme with `onDelete: SetNull`, so
-    // deleting one quietly unsets it on live records — say so instead.
-    const [cases, applications] = await Promise.all([
-      this.prisma.case.count({ where: { programId } }),
-      this.prisma.application.count({ where: { programId } }),
-    ]);
-    if (cases + applications > 0) {
-      throw new ConflictException(
-        `Энэ хөтөлбөр ${cases} хэрэг, ${applications} мэдүүлэгт ашиглагдсан тул устгах боломжгүй. `
-        + 'Оронд нь нийтлэлээс хасна уу.',
-      );
-    }
-
-    await this.prisma.universityProgram.delete({ where: { id: programId } });
-    await this.invalidate(slug);
-  }
-
   // --- Internals ---
 
   private buildWhere(query: QueryAdminUniversitiesDto): Prisma.UniversityWhereInput {
@@ -424,23 +377,6 @@ export class AdminUniversitiesService {
   private async assertSlugFree(slug: string): Promise<void> {
     const existing = await this.prisma.university.findUnique({ where: { slug }, select: { id: true } });
     if (existing) throw new ConflictException(`"${slug}" slug аль хэдийн ашиглагдсан байна.`);
-  }
-
-  private async requireSlug(universityId: string): Promise<string> {
-    const university = await this.prisma.university.findUnique({
-      where: { id: universityId },
-      select: { slug: true },
-    });
-    if (!university) throw new NotFoundException(`University ${universityId} not found`);
-    return university.slug;
-  }
-
-  private async requireProgram(universityId: string, programId: string): Promise<void> {
-    const program = await this.prisma.universityProgram.findFirst({
-      where: { id: programId, universityId },
-      select: { id: true },
-    });
-    if (!program) throw new NotFoundException(`Programme ${programId} not found`);
   }
 
 

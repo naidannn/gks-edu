@@ -77,6 +77,8 @@ Do not restate that here; extend it when infrastructure changes.
 | Зуучлалын гэрээ | `Contract` | |
 | Барьцааны гэрээ | `CollateralContract` | metadata only — never priced or automated (`gksedu.md` §5.4) |
 | Урьдчилгаа / үлдэгдэл төлбөр | `Payment` kind `PREPAYMENT` / `BALANCE` | |
+| Анги / хөтөлбөр | `UniversityProgram` | one subject at one school, with its tuition |
+| Судлах чиглэл | `StudyField` | canonical subject; every school words the same one differently |
 | Материал / бичиг баримт | `DocumentTemplate` → `CaseDocument` | template vs. instance |
 | Мэдүүлэг | `Application` | GKS has two decision rounds |
 | Урилга | `Invitation` | |
@@ -85,7 +87,7 @@ Do not restate that here; extend it when infrastructure changes.
 
 Full entity definitions and state machines: `docs/ARCHITECTURE.md` §3–§9.
 
-## Three rules that are easy to get wrong
+## Four rules that are easy to get wrong
 
 - **The school's deadline is not our deadline, and clients never see the school's.**
   `IntakeTerm.applicationDeadline` is the school's published last day; `internalDeadline`
@@ -104,6 +106,16 @@ Full entity definitions and state machines: `docs/ARCHITECTURE.md` §3–§9.
 - **Prices and prepayment are admin configuration**, not constants. 1,200,000₮ / 5,000,000₮
   and the 200,000₮ / 1,500,000₮ prepayments are *current values* stored in `ServicePricing`
   (`gksedu.md` §5.4).
+- **A school's own wording for a programme is not the subject it teaches.**
+  `경영학과(마케팅전공)`, `마케팅학부` and "Department of Marketing" are three schools'
+  names for one thing, so `UniversityProgram` keeps the school's wording and points at a
+  canonical `StudyField` — that link is the only reason "маркетинг" is one query instead of
+  135. Filing is suggested by `study-field.matcher.ts` and always overridable; a programme
+  it cannot place shows up under "ангилаагүй" rather than being guessed at. Tuition is
+  stored the way Korean schools publish it — **per semester**, with `tuitionYear` saying
+  which year's table it came from; never write the ×2 annual figure into the database.
+  `tuitionYear` is a staff signal, not a public one: the admin list sorts and flags on it
+  (`staleTuition`), the public card does not carry it (`ARCHITECTURE.md` §3.3).
 
 ## University reference data
 
@@ -149,6 +161,7 @@ pnpm dev              # web :3000 + api :3001
 pnpm prisma:migrate   # after any schema change
 pnpm prisma:seed
 pnpm ranking:import   # THE South Korea rank → theKoreaRank (--dry to preview)
+pnpm study-fields:import  # canonical subject taxonomy (--dry, --match)
 pnpm typecheck && pnpm lint && pnpm test
 pnpm tasks            # roadmap progress
 ```
