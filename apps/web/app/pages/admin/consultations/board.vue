@@ -27,18 +27,40 @@ const errorMsg = ref<string | null>(null);
 const mineOnly = ref(false);
 const dragging = ref<string | null>(null);
 const dropTarget = ref<LeadStage | null>(null);
+const truncated = ref(false);
+
+/**
+ * The board is a whole-funnel view, but `/leads` caps a page at 100, so it is
+ * assembled from pages of 100 the way the school catalogue is. `WON` and
+ * `LOST` accumulate forever, so the fetch stops at `MAX_PAGES`; sorting by
+ * `updatedAt` desc means what falls off the end is the stalest, and the board
+ * says so rather than quietly showing a short column.
+ */
+const PAGE_SIZE = 100;
+const MAX_PAGES = 5;
+
+type LeadPage = { items: LeadListItem[]; meta: { totalPages: number } };
 
 async function load() {
   pending.value = true;
   errorMsg.value = null;
+  truncated.value = false;
   try {
-    // The board is a whole-funnel view; 200 covers the office's live pipeline
-    // without paging, and the list endpoint already excludes merged rows.
-    const response = await api.get<{ items: LeadListItem[] }>('/leads', {
-      query: { limit: 200, sort: 'updatedAt', order: 'desc' },
-    });
-    leads.value = response.items;
-  } catch {
+    const query = { limit: PAGE_SIZE, sort: 'updatedAt', order: 'desc' };
+    // The list endpoint already excludes merged rows.
+    const first = await api.get<LeadPage>('/leads', { query: { ...query, page: 1 } });
+    const pages = Math.min(first.meta.totalPages, MAX_PAGES);
+    const rest = await Promise.all(
+      Array.from({ length: Math.max(0, pages - 1) }, (_, index) =>
+        api.get<LeadPage>('/leads', { query: { ...query, page: index + 2 } })),
+    );
+    leads.value = [first, ...rest].flatMap((page) => page.items);
+    truncated.value = first.meta.totalPages > MAX_PAGES;
+  } catch (error) {
+    // The message stays Mongolian, but the detail is logged: class-validator
+    // replies in English, so a rejected query must not be echoed into the UI
+    // the way a domain error from the service can be.
+    console.error('[board] /leads', error instanceof ApiError ? `${error.status} ${error.message}` : error);
     errorMsg.value = 'Самбарыг ачаалж чадсангүй';
   } finally {
     pending.value = false;
@@ -111,6 +133,9 @@ function formatDate(value: string | null): string {
 
     <p v-if="errorMsg" class="gks-board__error">{{ errorMsg }}</p>
     <p v-if="pending" class="gks-board__note">Уншиж байна…</p>
+    <p v-else-if="truncated" class="gks-board__note">
+      Сүүлд шинэчлэгдсэн {{ PAGE_SIZE * MAX_PAGES }} сэжмийг харуулж байна. Бүгдийг жагсаалтаас харна уу.
+    </p>
 
     <div v-else class="gks-board__columns">
       <section

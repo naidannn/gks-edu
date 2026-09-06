@@ -9,8 +9,9 @@ export class ApiError extends Error {
     readonly status: number,
     readonly body: ApiErrorBody | undefined,
     message: string,
+    options?: ErrorOptions,
   ) {
-    super(message);
+    super(message, options);
     this.name = 'ApiError';
   }
 }
@@ -51,11 +52,15 @@ export function useApi() {
       }
 
       const body = (error as { data?: ApiErrorBody }).data;
+      // The API answers in Mongolian, so a server-supplied message is shown
+      // verbatim. When there is no reply at all — API down, CORS, a dev-server
+      // restart mid-request — `$fetch` supplies its own English text with the
+      // URL in it; that is a log line, not something to put in front of staff.
       const message = Array.isArray(body?.message)
         ? body.message.join(', ')
-        : (body?.message ?? (error as Error).message);
+        : (body?.message ?? 'Сервертэй холбогдож чадсангүй');
 
-      throw new ApiError(status, body, message);
+      throw new ApiError(status, body, message, { cause: error });
     }
   };
 
