@@ -55,6 +55,33 @@ export interface DocumentTemplate {
   _count?: { rules: number };
 }
 
+/**
+ * A material typed onto one client's checklist (1D-22). The API saves it as a
+ * `DocumentTemplate`, so the next client is given it from the picker instead of
+ * having it retyped; no rule points at it, so the engine never issues it.
+ */
+export interface NewDocumentTemplateInput {
+  nameMn: string;
+  descriptionMn?: string;
+  sourceHint?: string;
+  issuerHint?: string;
+  needsTranslation?: boolean;
+  needsNotary?: boolean;
+  needsApostille?: boolean;
+  needsPhysicalOriginal?: boolean;
+  tipsMn?: string;
+}
+
+/** Adding a material to one case: pick a template, or write one out. */
+export interface CreateCaseDocumentInput {
+  templateId?: string;
+  template?: NewDocumentTemplateInput;
+  stage: DocStage;
+  necessity?: Necessity;
+  conditionNote?: string;
+  dueAt?: string;
+}
+
 export interface RequirementRule {
   id: string;
   templateId: string;

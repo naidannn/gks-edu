@@ -58,17 +58,7 @@ async function downloadPdf(contractId: string) {
 async function printContract(contractId: string) {
   await act(async () => {
     const blob = await api.get<Blob>(`/contracts/${contractId}/print`, { responseType: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const tab = window.open(url, '_blank');
-    if (!tab) {
-      // Popup blocked — hand the file over as a download instead of failing silently.
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Гэрээ-${contract.value?.number.replace(/\//g, '-') ?? contractId}.pdf`;
-      link.click();
-    }
-    // The new tab still needs the blob to render; revoking it now would blank the page.
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    openPdfBlob(blob, `Гэрээ-${contract.value?.number.replace(/\//g, '-') ?? contractId}.pdf`);
   });
 }
 

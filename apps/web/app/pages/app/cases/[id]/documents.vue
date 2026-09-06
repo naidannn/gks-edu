@@ -16,6 +16,11 @@ const saving = ref(false);
 const appointmentView = ref<OfficeAppointmentView | null>(null);
 const bookingAt = ref('');
 const bookingError = ref<string | null>(null);
+const printing = ref(false);
+
+/** The case shell resolves `/me/cases/:id`; the code names the printed file. */
+const caseDetail = inject<{ gksCase: Ref<{ code: string } | null> } | null>('caseDetail', null);
+const caseCode = computed(() => caseDetail?.gksCase.value?.code);
 
 async function loadAppointments() {
   appointmentView.value = await docs.appointments();
@@ -58,6 +63,18 @@ function onTransition(documentId: string, status: DocumentStatus) {
   return withBusy(() => docs.transition(documentId, status));
 }
 
+/** The same sheet the office prints (1D-21), from the client's own side. */
+async function print() {
+  printing.value = true;
+  try {
+    await docs.printChecklist(caseCode.value);
+  } catch (error) {
+    docs.error.value = error instanceof Error ? error.message : 'Жагсаалтыг хэвлэхэд алдаа гарлаа';
+  } finally {
+    printing.value = false;
+  }
+}
+
 async function book() {
   bookingError.value = null;
   if (!bookingAt.value) return;
@@ -82,6 +99,12 @@ function formatDateTime(value: string): string {
   <div class="gks-docs">
     <DsCard v-if="docs.checklist.value" padding="var(--sp-5)">
       <DocumentsProgressBar :progress="docs.checklist.value.progress" />
+      <div v-if="docs.checklist.value.documents.length" class="gks-docs__print">
+        <DsButton size="sm" variant="secondary" icon-left="printer" :loading="printing" @click="print">
+          Жагсаалтаа хэвлэх
+        </DsButton>
+        <span class="gks-docs__print-hint">A4 хуудсаар хэвлээд гар дээрээ тэмдэглэж явж болно.</span>
+      </div>
     </DsCard>
 
     <DocumentsConditionsForm :conditions="docs.conditions.value" :saving="saving" @save="onSaveConditions" />
@@ -134,6 +157,8 @@ function formatDateTime(value: string): string {
 .gks-docs__list { display: flex; flex-direction: column; gap: var(--sp-3); }
 .gks-docs__empty { color: var(--text-subtle); font-style: italic; }
 .gks-docs__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
+.gks-docs__print { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-4); }
+.gks-docs__print-hint { font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-docs__originals { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); }
 .gks-docs__originals li { display: flex; align-items: center; gap: var(--sp-2); }
 .gks-docs__booked {

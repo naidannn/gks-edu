@@ -3,6 +3,8 @@ import { Module } from '@nestjs/common';
 import { DOCUMENT_REMINDER_QUEUE } from '../../queue/queue.constants.js';
 import { CaseDocumentsController, DocumentActionsController } from './case-documents.controller.js';
 import { CaseDocumentsService } from './case-documents.service.js';
+import { ChecklistPdfService } from './checklist-pdf.service.js';
+import { ChecklistPrintService } from './checklist-print.service.js';
 import { DocumentFilesService } from './document-files.service.js';
 import { DocumentRemindersProcessor } from './document-reminders.processor.js';
 import { DocumentRemindersService } from './document-reminders.service.js';
@@ -20,6 +22,8 @@ import { WorkTasksService } from './work-tasks.service.js';
   providers: [
     RequirementsService,
     CaseDocumentsService,
+    ChecklistPdfService,
+    ChecklistPrintService,
     DocumentFilesService,
     DocumentTemplatesService,
     DocumentRemindersService,

@@ -266,7 +266,10 @@ useHead({ title: 'Материалын загвар · CRM' });
               <DsIconButton v-if="rule.isActive" icon="trash-2" label="Дүрэм хасах" @click="removeRule(rule.id)" />
             </li>
           </ul>
-          <p v-else class="gks-tpl__empty">Энэ загварт дүрэм алга — өөрөөр хэлбэл хэнд ч харагдахгүй.</p>
+          <p v-else class="gks-tpl__empty">
+            Энэ загварт дүрэм алга — хэнд ч өөрөө үүсэхгүй. Үйлчлүүлэгчийн материалын жагсаалтад
+            «Материал нэмэх» дээрээс гараар нэмэгдэнэ (1D-22).
+          </p>
 
           <div class="gks-tpl__new-rule">
             <h3 class="gks-tpl__new-rule-title">Дүрэм нэмэх</h3>

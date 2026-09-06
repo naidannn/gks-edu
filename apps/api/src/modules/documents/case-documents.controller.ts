@@ -9,12 +9,15 @@ import {
   Post,
   Put,
   Query,
+  Res,
+  StreamableFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiProduces, ApiQuery, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -22,6 +25,7 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { DocStage } from '../../prisma/client.js';
 import { CaseDocumentsService } from './case-documents.service.js';
+import { ChecklistPrintService } from './checklist-print.service.js';
 import { DocumentFilesService } from './document-files.service.js';
 import { DocumentRemindersService } from './document-reminders.service.js';
 import { UpsertCaseConditionsDto } from './dto/case-conditions.dto.js';
@@ -50,6 +54,7 @@ export class CaseDocumentsController {
     private readonly documents: CaseDocumentsService,
     private readonly requirements: RequirementsService,
     private readonly appointments: OfficeAppointmentsService,
+    private readonly checklistPrint: ChecklistPrintService,
   ) {}
 
   @Get('documents')
@@ -83,9 +88,31 @@ export class CaseDocumentsController {
     return this.requirements.resolveForCase(caseId, stage);
   }
 
+  @Get('documents/print')
+  @ApiQuery({ name: 'stage', enum: DocStage, required: false })
+  @ApiProduces('application/pdf')
+  @ApiOperation({ summary: 'The checklist as an A4 handout, rendered on demand and never stored (1D-21)' })
+  async print(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) res: Response,
+    @Query('stage') stage: DocStage = DocStage.ADMISSION,
+  ): Promise<StreamableFile> {
+    const { buffer, filename } = await this.checklistPrint.render(caseId, stage, user);
+    // The name is Cyrillic, so the quoted form is an ASCII fallback and
+    // `filename*` carries the real one (RFC 5987).
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="checklist-${caseId}.pdf"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    );
+    return new StreamableFile(buffer, { type: 'application/pdf' });
+  }
+
   @Post('documents')
   @Roles(...DOC_STAFF_ROLES)
-  @ApiOperation({ summary: 'Add a document no rule produced — e.g. one the school asked for (1E-04)' })
+  @ApiOperation({
+    summary: 'Add a document no rule produced — picked from the templates, or written out and saved as one (1E-04, 1D-22)',
+  })
   addDocument(@Param('caseId', ParseUUIDPipe) caseId: string, @Body() dto: CreateCaseDocumentDto) {
     return this.documents.createManual(caseId, dto);
   }

@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import type { CaseDocument, DocStage, DocumentChecklist, DocumentStatus, SignedFile, WorkspaceCase } from '@gks/shared';
+import type {
+  CaseDocument,
+  CreateCaseDocumentInput,
+  DocStage,
+  DocumentChecklist,
+  DocumentStatus,
+  SignedFile,
+  WorkspaceCase,
+} from '@gks/shared';
 import { ApiError } from '~/composables/useApi';
 
 /**
@@ -16,6 +24,7 @@ const api = useApi();
 const config = useRuntimeConfig();
 
 const stage = ref<DocStage>('ADMISSION');
+const adding = ref(false);
 const checklist = ref<DocumentChecklist | null>(null);
 const pending = ref(true);
 const busy = ref(false);
@@ -77,6 +86,33 @@ function resolveChecklist() {
   return act(() => api.post(`/cases/${caseId.value}/documents/resolve`, undefined, { query: { stage: stage.value } }));
 }
 
+/** A material the rules never produced — the school asked for it (1D-22). */
+async function addDocument(payload: CreateCaseDocumentInput) {
+  await act(() => api.post(`/cases/${caseId.value}/documents`, payload));
+  if (!errorMsg.value) adding.value = false;
+}
+
+/**
+ * The sheet is handed across the desk, so it leaves the system as a PDF
+ * (1D-21). Printing changes nothing, so it does not go through `act` — there
+ * is no checklist to reload afterwards.
+ */
+async function printChecklist() {
+  busy.value = true;
+  errorMsg.value = null;
+  try {
+    const blob = await api.get<Blob>(`/cases/${caseId.value}/documents/print`, {
+      query: { stage: stage.value },
+      responseType: 'blob',
+    });
+    openPdfBlob(blob, `Бүрдүүлэх материал-${props.workspaceCase.code}.pdf`);
+  } catch (err) {
+    errorMsg.value = err instanceof ApiError ? err.message : 'Жагсаалтыг хэвлэхэд алдаа гарлаа';
+  } finally {
+    busy.value = false;
+  }
+}
+
 const documents = computed<CaseDocument[]>(() => checklist.value?.documents ?? []);
 const progress = computed(() => checklist.value?.progress ?? null);
 
@@ -107,6 +143,12 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           <DsTag v-if="hasVisaStage" clickable :selected="stage === 'VISA'" @click="stage = 'VISA'">Визний материал</DsTag>
         </div>
         <div class="gks-cdocs__head-actions">
+          <DsButton size="sm" variant="accent" icon-left="plus" :disabled="busy" @click="adding = !adding">
+            Материал нэмэх
+          </DsButton>
+          <DsButton size="sm" variant="secondary" icon-left="printer" :loading="busy" @click="printChecklist">
+            Хэвлэх
+          </DsButton>
           <DsButton size="sm" variant="ghost" icon-left="refresh-cw" :loading="busy" @click="resolveChecklist">
             Жагсаалт шинэчлэх
           </DsButton>
@@ -122,6 +164,14 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
         :label="stage === 'ADMISSION' ? 'Элсэлтийн материал' : 'Визний материал'"
       />
     </DsCard>
+
+    <DocumentsAddDocument
+      v-if="adding"
+      :stage="stage"
+      :busy="busy"
+      @submit="addDocument"
+      @cancel="adding = false"
+    />
 
     <div v-if="pending && !checklist" class="gks-cdocs__skeleton" />
 

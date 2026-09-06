@@ -10,12 +10,14 @@ import type { UpsertCaseConditionsDto } from './dto/case-conditions.dto.js';
 import {
   type AddDocumentNoteDto,
   type CreateCaseDocumentDto,
+  type NewDocumentTemplateDto,
   type QueryCaseDocumentsDto,
   ReviewAction,
   type ReviewDocumentDto,
   type TransitionDocumentDto,
   type UpdateCaseDocumentDto,
 } from './dto/case-document.dto.js';
+import { toTemplateCode, uniqueTemplateCode } from './template-code.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { RequirementsService } from './requirements.service.js';
 
@@ -184,10 +186,18 @@ export class CaseDocumentsService {
 
   // ─── Writing ────────────────────────────────────────────────────────────────
 
-  /** Manual addition — a school asks for something no rule covers (1E-04). */
+  /**
+   * Manual addition — a school asks for something no rule covers (1E-04).
+   *
+   * Either a template is picked, or one is written out here and saved as a
+   * template on the way past (1D-22): the paper a school asked one client for
+   * is usually the paper it will ask the next one for.
+   */
   async createManual(caseId: string, dto: CreateCaseDocumentDto) {
+    const templateId = dto.templateId ?? (await this.templateForAdHoc(dto.template));
+
     const existing = await this.prisma.caseDocument.findUnique({
-      where: { caseId_templateId_stage: { caseId, templateId: dto.templateId, stage: dto.stage } },
+      where: { caseId_templateId_stage: { caseId, templateId, stage: dto.stage } },
     });
     if (existing) {
       return this.prisma.caseDocument.update({
@@ -205,7 +215,7 @@ export class CaseDocumentsService {
     return this.prisma.caseDocument.create({
       data: {
         caseId,
-        templateId: dto.templateId,
+        templateId,
         stage: dto.stage,
         necessity: dto.necessity ?? Necessity.REQUIRED,
         conditionNote: dto.conditionNote,
@@ -213,6 +223,43 @@ export class CaseDocumentsService {
         sortOrder: (last?.sortOrder ?? 0) + 1,
       },
     });
+  }
+
+  /**
+   * The template behind a hand-written material.
+   *
+   * A name the register already knows is reused rather than duplicated — three
+   * staff typing "Банкны тодорхойлолт" on three clients must not leave three
+   * templates behind, and the existing one keeps its own wording and flags,
+   * because it is shared with every checklist already carrying it.
+   */
+  private async templateForAdHoc(template: NewDocumentTemplateDto | undefined): Promise<string> {
+    const nameMn = template?.nameMn?.trim();
+    if (!nameMn) throw new BadRequestException('Материалын загвар сонгох, эсвэл шинэ материалын нэрийг бичнэ үү');
+
+    const known = await this.prisma.documentTemplate.findFirst({
+      where: { isActive: true, nameMn: { equals: nameMn, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (known) return known.id;
+
+    const taken = await this.prisma.documentTemplate.findMany({ select: { code: true } });
+    const created = await this.prisma.documentTemplate.create({
+      data: {
+        code: uniqueTemplateCode(toTemplateCode(nameMn), taken.map((row) => row.code)),
+        nameMn,
+        descriptionMn: template?.descriptionMn?.trim() || null,
+        sourceHint: template?.sourceHint?.trim() || null,
+        issuerHint: template?.issuerHint?.trim() || null,
+        needsTranslation: template?.needsTranslation ?? false,
+        needsNotary: template?.needsNotary ?? false,
+        needsApostille: template?.needsApostille ?? false,
+        needsPhysicalOriginal: template?.needsPhysicalOriginal ?? false,
+        tipsMn: template?.tipsMn?.trim() || null,
+      },
+      select: { id: true },
+    });
+    return created.id;
   }
 
   async update(id: string, dto: UpdateCaseDocumentDto) {

@@ -89,6 +89,14 @@ export function useCaseDocuments(caseId: Ref<string> | string) {
     window.open(await fileUrl(fileId), '_blank', 'noopener');
   }
 
+  /** The checklist as an A4 handout (1D-21) — rendered on demand, never stored. */
+  async function printChecklist(caseCode?: string) {
+    const blob = await api.get<Blob>(`/cases/${id.value}/documents/print?stage=${stage.value}`, {
+      responseType: 'blob',
+    });
+    openPdfBlob(blob, `Бүрдүүлэх материал-${caseCode ?? id.value}.pdf`);
+  }
+
   function appointments() {
     return api.get<OfficeAppointmentView>(`/cases/${id.value}/appointments`);
   }
@@ -114,6 +122,7 @@ export function useCaseDocuments(caseId: Ref<string> | string) {
     removeFile,
     fileUrl,
     openFile,
+    printChecklist,
     appointments,
     bookAppointment,
   };
