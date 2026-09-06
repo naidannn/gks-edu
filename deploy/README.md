@@ -150,9 +150,13 @@ failing:
 | `QPAY_USERNAME` / `QPAY_PASSWORD` / `QPAY_INVOICE_CODE` | `QPAY_MOCK=true` — invoices are faked, no real payment is taken |
 | `GOOGLE_CLIENT_ID` / `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | the "Google-ээр нэвтрэх" button does not render; `POST /auth/google` returns 503 |
 | `RESEND_API_KEY` | emails are written to the log instead of sent |
-| `SLACK_BOT_TOKEN` / `SLACK_CHANNEL_ID` | staff-channel messages are written to the log instead of posted |
 | SMS gateway | not chosen yet (`ARCHITECTURE.md` §18 q.10) — messages are logged |
 | `NUXT_PUBLIC_GA_ID` | no analytics script |
+
+`SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` **are** set (2026-09-06): a consultation
+request, a new account, a signed contract and a received payment post to the
+office channel. The bot has to stay invited to that channel — remove it and
+Slack answers `not_in_channel`, which the API logs and swallows.
 
 ---
 
