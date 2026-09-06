@@ -17,6 +17,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { SlackService } from '../notifications/slack.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { amountInWordsMnCapitalized } from './amount-words.util.js';
 import { ContractPdfService } from './contract-pdf.service.js';
@@ -64,6 +65,7 @@ export class ContractsService {
     private readonly storage: StorageService,
     private readonly otp: OtpService,
     private readonly notifications: NotificationsService,
+    private readonly slack: SlackService,
   ) {}
 
   // ─── Templates (1C-06) ────────────────────────────────────────────────────
@@ -323,6 +325,20 @@ export class ContractsService {
         contractNumber: full.number,
         serviceName: SERVICE_TYPE_LABELS[full.case.serviceType],
       },
+    });
+
+    await this.slack.notify({
+      emoji: '✍️',
+      title: 'Гэрээнд гарын үсэг зурагдлаа',
+      fields: [
+        { label: 'Гэрээний дугаар', value: full.number },
+        { label: 'Хэрэг', value: full.case.code },
+        { label: 'Үйлчилгээ', value: SERVICE_TYPE_LABELS[full.case.serviceType] },
+        { label: 'Хэлбэр', value: full.type === ContractType.ELECTRONIC ? 'Цахим' : 'Цаасан' },
+      ],
+      // The contract admin screen is a list, not a detail page — the case is
+      // where the signed PDF is actually opened.
+      link: { label: 'Хэргийг нээх', path: `/admin/cases/${full.caseId}` },
     });
 
     return updated;

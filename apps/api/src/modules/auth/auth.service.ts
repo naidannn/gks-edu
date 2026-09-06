@@ -13,6 +13,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { SlackService } from '../notifications/slack.service.js';
 import type { ChangePasswordDto } from './dto/password-reset.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
@@ -38,6 +39,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
+    private readonly slack: SlackService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthSession> {
@@ -54,7 +56,7 @@ export class AuthService {
       },
     });
 
-    await this.welcome(user);
+    await this.welcome(user, 'И-мэйл, нууц үг');
     return this.issueSession(user);
   }
 
@@ -117,7 +119,7 @@ export class AuthService {
       const created = await this.prisma.user.create({
         data: { email: payload.email, googleId, name: payload.name ?? null },
       });
-      await this.welcome(created);
+      await this.welcome(created, 'Google');
       return this.issueSession(created);
     }
 
@@ -228,16 +230,32 @@ export class AuthService {
   }
 
   /**
-   * The first email of the journey (§16). It goes through the dispatcher like
-   * every other notification — so it lands in the in-app centre too, and an
-   * admin can reword it — and `dispatch` never throws, so a mail outage can
-   * not fail a registration.
+   * The first email of the journey (§16), plus the office's Slack ping — both
+   * registration paths (password and Google) land here. It goes through the
+   * dispatcher like every other notification — so it lands in the in-app
+   * centre too, and an admin can reword it — and neither `dispatch` nor
+   * `notify` throws, so a mail or Slack outage can not fail a registration.
+   *
+   * @param via How the account was opened — the one thing the office cannot
+   *            read off the row itself.
    */
-  private async welcome(user: Pick<User, 'id' | 'email' | 'name'>): Promise<void> {
+  private async welcome(user: Pick<User, 'id' | 'email' | 'name'>, via: string): Promise<void> {
     await this.notifications.dispatch({
       event: NotificationEvent.ACCOUNT_CREATED,
       userIds: [user.id],
       context: { clientName: user.name ?? 'Эрхэм харилцагч', userEmail: user.email },
+    });
+
+    await this.slack.notify({
+      emoji: '🙋',
+      title: 'Шинэ хэрэглэгч бүртгүүлсэн',
+      fields: [
+        { label: 'Нэр', value: user.name },
+        { label: 'И-мэйл', value: user.email },
+        { label: 'Бүртгэлийн хэлбэр', value: via },
+      ],
+      // No link: a fresh account has no `Client` row yet, and the admin list
+      // has no URL-driven search to point at. The address above is the handle.
     });
   }
 

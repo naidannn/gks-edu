@@ -3,6 +3,7 @@ import { LeadActivityType, LeadSource } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { EmailService } from '../notifications/email.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
+import type { SlackService } from '../notifications/slack.service.js';
 import { LeadsService, normalizePhone } from './leads.service.js';
 import type { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 
@@ -11,7 +12,17 @@ function prismaStub(overrides: { recentLead?: { id: string } | null } = {}) {
   const prisma = {
     lead: {
       findFirst: vi.fn().mockResolvedValue(overrides.recentLead ?? null),
-      create: vi.fn().mockResolvedValue({ id: 'new-lead' }),
+      // Mirrors the `select` on the real create — the staff notification reads
+      // these fields straight off the returned row.
+      create: vi.fn().mockResolvedValue({
+        id: 'new-lead',
+        firstName: 'Бат',
+        lastName: 'Дорж',
+        phone: '+97699112233',
+        email: 'test@example.com',
+        source: LeadSource.WEBSITE,
+        interestedServices: [],
+      }),
     },
     leadActivity: { create: vi.fn().mockResolvedValue({ id: 'activity' }) },
     university: { findMany: vi.fn().mockResolvedValue([{ id: 'uni-1' }]) },
@@ -30,6 +41,10 @@ function emailStub() {
     send: vi.fn().mockResolvedValue(undefined),
     link: (path: string) => `https://gksedu.mn${path}`,
   } as unknown as EmailService;
+}
+
+function slackStub() {
+  return { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
 }
 
 const base: CreatePublicLeadDto = {
@@ -52,7 +67,7 @@ describe('normalizePhone', () => {
 describe('LeadsService.createFromPublicForm', () => {
   it('creates a lead with an opening activity', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
 
     const result = await service.createFromPublicForm({
       ...base,
@@ -72,7 +87,7 @@ describe('LeadsService.createFromPublicForm', () => {
 
   it('drops honeypot submissions without writing anything', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
 
     const result = await service.createFromPublicForm({ ...base, website: 'http://spam.example' });
 
@@ -83,7 +98,7 @@ describe('LeadsService.createFromPublicForm', () => {
 
   it('merges a repeat submission from the same number into the existing lead', async () => {
     const prisma = prismaStub({ recentLead: { id: 'existing-lead' } });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
 
     const result = await service.createFromPublicForm({ ...base, note: 'Дахин холбогдлоо' });
 

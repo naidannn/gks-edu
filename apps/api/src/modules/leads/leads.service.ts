@@ -7,6 +7,7 @@ import { EmailService } from '../notifications/email.service.js';
 import { leadReceivedEmail } from '../notifications/email/transactional.js';
 import { LEAD_SOURCE_LABELS, SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { SlackService } from '../notifications/slack.service.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import type { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
 import type { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
@@ -62,6 +63,7 @@ export class LeadsService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
     private readonly email: EmailService,
+    private readonly slack: SlackService,
   ) {}
 
   /**
@@ -94,6 +96,19 @@ export class LeadsService {
           meta: { channel: 'website_form', repeat: true } satisfies Prisma.InputJsonObject,
         },
       });
+      // A second form inside the dedupe window means the visitor is still
+      // waiting for a call — worth saying out loud, not just filing.
+      await this.slack.notify({
+        emoji: '🔁',
+        title: 'Давтан зөвлөгөөний хүсэлт',
+        fields: [
+          { label: 'Нэр', value: `${dto.lastName ?? ''} ${dto.firstName ?? ''}`.trim() },
+          { label: 'Утас', value: phone },
+          { label: 'Тэмдэглэл', value: dto.note },
+        ],
+        link: { label: 'CRM дээр нээх', path: `/admin/leads/${recent.id}` },
+      });
+
       return { id: recent.id, merged: true };
     }
 
@@ -152,6 +167,22 @@ export class LeadsService {
     source: LeadSource;
     interestedServices: ServiceType[];
   }): Promise<void> {
+    await this.slack.notify({
+      emoji: '🔔',
+      title: 'Шинэ зөвлөгөөний хүсэлт',
+      fields: [
+        { label: 'Нэр', value: `${lead.lastName} ${lead.firstName}`.trim() },
+        { label: 'Утас', value: lead.phone },
+        { label: 'И-мэйл', value: lead.email },
+        { label: 'Эх сурвалж', value: LEAD_SOURCE_LABELS[lead.source] },
+        {
+          label: 'Сонирхсон үйлчилгээ',
+          value: lead.interestedServices.map((service) => SERVICE_TYPE_LABELS[service]).join(', '),
+        },
+      ],
+      link: { label: 'CRM дээр нээх', path: `/admin/leads/${lead.id}` },
+    });
+
     const staff = await this.prisma.user.findMany({
       where: { isActive: true, role: { in: STAFF_ROLES as unknown as Role[] } },
       select: { id: true },

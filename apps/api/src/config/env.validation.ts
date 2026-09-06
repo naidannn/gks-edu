@@ -123,6 +123,15 @@ class EnvironmentVariables {
   @IsOptional()
   SMS_DAILY_LIMIT_GLOBAL?: string;
 
+  /** Slack bot token (`xoxb-…`) with `chat:write`; unset logs instead of posting. */
+  @IsString()
+  @IsOptional()
+  SLACK_BOT_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  SLACK_CHANNEL_ID?: string;
+
   @IsString()
   @IsOptional()
   STORAGE_DRIVER?: string;

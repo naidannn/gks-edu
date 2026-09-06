@@ -63,6 +63,16 @@ export interface AppConfig {
      * office mailbox once GKS EDU names one.
      */
     replyToEmail?: string;
+    slack: {
+      /**
+       * Bot token (`xoxb-…`) with `chat:write`. Empty means "log the message
+       * instead of posting", so nothing is written to the real channel in
+       * development.
+       */
+      botToken: string;
+      /** The office channel every staff-side broadcast goes to. */
+      channelId: string;
+    };
   };
   gemini: {
     /**
@@ -143,6 +153,10 @@ export const configuration = (): AppConfig => ({
     appUrl: process.env.APP_PUBLIC_URL ?? 'http://localhost:3000',
     staffFallbackEmail: process.env.NOTIFICATION_STAFF_EMAIL,
     replyToEmail: process.env.NOTIFICATION_REPLY_TO,
+    slack: {
+      botToken: process.env.SLACK_BOT_TOKEN ?? '',
+      channelId: process.env.SLACK_CHANNEL_ID ?? '',
+    },
   },
   storage: {
     driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',

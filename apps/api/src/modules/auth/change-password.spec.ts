@@ -5,6 +5,7 @@ import { hash } from 'bcryptjs';
 import { describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
+import type { SlackService } from '../notifications/slack.service.js';
 import { AuthService } from './auth.service.js';
 
 /**
@@ -42,6 +43,7 @@ function serviceStub(user: Record<string, unknown> | null) {
     jwt as unknown as JwtService,
     config as unknown as ConfigService,
     { dispatch: vi.fn() } as unknown as NotificationsService,
+    { notify: vi.fn() } as unknown as SlackService,
   );
 
   return { service, prisma };

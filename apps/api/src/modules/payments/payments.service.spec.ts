@@ -7,6 +7,7 @@ import { CaseStage, ContractStatus, PaymentKind, PaymentStatus, Role, ServiceTyp
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { CasesService } from '../cases/cases.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
+import type { SlackService } from '../notifications/slack.service.js';
 import { PaymentsService } from './payments.service.js';
 import type { QpayClientService } from './qpay-client.service.js';
 
@@ -68,7 +69,9 @@ function buildHarness(options: {
 
   const notifications = { dispatch: vi.fn().mockResolvedValue(undefined) } as unknown as NotificationsService;
 
-  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, pollQueue);
+  const slack = { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
+
+  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, slack, pollQueue);
   return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications };
 }
 

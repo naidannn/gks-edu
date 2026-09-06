@@ -18,6 +18,7 @@ import { QPAY_POLL_INTERVAL_MS, QPAY_POLL_LIMIT, QPAY_POLL_QUEUE } from '../../q
 import { CasesService } from '../cases/cases.service.js';
 import { PAYMENT_KIND_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { SlackService } from '../notifications/slack.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreatePaymentDto } from './dto/create-payment.dto.js';
 import type { QueryPaymentsDto } from './dto/query-payments.dto.js';
@@ -41,6 +42,7 @@ export class PaymentsService {
     private readonly qpay: QpayClientService,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
+    private readonly slack: SlackService,
     @InjectQueue(QPAY_POLL_QUEUE) private readonly pollQueue: Queue,
   ) {}
 
@@ -232,6 +234,18 @@ export class PaymentsService {
             amount: formatAmountMn(withCase.amountMnt),
             paidAt: formatDateMn(withCase.paidAt),
           },
+        });
+
+        await this.slack.notify({
+          emoji: '💰',
+          title: 'Төлбөр баталгаажлаа',
+          fields: [
+            { label: 'Хэрэг', value: withCase.case.code },
+            { label: 'Төрөл', value: PAYMENT_KIND_LABELS[withCase.kind] },
+            { label: 'Дүн', value: formatAmountMn(withCase.amountMnt) },
+            { label: 'Огноо', value: formatDateMn(withCase.paidAt) },
+          ],
+          link: { label: 'Хэргийг нээх', path: `/admin/cases/${withCase.case.id}` },
         });
       }
     }

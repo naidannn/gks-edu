@@ -10,6 +10,7 @@ import { NotificationsProcessor } from './notifications.processor.js';
 import { NotificationsService } from './notifications.service.js';
 import { ReminderSweepsProcessor } from './reminder-sweeps.processor.js';
 import { ReminderSweepsService } from './reminder-sweeps.service.js';
+import { SlackService } from './slack.service.js';
 import { SmsBudgetService } from './sms-budget.service.js';
 
 /**
@@ -32,8 +33,9 @@ import { SmsBudgetService } from './sms-budget.service.js';
     ReminderSweepsProcessor,
     NotificationsProcessor,
     EmailService,
+    SlackService,
     SmsBudgetService,
   ],
-  exports: [NotificationsService, NotificationTemplatesService, ReminderSweepsService, EmailService],
+  exports: [NotificationsService, NotificationTemplatesService, ReminderSweepsService, EmailService, SlackService],
 })
 export class NotificationsModule {}

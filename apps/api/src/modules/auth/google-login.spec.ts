@@ -4,6 +4,7 @@ import type { JwtService } from '@nestjs/jwt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
+import type { SlackService } from '../notifications/slack.service.js';
 import { AuthService } from './auth.service.js';
 
 const { verifyIdToken } = vi.hoisted(() => ({ verifyIdToken: vi.fn() }));
@@ -67,6 +68,7 @@ function serviceStub(
     jwt as unknown as JwtService,
     config as unknown as ConfigService,
     notifications as unknown as NotificationsService,
+    { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService,
   );
 
   return { service, prisma };
