@@ -35,6 +35,50 @@ const NAV: NavItem[] = [
   { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
 ];
 
+/**
+ * The ≤900px bottom tab bar. Most of our traffic is a phone, and a burger
+ * costs one tap before anyone sees where they can go — so the four pages
+ * people actually come for sit on the bottom edge, within thumb reach, and
+ * the fifth tab opens the rest of `NAV` as a sheet above it.
+ *
+ * `label` is tab wording, not appbar wording: a fifth-of-a-screen tab cannot
+ * carry "Их сургуулиуд". Five is the ceiling, the same one the portal shell
+ * works to — a sixth entry goes into the sheet, never into this bar.
+ *
+ * `match` is the section prefix, so /universities/seoul-national keeps the
+ * "Сургууль" tab lit; `isActive` above is exact by design (it has query
+ * strings to weigh) and is the wrong test here.
+ */
+const TABS = [
+  { to: '/', label: 'Нүүр', icon: 'house', match: null },
+  { to: '/universities', label: 'Сургууль', icon: 'graduation-cap', match: '/universities' },
+  { to: '/admissions', label: 'Элсэлт', icon: 'calendar-days', match: '/admissions' },
+  { to: '/plan', label: 'Төлөвлөгөө', icon: 'route', match: '/plan' },
+];
+
+/**
+ * The rest of the site, for the sheet only. These pages have always lived in
+ * the footer, which is fine on a desktop and useless on a phone — the footer
+ * is a scroll away, the sheet is one tap. The appbar itself stays at five
+ * entries; this list never reaches it.
+ */
+const MORE: NavLink[] = [
+  { to: '/blog', label: 'Мэдээ' },
+  { to: '/faq', label: 'Түгээмэл асуулт' },
+  { to: '/about', label: 'Бидний тухай' },
+  { to: '/contact', label: 'Холбоо барих' },
+];
+
+/**
+ * A NAV entry the tab bar already carries. The sheet still renders it — the
+ * 901–1024px burger has no tab bar behind it and needs the full list — but
+ * CSS drops the row below 900px, so the sheet is the overflow it claims to
+ * be instead of a list with three rows the thumb is already resting on.
+ */
+function isTabbed(to: string): boolean {
+  return TABS.some((tab) => tab.to === to);
+}
+
 /** The appbar's "Үйлчилгээ" group, plus the scholarship page it sits beside. */
 const FOOTER_SERVICES = [
   { to: '/services/language-prep', label: 'Хэлний бэлтгэл' },
@@ -99,14 +143,19 @@ function isGroupActive(group: NavGroup): boolean {
   return group.children.some((child) => isActive(child.to));
 }
 
+/** Section match for the bottom tabs — a detail page keeps its tab lit. */
+function isTabActive(tab: { to: string; match: string | null }): boolean {
+  if (!tab.match) return route.path === '/';
+  return route.path === tab.match || route.path.startsWith(`${tab.match}/`);
+}
+
 /**
  * Two disclosures share one piece of state discipline: the desktop dropdown
- * and the ≤1024px panel both close on any navigation, on Escape, and — for
- * the dropdown — on a pointer landing outside the bar.
+ * and the ≤1024px panel both close on any navigation, on Escape, and on a
+ * pointer landing outside the bar, the panel and the tab bar.
  */
 const openGroup = ref<string | null>(null);
 const menuOpen = ref(false);
-const appbar = ref<HTMLElement | null>(null);
 
 function closeMenus() {
   openGroup.value = null;
@@ -115,8 +164,17 @@ function closeMenus() {
 
 watch(() => route.fullPath, closeMenus);
 
+/**
+ * One outside-tap rule for both disclosures. The panel used to sit in the
+ * header's flow, so only the dropdown needed this; now that it is a fixed
+ * overlay (and, on a phone, a sheet), a tap on the page behind has to dismiss
+ * it too. The tab bar is excluded on purpose — its "Цэс" button toggles, and
+ * closing here first would make the second tap reopen what it just shut.
+ */
 function onPointerDown(event: PointerEvent) {
-  if (appbar.value && !appbar.value.contains(event.target as Node)) openGroup.value = null;
+  const target = event.target as HTMLElement | null;
+  if (target?.closest('.gks-appbar, .gks-appbar__panel, .gks-tabbar')) return;
+  closeMenus();
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -152,7 +210,7 @@ async function onLogout() {
       </p>
     </aside>
 
-    <header ref="appbar" class="gks-appbar">
+    <header class="gks-appbar">
       <nav class="gks-appbar__nav">
         <NuxtLink to="/" class="gks-appbar__brand">
           <img src="~/assets/img/gks-logo-mark.png" alt="GKS EDU GROUP" class="gks-appbar__logo">
@@ -216,33 +274,53 @@ async function onLogout() {
           </button>
         </div>
       </nav>
-
-      <div v-show="menuOpen" class="gks-appbar__panel">
-        <template v-for="item in NAV" :key="item.label">
-          <div v-if="'children' in item" class="gks-appbar__panel-group">
-            <p class="gks-appbar__panel-title">{{ item.label }}</p>
-            <NuxtLink
-              v-for="child in item.children"
-              :key="child.to"
-              :to="child.to"
-              class="gks-appbar__panel-link"
-              @click="closeMenus"
-            >
-              {{ child.label }}
-            </NuxtLink>
-          </div>
-          <NuxtLink v-else :to="item.to" class="gks-appbar__panel-link" @click="closeMenus">
-            {{ item.label }}
-          </NuxtLink>
-        </template>
-        <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-appbar__panel-link" @click="closeMenus">
-          Миний булан
-        </NuxtLink>
-        <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__panel-link" @click="closeMenus">
-          CRM
-        </NuxtLink>
-      </div>
     </header>
+
+    <!-- The overflow of NAV, opened by the burger (tablet) or the "Цэс" tab
+         (phone). It is `position: fixed` in both, because the appbar's
+         backdrop-filter would otherwise become its containing block. -->
+    <div v-show="menuOpen" class="gks-appbar__scrim" @click="closeMenus" />
+    <div v-show="menuOpen" class="gks-appbar__panel">
+      <span class="gks-appbar__handle" aria-hidden="true" />
+      <template v-for="item in NAV" :key="item.label">
+        <div v-if="'children' in item" class="gks-appbar__panel-group">
+          <p class="gks-appbar__panel-title">{{ item.label }}</p>
+          <NuxtLink
+            v-for="child in item.children"
+            :key="child.to"
+            :to="child.to"
+            class="gks-appbar__panel-link"
+            @click="closeMenus"
+          >
+            {{ child.label }}
+          </NuxtLink>
+        </div>
+        <NuxtLink
+          v-else
+          :to="item.to"
+          class="gks-appbar__panel-link"
+          :class="{ 'gks-appbar__panel-link--tabbed': isTabbed(item.to) }"
+          @click="closeMenus"
+        >
+          {{ item.label }}
+        </NuxtLink>
+      </template>
+      <NuxtLink
+        v-for="item in MORE"
+        :key="item.to"
+        :to="item.to"
+        class="gks-appbar__panel-link"
+        @click="closeMenus"
+      >
+        {{ item.label }}
+      </NuxtLink>
+      <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-appbar__panel-link" @click="closeMenus">
+        Миний булан
+      </NuxtLink>
+      <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__panel-link" @click="closeMenus">
+        CRM
+      </NuxtLink>
+    </div>
 
     <main class="gks-main">
       <slot />
@@ -318,6 +396,30 @@ async function onLogout() {
         </div>
       </div>
     </footer>
+
+    <nav class="gks-tabbar" aria-label="Үндсэн цэс">
+      <NuxtLink
+        v-for="tab in TABS"
+        :key="tab.to"
+        :to="tab.to"
+        class="gks-tabbar__tab"
+        :class="{ 'gks-tabbar__tab--active': isTabActive(tab) }"
+        :aria-current="isTabActive(tab) ? 'page' : undefined"
+      >
+        <span class="gks-tabbar__icon"><DsIcon :name="tab.icon" :size="21" /></span>
+        <span class="gks-tabbar__label">{{ tab.label }}</span>
+      </NuxtLink>
+      <button
+        type="button"
+        class="gks-tabbar__tab"
+        :class="{ 'gks-tabbar__tab--active': menuOpen }"
+        :aria-expanded="menuOpen"
+        @click="menuOpen = !menuOpen"
+      >
+        <span class="gks-tabbar__icon"><DsIcon :name="menuOpen ? 'x' : 'menu'" :size="21" /></span>
+        <span class="gks-tabbar__label">Цэс</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -431,6 +533,17 @@ async function onLogout() {
   color: var(--text-body);
   cursor: pointer;
 }
+.gks-appbar__scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: rgba(15, 44, 87, .38);
+  /* Swallows the touch instead of letting it scroll the page underneath —
+     cheaper and less fragile than locking the body from JS. */
+  touch-action: none;
+  overscroll-behavior: contain;
+}
 .gks-appbar__panel { display: none; }
 .gks-appbar__panel-group { display: contents; }
 .gks-appbar__panel-title {
@@ -450,6 +563,7 @@ async function onLogout() {
   text-decoration: none;
 }
 .gks-appbar__panel-link:hover { color: var(--brand-600); }
+.gks-appbar__handle { display: none; }
 
 .gks-appbar__actions { display: flex; align-items: center; gap: var(--sp-3); flex: none; }
 .gks-appbar__user { font-size: var(--fs-caption); color: var(--text-subtle); }
@@ -545,6 +659,53 @@ async function onLogout() {
 }
 .gks-footer__bottom-link:hover { color: var(--n-000); }
 
+/* ---- Mobile bottom tabs (≤900px) ----
+   Four destinations plus the sheet. Same shape as the portal shell's bar, so
+   a client crossing between /universities and /app does not relearn the
+   bottom edge of the screen. */
+.gks-tabbar {
+  display: none;
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 46;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(12px);
+  border-top: var(--border-hair) solid var(--line-hairline);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.gks-tabbar__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 58px;
+  padding: var(--sp-2) 2px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-tabbar__icon {
+  display: inline-flex;
+  padding: 2px var(--sp-4);
+  border-radius: var(--radius-pill);
+  transition: var(--transition-control);
+}
+.gks-tabbar__label {
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+}
+.gks-tabbar__tab--active { color: var(--brand-700); }
+.gks-tabbar__tab--active .gks-tabbar__icon { background: var(--surface-selected); }
+.gks-tabbar__tab--active .gks-tabbar__label { font-weight: var(--fw-semibold); }
+
 @media (max-width: 1024px) {
   .gks-appbar__nav { gap: var(--sp-4); }
   .gks-appbar__links { display: none; }
@@ -553,22 +714,63 @@ async function onLogout() {
   .gks-appbar__panel {
     display: flex;
     flex-direction: column;
+    position: fixed;
+    inset: 68px 0 auto 0;
+    z-index: 45;
     max-width: var(--container-page);
-    max-height: calc(100vh - 68px);
+    max-height: calc(100dvh - 68px);
     overflow-y: auto;
     margin: 0 auto;
     padding: 0 var(--gutter-desktop) var(--sp-4);
+    background: var(--surface-raised);
     border-top: var(--border-hair) solid var(--line-soft);
+    box-shadow: var(--shadow-menu);
   }
   .gks-footer__inner { grid-template-columns: 1fr 1fr; }
 }
 
+/* Below 900px the burger gives way to the tab bar, and the same NAV overflow
+   opens upward as a sheet: the thumb is at the bottom of the phone, so the
+   panel it summons should be too. */
+@media (max-width: 900px) {
+  .gks-appbar__burger { display: none; }
+  .gks-tabbar { display: grid; }
+  .gks-appbar__scrim { display: block; }
+
+  .gks-appbar__panel {
+    inset: auto 0 calc(58px + env(safe-area-inset-bottom, 0px)) 0;
+    max-height: 60dvh;
+    padding: var(--sp-2) var(--gutter-mobile) var(--sp-3);
+    border-top: 0;
+    border-radius: var(--radius-3) var(--radius-3) 0 0;
+    box-shadow: 0 -12px 32px rgba(15, 44, 87, .18);
+  }
+  .gks-appbar__panel-link--tabbed { display: none; }
+  .gks-appbar__handle {
+    display: block;
+    flex: none;
+    align-self: center;
+    width: 36px;
+    height: 4px;
+    margin: var(--sp-2) 0 var(--sp-1);
+    border-radius: var(--radius-pill);
+    background: var(--line-hairline);
+  }
+  /* The first panel title would otherwise sit hard against the handle. */
+  .gks-appbar__panel-title:first-of-type { margin-top: var(--sp-1); }
+
+  /* Clear the fixed bar so the last row of the footer is never trapped
+     under it. */
+  .gks-footer__bottom-inner { padding-bottom: calc(var(--sp-5) + 58px + env(safe-area-inset-bottom, 0px)); }
+}
+
 @media (max-width: 640px) {
   .gks-appbar__nav { padding: var(--sp-3) var(--gutter-mobile); }
-  .gks-appbar__panel { padding: 0 var(--gutter-mobile) var(--sp-4); }
   .gks-main { padding: var(--sp-6) var(--gutter-mobile) var(--sp-9); }
   .gks-footer__inner { grid-template-columns: 1fr; padding: var(--sp-8) var(--gutter-mobile) var(--sp-6); }
-  .gks-footer__bottom-inner { padding: var(--sp-4) var(--gutter-mobile); }
+  .gks-footer__bottom-inner {
+    padding: var(--sp-4) var(--gutter-mobile) calc(var(--sp-4) + 58px + env(safe-area-inset-bottom, 0px));
+  }
   .gks-appbar__user { display: none; }
 }
 </style>
