@@ -57,6 +57,19 @@ const FOOTER_EXPLORE = [
   { to: '/plan', label: 'Суралцах төлөвлөгөө' },
   { to: '/blog', label: 'Мэдээ' },
   { to: '/faq', label: 'Түгээмэл асуулт' },
+  { to: '/about', label: 'Бидний тухай' },
+  { to: '/contact', label: 'Холбоо барих' },
+];
+
+/**
+ * The legal set (1A-33). It sits in the bottom bar rather than in a column of
+ * its own: these are pages people look for when they already have a reason to,
+ * and the copyright line is where every site trains them to look.
+ */
+const FOOTER_LEGAL = [
+  { to: '/terms', label: 'Үйлчилгээний нөхцөл' },
+  { to: '/privacy', label: 'Нууцлал' },
+  { to: '/refund', label: 'Төлбөр, буцаалт' },
 ];
 
 const year = new Date().getFullYear();
@@ -283,6 +296,16 @@ async function onLogout() {
       <div class="gks-footer__bottom">
         <div class="gks-footer__bottom-inner">
           <p class="gks-tnum">© {{ year }} GKS EDU GROUP. Бүх эрх хуулиар хамгаалагдсан.</p>
+          <nav class="gks-footer__bottom-links" aria-label="Хууль зүйн мэдээлэл">
+            <NuxtLink
+              v-for="item in FOOTER_LEGAL"
+              :key="item.to"
+              :to="item.to"
+              class="gks-footer__bottom-link"
+            >
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
           <nav class="gks-footer__bottom-links" aria-label="Хэрэглэгчийн хэсэг">
             <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-footer__bottom-link">
               Миний булан

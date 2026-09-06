@@ -60,6 +60,7 @@
 | `1A-31` | Admin: `/admin/universities/ranking` — жин тохируулах, урьдчилан харах, задаргаа, гар засвар (`gksRankBoost`) | done | M | 1A-30 |
 | `1A-32` | Google-ээр нэвтрэх: `POST /auth/google` (ID token баталгаажуулалт), `User.googleId`, нэвтрэх/бүртгүүлэх хуудсан дээрх Google товч. Баталгаажсан и-мэйл ижил байвал бүртгэлийг автоматаар холбоно (урилга хүлээж байсан бол эзэмшүүлнэ) | done | M | 1A-18 |
 | `1A-34` | SEO гүнзгийрүүлэлт: canonical URL бүх хуудсанд, шүүлттэй каталогт `noindex, follow`, хаалттай хэсэгт `noindex`, жинхэнэ 404 статус, өгөгдмөл OG зураг + favicon/manifest, `Organization`/`WebSite`/`BreadcrumbList`/`FAQPage` structured data, sitemap/robots өргөтгөл | done | M | 1A-19 |
+| `1A-33` | Хууль зүйн ба танилцуулгын хуудсууд: `/terms`, `/privacy`, `/refund`, `/about`, `/contact` + footer, бүртгэлийн зөвшөөрөл, sitemap. *(Эх бичвэрийг хуульч/бизнес батлах нь `ARCHITECTURE.md` §18 асуулт 20-д үлдсэн)* | done | M | 1A-10 |
 
 ---
 
