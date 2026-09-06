@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { paginate } from '../../common/dto/pagination.dto.js';
+import { nextYearlyCode } from '../../common/utils/yearly-code.js';
 import {
   CaseStage,
   ClientStatus,
@@ -959,12 +960,9 @@ export class ClientsService {
     return { ...rest, userId: user.id, ...this.caseSummary(user.cases) };
   }
 
-  /** `KH-{year}-{seq}` — "харилцагч", sequence resets each calendar year. */
-  private async generateCode(db: Db): Promise<string> {
-    const year = new Date().getFullYear();
-    const prefix = `KH-${year}-`;
-    const count = await db.client.count({ where: { code: { startsWith: prefix } } });
-    return `${prefix}${(count + 1).toString().padStart(4, '0')}`;
+  /** `KH-2026-0007` — "харилцагч". */
+  private generateCode(db: Db): Promise<string> {
+    return nextYearlyCode('KH', (stem) => db.client.count({ where: { code: { startsWith: stem } } }));
   }
 }
 

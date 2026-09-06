@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
-import { LeadActivityType, LeadSource, LeadStage, NotificationEvent, Prisma, type Role, type ServiceType } from '../../prisma/client.js';
+import { LeadActivityType, LeadSource, LeadStage, NotificationEvent, Prisma, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { EmailService } from '../notifications/email.service.js';
 import { leadReceivedEmail } from '../notifications/email/transactional.js';
@@ -184,7 +184,7 @@ export class LeadsService {
     });
 
     const staff = await this.prisma.user.findMany({
-      where: { isActive: true, role: { in: STAFF_ROLES as unknown as Role[] } },
+      where: { isActive: true, role: { in: [...STAFF_ROLES] } },
       select: { id: true },
     });
     if (!staff.length) return;

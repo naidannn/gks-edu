@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { OtpService } from '../../sms/otp.service.js';
 import { StorageService } from '../../storage/storage.service.js';
+import { isCrmStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import {
   BalanceTrigger,
@@ -10,7 +11,6 @@ import {
   ContractType,
   NotificationEvent,
   type Prisma,
-  Role,
   type ServiceType,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -30,7 +30,6 @@ import type { QueryContractsDto } from './dto/query-contracts.dto.js';
 import type { RegisterPhysicalContractDto } from './dto/register-physical-contract.dto.js';
 import type { UpsertCollateralContractDto } from './dto/upsert-collateral-contract.dto.js';
 
-const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
 
 /**
  * One title for every service, the way the office's signed Word contract
@@ -395,8 +394,7 @@ export class ContractsService {
   }
 
   private assertAccess(contract: { userId: string }, user: AuthenticatedUser): void {
-    const isStaff = (STAFF_ROLES as readonly Role[]).includes(user.role);
-    if (!isStaff && contract.userId !== user.id) {
+    if (!isCrmStaff(user.role) && contract.userId !== user.id) {
       throw new ForbiddenException('Энэ гэрээнд хандах эрхгүй байна');
     }
   }

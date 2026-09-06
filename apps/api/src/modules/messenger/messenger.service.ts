@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DOC_STAFF_ROLES, isStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { nextYearlyCode } from '../../common/utils/yearly-code.js';
 import {
   ConversationStatus,
   ConversationTopic,
@@ -549,12 +550,9 @@ export class MessengerService {
     });
   }
 
-  /** `CH-{year}-{seq}` — "чат", sequence resets each calendar year. */
-  private async generateCode(db: Db): Promise<string> {
-    const year = new Date().getFullYear();
-    const prefix = `CH-${year}-`;
-    const count = await db.conversation.count({ where: { code: { startsWith: prefix } } });
-    return `${prefix}${(count + 1).toString().padStart(4, '0')}`;
+  /** `CH-2026-0007` — "чат". */
+  private generateCode(db: Db): Promise<string> {
+    return nextYearlyCode('CH', (stem) => db.conversation.count({ where: { code: { startsWith: stem } } }));
   }
 
   /** Push the new message and the refreshed thread head to everyone concerned. */

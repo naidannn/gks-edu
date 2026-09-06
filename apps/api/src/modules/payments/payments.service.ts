@@ -3,6 +3,7 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundEx
 import { ConfigService } from '@nestjs/config';
 import type { Queue } from 'bullmq';
 import { paginate } from '../../common/dto/pagination.dto.js';
+import { isCrmStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import {
   CaseStage,
@@ -12,7 +13,6 @@ import {
   PaymentKind,
   PaymentStatus,
   type Prisma,
-  Role,
   type ServiceType,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -28,7 +28,6 @@ import type { QueryPaymentsDto } from './dto/query-payments.dto.js';
 import type { RegisterManualPaymentDto } from './dto/register-manual-payment.dto.js';
 import { QpayClientService } from './qpay-client.service.js';
 
-const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
 
 /** Target case stage each payment kind advances once confirmed (1C-15). */
 const PROGRESS_TARGET: Partial<Record<PaymentKind, CaseStage>> = {
@@ -57,8 +56,7 @@ export class PaymentsService {
   async createForCase(caseId: string, dto: CreatePaymentDto, actor: AuthenticatedUser) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, include: { contract: true } });
     if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
-    const isStaff = (STAFF_ROLES as readonly Role[]).includes(actor.role);
-    if (!isStaff && gksCase.userId !== actor.id) {
+    if (!isCrmStaff(actor.role) && gksCase.userId !== actor.id) {
       throw new ForbiddenException('Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
     }
     const contract = await this.assertReadyFor(gksCase, dto.kind);
@@ -407,8 +405,7 @@ export class PaymentsService {
   }
 
   private assertAccess(payment: { case: { userId: string } }, user: AuthenticatedUser): void {
-    const isStaff = (STAFF_ROLES as readonly Role[]).includes(user.role);
-    if (!isStaff && payment.case.userId !== user.id) {
+    if (!isCrmStaff(user.role) && payment.case.userId !== user.id) {
       throw new ForbiddenException('Энэ төлбөрт хандах эрхгүй байна');
     }
   }

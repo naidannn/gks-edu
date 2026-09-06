@@ -8,7 +8,6 @@ import {
   Necessity,
   NotificationEvent,
   PaymentStatus,
-  Role,
   VisaStatus,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -323,7 +322,7 @@ export class ReminderSweepsService {
     // Unassigned leads still have to be chased — they go to every consultant.
     const fallback = due.some((lead) => !lead.assignedToId)
       ? await this.prisma.user.findMany({
-          where: { isActive: true, role: { in: STAFF_ROLES as unknown as Role[] } },
+          where: { isActive: true, role: { in: [...STAFF_ROLES] } },
           select: { id: true },
         })
       : [];
@@ -474,7 +473,7 @@ export class ReminderSweepsService {
     const needsFallback = cases.some((row) => !row.assignedConsultantId && !row.assignedDocOfficerId);
     const fallback = needsFallback
       ? await this.prisma.user.findMany({
-          where: { isActive: true, role: { in: STAFF_ROLES as unknown as Role[] } },
+          where: { isActive: true, role: { in: [...STAFF_ROLES] } },
           select: { id: true },
         })
       : [];

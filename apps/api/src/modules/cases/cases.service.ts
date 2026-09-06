@@ -1,6 +1,8 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { paginate } from '../../common/dto/pagination.dto.js';
+import { isCrmStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { nextYearlyCode } from '../../common/utils/yearly-code.js';
 import { type CaseStage, Prisma, Role, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AdmissionsService } from '../admissions/admissions.service.js';
@@ -32,7 +34,6 @@ export type ReplaceUniversityChoicesInput = {
   universityChoices: readonly UniversityChoiceInput[];
 };
 
-const STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT] as const;
 
 /** Ordering of the flow rows that make up the main line; escapes sit at 900+. */
 const MAIN_LINE_MAX_SORT = 900;
@@ -362,8 +363,7 @@ export class CasesService {
   }
 
   private assertReadAccess(found: { userId: string }, user: AuthenticatedUser): void {
-    const isStaff = (STAFF_ROLES as readonly Role[]).includes(user.role);
-    if (!isStaff && found.userId !== user.id) {
+    if (!isCrmStaff(user.role) && found.userId !== user.id) {
       throw new ForbiddenException('Энэ үйлчилгээнд хандах эрхгүй байна');
     }
   }
@@ -389,11 +389,8 @@ export class CasesService {
     return where;
   }
 
-  /** `GKS-{year}-{seq}` (§5) — sequence resets each calendar year. */
-  private async generateCode(db: Db): Promise<string> {
-    const year = new Date().getFullYear();
-    const prefix = `GKS-${year}-`;
-    const count = await db.case.count({ where: { code: { startsWith: prefix } } });
-    return `${prefix}${(count + 1).toString().padStart(4, '0')}`;
+  /** `GKS-2026-0007` (§5). */
+  private generateCode(db: Db): Promise<string> {
+    return nextYearlyCode('GKS', (stem) => db.case.count({ where: { code: { startsWith: stem } } }));
   }
 }

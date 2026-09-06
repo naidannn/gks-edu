@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { paginate } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
-import { type Prisma, Role, WorkTaskStatus } from '../../prisma/client.js';
+import { type Prisma, WorkTaskStatus } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreateWorkTaskDto, QueryWorkTasksDto, UpdateWorkTaskDto } from './dto/work-task.dto.js';
 
@@ -120,7 +120,7 @@ export class WorkTasksService {
 
   private async assertAssignable(userId: string): Promise<void> {
     const user = await this.prisma.user.findFirst({
-      where: { id: userId, isActive: true, role: { in: DOC_STAFF_ROLES as unknown as Role[] } },
+      where: { id: userId, isActive: true, role: { in: [...DOC_STAFF_ROLES] } },
     });
     if (!user) throw new BadRequestException('Идэвхтэй, тохирох эрхтэй ажилтан олдсонгүй');
   }
