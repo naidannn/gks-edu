@@ -145,7 +145,7 @@ useHead({ title: 'Материал шалгах · CRM' });
           class="gks-filters__search"
           icon-left="search"
           type="search"
-          placeholder="Хэргийн код, хэрэглэгчээр хайх…  ( / )"
+          placeholder="Үйлчилгээний код, хэрэглэгчээр хайх…  ( / )"
         />
         <DsSelect v-model="stage" :options="STAGE_OPTIONS" aria-label="Шат" />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
@@ -153,8 +153,8 @@ useHead({ title: 'Материал шалгах · CRM' });
     </DsCard>
 
     <p v-if="caseId" class="gks-review__scope">
-      Нэг хэрэг дээр шүүсэн байна.
-      <button type="button" class="gks-review__clear" @click="caseId = ''; page = 1; load()">Бүх хэргийг харах</button>
+      Нэг үйлчилгээгээр шүүсэн байна.
+      <button type="button" class="gks-review__clear" @click="caseId = ''; page = 1; load()">Бүх үйлчилгээг харах</button>
     </p>
     <p v-if="error" class="gks-review__error">{{ error }}</p>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /** Every service cycle the client has ever had, newest first (1C-17, 1G-15). */
 definePageMeta({ middleware: 'auth', layout: 'portal' });
-useHead({ title: 'Миний хэрэг' });
+useHead({ title: 'Миний үйлчилгээ' });
 
 const { overview, pending, error, load } = usePortal();
 
@@ -13,7 +13,7 @@ onMounted(() => load());
     <header class="gks-cases__head">
       <div>
         <span class="gks-eyebrow">Миний булан</span>
-        <h1 class="gks-cases__title">Миний хэрэг</h1>
+        <h1 class="gks-cases__title">Миний үйлчилгээ</h1>
       </div>
       <DsButton variant="accent" size="sm" icon-left="plus" @click="navigateTo('/app/start')">
         Шинэ үйлчилгээ
@@ -25,7 +25,7 @@ onMounted(() => load());
 
     <DsCard v-else-if="!overview?.cases.length" padding="var(--sp-8)">
       <p class="gks-cases__empty">
-        Танд одоогоор хэрэг алга байна. Үйлчилгээгээ сонгож, зуучлалын гэрээгээ өөрөө байгуулаарай.
+        Танд одоогоор үйлчилгээ алга байна. Үйлчилгээгээ сонгож, зуучлалын гэрээгээ өөрөө байгуулаарай.
       </p>
       <DsButton variant="accent" class="gks-cases__empty-cta" @click="navigateTo('/app/start')">
         Үйлчилгээ эхлүүлэх

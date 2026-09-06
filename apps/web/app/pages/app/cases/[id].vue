@@ -23,7 +23,7 @@ async function load() {
   try {
     gksCase.value = await api.get<PortalCaseDetail>(`/me/cases/${id.value}`);
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : 'Хэргийг ачаалж чадсангүй';
+    errorMsg.value = err instanceof Error ? err.message : 'Үйлчилгээг ачаалж чадсангүй';
   } finally {
     pending.value = false;
   }
@@ -49,13 +49,13 @@ function stageTone(stage: CaseStage): 'neutral' | 'info' | 'success' | 'danger' 
   return 'info';
 }
 
-useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний хэрэг') });
+useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйлчилгээ') });
 </script>
 
 <template>
   <div class="gks-mycase">
     <NuxtLink to="/app/cases" class="gks-mycase__back">
-      <DsIcon name="arrow-left" :size="16" /> Миний хэрэг
+      <DsIcon name="arrow-left" :size="16" /> Миний үйлчилгээ
     </NuxtLink>
 
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>

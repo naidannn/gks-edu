@@ -292,7 +292,7 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
                     {{ c.lastName }} {{ c.firstName }}
                   </NuxtLink>
                   <span class="gks-cell-sub gks-tnum">
-                    {{ c.code }}<template v-if="c.caseCount > 1"> · {{ c.caseCount }} хэрэг</template>
+                    {{ c.code }}<template v-if="c.caseCount > 1"> · {{ c.caseCount }} үйлчилгээ</template>
                   </span>
                 </span>
               </td>
@@ -309,7 +309,7 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
                 <DsBadge v-if="c.activeCase" :tone="CASE_STAGE_TONE[c.activeCase.stage]">
                   {{ CASE_STAGE_LABELS[c.activeCase.stage] }}
                 </DsBadge>
-                <span v-else class="gks-muted">Хэрэг нээгээгүй</span>
+                <span v-else class="gks-muted">Үйлчилгээ эхлээгүй</span>
               </td>
               <td data-label="Явц">
                 <div class="gks-progress">

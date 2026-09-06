@@ -19,7 +19,7 @@ onMounted(() => load());
 
 const NAV = [
   { to: '/app', label: 'Хяналтын самбар', short: 'Самбар', icon: 'layout-dashboard' },
-  { to: '/app/cases', label: 'Миний хэрэг', short: 'Хэрэг', icon: 'folder-open' },
+  { to: '/app/cases', label: 'Миний үйлчилгээ', short: 'Үйлчилгээ', icon: 'folder-open' },
   { to: '/app/profile', label: 'Миний мэдээлэл', short: 'Мэдээлэл', icon: 'user-round' },
   { to: '/account/saved', label: 'Хадгалсан сургууль', short: 'Хадгалсан', icon: 'bookmark' },
 ];

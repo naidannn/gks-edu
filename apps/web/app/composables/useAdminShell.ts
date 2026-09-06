@@ -61,7 +61,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: 'Үйл ажиллагаа',
     collapsible: true,
     items: [
-      { to: '/admin/cases', label: 'Хэрэг', icon: 'folder', keywords: 'case' },
+      { to: '/admin/cases', label: 'Үйлчилгээ', icon: 'folder', keywords: 'case' },
       { to: '/admin/documents', label: 'Материал шалгах', icon: 'file-check-2', keywords: 'document бичиг баримт' },
       { to: '/admin/applications', label: 'Мэдүүлэг', icon: 'graduation-cap', keywords: 'application' },
       { to: '/admin/visa', label: 'Виз', icon: 'plane', keywords: 'visa' },

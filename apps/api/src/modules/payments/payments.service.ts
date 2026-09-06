@@ -54,7 +54,7 @@ export class PaymentsService {
     if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
     const isStaff = (STAFF_ROLES as readonly Role[]).includes(actor.role);
     if (!isStaff && gksCase.userId !== actor.id) {
-      throw new ForbiddenException('Энэ хэрэгт төлбөр үүсгэх эрхгүй байна');
+      throw new ForbiddenException('Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
     }
     if (!gksCase.contract || gksCase.contract.status === ContractStatus.DRAFT) {
       throw new BadRequestException('Гэрээ гарын үсэг зураагүй тул төлбөр үүсгэх боломжгүй');
@@ -76,7 +76,7 @@ export class PaymentsService {
       },
     });
     if (!canAdvance?.isSystemOnly) {
-      throw new BadRequestException(`Хэрэг одоогийн (${gksCase.stage}) шатандаа ${dto.kind} төлбөр хүлээж авахад бэлэн биш байна`);
+      throw new BadRequestException(`Үйлчилгээ одоогийн (${gksCase.stage}) шатандаа ${dto.kind} төлбөр хүлээж авахад бэлэн биш байна`);
     }
 
     const amountMnt = this.resolveAmount(dto.kind, gksCase.contract);
@@ -240,12 +240,12 @@ export class PaymentsService {
           emoji: '💰',
           title: 'Төлбөр баталгаажлаа',
           fields: [
-            { label: 'Хэрэг', value: withCase.case.code },
+            { label: 'Үйлчилгээ', value: withCase.case.code },
             { label: 'Төрөл', value: PAYMENT_KIND_LABELS[withCase.kind] },
             { label: 'Дүн', value: formatAmountMn(withCase.amountMnt) },
             { label: 'Огноо', value: formatDateMn(withCase.paidAt) },
           ],
-          link: { label: 'Хэргийг нээх', path: `/admin/cases/${withCase.case.id}` },
+          link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${withCase.case.id}` },
         });
       }
     }

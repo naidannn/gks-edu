@@ -109,7 +109,7 @@ const ctaHref = computed(() => {
       <article class="gks-plan__date-card">
         <span class="gks-plan__date-icon"><DsIcon name="calendar-check" :size="24" /></span>
         <div>
-          <p class="gks-plan__date-label">Бүртгүүлэх огноо</p>
+          <p class="gks-plan__date-label">Бүртгэлийн эцсийн хугацаа</p>
           <p class="gks-plan__date gks-tnum">{{ formatFullDate(roadmap.registrationDeadline) }}</p>
         </div>
       </article>

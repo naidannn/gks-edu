@@ -94,8 +94,8 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
           <div class="gks-form-page__switches">
             <DsCheckbox
               v-model="openCase"
-              label="Зуучлалын хэргийг шууд нээх"
-              description="Сонгосон үйлчилгээгээр хэрэг үүсч, «Гэрээ бэлтгэж буй» шатнаас эхэлнэ."
+              label="Зуучлалын үйлчилгээг шууд эхлүүлэх"
+              description="Сонгосон үйлчилгээ «Гэрээ бэлтгэж буй» шатнаас эхэлнэ."
             />
             <DsCheckbox v-model="assignToMe" label="Би хариуцна" description="Хариуцах зөвлөхөөр өөрийгөө тохируулна." />
           </div>

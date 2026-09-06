@@ -120,7 +120,7 @@ useHead({ title: 'Мэдүүлэг · CRM' });
           class="gks-filters__search"
           icon-left="search"
           type="search"
-          placeholder="Хэргийн код, хэрэглэгчээр хайх…  ( / )"
+          placeholder="Үйлчилгээний код, хэрэглэгчээр хайх…  ( / )"
         />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
         <DsSelect v-model="serviceType" :options="SERVICE_OPTIONS" aria-label="Үйлчилгээ" />
@@ -140,7 +140,7 @@ useHead({ title: 'Мэдүүлэг · CRM' });
         </thead>
         <tbody>
           <tr v-for="item in data.items" :key="item.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/applications/${item.case.id}`)" @keydown.enter="navigateTo(`/admin/applications/${item.case.id}`)">
-            <td class="gks-tnum" data-label="Хэрэг">{{ item.case.code }}</td>
+            <td class="gks-tnum" data-label="Үйлчилгээ">{{ item.case.code }}</td>
             <td data-label="Хэрэглэгч">{{ item.case.user?.name ?? '—' }}</td>
             <td data-label="Сургууль">{{ universityName(item.university, UNKNOWN_LABEL) }}</td>
             <td data-label="Үйлчилгээ">{{ SERVICE_LABELS[item.case.serviceType] }}</td>

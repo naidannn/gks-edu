@@ -35,17 +35,17 @@ onMounted(async () => {
   }
 });
 
-useHead({ title: 'Хэрэг · CRM' });
+useHead({ title: 'Үйлчилгээ · CRM' });
 </script>
 
 <template>
   <div class="gks-caseredirect">
     <DsCard v-if="failed" accent>
-      <p>Хэргийг олж чадсангүй.</p>
-      <NuxtLink to="/admin/cases" class="gks-caseredirect__link">Хэргийн жагсаалт руу очих →</NuxtLink>
+      <p>Үйлчилгээг олж чадсангүй.</p>
+      <NuxtLink to="/admin/cases" class="gks-caseredirect__link">Үйлчилгээний жагсаалт руу очих →</NuxtLink>
     </DsCard>
 
-    <DsCard v-else-if="orphan" :title="orphan.code" eyebrow="Үйлчлүүлэгчийн бүртгэлгүй хэрэг">
+    <DsCard v-else-if="orphan" :title="orphan.code" eyebrow="Үйлчлүүлэгчийн бүртгэлгүй үйлчилгээ">
       <p class="gks-caseredirect__text">
         Энэ хэрэг <strong>{{ orphan.user.name ?? orphan.user.email }}</strong> хэрэглэгчийнх боловч түүнд
         үйлчлүүлэгчийн бүртгэл үүсээгүй тул ажлын талбар нээгдэхгүй байна. Тухайн хүнийг үйлчлүүлэгчээр
@@ -55,7 +55,7 @@ useHead({ title: 'Хэрэг · CRM' });
         <DsButton variant="accent" icon-left="user-plus" @click="navigateTo('/admin/clients/new')">
           Үйлчлүүлэгч бүртгэх
         </DsButton>
-        <DsButton variant="secondary" @click="navigateTo('/admin/cases')">Хэргийн жагсаалт</DsButton>
+        <DsButton variant="secondary" @click="navigateTo('/admin/cases')">Үйлчилгээний жагсаалт</DsButton>
       </div>
     </DsCard>
 

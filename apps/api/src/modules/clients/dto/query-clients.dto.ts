@@ -27,7 +27,7 @@ export class QueryClientsDto extends PaginationQueryDto {
   @IsOptional()
   serviceType?: ServiceType;
 
-  @ApiPropertyOptional({ enum: CaseStage, description: 'Зуучлалын үе шат — идэвхтэй хэргээр нь шүүнэ' })
+  @ApiPropertyOptional({ enum: CaseStage, description: 'Зуучлалын үе шат — идэвхтэй үйлчилгээгээр нь шүүнэ' })
   @IsEnum(CaseStage)
   @IsOptional()
   stage?: CaseStage;

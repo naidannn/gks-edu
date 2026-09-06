@@ -240,7 +240,7 @@ export class CasesService {
   private assertReadAccess(found: { userId: string }, user: AuthenticatedUser): void {
     const isStaff = (STAFF_ROLES as readonly Role[]).includes(user.role);
     if (!isStaff && found.userId !== user.id) {
-      throw new ForbiddenException('Энэ хэрэгт хандах эрхгүй байна');
+      throw new ForbiddenException('Энэ үйлчилгээнд хандах эрхгүй байна');
     }
   }
 

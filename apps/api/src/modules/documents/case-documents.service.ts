@@ -377,7 +377,7 @@ export class CaseDocumentsService {
 
   private assertOwnership(ownerId: string, actor: AuthenticatedUser): void {
     if (!isStaff(actor.role) && ownerId !== actor.id) {
-      throw new ForbiddenException('Энэ хэргийн материалд хандах эрхгүй байна');
+      throw new ForbiddenException('Энэ үйлчилгээний материалд хандах эрхгүй байна');
     }
   }
 

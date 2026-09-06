@@ -181,7 +181,7 @@ const NON_NULLABLE_FIELDS = [
 
 /** Relations that make a school undeletable — its history would go with it. */
 const BLOCKING_RELATIONS: { key: 'cases' | 'clients' | 'applications' | 'requirementRules'; label: string }[] = [
-  { key: 'cases', label: 'хэрэг' },
+  { key: 'cases', label: 'үйлчилгээ' },
   { key: 'clients', label: 'хэрэглэгч' },
   { key: 'applications', label: 'мэдүүлэг' },
   { key: 'requirementRules', label: 'материалын дүрэм' },

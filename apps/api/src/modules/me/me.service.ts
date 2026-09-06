@@ -136,7 +136,7 @@ export class MeService {
       select: { code: true },
     });
     if (open) {
-      throw new ConflictException(`Энэ үйлчилгээгээр танд нээлттэй хэрэг байна (${open.code})`);
+      throw new ConflictException(`Энэ үйлчилгээ танд аль хэдийн нээлттэй байна (${open.code})`);
     }
 
     // Both throw a readable message before anything is written, so a missing
@@ -208,7 +208,7 @@ export class MeService {
         transitions: { orderBy: { createdAt: 'desc' }, take: 20, include: { actor: { select: { id: true, name: true } } } },
       },
     });
-    if (!row) throw new NotFoundException('Хэрэг олдсонгүй');
+    if (!row) throw new NotFoundException('Үйлчилгээ олдсонгүй');
 
     return this.decorate(row);
   }

@@ -398,7 +398,7 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
         </div>
 
         <p v-if="!university.intakes.length" class="gks-form-page__empty">
-          Элсэлтийн улирал бүртгэгдээгүй байна. Хэрэг нээхэд улирал сонгох шаардлагатай.
+          Элсэлтийн улирал бүртгэгдээгүй байна. Үйлчилгээ эхлүүлэхэд улирал сонгох шаардлагатай.
         </p>
 
         <div v-else class="gks-table-wrap gks-table-wrap--auto">
@@ -474,7 +474,7 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
           <div><dt>Бүртгэсэн</dt><dd class="gks-tnum">{{ formatDate(university.createdAt) }}</dd></div>
           <div><dt>Сүүлд өөрчилсөн</dt><dd class="gks-tnum">{{ formatDate(university.updatedAt) }}</dd></div>
           <div><dt>Хадгалсан хэрэглэгч</dt><dd class="gks-tnum">{{ university._count.savedBy }}</dd></div>
-          <div><dt>Холбоотой хэрэг</dt><dd class="gks-tnum">{{ university._count.cases }}</dd></div>
+          <div><dt>Холбоотой үйлчилгээ</dt><dd class="gks-tnum">{{ university._count.cases }}</dd></div>
           <div><dt>Холбоотой мэдүүлэг</dt><dd class="gks-tnum">{{ university._count.applications }}</dd></div>
           <div><dt>Материалын дүрэм</dt><dd class="gks-tnum">{{ university._count.requirementRules }}</dd></div>
           <div>

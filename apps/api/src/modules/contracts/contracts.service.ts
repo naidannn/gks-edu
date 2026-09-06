@@ -99,7 +99,7 @@ export class ContractsService {
       include: { user: { include: { client: true } }, university: true, contract: true },
     });
     if (!gksCase) throw new NotFoundException(`Case ${dto.caseId} not found`);
-    if (gksCase.contract) throw new BadRequestException('Энэ хэрэгт аль хэдийн гэрээ үүссэн байна');
+    if (gksCase.contract) throw new BadRequestException('Энэ үйлчилгээнд аль хэдийн гэрээ үүссэн байна');
     if (gksCase.stage !== CaseStage.CONTRACT_DRAFT) {
       throw new BadRequestException('Гэрээг зөвхөн CONTRACT_DRAFT шатанд үүсгэнэ');
     }
@@ -332,13 +332,13 @@ export class ContractsService {
       title: 'Гэрээнд гарын үсэг зурагдлаа',
       fields: [
         { label: 'Гэрээний дугаар', value: full.number },
-        { label: 'Хэрэг', value: full.case.code },
+        { label: 'Үйлчилгээ', value: full.case.code },
         { label: 'Үйлчилгээ', value: SERVICE_TYPE_LABELS[full.case.serviceType] },
         { label: 'Хэлбэр', value: full.type === ContractType.ELECTRONIC ? 'Цахим' : 'Цаасан' },
       ],
       // The contract admin screen is a list, not a detail page — the case is
       // where the signed PDF is actually opened.
-      link: { label: 'Хэргийг нээх', path: `/admin/cases/${full.caseId}` },
+      link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${full.caseId}` },
     });
 
     return updated;

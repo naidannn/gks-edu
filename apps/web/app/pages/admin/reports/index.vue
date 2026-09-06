@@ -251,7 +251,7 @@ const maxMonthRevenue = computed(() =>
                 <th scope="col" class="gks-table__num">Сэжим</th>
                 <th scope="col" class="gks-table__num">Гэрээ</th>
                 <th scope="col" class="gks-table__num">Хөрвөлт</th>
-                <th scope="col" class="gks-table__num">Хэрэг</th>
+                <th scope="col" class="gks-table__num">Үйлчилгээ</th>
                 <th scope="col" class="gks-table__num">Нээлттэй ажил</th>
                 <th scope="col" class="gks-table__num">Хугацаа хэтэрсэн</th>
                 <th v-if="canSeeFinance" scope="col" class="gks-table__num">Орлого</th>

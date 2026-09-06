@@ -110,7 +110,7 @@ export const EVENT_PRESENTATION: Record<NotificationEvent, EventPresentation> = 
   [NotificationEvent.INTAKE_DEADLINE_NEAR]: {
     eyebrow: 'Элсэлт',
     tone: 'warning',
-    ctaLabel: 'Хэргээ харах',
+    ctaLabel: 'Үйлчилгээгээ харах',
   },
   [NotificationEvent.INTAKE_OPENED]: {
     eyebrow: 'Элсэлт',

@@ -100,7 +100,7 @@ function mnt(value: string): string { return formatMnt(Number(value)) ?? '—'; 
           </div>
         </template>
         <DsButton v-else :loading="creating === 'BALANCE'" @click="create('BALANCE')">Үлдэгдэл төлөх</DsButton>
-        <p v-if="!balance" class="gks-payment__hint">Таны хэрэг зохих шатандаа хүрээгүй бол алдаа гарч болно.</p>
+        <p v-if="!balance" class="gks-payment__hint">Таны үйлчилгээ зохих шатандаа хүрээгүй бол алдаа гарч болно.</p>
       </DsCard>
     </template>
   </div>

@@ -161,7 +161,7 @@ export class AdminProgramsService extends ProgramsService {
     const { cases, applications } = program._count;
     if (cases + applications > 0) {
       throw new ConflictException(
-        `Энэ хөтөлбөр ${cases} хэрэг, ${applications} мэдүүлэгт ашиглагдсан тул устгах боломжгүй. `
+        `Энэ хөтөлбөр ${cases} үйлчилгээ, ${applications} мэдүүлэгт ашиглагдсан тул устгах боломжгүй. `
         + 'Оронд нь нийтлэлээс хасна уу.',
       );
     }

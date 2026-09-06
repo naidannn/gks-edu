@@ -123,8 +123,8 @@ useHead({ title: 'Виз · CRM' });
     <header class="gks-page__head">
       <div class="gks-page__heading">
         <span class="gks-eyebrow">CRM</span>
-        <h1 class="gks-page__title">Визний хэрэг</h1>
-        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} хэрэг</p>
+        <h1 class="gks-page__title">Визний явц</h1>
+        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} виз</p>
       </div>
     </header>
 
@@ -135,7 +135,7 @@ useHead({ title: 'Виз · CRM' });
           class="gks-filters__search"
           icon-left="search"
           type="search"
-          placeholder="Хэргийн код, хэрэглэгчээр хайх…  ( / )"
+          placeholder="Үйлчилгээний код, хэрэглэгчээр хайх…  ( / )"
         />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
       </div>
@@ -146,7 +146,7 @@ useHead({ title: 'Виз · CRM' });
     <div class="gks-split">
       <aside class="gks-split__list gks-queue-list">
         <div v-if="pending && !data" class="gks-skeleton gks-skeleton--tall"><div v-for="n in 5" :key="n" class="gks-skeleton__row" /></div>
-        <p v-else-if="!data?.items.length" class="gks-visadm__empty">Визний хэрэг алга байна.</p>
+        <p v-else-if="!data?.items.length" class="gks-visadm__empty">Визний бүртгэл алга байна.</p>
         <button
           v-for="item in data?.items ?? []"
           :key="item.id"

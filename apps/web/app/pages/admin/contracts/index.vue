@@ -88,7 +88,7 @@ useHead({ title: 'Гэрээ · CRM' });
       <div class="gks-page__heading">
         <span class="gks-eyebrow">CRM · Үйл ажиллагаа</span>
         <h1 class="gks-page__title">Гэрээ</h1>
-        <p class="gks-page__hint">Төлөвөөр нь шүүж, хэрэг рүү орж дараагийн үйлдлээ гүйцэтгэнэ.</p>
+        <p class="gks-page__hint">Төлөвөөр нь шүүж, үйлчилгээ рүү орж дараагийн үйлдлээ гүйцэтгэнэ.</p>
       </div>
       <div class="gks-page__actions">
         <NuxtLink to="/admin/settings/contract-templates" class="contracts__template-link">
@@ -127,7 +127,7 @@ useHead({ title: 'Гэрээ · CRM' });
           class="gks-filters__search"
           icon-left="search"
           type="search"
-          placeholder="Хэргийн код, нэр, имэйлээр хайх…  ( / )"
+          placeholder="Үйлчилгээний код, нэр, имэйлээр хайх…  ( / )"
         />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Гэрээний төлөв" />
         <DsSelect v-model="type" :options="TYPE_OPTIONS" aria-label="Гэрээний төрөл" />

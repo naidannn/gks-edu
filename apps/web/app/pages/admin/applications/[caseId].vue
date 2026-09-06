@@ -189,7 +189,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
     <p v-if="error" class="gks-appadm__error">{{ error }}</p>
 
     <DsCard v-if="!application && !pending" title="Мэдүүлэг нээгдээгүй">
-      <p class="gks-muted">Энэ хэрэг дээр сургуулийн мэдүүлэг үүсээгүй байна.</p>
+      <p class="gks-muted">Энэ үйлчилгээнд сургуулийн мэдүүлэг үүсээгүй байна.</p>
       <DsButton variant="accent" :loading="busy" @click="open">Мэдүүлэг нээх</DsButton>
     </DsCard>
 

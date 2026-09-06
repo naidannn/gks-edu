@@ -5,7 +5,7 @@ import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { WorkTaskStatus, WorkTaskType } from '../../../prisma/client.js';
 
 export class CreateWorkTaskDto {
-  @ApiPropertyOptional({ description: 'Хэргийн ажил бол — `leadId`-тэй хамт ирж болохгүй' })
+  @ApiPropertyOptional({ description: 'Үйлчилгээний ажил бол — `leadId`-тэй хамт ирж болохгүй' })
   @IsUUID()
   @IsOptional()
   caseId?: string;

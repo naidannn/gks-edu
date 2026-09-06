@@ -145,7 +145,7 @@ async function submit() {
     await refresh();
     await navigateTo(`/app/cases/${created.id}/contract`);
   } catch (err) {
-    errorMsg.value = err instanceof ApiError ? err.message : 'Хэрэг үүсгэж чадсангүй';
+    errorMsg.value = err instanceof ApiError ? err.message : 'Үйлчилгээ эхлүүлж чадсангүй';
   } finally {
     submitting.value = false;
   }

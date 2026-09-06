@@ -404,7 +404,7 @@ export class AdmissionsService {
     const { cases, applications } = existing._count;
     if (cases + applications > 0) {
       throw new ConflictException(
-        `Энэ элсэлтийн улирал ${cases} хэрэг, ${applications} мэдүүлэгт ашиглагдсан тул устгах боломжгүй. ` +
+        `Энэ элсэлтийн улирал ${cases} үйлчилгээ, ${applications} мэдүүлэгт ашиглагдсан тул устгах боломжгүй. ` +
           'Оронд нь төлөвийг "Цуцлагдсан" болгоно уу.',
       );
     }

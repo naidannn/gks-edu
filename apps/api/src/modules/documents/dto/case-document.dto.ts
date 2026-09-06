@@ -92,7 +92,7 @@ export class QueryCaseDocumentsDto extends PaginationQueryDto {
   @IsOptional()
   caseId?: string;
 
-  @ApiPropertyOptional({ description: 'Тухайн баримт хариуцагчид хуваарилагдсан хэргүүд' })
+  @ApiPropertyOptional({ description: 'Тухайн баримт хариуцагчид хуваарилагдсан үйлчилгээнүүд' })
   @IsUUID()
   @IsOptional()
   assignedDocOfficerId?: string;

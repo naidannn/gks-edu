@@ -57,10 +57,10 @@ export class CaseAccessGuard implements CanActivate {
       where: { id: caseId },
       select: { id: true, userId: true, assignedConsultantId: true, assignedDocOfficerId: true },
     });
-    if (!found) throw new NotFoundException('Хэрэг олдсонгүй');
+    if (!found) throw new NotFoundException('Үйлчилгээ олдсонгүй');
 
     if (!this.isAllowed(user, found)) {
-      throw new ForbiddenException('Энэ хэрэгт хандах эрхгүй байна');
+      throw new ForbiddenException('Энэ үйлчилгээнд хандах эрхгүй байна');
     }
 
     request.caseAccess = {

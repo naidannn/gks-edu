@@ -5,7 +5,7 @@ import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { ApplicationDecision, ApplicationStatus, ServiceType } from '../../../prisma/client.js';
 
 export class CreateApplicationDto {
-  @ApiPropertyOptional({ description: 'Хоосон бол хэргийн сургуулийг авна' })
+  @ApiPropertyOptional({ description: 'Хоосон бол үйлчилгээний сургуулийг авна' })
   @IsUUID()
   @IsOptional()
   universityId?: string;

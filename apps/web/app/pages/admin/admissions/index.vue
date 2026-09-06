@@ -164,7 +164,7 @@ function countdown(row: AdmissionListItem | Row): string {
         <strong class="gks-tnum">{{ stats.missingDates }}</strong>
       </li>
       <li class="gks-stat" :class="{ 'gks-stat--danger': stats.atRisk > 0 }">
-        <span>Эрсдэлтэй хэрэг</span>
+        <span>Эрсдэлтэй үйлчилгээ</span>
         <strong class="gks-tnum">
           <NuxtLink to="/admin/admissions/board">{{ stats.atRisk }}</NuxtLink>
         </strong>
@@ -212,7 +212,7 @@ function countdown(row: AdmissionListItem | Row): string {
             <th scope="col">Сургуулийн хугацаа</th>
             <th scope="col">Хичээл эхлэх</th>
             <th scope="col">Үлдсэн</th>
-            <th scope="col">Хэрэг</th>
+            <th scope="col">Үйлчилгээ</th>
             <th scope="col">Төлөв</th>
             <th scope="col">Эх сурвалж</th>
           </tr>
@@ -241,7 +241,7 @@ function countdown(row: AdmissionListItem | Row): string {
             <td class="gks-tnum" data-label="Сургуулийн хугацаа">{{ formatDate(row.applicationDeadline) }}</td>
             <td class="gks-tnum" data-label="Хичээл эхлэх">{{ formatDate(row.classStartDate) }}</td>
             <td class="gks-tnum" data-label="Үлдсэн">{{ countdown(row) }}</td>
-            <td class="gks-tnum" data-label="Хэрэг">{{ row._count.cases }}</td>
+            <td class="gks-tnum" data-label="Үйлчилгээ">{{ row._count.cases }}</td>
             <td data-label="Төлөв">
               <DsBadge :tone="INTAKE_PHASE_TONE[row.phase]">{{ INTAKE_PHASE_LABELS[row.phase] }}</DsBadge>
             </td>

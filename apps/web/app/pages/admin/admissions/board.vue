@@ -81,19 +81,19 @@ function ownerLabel(row: AdmissionBoardCase): string {
         <span class="gks-eyebrow">Элсэлт</span>
         <h1 class="gks-page__title">Элсэлтийн самбар</h1>
         <p class="gks-page__hint">
-          Хэрэг бүр өөрийн элсэлтийн доор, материалын бэлэн байдлаар эрэмбэлэгдэнэ. Хамгийн дутуу нь
-          дээрээ — тэр хэрэг л хугацаагаа алдах эрсдэлтэй.
+          Үйлчилгээ бүр өөрийн элсэлтийн доор, материалын бэлэн байдлаар эрэмбэлэгдэнэ. Хамгийн дутуу нь
+          дээрээ — тэр үйлчилгээ л хугацаагаа алдах эрсдэлтэй.
         </p>
       </div>
       <div class="gks-board__totals">
-        <span class="gks-tnum">{{ totalCases }} хэрэг</span>
+        <span class="gks-tnum">{{ totalCases }} үйлчилгээ</span>
         <DsBadge v-if="totalAtRisk" tone="danger">{{ totalAtRisk }} эрсдэлтэй</DsBadge>
       </div>
     </header>
 
     <div class="gks-toggles">
       <DsTag clickable :selected="onlyAtRisk" @click="onlyAtRisk = !onlyAtRisk">Зөвхөн эрсдэлтэй</DsTag>
-      <DsTag clickable :selected="onlyMine" @click="onlyMine = !onlyMine">Зөвхөн миний хэрэг</DsTag>
+      <DsTag clickable :selected="onlyMine" @click="onlyMine = !onlyMine">Зөвхөн миний үйлчилгээ</DsTag>
     </div>
 
     <DsCard v-if="errorMsg" accent>{{ errorMsg }}</DsCard>
@@ -103,7 +103,7 @@ function ownerLabel(row: AdmissionBoardCase): string {
     </div>
 
     <DsCard v-else-if="!groups.length">
-      Элсэлт сонгосон нээлттэй хэрэг алга байна. Хэрэг үүсгэхдээ элсэлтийн улирлыг нь заавал сонгоно уу —
+      Элсэлт сонгосон идэвхтэй үйлчилгээ алга байна. Үйлчилгээ эхлүүлэхдээ элсэлтийн улирлыг нь заавал сонгоно уу —
       эс бөгөөс энэ самбар түүнийг хянаж чадахгүй.
     </DsCard>
 
@@ -133,7 +133,7 @@ function ownerLabel(row: AdmissionBoardCase): string {
         <table class="gks-table gks-table--cards">
           <thead>
             <tr>
-              <th scope="col">Хэрэг</th>
+              <th scope="col">Үйлчилгээ</th>
               <th scope="col">Үйлчлүүлэгч</th>
               <th scope="col">Үе шат</th>
               <th scope="col">Материал</th>
@@ -148,7 +148,7 @@ function ownerLabel(row: AdmissionBoardCase): string {
               :class="{ 'gks-board__row--risk': row.atRisk }"
               @click="navigateTo(`/admin/cases/${row.caseId}`)"
             >
-              <td class="gks-tnum" data-label="Хэрэг">{{ row.code }}</td>
+              <td class="gks-tnum" data-label="Үйлчилгээ">{{ row.code }}</td>
               <td data-label="Үйлчлүүлэгч">{{ row.clientName }}</td>
               <td data-label="Үе шат">{{ CASE_STAGE_LABELS[row.stage] }}</td>
               <td class="gks-tnum" data-label="Материал">

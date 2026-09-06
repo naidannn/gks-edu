@@ -9,7 +9,7 @@ const APP_URL = 'https://gksedu.mn';
 describe('parseEmailBody (1G-03 layout model)', () => {
   it('promotes `Нэр: утга` runs to a fact table, and keeps the sentence above them a paragraph', () => {
     const { blocks } = parseEmailBody(
-      'Гэрээ баталгаажлаа.\nГэрээний дугаар: GKS-C-1\nХэрэг: GKS-2026-0148',
+      'Гэрээ баталгаажлаа.\nГэрээний дугаар: GKS-C-1\nҮйлчилгээ: GKS-2026-0148',
     );
 
     expect(blocks).toEqual([
@@ -18,7 +18,7 @@ describe('parseEmailBody (1G-03 layout model)', () => {
         kind: 'facts',
         rows: [
           { label: 'Гэрээний дугаар', value: 'GKS-C-1' },
-          { label: 'Хэрэг', value: 'GKS-2026-0148' },
+          { label: 'Үйлчилгээ', value: 'GKS-2026-0148' },
         ],
       },
     ]);
@@ -57,8 +57,8 @@ describe('parseEmailBody (1G-03 layout model)', () => {
   });
 
   it('drops a fact whose value the dispatcher could not fill', () => {
-    const { blocks } = parseEmailBody('Хэрэг: GKS-1\nУрилга: —');
-    expect(blocks).toEqual([{ kind: 'facts', rows: [{ label: 'Хэрэг', value: 'GKS-1' }] }]);
+    const { blocks } = parseEmailBody('Үйлчилгээ: GKS-1\nУрилга: —');
+    expect(blocks).toEqual([{ kind: 'facts', rows: [{ label: 'Үйлчилгээ', value: 'GKS-1' }] }]);
   });
 });
 

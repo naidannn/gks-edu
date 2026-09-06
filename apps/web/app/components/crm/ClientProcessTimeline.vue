@@ -145,7 +145,7 @@ function isOverdue(task: WorkTask): boolean {
         <DsCard title="Үйлчилгээний явц" :eyebrow="SERVICE_LABELS[workspaceCase.serviceType]">
           <p v-if="currentIndex < 0" class="gks-cproc__off">
             <DsBadge tone="warning">{{ CASE_STAGE_LABELS[workspaceCase.stage] }}</DsBadge>
-            Энэ хэрэг үндсэн урсгалаас түр гарсан байна.
+            Энэ үйлчилгээ үндсэн урсгалаас түр гарсан байна.
           </p>
 
           <ol class="gks-cproc__steps">
@@ -209,7 +209,7 @@ function isOverdue(task: WorkTask): boolean {
         </DsCard>
 
         <DsCard title="Дотоод ажил" :eyebrow="`${tasks.length} даалгавар`">
-          <p v-if="!tasks.length" class="gks-cproc__muted">Энэ хэрэг дээр даалгавар үүсээгүй байна.</p>
+          <p v-if="!tasks.length" class="gks-cproc__muted">Энэ үйлчилгээнд даалгавар үүсээгүй байна.</p>
           <ul v-else class="gks-cproc__tasks">
             <li v-for="task in tasks" :key="task.id" class="gks-cproc__task">
               <div class="gks-cproc__task-text">

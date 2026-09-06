@@ -3,9 +3,9 @@ import { registerSchema } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 
 /**
- * Creating a portal account. It carries only the login itself — the identity
- * the brokerage contract is written against is collected right afterwards, on
- * `/app/profile` (1B-18).
+ * Creating a portal account. It carries only the login itself. The identity the
+ * brokerage contract is written against (`/app/profile`, 1B-18) is asked for at
+ * the point it is actually needed — starting a service — not on the way in.
  */
 definePageMeta({ layout: 'default' });
 useHead({ title: 'Бүртгүүлэх' });
@@ -44,8 +44,8 @@ async function submit() {
   pending.value = true;
   try {
     await auth.register(parsed.data.email, parsed.data.password, parsed.data.name);
-    // Straight to the profile: nothing else can happen until it is filled in.
-    await navigateTo((route.query.redirect as string) || '/app/profile');
+    // Into the cabinet, not a form: a new account has nothing to declare yet.
+    await navigateTo((route.query.redirect as string) || '/app/cases');
   } catch (err) {
     error.value = apiErrorMessage(err, 'Бүртгэл үүсгэхэд алдаа гарлаа');
   } finally {
@@ -55,27 +55,20 @@ async function submit() {
 
 /**
  * Google covers registration too: an unknown address creates the account, a
- * known one just signs in. Either way the profile still has to be filled in.
+ * known one just signs in. Either way it lands in the same place.
  */
 async function submitGoogle(idToken: string) {
   error.value = null;
   pending.value = true;
   try {
     await auth.loginWithGoogle(idToken);
-    await navigateTo((route.query.redirect as string) || '/app/profile');
+    await navigateTo((route.query.redirect as string) || '/app/cases');
   } catch (err) {
     error.value = apiErrorMessage(err, 'Google-ээр бүртгүүлж чадсангүй');
   } finally {
     pending.value = false;
   }
 }
-
-const STEPS = [
-  'Бүртгэл үүсгэнэ',
-  'Хувийн мэдээллээ бөглөнө',
-  'Үйлчилгээгээ сонгож гэрээгээ байгуулна',
-  'Урьдчилгаагаа төлж материалаа бүрдүүлнэ',
-];
 </script>
 
 <template>
@@ -83,12 +76,6 @@ const STEPS = [
     <img src="~/assets/img/gks-logo-mark.png" alt="" class="gks-auth__mark">
     <h1 class="gks-auth__title">Бүртгүүлэх</h1>
     <p class="gks-auth__lede">Солонгост суралцах замаа GKS EDU-тэй хамт эхлүүлээрэй.</p>
-
-    <ol class="gks-auth__steps">
-      <li v-for="(step, index) in STEPS" :key="step">
-        <span class="gks-auth__step-no gks-tnum">{{ index + 1 }}</span>{{ step }}
-      </li>
-    </ol>
 
     <form class="gks-auth__form" @submit.prevent="submit">
       <DsInput v-model="name" label="Нэр" autocomplete="name" placeholder="Батбаярын Түвшин" />
@@ -134,30 +121,6 @@ const STEPS = [
 .gks-auth__mark { height: 40px; width: auto; margin-bottom: var(--sp-6); }
 .gks-auth__title { font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .gks-auth__lede { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-muted); }
-
-.gks-auth__steps {
-  margin-top: var(--sp-6);
-  width: 100%;
-  max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  list-style: none;
-  text-align: left;
-}
-.gks-auth__steps li { display: flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-body-sm); color: var(--text-muted); }
-.gks-auth__step-no {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-selected);
-  color: var(--brand-700);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-}
 
 .gks-auth__form {
   margin-top: var(--sp-6);

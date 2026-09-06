@@ -197,7 +197,7 @@ function resolveAction(snapshot: CaseSnapshot): NextAction {
         key: 'COMPLETED',
         actor: 'NONE',
         label: 'Үйлчилгээ дууссан',
-        description: 'Энэ хэргийн бүх алхам дууссан байна.',
+        description: 'Энэ үйлчилгээний бүх алхам дууссан байна.',
         tab: 'overview',
       };
 
@@ -206,7 +206,7 @@ function resolveAction(snapshot: CaseSnapshot): NextAction {
         key: 'ON_HOLD',
         actor: 'STAFF',
         label: 'Түр зогссон',
-        description: 'Хэрэг түр зогссон байна. Үргэлжлүүлэхийн тулд зөвлөхтэйгээ холбогдоно уу.',
+        description: 'Үйлчилгээ түр зогссон байна. Үргэлжлүүлэхийн тулд зөвлөхтэйгээ холбогдоно уу.',
         tab: 'overview',
       };
 
@@ -215,7 +215,7 @@ function resolveAction(snapshot: CaseSnapshot): NextAction {
       return {
         key: snapshot.stage,
         actor: 'NONE',
-        label: snapshot.stage === 'CANCELLED' ? 'Хэрэг цуцлагдсан' : 'Татгалзсан',
+        label: snapshot.stage === 'CANCELLED' ? 'Үйлчилгээ цуцлагдсан' : 'Татгалзсан',
         description: 'Дэлгэрэнгүй тайлбарыг зөвлөхөөсөө авна уу.',
         tab: 'overview',
       };
@@ -232,7 +232,7 @@ function contractAction(snapshot: CaseSnapshot): NextAction {
       key: 'CONTRACT_MISSING',
       actor: 'STAFF',
       label: 'Гэрээ бэлтгэгдэж байна',
-      description: 'Энэ хэрэгт гэрээ хараахан үүсээгүй байна. Зөвлөхтэйгээ холбогдоно уу.',
+      description: 'Энэ үйлчилгээнд гэрээ хараахан үүсээгүй байна. Зөвлөхтэйгээ холбогдоно уу.',
       tab: 'contract',
     };
   }

@@ -100,7 +100,7 @@ function formatDate(value: string | null): string {
 
     <DsCard v-if="!contract" title="Гэрээ">
       <p class="gks-contract__unknown">
-        Энэ хэрэгт гэрээ хараахан үүсээгүй байна. Шинээр үйлчилгээ эхлүүлэх бол доорх товчийг дарна уу.
+        Энэ үйлчилгээнд гэрээ хараахан үүсээгүй байна. Шинээр үйлчилгээ эхлүүлэх бол доорх товчийг дарна уу.
       </p>
       <DsButton variant="accent" class="gks-contract__action" @click="navigateTo('/app/start')">
         Үйлчилгээ эхлүүлэх

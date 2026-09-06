@@ -178,7 +178,7 @@ useHead({
         </template>
 
         <DsCard v-else-if="tab !== 'activity'" padding="var(--sp-8)">
-          <p class="gks-ws__empty">Хэрэг нээгдээгүй тул энэ хэсэг хоосон байна.</p>
+          <p class="gks-ws__empty">Үйлчилгээ эхлээгүй тул энэ хэсэг хоосон байна.</p>
         </DsCard>
 
         <CrmClientActivity

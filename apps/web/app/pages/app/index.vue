@@ -66,7 +66,7 @@ const TAB_LINKS = [
 
           <PortalJourneyStepper :journey="activeCase.journey" :stage="activeCase.stage" />
 
-          <nav class="gks-home__tabs" aria-label="Хэргийн хэсгүүд">
+          <nav class="gks-home__tabs" aria-label="Үйлчилгээний хэсгүүд">
             <NuxtLink
               v-for="tab in TAB_LINKS"
               :key="tab.tab"
@@ -80,7 +80,7 @@ const TAB_LINKS = [
         </DsCard>
       </template>
 
-      <DsCard v-else title="Танд нээлттэй хэрэг алга байна">
+      <DsCard v-else title="Танд идэвхтэй үйлчилгээ алга байна">
         <p class="gks-home__lede">
           Үйлчилгээгээ сонгоод зуучлалын гэрээгээ энд байгуулж, урьдчилгаа төлбөрөө QPay-ээр төлснөөр
           материал бүрдүүлэлт эхэлнэ.
@@ -91,7 +91,7 @@ const TAB_LINKS = [
       </DsCard>
 
       <section v-if="otherCases.length" class="gks-home__others">
-        <h2 class="gks-home__section-title">Бусад хэрэг</h2>
+        <h2 class="gks-home__section-title">Бусад үйлчилгээ</h2>
         <PortalCaseCard v-for="item in otherCases" :key="item.id" :item="item" />
       </section>
 

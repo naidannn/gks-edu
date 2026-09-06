@@ -160,13 +160,13 @@ export class DepartureService {
 
   private assertAccess(ownerId: string, actor: AuthenticatedUser): void {
     if (!isStaff(actor.role) && ownerId !== actor.id) {
-      throw new ForbiddenException('Энэ хэргийн бэлтгэлд хандах эрхгүй байна');
+      throw new ForbiddenException('Энэ үйлчилгээний бэлтгэлд хандах эрхгүй байна');
     }
   }
 
   private async getOrThrow(caseId: string) {
     const plan = await this.prisma.departurePlan.findUnique({ where: { caseId }, include: PLAN_INCLUDE });
-    if (!plan) throw new NotFoundException('Энэ хэрэг дээр явахын өмнөх бэлтгэл нээгдээгүй байна');
+    if (!plan) throw new NotFoundException('Энэ үйлчилгээнд явахын өмнөх бэлтгэл нээгдээгүй байна');
     return plan;
   }
 }

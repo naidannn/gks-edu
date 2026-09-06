@@ -104,7 +104,7 @@ useHead({ title: 'Төлбөр · CRM' });
           class="gks-filters__search"
           icon-left="search"
           type="search"
-          placeholder="Хэргийн код, хэрэглэгчээр хайх…  ( / )"
+          placeholder="Үйлчилгээний код, хэрэглэгчээр хайх…  ( / )"
         />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
         <DsSelect v-model="kind" :options="KIND_OPTIONS" aria-label="Төрөл" />
@@ -124,7 +124,7 @@ useHead({ title: 'Төлбөр · CRM' });
         </thead>
         <tbody>
           <tr v-for="p in data.items" :key="p.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/cases/${p.case.id}`)" @keydown.enter="navigateTo(`/admin/cases/${p.case.id}`)">
-            <td class="gks-tnum" data-label="Хэрэг">{{ p.case.code }}</td>
+            <td class="gks-tnum" data-label="Үйлчилгээ">{{ p.case.code }}</td>
             <td data-label="Хэрэглэгч">{{ p.case.user.name ?? p.case.user.email }}</td>
             <td data-label="Төрөл">{{ PAYMENT_KIND_LABELS[p.kind] }}</td>
             <td class="gks-tnum" data-label="Дүн">{{ mnt(p.amountMnt) }}</td>

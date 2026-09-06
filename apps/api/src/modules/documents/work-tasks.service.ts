@@ -31,7 +31,7 @@ export class WorkTasksService {
 
   async create(dto: CreateWorkTaskDto, actor: AuthenticatedUser) {
     if (Boolean(dto.caseId) === Boolean(dto.leadId)) {
-      throw new BadRequestException('Ажил нь хэрэг эсвэл сэжмийн аль нэгэнд харьяалагдана');
+      throw new BadRequestException('Ажил нь үйлчилгээ эсвэл сэжмийн аль нэгэнд харьяалагдана');
     }
     if (dto.assigneeId) await this.assertAssignable(dto.assigneeId);
 

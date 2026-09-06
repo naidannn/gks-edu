@@ -25,7 +25,7 @@ function state(index: number): 'done' | 'current' | 'todo' {
   <div class="gks-journey">
     <p v-if="isOffTrack" class="gks-journey__off">
       <DsBadge tone="warning">{{ CASE_STAGE_LABELS[stage] }}</DsBadge>
-      <span>Энэ хэрэг үндсэн урсгалаас түр гарсан байна.</span>
+      <span>Энэ үйлчилгээ үндсэн урсгалаас түр гарсан байна.</span>
     </p>
 
     <ol class="gks-journey__list">

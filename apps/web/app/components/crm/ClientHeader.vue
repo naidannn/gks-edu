@@ -69,7 +69,7 @@ const target = computed(() => {
       </div>
     </div>
 
-    <p v-else class="gks-clienthead__nocase">Энэ үйлчлүүлэгч дээр хэрэг нээгдээгүй байна.</p>
+    <p v-else class="gks-clienthead__nocase">Энэ үйлчлүүлэгч дээр үйлчилгээ эхлээгүй байна.</p>
 
     <!-- A returning client runs several cycles; the picker only appears then. -->
     <div v-if="cases.length > 1" class="gks-clienthead__cases">

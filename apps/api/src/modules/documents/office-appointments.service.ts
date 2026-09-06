@@ -32,7 +32,7 @@ export class OfficeAppointmentsService {
     const open = await this.prisma.officeAppointment.findFirst({
       where: { caseId, status: AppointmentStatus.SCHEDULED },
     });
-    if (open) throw new BadRequestException('Энэ хэрэг дээр товлогдсон уулзалт аль хэдийн байна');
+    if (open) throw new BadRequestException('Энэ үйлчилгээнд товлогдсон уулзалт аль хэдийн байна');
 
     const scheduledAt = new Date(dto.scheduledAt);
     if (scheduledAt.getTime() < Date.now()) throw new BadRequestException('Өнгөрсөн цагт товлох боломжгүй');

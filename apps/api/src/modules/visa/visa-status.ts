@@ -16,6 +16,6 @@ export const VISA_TRANSITIONS: Record<VisaStatus, readonly VisaStatus[]> = {
 
 export function assertVisaTransition(from: VisaStatus, to: VisaStatus): void {
   if (!VISA_TRANSITIONS[from].includes(to)) {
-    throw new BadRequestException(`Визний хэргийг ${from} төлөвөөс ${to} рүү шилжүүлэх боломжгүй`);
+    throw new BadRequestException(`Визний төлөвийг ${from}-с ${to} рүү шилжүүлэх боломжгүй`);
   }
 }

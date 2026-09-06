@@ -253,7 +253,7 @@ export class VisaService {
 
   private async getOrThrow(caseId: string) {
     const visaCase = await this.prisma.visaCase.findUnique({ where: { caseId } });
-    if (!visaCase) throw new NotFoundException('Энэ хэрэг дээр визний шат нээгдээгүй байна');
+    if (!visaCase) throw new NotFoundException('Энэ үйлчилгээнд визний шат нээгдээгүй байна');
     return visaCase;
   }
 }

@@ -54,7 +54,7 @@ export class ReportsController {
 
   @Get('document-progress')
   @Roles(...STAFF_ROLES, Role.DOC_OFFICER)
-  @ApiOperation({ summary: 'Материалын явц, хугацаа хэтэрсэн хэрэг' })
+  @ApiOperation({ summary: 'Материалын явц, хугацаа хэтэрсэн үйлчилгээ' })
   documentProgress() {
     return this.reports.documentProgress();
   }

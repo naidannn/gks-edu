@@ -70,7 +70,7 @@ useUrlFilters({
   serviceType: [serviceType, SERVICE_OPTIONS.map((o) => o.value)],
 });
 
-useHead({ title: 'Хэрэг · CRM' });
+useHead({ title: 'Үйлчилгээ · CRM' });
 </script>
 
 <template>
@@ -78,8 +78,8 @@ useHead({ title: 'Хэрэг · CRM' });
     <header class="gks-page__head">
       <div class="gks-page__heading">
         <span class="gks-eyebrow">CRM</span>
-        <h1 class="gks-page__title">Хэрэг</h1>
-        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} хэрэг</p>
+        <h1 class="gks-page__title">Үйлчилгээ</h1>
+        <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} үйлчилгээ</p>
       </div>
     </header>
 
@@ -97,12 +97,12 @@ useHead({ title: 'Хэрэг · CRM' });
       </div>
     </DsCard>
 
-    <DsCard v-if="error" accent><p>Хэргийн жагсаалтыг ачаалж чадсангүй.</p></DsCard>
+    <DsCard v-if="error" accent><p>Үйлчилгээний жагсаалтыг ачаалж чадсангүй.</p></DsCard>
     <div v-else-if="pending && !data" class="gks-skeleton">
       <div v-for="n in 6" :key="n" class="gks-skeleton__row" />
     </div>
     <DsCard v-else-if="!data?.items.length" padding="var(--sp-8)">
-      <p class="gks-empty">Тохирох хэрэг олдсонгүй.</p>
+      <p class="gks-empty">Тохирох үйлчилгээ олдсонгүй.</p>
     </DsCard>
 
     <div v-else class="gks-table-wrap">

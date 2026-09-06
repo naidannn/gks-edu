@@ -73,7 +73,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
     bodyMn:
       'Сайн байна уу, {{clientName}}.\n\n' +
       '"{{documentName}}" материалын эцсийн хугацаа {{dueDate}} — {{daysLeft}} хоног үлдлээ.\n' +
-      'Хэрэг: {{caseCode}}\n\n' +
+      'Үйлчилгээ: {{caseCode}}\n\n' +
       'Материалаа кабинетаараа орж илгээнэ үү: {{link}}\n\n' +
       'GKS EDU GROUP',
     linkMn: CASE_DOCS,
@@ -97,7 +97,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
     titleMn: 'Дутуу материал — {{caseCode}}',
     bodyMn:
       'Сайн байна уу, {{clientName}}.\n\n' +
-      'Таны хэрэгт {{missingCount}} материал дутуу байна:\n{{missingList}}\n\n' +
+      'Таны үйлчилгээнд {{missingCount}} материал дутуу байна:\n{{missingList}}\n\n' +
       'Кабинетаараа орж илгээнэ үү: {{link}}\n\n' +
       'GKS EDU GROUP',
     linkMn: CASE_DOCS,
@@ -154,7 +154,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
     bodyMn:
       'Сайн байна уу, {{clientName}}.\n\n' +
       '"{{documentName}}" материалыг хянаж, хүлээн авлаа. Танд баярлалаа.\n\n' +
-      'Хэрэг: {{caseCode}}\n' +
+      'Үйлчилгээ: {{caseCode}}\n' +
       'Үлдсэн материал: {{remainingCount}}\n\n' +
       'Бүрдүүлэлтийн явцаа кабинетаасаа хараарай.\n\n' +
       'GKS EDU GROUP',
@@ -177,7 +177,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
       'Сайн байна уу, {{clientName}}.\n\n' +
       '{{serviceName}} үйлчилгээний зуучлалын гэрээ баталгаажлаа.\n' +
       'Гэрээний дугаар: {{contractNumber}}\n' +
-      'Хэрэг: {{caseCode}}\n\n' +
+      'Үйлчилгээ: {{caseCode}}\n\n' +
       'Гэрээгээ кабинетаасаа татаж авах боломжтой: {{link}}\n\n' +
       'GKS EDU GROUP',
     linkMn: CASE_CONTRACT,
@@ -202,7 +202,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
     bodyMn:
       'Сайн байна уу, {{clientName}}.\n\n' +
       '{{paymentKindName}} {{amount}}₮ төлөх хугацаа болсон байна.\n' +
-      'Хэрэг: {{caseCode}}\n\n' +
+      'Үйлчилгээ: {{caseCode}}\n\n' +
       'QPay-ээр төлөх: {{link}}\n\n' +
       'GKS EDU GROUP',
     linkMn: CASE_PAYMENT,
@@ -228,7 +228,7 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
       'Сайн байна уу, {{clientName}}.\n\n' +
       '{{paymentKindName}} {{amount}}₮ төлбөр амжилттай баталгаажлаа.\n' +
       'Гүйлгээний огноо: {{paidAt}}\n' +
-      'Хэрэг: {{caseCode}}\n\n' +
+      'Үйлчилгээ: {{caseCode}}\n\n' +
       'Дэлгэрэнгүй: {{link}}\n\n' +
       'GKS EDU GROUP',
     linkMn: CASE_PAYMENT,
@@ -545,14 +545,14 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
     linkMn: '/universities/{{universitySlug}}',
   },
 
-  // ── Ажилтанд: элсэлтээ алдаж болзошгүй хэрэг (1H-09) ─────────────────────
+  // ── Ажилтанд: элсэлтээ алдаж болзошгүй үйлчилгээ (1H-09) ────────────────
   //
   // The office's own words: "ажилтан хүртэл хэрэглэгчээ мартаад" — this is the
   // notification that makes that visible before the date passes.
   {
     event: NotificationEvent.INTAKE_CASE_AT_RISK,
     channel: NotificationChannel.IN_APP,
-    titleMn: 'Элсэлтээ алдаж болзошгүй хэрэг',
+    titleMn: 'Элсэлтээ алдаж болзошгүй үйлчилгээ',
     bodyMn:
       '{{caseCode}} — {{clientName}}. {{universityName}} {{intakeName}}: {{daysLeft}} хоног үлдэхэд ' +
       'материал {{readiness}}% бүрдсэн ({{missingDocuments}} дутуу).',
@@ -563,8 +563,8 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
     channel: NotificationChannel.EMAIL,
     titleMn: '{{caseCode}} элсэлтээ алдаж болзошгүй — {{daysLeft}} хоног үлдлээ',
     bodyMn:
-      'Анхаарал шаардсан хэрэг:\n\n' +
-      'Хэрэг: {{caseCode}} — {{clientName}}\n' +
+      'Анхаарал шаардсан үйлчилгээ:\n\n' +
+      'Үйлчилгээ: {{caseCode}} — {{clientName}}\n' +
       'Элсэлт: {{universityName}} — {{intakeName}}\n' +
       'Манай бүртгэлийн эцсийн хугацаа: {{deadlineDate}} ({{daysLeft}} хоног үлдлээ)\n' +
       'Материалын бүрдэлт: {{readiness}}% ({{missingDocuments}} материал дутуу)\n\n' +

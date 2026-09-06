@@ -148,7 +148,7 @@ const needsPhysicalRegistration = computed(
 
     <DsCard title="Гэрээ">
       <div v-if="!contract" class="gks-cpay__actions">
-        <p class="gks-cpay__muted">Энэ хэрэг дээр гэрээ үүсээгүй байна.</p>
+        <p class="gks-cpay__muted">Энэ үйлчилгээнд гэрээ үүсээгүй байна.</p>
         <div class="gks-cpay__buttons">
           <DsButton :loading="busy" @click="createContract('ELECTRONIC')">Цахим гэрээ үүсгэх</DsButton>
           <DsButton variant="secondary" :loading="busy" @click="createContract('PHYSICAL')">Биет гэрээ үүсгэх</DsButton>

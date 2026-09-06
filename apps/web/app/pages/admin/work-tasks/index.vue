@@ -145,7 +145,7 @@ useHead({ title: 'Материалын ажил · CRM' });
 
     <DsCard title="Шинэ даалгавар">
       <div class="gks-form-grid">
-        <DsInput v-model="draft.caseId" label="Хэргийн ID" placeholder="UUID" />
+        <DsInput v-model="draft.caseId" label="Үйлчилгээний ID" placeholder="UUID" />
         <DsSelect v-model="draft.type" label="Төрөл" :options="TYPE_OPTIONS" />
         <DsInput v-model="draft.title" label="Гарчиг" />
         <DsSelect v-model="draft.assigneeId" label="Хариуцагч" :options="ASSIGNEE_OPTIONS" />
@@ -167,11 +167,11 @@ useHead({ title: 'Материалын ажил · CRM' });
     <div v-else class="gks-table-wrap">
       <table class="gks-table gks-table--cards">
         <thead>
-          <tr><th>Хэрэг</th><th>Даалгавар</th><th>Төрөл</th><th>Хариуцагч</th><th>Хугацаа</th><th>Төлөв</th><th /></tr>
+          <tr><th>Үйлчилгээ</th><th>Даалгавар</th><th>Төрөл</th><th>Хариуцагч</th><th>Хугацаа</th><th>Төлөв</th><th /></tr>
         </thead>
         <tbody>
           <tr v-for="task in data.items" :key="task.id">
-            <td class="gks-tnum" data-label="Хэрэг">{{ task.case?.code ?? '—' }}</td>
+            <td class="gks-tnum" data-label="Үйлчилгээ">{{ task.case?.code ?? '—' }}</td>
             <td data-label="Даалгавар">
               {{ task.title }}
               <span v-if="task.caseDocument" class="gks-tasks__doc">{{ task.caseDocument.template.nameMn }}</span>
