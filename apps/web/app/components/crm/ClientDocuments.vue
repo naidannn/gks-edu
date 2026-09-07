@@ -67,13 +67,15 @@ function onReview(documentId: string, action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN
 function onTransition(documentId: string, toStatus: DocumentStatus) {
   return act(() => api.post(`/case-documents/${documentId}/transitions`, { toStatus }));
 }
-function onNote(documentId: string, body: string) {
-  return act(() => api.post(`/case-documents/${documentId}/notes`, { body }));
-}
-function onUpload(documentId: string, files: File[]) {
-  const body = new FormData();
-  for (const file of files) body.append('files', file);
-  return act(() => api.post(`/case-documents/${documentId}/files?isFinal=true`, body));
+function onSend(documentId: string, payload: { files: File[]; note: string }) {
+  return act(async () => {
+    if (payload.files.length) {
+      const body = new FormData();
+      for (const file of payload.files) body.append('files', file);
+      await api.post(`/case-documents/${documentId}/files?isFinal=true`, body);
+    }
+    if (payload.note) await api.post(`/case-documents/${documentId}/notes`, { body: payload.note });
+  });
 }
 async function openFile(fileId: string) {
   const signed = await api.get<SignedFile>(`/document-files/${fileId}/url`);
@@ -209,8 +211,7 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           :busy="busy"
           @review="(action, note) => onReview(document.id, action, note)"
           @transition="(status) => onTransition(document.id, status)"
-          @note="(body) => onNote(document.id, body)"
-          @upload="(files) => onUpload(document.id, files)"
+          @send="(payload) => onSend(document.id, payload)"
           @open="openFile"
         />
       </li>

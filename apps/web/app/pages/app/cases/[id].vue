@@ -107,4 +107,30 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйл�
 .gks-mycase__tab { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--text-muted); text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; }
 .gks-mycase__tab:hover { color: var(--text-strong); }
 .gks-mycase__tab--active { color: var(--brand-700); border-bottom-color: var(--brand-600); font-weight: var(--fw-semibold); }
+
+/* Seven underline tabs do not fit a phone, and scrolling them sideways hides
+   the four that matter later in the journey. Below 700px they become a grid of
+   chips: two rows, everything visible, nothing to swipe. */
+@media (max-width: 700px) {
+  .gks-mycase__tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-2);
+    border-bottom: 0;
+    overflow: visible;
+  }
+  .gks-mycase__tab {
+    padding: var(--sp-2) var(--sp-1);
+    border: var(--border-hair) solid var(--line-hairline);
+    border-radius: var(--radius-pill);
+    background: var(--surface-card);
+    font-size: var(--fs-caption);
+    text-align: center;
+  }
+  .gks-mycase__tab--active {
+    border-color: var(--brand-600);
+    background: var(--brand-600);
+    color: var(--text-inverse);
+  }
+}
 </style>

@@ -52,11 +52,11 @@ const GUIDE = [
   { icon: 'messages-square', title: 'Ярилцлагын бэлтгэл', body: 'Суралцах шалтгаан, сургууль, төлбөрөө хэн санхүүжүүлэх талаар товч, тодорхой хариулна. Бид урьдчилан дадлага хийлгэнэ.' },
 ];
 
-function onUpload(documentId: string, files: File[]) {
-  return withBusy(() => docs.upload(documentId, files));
-}
-function onNote(documentId: string, body: string) {
-  return withBusy(() => docs.addNote(documentId, body));
+function onSend(documentId: string, payload: { files: File[]; note: string }) {
+  return withBusy(async () => {
+    if (payload.files.length) await docs.upload(documentId, payload.files);
+    if (payload.note) await docs.addNote(documentId, payload.note);
+  });
 }
 function onTransition(documentId: string, status: DocumentStatus) {
   return withBusy(() => docs.transition(documentId, status));
@@ -111,8 +111,7 @@ function onTransition(documentId: string, status: DocumentStatus) {
           :document="document"
           mode="client"
           :busy="busy"
-          @upload="onUpload(document.id, $event)"
-          @note="onNote(document.id, $event)"
+          @send="onSend(document.id, $event)"
           @transition="onTransition(document.id, $event)"
           @open="docs.openFile($event)"
         />

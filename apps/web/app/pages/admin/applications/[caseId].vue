@@ -315,7 +315,7 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
           <DsInput v-model="invitationForm.issuedAt" type="date" label="Олгосон огноо" />
           <DsInput v-model="invitationForm.note" label="Тэмдэглэл" />
         </div>
-        <input type="file" accept=".pdf,.jpg,.png" class="gks-appadm__file" @change="invitationFile = ($event.target as HTMLInputElement).files?.[0] ?? null">
+        <DsFileField v-model="invitationFile" label="Урилгын хуулбар" class="gks-appadm__file" />
         <DsButton variant="accent" :disabled="busy" @click="recordInvitation">
           {{ invitation ? 'Урилга шинэчлэх' : 'Урилга бүртгэх' }}
         </DsButton>
@@ -341,5 +341,5 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
 .gks-appadm__invoices { margin-top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3); }
 .gks-appadm__invoices li { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); padding-top: var(--sp-3); border-top: var(--border-hair) solid var(--line-hairline); font-size: var(--fs-body-sm); }
 .gks-appadm__invoice-actions { display: flex; align-items: center; gap: var(--sp-2); }
-.gks-appadm__file { display: block; margin-bottom: var(--sp-3); font-size: var(--fs-body-sm); }
+.gks-appadm__file { margin-bottom: var(--sp-3); }
 </style>

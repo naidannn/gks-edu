@@ -276,14 +276,25 @@ async function onLogout() {
               {{ item.label }}
             </NuxtLink>
           </template>
-          <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-appbar__link">Миний булан</NuxtLink>
           <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__link">CRM</NuxtLink>
         </div>
 
         <div class="gks-appbar__actions">
           <template v-if="auth.isAuthenticated">
             <span class="gks-appbar__user gks-tnum">{{ auth.user?.email }}</span>
-            <DsButton variant="secondary" size="sm" icon-left="log-out" @click="onLogout">Гарах</DsButton>
+            <NuxtLink to="/app" class="gks-appbar__account">
+              <DsIcon name="folder-open" :size="16" />
+              <span>Миний булан</span>
+            </NuxtLink>
+            <DsButton
+              variant="secondary"
+              size="sm"
+              icon-left="log-out"
+              class="gks-appbar__logout"
+              @click="onLogout"
+            >
+              Гарах
+            </DsButton>
           </template>
           <template v-else>
             <NuxtLink to="/login" class="gks-appbar__login">Нэвтрэх</NuxtLink>
@@ -340,12 +351,12 @@ async function onLogout() {
       >
         {{ item.label }}
       </NuxtLink>
-      <NuxtLink v-if="auth.isAuthenticated" to="/app" class="gks-appbar__panel-link" @click="closeMenus">
-        Миний булан
-      </NuxtLink>
       <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__panel-link" @click="closeMenus">
         CRM
       </NuxtLink>
+      <button v-if="auth.isAuthenticated" type="button" class="gks-appbar__panel-link gks-appbar__panel-logout" @click="onLogout">
+        Гарах
+      </button>
     </div>
 
     <main class="gks-main">
@@ -630,6 +641,39 @@ async function onLogout() {
 }
 .gks-appbar__login:hover { border-color: var(--brand-300); color: var(--brand-700); }
 
+/* Signed in, the bar's job is to point at the cabinet, and a sixth muted link
+   did not do it — people could not tell where their own pages were. This is
+   the same accent shape "Бүртгүүлэх" has for everybody else, in the same
+   place, so the bar always has exactly one bright thing in it. */
+.gks-appbar__account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--control-sm);
+  padding: 0 var(--sp-4);
+  border-radius: var(--radius-2);
+  background: var(--brand-600);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  color: var(--text-inverse);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: var(--transition-control);
+}
+.gks-appbar__account:hover { background: var(--brand-700); color: var(--text-inverse); }
+/* Only where the bar had to drop its own "Гарах" — above 640px it is still up
+   there, and two of them in one open sheet is one too many. */
+.gks-appbar__panel-logout {
+  display: none;
+  width: 100%;
+  border-inline: 0;
+  border-top: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .gks-main {
   flex: 1;
   width: 100%;
@@ -813,6 +857,8 @@ async function onLogout() {
 
 @media (max-width: 640px) {
   .gks-appbar__nav { padding: var(--sp-3) var(--gutter-mobile); }
+  .gks-appbar__logout { display: none; }
+  .gks-appbar__panel-logout { display: block; }
   .gks-main { padding: var(--sp-6) var(--gutter-mobile) var(--sp-9); }
   .gks-footer__inner { grid-template-columns: 1fr; padding: var(--sp-8) var(--gutter-mobile) var(--sp-6); }
   .gks-footer__bottom-inner {

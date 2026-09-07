@@ -118,7 +118,6 @@ const manual = reactive({
   note: '',
 });
 const manualReceipt = ref<File | null>(null);
-const manualReceiptInput = ref<HTMLInputElement | null>(null);
 
 /** Only the kinds still unpaid — the form must not offer to re-collect the prepayment. */
 const manualKindOptions = computed(() =>
@@ -147,7 +146,6 @@ async function registerManual() {
   manual.reference = '';
   manual.note = '';
   manualReceipt.value = null;
-  if (manualReceiptInput.value) manualReceiptInput.value.value = '';
 }
 
 async function openReceipt(paymentId: string) {
@@ -277,11 +275,7 @@ const needsPhysicalRegistration = computed(
           <h3 class="gks-cpay__subtitle">Биет гэрээ бүртгэх</h3>
           <p class="gks-cpay__muted">Гэрээг хэвлэж, талууд гарын үсэг зурсны дараа сканыг нь эндээс хавсаргана.</p>
           <DsInput v-model="physicalSignedAt" type="date" label="Гарын үсэг зурсан огноо" />
-          <input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png"
-            @change="physicalFile = ($event.target as HTMLInputElement).files?.[0] ?? null"
-          >
+          <DsFileField v-model="physicalFile" label="Гарын үсэгтэй гэрээний скан" />
           <DsButton
             size="sm"
             :disabled="!physicalSignedAt || !physicalFile"
@@ -300,11 +294,7 @@ const needsPhysicalRegistration = computed(
           </label>
           <DsInput v-model="collateral.startDate" type="date" label="Эхлэх огноо" />
           <DsInput v-model="collateral.endDate" type="date" label="Дуусах огноо" />
-          <input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png"
-            @change="collateralFile = ($event.target as HTMLInputElement).files?.[0] ?? null"
-          >
+          <DsFileField v-model="collateralFile" label="Барьцааны гэрээний скан" />
           <DsButton size="sm" :loading="busy" @click="saveCollateral(contract.id)">Хадгалах</DsButton>
         </div>
       </template>
@@ -342,15 +332,7 @@ const needsPhysicalRegistration = computed(
           <DsInput v-model="manual.reference" label="Гүйлгээний дугаар" placeholder="Дансны гүйлгээ / баримтын дугаар" />
         </div>
         <DsTextarea v-model="manual.note" label="Тэмдэглэл" :rows="2" placeholder="Хэн, аль данснаас төлсөн г.м." />
-        <label class="gks-cpay__file">
-          <span class="gks-cpay__muted">Баримт (заавал биш) — PDF, JPG, PNG</span>
-          <input
-            ref="manualReceiptInput"
-            type="file"
-            accept="application/pdf,image/jpeg,image/png"
-            @change="manualReceipt = ($event.target as HTMLInputElement).files?.[0] ?? null"
-          >
-        </label>
+        <DsFileField v-model="manualReceipt" label="Баримт (заавал биш)" />
         <DsButton size="sm" :disabled="!manual.paidAt" :loading="busy" @click="registerManual()">Төлбөр бүртгэх</DsButton>
       </div>
 
@@ -431,7 +413,6 @@ const needsPhysicalRegistration = computed(
 .gks-cpay__subform--flush { align-items: flex-start; margin-top: 0; padding-top: 0; border-top: none; }
 .gks-cpay__subform--flush > .gks-cpay__grid, .gks-cpay__subform--flush > .gks-field { align-self: stretch; }
 .gks-cpay__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3); }
-.gks-cpay__file { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
 .gks-cpay__link { font-size: var(--fs-caption); color: var(--brand-700); text-decoration: none; }
 
 .gks-cpay__table-wrap { overflow-x: auto; }

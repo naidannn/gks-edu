@@ -89,13 +89,15 @@ function onReview(action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string) {
 function onTransition(toStatus: DocumentStatus) {
   return act(() => api.post(`/case-documents/${selectedId.value}/transitions`, { toStatus }));
 }
-function onNote(body: string) {
-  return act(() => api.post(`/case-documents/${selectedId.value}/notes`, { body }));
-}
-function onUpload(files: File[]) {
-  const body = new FormData();
-  for (const file of files) body.append('files', file);
-  return act(() => api.post(`/case-documents/${selectedId.value}/files?isFinal=true`, body));
+function onSend(payload: { files: File[]; note: string }) {
+  return act(async () => {
+    if (payload.files.length) {
+      const body = new FormData();
+      for (const file of payload.files) body.append('files', file);
+      await api.post(`/case-documents/${selectedId.value}/files?isFinal=true`, body);
+    }
+    if (payload.note) await api.post(`/case-documents/${selectedId.value}/notes`, { body: payload.note });
+  });
 }
 async function openFile(fileId: string) {
   const signed = await api.get<SignedFile>(`/document-files/${fileId}/url`);
@@ -187,8 +189,7 @@ useHead({ title: 'Материал шалгах · CRM' });
           :busy="busy"
           @review="onReview"
           @transition="onTransition"
-          @note="onNote"
-          @upload="onUpload"
+          @send="onSend"
           @open="openFile"
         />
         <DsCard v-else padding="var(--sp-8)"><p class="gks-empty">Зүүн талаас материал сонгоно уу.</p></DsCard>

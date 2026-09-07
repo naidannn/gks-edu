@@ -58,7 +58,8 @@ const textareaId = useId();
   outline: none;
   transition: var(--transition-control);
 }
-.gks-field__textarea:focus { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
+.gks-field__textarea:focus,
+.gks-field__textarea:focus-visible { border-color: var(--brand-600); box-shadow: 0 0 0 3px var(--brand-050); }
 .gks-field__textarea--error { border-color: var(--red-700); }
 .gks-field__textarea:disabled { background: var(--n-050); color: var(--text-disabled); }
 

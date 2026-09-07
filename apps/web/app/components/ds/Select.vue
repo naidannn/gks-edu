@@ -62,7 +62,8 @@ const selectId = useId();
   cursor: pointer;
   transition: var(--transition-control);
 }
-.gks-field__select:focus { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
+.gks-field__select:focus,
+.gks-field__select:focus-visible { border-color: var(--brand-600); box-shadow: 0 0 0 3px var(--brand-050); }
 .gks-field__select--error { border-color: var(--red-700); }
 .gks-field__select:disabled { background: var(--n-050); color: var(--text-disabled); cursor: not-allowed; }
 .gks-field__chevron { position: absolute; right: var(--sp-4); pointer-events: none; color: var(--text-muted); }

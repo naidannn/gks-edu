@@ -218,7 +218,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
   border-radius: var(--radius-2);
   transition: var(--transition-control);
 }
-.gks-field__control:focus-within { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
+.gks-field__control:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px var(--brand-050); }
 .gks-field__control--error { border-color: var(--red-700); }
 .gks-field__control--disabled { background: var(--n-050); }
 .gks-combo__control { cursor: text; }
@@ -237,6 +237,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
   color: var(--text-body);
   text-overflow: ellipsis;
 }
+.gks-field__input:focus-visible { box-shadow: none; }
 .gks-field__input:disabled { color: var(--text-disabled); }
 
 .gks-combo__list {

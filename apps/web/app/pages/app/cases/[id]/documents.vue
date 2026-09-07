@@ -55,12 +55,12 @@ async function onSaveConditions(payload: Partial<CaseConditions>) {
   }
 }
 
-function onUpload(documentId: string, files: File[]) {
-  return withBusy(() => docs.upload(documentId, files));
-}
-
-function onNote(documentId: string, body: string) {
-  return withBusy(() => docs.addNote(documentId, body));
+/** Files, a message, or both — whatever the card had when Илгээх was pressed. */
+function onSend(documentId: string, payload: { files: File[]; note: string }) {
+  return withBusy(async () => {
+    if (payload.files.length) await docs.upload(documentId, payload.files);
+    if (payload.note) await docs.addNote(documentId, payload.note);
+  });
 }
 
 function onTransition(documentId: string, status: DocumentStatus) {
@@ -123,8 +123,7 @@ function formatAppointmentAt(value: string): string {
         :document="document"
         mode="client"
         :busy="busy"
-        @upload="onUpload(document.id, $event)"
-        @note="onNote(document.id, $event)"
+        @send="onSend(document.id, $event)"
         @transition="onTransition(document.id, $event)"
         @open="docs.openFile($event)"
       />

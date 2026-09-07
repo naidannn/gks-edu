@@ -64,9 +64,12 @@ const inputId = useId();
   border-radius: var(--radius-2);
   transition: var(--transition-control);
 }
-.gks-field__control:focus-within { border-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--brand-600); }
+/* One line, not two: the frame changes colour and grows a soft halo. The inset
+   ring this used to add read as a second border inside the first, and the
+   global `:focus-visible` shadow drew a third around the bare input. */
+.gks-field__control:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px var(--brand-050); }
 .gks-field__control--error { border-color: var(--red-700); }
-.gks-field__control--error:focus-within { box-shadow: inset 0 0 0 1px var(--red-700); }
+.gks-field__control--error:focus-within { box-shadow: 0 0 0 3px var(--red-100); }
 .gks-field__control--disabled { background: var(--n-050); }
 
 .gks-field__icon { color: var(--text-subtle); }
@@ -81,6 +84,7 @@ const inputId = useId();
   font-family: var(--font-sans);
   color: var(--text-body);
 }
+.gks-field__input:focus-visible { box-shadow: none; }
 .gks-field__suffix { font-size: var(--fs-caption); color: var(--text-subtle); font-family: var(--font-mono); }
 
 .gks-field__note { display: flex; align-items: center; gap: 6px; font-size: var(--fs-caption); color: var(--text-muted); }

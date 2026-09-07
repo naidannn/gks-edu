@@ -13,16 +13,23 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  upload: [files: File[]];
+  /** One action for the person: the files they picked, the words they typed, or both. */
+  send: [payload: { files: File[]; note: string }];
   review: [action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string];
   transition: [status: DocumentStatus];
-  note: [body: string];
   open: [fileId: string];
 }>();
 
 const expanded = ref(false);
 const reviewNote = ref('');
 const clientNote = ref('');
+/**
+ * Picked, not yet sent. Uploading on selection and then offering a separate
+ * "Илгээх" that only text could switch on made the file look like it was
+ * waiting on a message it never needed — so the two share one button, and
+ * either half of it may be empty.
+ */
+const staged = ref<File[]>([]);
 
 const template = computed(() => props.document.template);
 
@@ -81,10 +88,20 @@ function submitReview(action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN') {
   reviewNote.value = '';
 }
 
-function submitNote() {
-  const body = clientNote.value.trim();
-  if (!body) return;
-  emit('note', body);
+function stage(files: File[]) {
+  staged.value = [...staged.value, ...files];
+}
+
+function unstage(index: number) {
+  staged.value.splice(index, 1);
+}
+
+const canSend = computed(() => !props.busy && (staged.value.length > 0 || clientNote.value.trim().length > 0));
+
+function send() {
+  if (!canSend.value) return;
+  emit('send', { files: [...staged.value], note: clientNote.value.trim() });
+  staged.value = [];
   clientNote.value = '';
 }
 
@@ -163,8 +180,19 @@ function formatSize(bytes: number): string {
         v-if="canUpload"
         :accepted-file-types="template.acceptedFileTypes"
         :busy="busy"
-        @select="emit('upload', $event)"
+        @select="stage"
       />
+
+      <ul v-if="staged.length" class="gks-doc__staged">
+        <li v-for="(file, index) in staged" :key="`${file.name}-${index}`" class="gks-doc__staged-item">
+          <DsIcon name="file-text" :size="16" />
+          <span class="gks-doc__staged-name">{{ file.name }}</span>
+          <span class="gks-doc__file-meta gks-tnum">{{ formatSize(file.size) }}</span>
+          <button type="button" class="gks-doc__staged-clear" aria-label="Хасах" @click="unstage(index)">
+            <DsIcon name="x" :size="14" />
+          </button>
+        </li>
+      </ul>
 
       <div v-if="canReview" class="gks-doc__review">
         <DsTextarea v-model="reviewNote" :rows="2" placeholder="Тайлбар — засвар хүсэх/буцаах үед заавал" />
@@ -208,8 +236,18 @@ function formatSize(bytes: number): string {
       </section>
 
       <div class="gks-doc__ask">
-        <DsInput v-model="clientNote" placeholder="Асуулт эсвэл тэмдэглэл бичих" @keyup.enter="submitNote" />
-        <DsButton size="sm" variant="ghost" icon-left="send" :disabled="!clientNote.trim()" @click="submitNote">
+        <DsInput
+          v-model="clientNote"
+          :placeholder="staged.length ? 'Тайлбар нэмэх (заавал биш)' : 'Асуулт эсвэл тэмдэглэл бичих'"
+          @keyup.enter="send"
+        />
+        <DsButton
+          size="sm"
+          :variant="staged.length ? 'accent' : 'ghost'"
+          icon-left="send"
+          :disabled="!canSend"
+          @click="send"
+        >
           Илгээх
         </DsButton>
       </div>
@@ -300,6 +338,27 @@ function formatSize(bytes: number): string {
 .gks-doc__note-body { font-size: var(--fs-body-sm); color: var(--text-body); }
 .gks-doc__note-meta { margin-top: 2px; font-size: var(--fs-caption); color: var(--text-subtle); }
 
+.gks-doc__staged { display: flex; flex-direction: column; gap: var(--sp-2); }
+.gks-doc__staged-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-2);
+  background: var(--surface-card);
+  font-size: var(--fs-body-sm);
+}
+.gks-doc__staged-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gks-doc__staged-clear { flex: none; display: inline-flex; border: 0; padding: 2px; background: none; color: var(--text-subtle); cursor: pointer; }
+.gks-doc__staged-clear:hover { color: var(--danger-fg); }
+
 .gks-doc__ask { display: flex; gap: var(--sp-2); align-items: flex-start; }
 .gks-doc__ask > :first-child { flex: 1; }
+
+/* On a phone the field and the button do not share a line comfortably. */
+@media (max-width: 520px) {
+  .gks-doc__ask { flex-wrap: wrap; }
+  .gks-doc__ask > :first-child { flex: 1 1 100%; }
+}
 </style>
