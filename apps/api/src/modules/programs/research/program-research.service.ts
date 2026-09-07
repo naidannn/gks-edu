@@ -5,6 +5,7 @@ import { PROGRAM_RESEARCH_JOB, PROGRAM_RESEARCH_QUEUE } from '../../../queue/que
 import { IntakeResearchStatus, Prisma, type ProgramLevel } from '../../../prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import { AdmissionConfigService } from '../../admissions/admission-config.service.js';
+import { DeepseekService } from '../../admissions/research/deepseek.service.js';
 import { GeminiService, extractJson } from '../../admissions/research/gemini.service.js';
 import {
   ProgramResearchParseError,
@@ -48,6 +49,7 @@ export class ProgramResearchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gemini: GeminiService,
+    private readonly deepseek: DeepseekService,
     private readonly config: AdmissionConfigService,
     @InjectQueue(PROGRAM_RESEARCH_QUEUE) private readonly queue: Queue,
   ) {}
@@ -63,7 +65,7 @@ export class ProgramResearchService {
     });
     if (!university) throw new NotFoundException('Сургууль олдсонгүй.');
 
-    const model = (await this.config.get()).researchModel;
+    const model = (await this.config.get()).programResearchModel;
 
     const run = await this.prisma.programResearchRun.create({
       data: {
@@ -142,9 +144,11 @@ export class ProgramResearchService {
         officialWebsite: links.officialWebsite ?? null,
         year: run.year,
         levels: run.levels,
+        // Which question is honest to ask depends on who is answering.
+        grounded: !run.model.startsWith('deepseek'),
       });
 
-      const answer = await this.gemini.generateJson({
+      const answer = await this.provider(run.model).generateJson({
         model: run.model,
         prompt,
         mockAnswer: () => mockProgramResearchAnswer(run.year, run.levels),
@@ -156,7 +160,11 @@ export class ProgramResearchService {
       // the prices were written from memory — which the lite models will
       // happily do, and label HIGH. A mock run has no trail by construction and
       // says so in its own notes, so it is exempt rather than marked down.
-      const grounded = this.gemini.isMock || answer.sources.length > 0;
+      // DeepSeek has no grounding at all, so `sources` is empty by
+      // construction and every candidate lands at LOW with the "from memory"
+      // note. That is the truthful label for a recall answer, and it is the
+      // same label Gemini earns on this prompt in practice.
+      const grounded = this.provider(run.model).isMock || answer.sources.length > 0;
       if (!grounded) {
         this.logger.warn(
           `Grounding хоосон (${runId}): загвар хайлт хийлгүй хариулсан тул бүх саналыг LOW болголоо`,
@@ -207,6 +215,17 @@ export class ProgramResearchService {
   }
 
   /**
+   * Which provider answers, decided by the model name alone.
+   *
+   * `AdmissionConfig.programResearchModel` is a free-text field an admin types,
+   * so the prefix is the routing: anything `deepseek-` goes to DeepSeek, the
+   * rest to Gemini. One field, no second switch to keep in step with it.
+   */
+  private provider(model: string): GeminiService | DeepseekService {
+    return model.startsWith('deepseek') ? this.deepseek : this.gemini;
+  }
+
+  /**
    * Collapses duplicate departments, keeping the best-evidenced one. A model
    * asked to search reports the same department twice from two pages often
    * enough that the review list is unreadable without this.
@@ -242,7 +261,7 @@ export class ProgramResearchService {
       // mode, not the mode the run executed in; for a run you are looking at
       // now those are the same thing, and "what am I about to trust" is the
       // question being answered.
-      mock: this.gemini.isMock,
+      mock: this.provider(run.model).isMock,
     };
   }
 }

@@ -8,6 +8,16 @@ export interface ProgramResearchSubject {
   officialWebsite: string | null;
   year: number;
   levels: ProgramLevel[];
+  /**
+   * Whether the provider answering can actually search the web.
+   *
+   * It changes what the prompt may honestly ask for. Told to search, a model
+   * that cannot returns an empty list — correctly, because rule zero says an
+   * unsearched answer is a failed run. DeepSeek did exactly that. So an
+   * ungrounded provider is asked a different question: recall the structure,
+   * say so, and leave prices null rather than guessing at them.
+   */
+  grounded: boolean;
 }
 
 const LEVEL_HINTS: Record<ProgramLevel, string> = {
@@ -39,14 +49,24 @@ export function buildProgramResearchPrompt(subject: ProgramResearchSubject): str
     ? subject.levels
     : (['LANGUAGE_PREP', 'BACHELOR', 'MASTER', 'PHD'] as ProgramLevel[]);
 
-  return `You are researching what a South Korean university teaches and what it charges, for a Mongolian study-abroad agency that quotes these figures to clients.
-
-THIS IS A LOOKUP, NOT A RECALL TASK. Before you write anything, RUN GOOGLE
+  const opening = subject.grounded
+    ? `THIS IS A LOOKUP, NOT A RECALL TASK. Before you write anything, RUN GOOGLE
 SEARCH — in Korean — and read the pages you find. Korean universities publish a
 tuition table (등록금 / 수업료) every academic year and the numbers move, so a
 fee remembered from training data is not merely stale: it is the number our
 consultant quotes and the family then budgets against. If you have not opened a
-page for a figure, you have not found that figure.
+page for a figure, you have not found that figure.`
+    : `YOU HAVE NO SEARCH TOOL, so answer from what you know and label it
+honestly. What you are reliably good at is the SHAPE of the school: its colleges
+and the departments inside them. What you are not good at is this year's
+tuition, because Korean universities republish the table annually — so report
+the structure fully and the money cautiously. A figure you are not confident
+about must be null. A null reads as "мэдээлэл шинэчлэгдэж байна" on our side and
+somebody goes and looks it up; a wrong figure is quoted to a family.`;
+
+  return `You are researching what a South Korean university teaches and what it charges, for a Mongolian study-abroad agency that quotes these figures to clients.
+
+${opening}
 
 UNIVERSITY
   Korean name:  ${subject.nameKo}
@@ -54,9 +74,9 @@ UNIVERSITY
   City:         ${subject.cityEn}
   Official site: ${subject.officialWebsite ?? '(find it)'}
 
-Search Korean pages: 등록금 안내, 학과 소개, 외국인 특별전형 모집요강, 장학금 안내.
+${subject.grounded ? `Search Korean pages: 등록금 안내, 학과 소개, 외국인 특별전형 모집요강, 장학금 안내.
 The English "admissions" page is usually a summary; the Korean one carries the table.
-
+` : ''}
 FIND, for academic year ${subject.year}, the departments open to INTERNATIONAL
 students at each of these levels:
 ${levels.map((level) => `  - ${level}: ${LEVEL_HINTS[level]}`).join('\n')}
@@ -91,16 +111,23 @@ For each department report:
   scholarshipNote       what that discount depends on, IN MONGOLIAN
   topikLevel            minimum TOPIK level required (1-6), or null if none is stated
   language              KOREAN, ENGLISH or KOREAN_ENGLISH — the language classes are taught in
-  confidence            HIGH  = read off an official university page for ${subject.year}
+  confidence            ${subject.grounded
+    ? `HIGH  = read off an official university page for ${subject.year}
                         MEDIUM= read off an official page for a nearby year, or a reliable secondary source
-                        LOW    = inferred
-  sourceUrl             the exact page the figures came from
+                        LOW    = inferred`
+    : `MEDIUM= you are confident this department exists and the figure is close
+                        LOW    = you are unsure. Never HIGH: you did not open a page.`}
+  sourceUrl             ${subject.grounded ? 'the exact page the figures came from' : 'null — you opened no page, so do not write a URL'}
   note                  IN MONGOLIAN, what is uncertain and why (or null)
 
 RULES — these matter more than completeness:
-  0. SEARCH FIRST, ALWAYS. Every figure you report must come from a page you
+${subject.grounded ? `  0. SEARCH FIRST, ALWAYS. Every figure you report must come from a page you
      opened during this search. Answering from memory is a failed run, and an
-     empty search returns an empty "candidates" list — never a remembered one.
+     empty search returns an empty "candidates" list — never a remembered one.` : `  0. NEVER return an empty list because you could not verify something. You are
+     being asked to recall, and the answer is labelled as recall on our side —
+     every candidate is marked low-confidence and a human checks the prices
+     before any of it is quoted. An empty answer helps nobody; an honest,
+     fully-structured one with null prices helps a great deal.`}
   1. NEVER invent a number. If a fee is not published, return null. A null
      shows as "мэдээлэл шинэчлэгдэж байна"; a wrong fee is quoted to a family.
   2. Do NOT convert between per-term and per-year. Report each one only if the
@@ -137,5 +164,5 @@ Answer with JSON only, no prose and no markdown fence:
   "sources": ["https://...", "https://..."]
 }
 
-"sources" lists the pages you actually opened. Search now, then answer.`;
+${subject.grounded ? '"sources" lists the pages you actually opened. Search now, then answer.' : '"sources" is an empty list: you opened no pages. Answer now.'}`;
 }

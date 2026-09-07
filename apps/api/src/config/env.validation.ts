@@ -71,6 +71,27 @@ class EnvironmentVariables {
   @IsOptional()
   GEMINI_MOCK?: string;
 
+  /** 1I-07 — DeepSeek, for the programme-and-tuition search. No grounding. */
+  @IsString()
+  @IsOptional()
+  DEEPSEEK_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  DEEPSEEK_BASE_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  DEEPSEEK_TIMEOUT_MS?: string;
+
+  @IsString()
+  @IsOptional()
+  DEEPSEEK_MAX_OUTPUT_TOKENS?: string;
+
+  @IsString()
+  @IsOptional()
+  DEEPSEEK_MOCK?: string;
+
   @IsString()
   @IsOptional()
   QPAY_BASE_URL?: string;

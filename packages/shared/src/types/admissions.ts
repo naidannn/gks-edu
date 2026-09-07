@@ -102,7 +102,14 @@ export interface AdmissionConfig {
   clientReminderOffsets: number[];
   staffReminderOffsets: number[];
   riskReadinessThreshold: number;
+  /** The intake-calendar search's model — Gemini, because that search is grounded. */
   researchModel: string;
+  /**
+   * The programme search's model. A `deepseek-` prefix routes the call to
+   * DeepSeek: enumerating a school's sixty departments is a big-model job that
+   * nothing grounds in practice, so it is not worth Gemini Pro's price.
+   */
+  programResearchModel: string;
   updatedAt: string;
   updatedBy: { id: string; name: string | null } | null;
 }

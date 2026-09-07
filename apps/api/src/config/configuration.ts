@@ -74,6 +74,19 @@ export interface AppConfig {
       channelId: string;
     };
   };
+  deepseek: {
+    /**
+     * 1I-07 — the "research this school's programmes" button. A different
+     * provider from the intake search on purpose: enumerating sixty departments
+     * is a big-model job that nothing grounds, so it is bought at DeepSeek's
+     * price rather than Gemini Pro's.
+     */
+    apiKey: string;
+    baseUrl: string;
+    timeoutMs: number;
+    maxOutputTokens: number;
+    mock: boolean;
+  };
   gemini: {
     /**
      * 1H-10 — the "research this school's intake dates online" button. Google
@@ -129,6 +142,16 @@ export const configuration = (): AppConfig => ({
     invoiceCode: process.env.QPAY_INVOICE_CODE ?? '',
     callbackUrl: process.env.QPAY_CALLBACK_URL ?? 'http://localhost:3001/api/v1/payments/qpay/webhook',
     mock: (process.env.QPAY_MOCK ?? 'true') === 'true',
+  },
+  deepseek: {
+    apiKey: process.env.DEEPSEEK_API_KEY ?? '',
+    baseUrl: process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com',
+    timeoutMs: Number.parseInt(process.env.DEEPSEEK_TIMEOUT_MS ?? '300000', 10),
+    // Sixty departments is ~13k output tokens; the provider's 8k default
+    // truncates mid-JSON and the whole reply becomes unreadable.
+    maxOutputTokens: Number.parseInt(process.env.DEEPSEEK_MAX_OUTPUT_TOKENS ?? '16384', 10),
+    // Defaults to mock unless a key is present AND mocking is not forced on.
+    mock: (process.env.DEEPSEEK_MOCK ?? (process.env.DEEPSEEK_API_KEY ? 'false' : 'true')) === 'true',
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY ?? '',

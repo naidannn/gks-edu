@@ -661,8 +661,16 @@ model AdmissionConfig {
   /// Below this document-readiness percentage a case counts as at risk.
   riskReadinessThreshold Int   @default(80)
 
-  /// Gemini model the "research this online" button runs against.
+  /// The model the intake-calendar search runs against. Gemini only: that
+  /// search is worth grounding, and grounding is Google's.
   researchModel String @default("gemini-3.1-flash-lite")
+
+  /// The model the programme-and-tuition search runs against, kept separate
+  /// because the two searches are different jobs. Enumerating a school's sixty
+  /// departments needs a big model and does not get grounded in practice, so it
+  /// is not worth Gemini Pro's price; a `deepseek-` prefix routes the call to
+  /// DeepSeek instead, at roughly a twentieth of the cost for the same recall.
+  programResearchModel String @default("deepseek-v4-flash")
 
   updatedAt   DateTime @updatedAt
   updatedById String?  @db.Uuid

@@ -48,9 +48,17 @@ export class UpdateAdmissionConfigDto {
   @IsOptional()
   riskReadinessThreshold?: number;
 
-  @ApiPropertyOptional({ description: 'Gemini model the research button runs against' })
+  @ApiPropertyOptional({ description: 'Model the intake-calendar search runs against (Gemini)' })
   @IsString()
   @MaxLength(80)
   @IsOptional()
   researchModel?: string;
+
+  @ApiPropertyOptional({
+    description: 'Model the programme search runs against. A `deepseek-` prefix routes to DeepSeek.',
+  })
+  @IsString()
+  @MaxLength(80)
+  @IsOptional()
+  programResearchModel?: string;
 }

@@ -25,6 +25,7 @@ const clientOffsets = ref('');
 const staffOffsets = ref('');
 const riskThreshold = ref('80');
 const researchModel = ref('');
+const programResearchModel = ref('');
 
 function fill(value: AdmissionConfig) {
   leadDays.value = String(value.internalLeadDays);
@@ -32,6 +33,7 @@ function fill(value: AdmissionConfig) {
   staffOffsets.value = value.staffReminderOffsets.join(', ');
   riskThreshold.value = String(value.riskReadinessThreshold);
   researchModel.value = value.researchModel;
+  programResearchModel.value = value.programResearchModel;
 }
 
 async function load() {
@@ -83,6 +85,7 @@ async function save() {
       staffReminderOffsets: parsedStaffOffsets.value,
       riskReadinessThreshold: Number.parseInt(riskThreshold.value, 10),
       researchModel: researchModel.value.trim(),
+      programResearchModel: programResearchModel.value.trim(),
     });
     config.value = result;
     fill(result);
@@ -158,10 +161,23 @@ async function save() {
 
       <DsCard title="Интернэтээс судлах">
         <p class="gks-adm-config__note">
-          "Интернэтээс судлах" товч ажиллуулах Gemini загвар. Түлхүүр тохируулаагүй бол систем
+          Хоёр судалгаа өөр ажил тул загвар нь ч тусдаа. Түлхүүр тохируулаагүй бол систем
           хуурамч (mock) хариу буцаана — судалгаа биш гэдгийг үр дүн дээр нь бичиж өгдөг.
         </p>
-        <DsInput v-model="researchModel" label="Загвар" placeholder="gemini-3.1-flash-lite" />
+        <div class="gks-form-grid">
+          <DsInput
+            v-model="researchModel"
+            label="Элсэлтийн хугацаа — загвар"
+            placeholder="gemini-3.1-flash-lite"
+            hint="Google хайлттай ажилладаг тул Gemini байх ёстой."
+          />
+          <DsInput
+            v-model="programResearchModel"
+            label="Хөтөлбөр, төлбөр — загвар"
+            placeholder="deepseek-v4-flash"
+            hint="deepseek- гэж эхэлбэл DeepSeek рүү очно. Хайлт байхгүй тул бүх санал LOW."
+          />
+        </div>
       </DsCard>
 
       <p v-if="errorMsg" class="gks-adm-config__error">{{ errorMsg }}</p>

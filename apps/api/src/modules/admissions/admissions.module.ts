@@ -6,6 +6,7 @@ import { AdminAdmissionsController } from './admin-admissions.controller.js';
 import { AdmissionsBoardService } from './admissions-board.service.js';
 import { AdmissionsController } from './admissions.controller.js';
 import { AdmissionsService } from './admissions.service.js';
+import { DeepseekService } from './research/deepseek.service.js';
 import { GeminiService } from './research/gemini.service.js';
 import { IntakeResearchProcessor } from './research/intake-research.processor.js';
 import { IntakeResearchService } from './research/intake-research.service.js';
@@ -25,11 +26,12 @@ import { IntakeResearchService } from './research/intake-research.service.js';
     AdmissionConfigService,
     AdmissionsBoardService,
     GeminiService,
+    DeepseekService,
     IntakeResearchService,
     IntakeResearchProcessor,
   ],
-  // `GeminiService` is exported for the programme-research search, which is the
-  // same client against the same admin-configured model — see `ProgramsModule`.
-  exports: [AdmissionsService, AdmissionConfigService, AdmissionsBoardService, GeminiService],
+  // Both clients are exported for the programme-research search: which one
+  // answers is decided there by the configured model name — see `ProgramsModule`.
+  exports: [AdmissionsService, AdmissionConfigService, AdmissionsBoardService, GeminiService, DeepseekService],
 })
 export class AdmissionsModule {}

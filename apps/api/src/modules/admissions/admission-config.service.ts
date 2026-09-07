@@ -13,6 +13,7 @@ const SELECT = {
   staffReminderOffsets: true,
   riskReadinessThreshold: true,
   researchModel: true,
+  programResearchModel: true,
   updatedAt: true,
   updatedBy: { select: { id: true, name: true } },
 } as const;
