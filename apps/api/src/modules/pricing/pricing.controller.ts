@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Audit } from '../../common/decorators/audit.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Role, type ServiceType } from '../../prisma/client.js';
 import { CreateServicePricingDto } from './dto/create-service-pricing.dto.js';
+import { UpdateServicePricingDto } from './dto/update-service-pricing.dto.js';
 import { PricingService } from './pricing.service.js';
 
 @ApiTags('pricing')
@@ -37,8 +39,19 @@ export class PricingController {
 
   @Post()
   @Roles(Role.ADMIN)
+  @Audit({ action: 'pricing.create', entity: 'ServicePricing', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Version in a new price/prepayment configuration (1C-19)' })
   create(@Body() dto: CreateServicePricingDto) {
     return this.pricing.create(dto);
+  }
+
+  @Patch(':id')
+  @Roles(Role.ADMIN)
+  @Audit({ action: 'pricing.update', entity: 'ServicePricing' })
+  @ApiOperation({
+    summary: 'Correct the row currently in effect — a typo fix, not a price change (1C-19)',
+  })
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateServicePricingDto) {
+    return this.pricing.update(id, dto);
   }
 }

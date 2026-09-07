@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { type DecimalLike, toNumber } from '../../common/utils/decimal.js';
 import { PrepaymentMode, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
 import type { CreateServicePricingDto } from './dto/create-service-pricing.dto.js';
+import type { UpdateServicePricingDto } from './dto/update-service-pricing.dto.js';
 
 /** Prices change a few times a year; the service pages ask on every visit. */
 const PUBLIC_CACHE_KEY = 'pricing:public';
@@ -80,6 +81,7 @@ export class PricingService {
    * snapshot never drifts when the price changes later.
    */
   async create(dto: CreateServicePricingDto) {
+    PricingService.assertCoherent(dto);
     const effectiveFrom = dto.effectiveFrom ? new Date(dto.effectiveFrom) : new Date();
 
     const created = await this.prisma.$transaction(async (tx) => {
@@ -105,6 +107,60 @@ export class PricingService {
 
     await this.cache.del(PUBLIC_CACHE_KEY);
     return created;
+  }
+
+  /**
+   * Corrects the row currently in effect, in place. Versioning protects a
+   * *price change* — the old figure has to stay readable, because contracts
+   * signed under it refer to it. A mistyped figure is not a price change: it
+   * was never in force, and versioning past it would leave a price the office
+   * never charged sitting in the history. So this edits, and it edits only the
+   * open row — anything with an `effectiveTo` has already been superseded and
+   * is a record of what we charged.
+   */
+  async update(id: string, dto: UpdateServicePricingDto) {
+    const current = await this.prisma.servicePricing.findUnique({ where: { id } });
+    if (!current) {
+      throw new NotFoundException('Үнийн хувилбар олдсонгүй');
+    }
+    if (current.effectiveTo) {
+      throw new BadRequestException('Хаагдсан хувилбарыг засах боломжгүй — шинэ хувилбар нэмнэ үү');
+    }
+
+    const merged = {
+      totalAmount: dto.totalAmount ?? toNumber(current.totalAmount as DecimalLike),
+      prepaymentMode: dto.prepaymentMode ?? current.prepaymentMode,
+      prepaymentValue: dto.prepaymentValue ?? toNumber(current.prepaymentValue as DecimalLike),
+      balanceTrigger: dto.balanceTrigger ?? current.balanceTrigger,
+    };
+    PricingService.assertCoherent(merged);
+
+    const updated = await this.prisma.servicePricing.update({ where: { id }, data: merged });
+
+    await this.cache.del(PUBLIC_CACHE_KEY);
+    return updated;
+  }
+
+  /**
+   * The one rule the field-by-field validators cannot see: a prepayment only
+   * means something *relative to* the total. A percent above 100, or a fixed
+   * prepayment larger than the price itself, would leave `amounts()` handing
+   * back a negative balance and the contract quoting it.
+   */
+  private static assertCoherent(pricing: {
+    totalAmount: number;
+    prepaymentMode: PrepaymentMode;
+    prepaymentValue: number;
+  }): void {
+    if (pricing.prepaymentMode === PrepaymentMode.PERCENT) {
+      if (pricing.prepaymentValue > 100) {
+        throw new BadRequestException('Хувиар тооцох урьдчилгаа 100%-иас их байж болохгүй');
+      }
+      return;
+    }
+    if (pricing.prepaymentValue > pricing.totalAmount) {
+      throw new BadRequestException('Урьдчилгаа нийт төлбөрөөс их байж болохгүй');
+    }
   }
 
   /** Resolves a pricing snapshot's prepayment/balance MNT amounts (gksedu.md §5.4). */
