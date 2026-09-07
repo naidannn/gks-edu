@@ -54,10 +54,29 @@ const errors = reactive<Record<string, string>>({});
 const status = ref<ClientStatus>('ACTIVE');
 const saving = ref(false);
 const saveError = ref<string | null>(null);
+/**
+ * What the save did to the contracts (1C-30). A corrected register number is
+ * rewritten into every contract nobody has signed yet; a signed one is left
+ * alone, and the office has to say so out loud rather than assume the paper
+ * followed the record.
+ */
+const contractNotice = ref<{ text: string; warn: boolean } | null>(null);
 
 const { universities, loading: universitiesLoading, load: loadUniversities } = useUniversityCatalogue();
 
 const STATUS_OPTIONS = selectOptions(CLIENT_STATUS_LABELS);
+
+/** One line about what happened to the contracts, or nothing to say. */
+function contractSyncNotice(sync?: { refreshed: number; locked: number }): { text: string; warn: boolean } | null {
+  if (!sync) return null;
+  const refreshed = sync.refreshed > 0 ? `Гарын үсэг зураагүй ${sync.refreshed} гэрээ шинэ мэдээллээр шинэчлэгдлээ.` : '';
+  const locked =
+    sync.locked > 0
+      ? `Гарын үсэг зурагдсан ${sync.locked} гэрээнд засвар тусахгүй — шинэ гэрээгээр баталгаажуулна уу.`
+      : '';
+  const text = [refreshed, locked].filter(Boolean).join(' ');
+  return text ? { text, warn: sync.locked > 0 } : null;
+}
 
 async function startEditing() {
   if (!client.value) return;
@@ -67,6 +86,7 @@ async function startEditing() {
   fillChoicesFromCase(form, activeCase.value?.universityChoices ?? []);
   status.value = client.value.status;
   saveError.value = null;
+  contractNotice.value = null;
   editing.value = true;
   if (!universities.value.length) await loadUniversities();
 }
@@ -79,7 +99,11 @@ async function save() {
   }
   saving.value = true;
   try {
-    await api.patch(`/clients/${id.value}`, { ...clientPayload(form), status: status.value });
+    const saved = await api.patch<{ contractSync?: { refreshed: number; locked: number } }>(
+      `/clients/${id.value}`,
+      { ...clientPayload(form), status: status.value },
+    );
+    contractNotice.value = contractSyncNotice(saved?.contractSync);
     editing.value = false;
     await workspace.refresh();
   } catch (err) {
@@ -134,6 +158,12 @@ useHead({
       </form>
 
       <template v-else>
+        <DsCard v-if="contractNotice" :accent="contractNotice.warn">
+          <p class="gks-ws__notice" :class="{ 'gks-ws__notice--warn': contractNotice.warn }">
+            {{ contractNotice.text }}
+          </p>
+        </DsCard>
+
         <nav class="gks-tabs" aria-label="Үйлчлүүлэгчийн хэсгүүд">
           <button
             v-for="entry in TABS"
@@ -198,6 +228,8 @@ useHead({
 .gks-ws__form { display: flex; flex-direction: column; gap: var(--sp-4); max-width: 1100px; }
 .gks-ws__status-field { margin-top: var(--sp-4); max-width: 320px; }
 .gks-ws__error { color: var(--danger-fg); }
+.gks-ws__notice { font-size: var(--fs-body-sm); }
+.gks-ws__notice--warn { color: var(--danger-fg); }
 .gks-ws__empty { font-size: var(--fs-body-sm); color: var(--text-muted); }
 </style>
 

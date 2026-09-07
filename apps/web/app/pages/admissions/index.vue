@@ -116,18 +116,6 @@ const regionOptions = computed(() => [
   ...(facets.value?.regions ?? []).map((row) => ({ value: row.value, label: `${row.label} (${row.count})` })),
 ]);
 
-/**
- * An em dash for a date the school has not published — the same convention the
- * university page uses. Never a substituted date (CLAUDE.md); the longer
- * "мэдээлэл шинэчлэгдэж байна" wording belongs in prose, not in a two-column
- * date row where it wraps over three lines.
- */
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
-
 function countdownLabel(days: number | null): string {
   if (days === null) return 'Хугацаа тодорхойгүй';
   if (days < 0) return 'Хугацаа дууссан';
@@ -256,11 +244,11 @@ useListingSeo('/admissions');
           <dl class="gks-adm-card__dates">
             <div>
               <dt>Бүртгэлийн эцсийн хугацаа</dt>
-              <dd class="gks-tnum">{{ formatDate(intake.internalDeadline) }}</dd>
+              <dd class="gks-tnum">{{ formatNumericDateUtc(intake.internalDeadline) }}</dd>
             </div>
             <div>
               <dt>Хичээл эхлэх</dt>
-              <dd class="gks-tnum">{{ formatDate(intake.classStartDate) }}</dd>
+              <dd class="gks-tnum">{{ formatNumericDateUtc(intake.classStartDate) }}</dd>
             </div>
           </dl>
 

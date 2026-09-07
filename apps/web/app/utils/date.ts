@@ -82,3 +82,21 @@ export function formatNumericDate(value: DateLike): string {
 export function formatDateUtc(value: DateLike): string {
   return render(value, { ...DATE, timeZone: 'UTC' });
 }
+
+/**
+ * `2027.01.24` — the same day as {@link formatDateUtc}, written without asking
+ * the platform for a locale.
+ *
+ * Everything above goes through `toLocaleString('mn-MN')`, which is correct
+ * where the runtime carries Mongolian locale data and silently falls back to
+ * English ("Jan 24, 2027") where it does not — some Chrome builds ship no `mn`
+ * at all. A public page in Mongolian cannot take that chance for a date a
+ * client has to work to, so a deadline is written in digits, which read the
+ * same in every locale and line up in a column.
+ */
+export function formatNumericDateUtc(value: DateLike): string {
+  const date = parse(value);
+  if (date === null) return NO_DATE;
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getUTCFullYear()}.${pad(date.getUTCMonth() + 1)}.${pad(date.getUTCDate())}`;
+}

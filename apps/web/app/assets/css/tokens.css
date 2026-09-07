@@ -127,6 +127,10 @@
   --border-hair: 1px; --border-thick: 2px; --border-rail: 3px;
 
   --control-sm: 36px; --control-md: 44px; --control-lg: 52px;
+  /* Vertical padding inside a single-line field. It is what actually sets
+     the height of a text input — `--control-md` is only a floor, and text
+     plus this padding clears it. Set to 0 where the floor should win. */
+  --field-pad-y: var(--sp-3);
 
   --container-prose: 68ch; --container-narrow: 720px;
   --container-content: 1080px; --container-page: 1180px;

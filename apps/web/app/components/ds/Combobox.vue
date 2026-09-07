@@ -231,7 +231,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
   border: 0;
   outline: none;
   background: transparent;
-  padding: var(--sp-3) 0;
+  padding: var(--field-pad-y) 0;
   font-size: var(--fs-body);
   font-family: var(--font-sans);
   color: var(--text-body);

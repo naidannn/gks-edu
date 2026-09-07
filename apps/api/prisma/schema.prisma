@@ -329,10 +329,10 @@ model University {
 
   faculties Faculty[]
   programs  UniversityProgram[]
-  intakes  IntakeTerm[]
-  savedBy  SavedUniversity[]
-  cases    Case[]
-  clients  Client[]
+  intakes   IntakeTerm[]
+  savedBy   SavedUniversity[]
+  cases     Case[]
+  clients   Client[]
 
   caseChoices CaseUniversityChoice[]
 
@@ -1286,6 +1286,12 @@ model Contract {
   type   ContractType
   status ContractStatus @default(DRAFT)
 
+  /// The template version this contract was issued from, so an unsigned draft
+  /// can be re-rendered against the same legal text when the client's identity
+  /// is corrected (1C-30). Null on contracts issued before that was recorded.
+  templateId String?           @db.Uuid
+  template   ContractTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
   // Pricing snapshot taken when the contract is issued (§6.1) — a later price
   // change never rewrites an existing contract.
   totalAmountSnapshot     Decimal        @db.Decimal(14, 2)
@@ -1340,6 +1346,7 @@ model ContractTemplate {
   version     Int         @default(1)
   isActive    Boolean     @default(true)
   bodyMn      String
+  contracts   Contract[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 

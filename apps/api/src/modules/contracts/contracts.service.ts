@@ -4,12 +4,14 @@ import { OtpService } from '../../sms/otp.service.js';
 import { StorageService } from '../../storage/storage.service.js';
 import { isCrmStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import type { DecimalLike } from '../../common/utils/decimal.js';
 import {
   BalanceTrigger,
   CaseStage,
   ContractStatus,
   ContractType,
   NotificationEvent,
+  type PrepaymentMode,
   type Prisma,
   type ServiceType,
 } from '../../prisma/client.js';
@@ -22,7 +24,13 @@ import { PricingService } from '../pricing/pricing.service.js';
 import { amountInWordsMnCapitalized } from './amount-words.util.js';
 import { ContractPdfService } from './contract-pdf.service.js';
 import { ADULT_AGE, ageOn } from '../clients/dto/client-fields.js';
-import { formatAmount, formatAmountExact, renderContractBody, universityNames } from './contract-template.util.js';
+import {
+  type ContractUniversityChoice,
+  formatAmount,
+  formatAmountExact,
+  renderContractBody,
+  universityNames,
+} from './contract-template.util.js';
 import type { AcceptContractDto } from './dto/accept-contract.dto.js';
 import type { CreateContractDto } from './dto/create-contract.dto.js';
 import type { CreateContractTemplateDto } from './dto/create-contract-template.dto.js';
@@ -53,6 +61,21 @@ export const BALANCE_CONDITION: Record<BalanceTrigger, string> = {
   [BalanceTrigger.AFTER_SCHOLARSHIP_RESULT]:
     'БНСУ-ын Засгийн газрын тэтгэлэгт хөтөлбөрийн албан ёсны үр дүн зарлагдаж, Зуучлуулагч тэтгэлэгт тэнцсэн тухай мэдэгдэл ирмэгц Зуучлагч тал энэ талаар Зуучлуулагчид боломжит богино хугацаанд мэдэгдэх бөгөөд үүний үндсэн дээр Зуучлуулагч нь үлдэгдэл төлбөрийг төлнө',
 };
+
+/**
+ * The statuses whose body is still only a draft on our side — nobody has put a
+ * name to it, so correcting the client record may still correct it (1C-30).
+ * From `SIGNED` on, the text is what two people agreed to.
+ */
+const REWRITABLE_STATUSES: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT];
+
+/** What a client edit did to that client's contracts (1C-30). */
+export interface ContractSyncResult {
+  /** Unsigned contracts re-rendered with the corrected details. */
+  refreshed: number;
+  /** Signed contracts left untouched — they are reissued by hand, if at all. */
+  locked: number;
+}
 
 @Injectable()
 export class ContractsService {
@@ -125,24 +148,19 @@ export class ContractsService {
     const client = gksCase.user.client;
     const signedForByGuardian = Boolean(client && ageOn(client.birthDate) < ADULT_AGE);
 
-    const { prepayment, balance } = PricingService.amounts(pricing);
     const contractDate = new Date();
-    const bodyMn = renderContractBody(template.bodyMn, {
-      ...partyTokens(gksCase.user, client, signedForByGuardian),
-      contractDate: contractDate.toLocaleDateString('en-CA'),
-      signatureDate: formatSignatureDate(contractDate),
-      universityName: universityNames(gksCase.universityChoices, gksCase.university?.nameMn ?? null),
-      totalAmount: formatAmountExact(pricing.totalAmount),
-      totalAmountWords: amountInWordsMnCapitalized(pricing.totalAmount),
-      prepaymentAmount: formatAmountExact(prepayment),
-      prepaymentAmountWords: amountInWordsMnCapitalized(prepayment),
-      balanceAmount: formatAmountExact(balance),
-      balanceAmountWords: amountInWordsMnCapitalized(balance),
-      balanceCondition: BALANCE_CONDITION[pricing.balanceTrigger],
-      paymentSchedule: `Гэрээ байгуулах үед ${formatAmount(prepayment)}₮, ${
-        pricing.balanceTrigger === BalanceTrigger.AFTER_SCHOLARSHIP_RESULT ? 'тэтгэлэгт тэнцсэний дараа' : 'виз гарсны дараа'
-      } үлдэгдэл ${formatAmount(balance)}₮`,
-    });
+    const bodyMn = renderContractBody(
+      template.bodyMn,
+      contractTokens({
+        user: gksCase.user,
+        client,
+        signedForByGuardian,
+        contractDate,
+        universityChoices: gksCase.universityChoices,
+        universityFallback: gksCase.university?.nameMn ?? null,
+        money: pricing,
+      }),
+    );
 
     return this.prisma.contract.create({
       data: {
@@ -151,6 +169,7 @@ export class ContractsService {
         number: await this.nextContractNumber(contractDate),
         type: dto.type,
         status: dto.type === ContractType.ELECTRONIC ? ContractStatus.SENT : ContractStatus.DRAFT,
+        templateId: template.id,
         totalAmountSnapshot: pricing.totalAmount,
         prepaymentModeSnapshot: pricing.prepaymentMode,
         prepaymentValueSnapshot: pricing.prepaymentValue,
@@ -159,6 +178,85 @@ export class ContractsService {
         bodyMn,
       },
     });
+  }
+
+  /**
+   * Re-renders every contract of a user that nobody has signed yet (1C-30).
+   *
+   * The body is a snapshot taken when the contract was issued, so a register
+   * number typed wrong at registration stays wrong on the draft long after the
+   * client record is corrected — which is exactly the paper the office then
+   * prints. Correcting the client corrects the drafts with it.
+   *
+   * What it deliberately does not touch: the money, the contract number and the
+   * issue date, all read back from the contract's own snapshot; and any
+   * contract already signed — that one is a legal record of what two people
+   * agreed to, and it is reissued by hand, not rewritten behind their backs.
+   */
+  async refreshUnsignedForUser(userId: string): Promise<ContractSyncResult> {
+    const contracts = await this.prisma.contract.findMany({
+      where: { userId },
+      include: {
+        template: true,
+        case: {
+          include: {
+            user: { include: { client: true } },
+            university: true,
+            universityChoices: {
+              orderBy: { sortOrder: 'asc' },
+              select: { track: true, university: { select: { nameMn: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const result: ContractSyncResult = { refreshed: 0, locked: 0 };
+
+    for (const contract of contracts) {
+      // A contract issued before `templateId` was recorded falls back to the
+      // service's active template — the same text it would be reissued from.
+      const template =
+        contract.template ??
+        (await this.prisma.contractTemplate.findFirst({
+          where: { serviceType: contract.case.serviceType, isActive: true },
+          orderBy: { version: 'desc' },
+        }));
+      if (!template) continue;
+
+      const client = contract.case.user.client;
+      const bodyMn = renderContractBody(
+        template.bodyMn,
+        contractTokens({
+          user: contract.case.user,
+          client,
+          signedForByGuardian: Boolean(client && ageOn(client.birthDate) < ADULT_AGE),
+          contractDate: contract.createdAt,
+          universityChoices: contract.case.universityChoices,
+          universityFallback: contract.case.university?.nameMn ?? null,
+          money: {
+            totalAmount: contract.totalAmountSnapshot,
+            prepaymentMode: contract.prepaymentModeSnapshot,
+            prepaymentValue: contract.prepaymentValueSnapshot,
+            balanceTrigger: contract.balanceTriggerSnapshot,
+          },
+        }),
+      );
+
+      // Nothing the contract says changed — a signed contract is only worth
+      // warning about when the correction would actually have reached it.
+      if (bodyMn === contract.bodyMn) continue;
+
+      if (!REWRITABLE_STATUSES.includes(contract.status)) {
+        result.locked += 1;
+        continue;
+      }
+
+      await this.prisma.contract.update({ where: { id: contract.id }, data: { bodyMn } });
+      result.refreshed += 1;
+    }
+
+    return result;
   }
 
   // ─── Reading ───────────────────────────────────────────────────────────────
@@ -475,6 +573,48 @@ export function partyTokens(user: ContractUser, client: ContractClient | null, b
     guardianName,
     guardianRegister: byGuardian ? (client?.guardianRegisterNumber ?? '—') : '—',
     guardianRelation: byGuardian ? (client?.guardianRelation ?? '—') : '—',
+  };
+}
+
+/**
+ * Every `{{token}}` the contract body can use, for one case at one moment.
+ *
+ * Issuing a contract and re-rendering an unsigned one build the same map: the
+ * only difference is where the money and the date come from — the live price
+ * list on the first pass, the contract's own snapshot on every later one.
+ */
+export function contractTokens(input: {
+  user: ContractUser;
+  client: ContractClient | null;
+  signedForByGuardian: boolean;
+  contractDate: Date;
+  universityChoices: readonly ContractUniversityChoice[];
+  universityFallback: string | null;
+  money: {
+    totalAmount: DecimalLike;
+    prepaymentMode: PrepaymentMode;
+    prepaymentValue: DecimalLike;
+    balanceTrigger: BalanceTrigger;
+  };
+}): Record<string, string> {
+  const { prepayment, balance } = PricingService.amounts(input.money);
+  const total = input.money.totalAmount;
+
+  return {
+    ...partyTokens(input.user, input.client, input.signedForByGuardian),
+    contractDate: input.contractDate.toLocaleDateString('en-CA'),
+    signatureDate: formatSignatureDate(input.contractDate),
+    universityName: universityNames(input.universityChoices, input.universityFallback),
+    totalAmount: formatAmountExact(total),
+    totalAmountWords: amountInWordsMnCapitalized(total),
+    prepaymentAmount: formatAmountExact(prepayment),
+    prepaymentAmountWords: amountInWordsMnCapitalized(prepayment),
+    balanceAmount: formatAmountExact(balance),
+    balanceAmountWords: amountInWordsMnCapitalized(balance),
+    balanceCondition: BALANCE_CONDITION[input.money.balanceTrigger],
+    paymentSchedule: `Гэрээ байгуулах үед ${formatAmount(prepayment)}₮, ${
+      input.money.balanceTrigger === BalanceTrigger.AFTER_SCHOLARSHIP_RESULT ? 'тэтгэлэгт тэнцсэний дараа' : 'виз гарсны дараа'
+    } үлдэгдэл ${formatAmount(balance)}₮`,
   };
 }
 

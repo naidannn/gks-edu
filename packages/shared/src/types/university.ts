@@ -95,8 +95,10 @@ export interface UniversityCard {
 export interface UniversityProgram {
   id: string;
   level: ProgramLevel;
+  /** The school's own wording, in the three languages we have it in. */
   nameMn: string;
   nameEn: string | null;
+  nameKo: string | null;
   durationYears: number | null;
   /** Per semester, KRW — the figure Korean schools publish. */
   tuitionPerTermKrw: number | null;

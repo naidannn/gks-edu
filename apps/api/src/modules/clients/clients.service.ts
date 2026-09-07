@@ -22,6 +22,7 @@ import {
   type UniversityChoiceInput,
   normaliseChoices,
 } from '../cases/university-choice.rules.js';
+import { ContractsService } from '../contracts/contracts.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { AccountClaimService } from '../users/account-claim.service.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
@@ -157,6 +158,7 @@ export class ClientsService {
     private readonly prisma: PrismaService,
     private readonly cases: CasesService,
     private readonly claims: AccountClaimService,
+    private readonly contracts: ContractsService,
   ) {}
 
   // ─── Create ───────────────────────────────────────────────────────────────
@@ -535,6 +537,10 @@ export class ClientsService {
       });
     });
 
+    // The same correction from the portal side (1C-30) — a client who fixes
+    // their own register number fixes the contract they have not signed yet.
+    await this.contracts.refreshUnsignedForUser(userId);
+
     return this.findByUserId(userId);
   }
 
@@ -647,7 +653,12 @@ export class ClientsService {
       });
     }
 
-    return this.findOne(id);
+    // A register number typed wrong at registration is on the draft contract
+    // too, and correcting one without the other is what the office found out
+    // the hard way (1C-30). Signed contracts are counted, never rewritten.
+    const contractSync = await this.contracts.refreshUnsignedForUser(existing.userId);
+
+    return { ...(await this.findOne(id)), contractSync };
   }
 
   // ─── Internals ────────────────────────────────────────────────────────────
