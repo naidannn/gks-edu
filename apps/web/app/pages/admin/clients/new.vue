@@ -50,12 +50,14 @@ async function submit() {
   submitting.value = true;
   try {
     const path = leadId.value ? `/clients/from-lead/${leadId.value}` : '/clients';
-    const created = await api.post<ClientDetail>(path, {
+    const created = await api.post<ClientDetail & { accountLinked?: boolean }>(path, {
       ...clientPayload(form),
       openCase: openCase.value,
       ...(assignToMe.value && auth.user ? { assignedConsultantId: auth.user.id } : {}),
     });
-    await navigateTo(`/admin/clients/${created.id}`);
+    // The client had already signed up on the site, so their service went onto
+    // the account they own and no invitation was sent — the record says so once.
+    await navigateTo(`/admin/clients/${created.id}${created.accountLinked ? '?linked=1' : ''}`);
   } catch (err) {
     submitError.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа.');
   } finally {
@@ -83,6 +85,7 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
       <p class="gks-page__hint">
         <DsIcon name="mail" :size="14" />
         Имэйл хаяг бөглөвөл кабинет идэвхжүүлэх урилга бүртгэмэгц тэр хаяг руу илгээгдэнэ — холбоос 7 хоног хүчинтэй.
+        Сайт дээр өөрөө бүртгүүлсэн хүн бол үйлчилгээ нь тэр бүртгэл дээр нь холбогдоно.
       </p>
     </header>
 

@@ -173,11 +173,11 @@ export class ClientsService {
     const choices = this.resolveChoices(dto);
     this.assertGuardianPresent(new Date(dto.birthDate), dto);
     await this.assertRegisterFree(dto.registerNumber);
-    await this.assertEmailFree(dto.email);
+    const existingAccount = await this.accountToAdopt(dto.email);
     if (dto.assignedConsultantId) await this.assertStaff(dto.assignedConsultantId);
 
     const created = await this.prisma.$transaction(async (tx) => {
-      const account = await this.createAccount(tx, dto);
+      const account = await this.resolveAccount(tx, existingAccount, dto);
       const client = await tx.client.create({
         data: {
           ...this.toClientData(dto),
@@ -202,9 +202,9 @@ export class ClientsService {
       return client;
     });
 
-    await this.invitePortal(created.userId, dto);
+    if (!existingAccount?.hasLogin) await this.invitePortal(created.userId, dto);
 
-    return this.findOne(created.id);
+    return { ...(await this.findOne(created.id)), accountLinked: Boolean(existingAccount) };
   }
 
   /**
@@ -251,11 +251,11 @@ export class ClientsService {
     const choices = this.resolveChoices(merged);
     this.assertGuardianPresent(new Date(merged.birthDate), merged);
     await this.assertRegisterFree(merged.registerNumber);
-    await this.assertEmailFree(merged.email);
+    const existingAccount = await this.accountToAdopt(merged.email);
     if (merged.assignedConsultantId) await this.assertStaff(merged.assignedConsultantId);
 
     const created = await this.prisma.$transaction(async (tx) => {
-      const account = await this.createAccount(tx, merged);
+      const account = await this.resolveAccount(tx, existingAccount, merged);
       const client = await tx.client.create({
         data: {
           ...this.toClientData(merged),
@@ -296,9 +296,9 @@ export class ClientsService {
       return client;
     });
 
-    await this.invitePortal(created.userId, merged);
+    if (!existingAccount?.hasLogin) await this.invitePortal(created.userId, merged);
 
-    return this.findOne(created.id);
+    return { ...(await this.findOne(created.id)), accountLinked: Boolean(existingAccount) };
   }
 
   /**
@@ -766,16 +766,70 @@ export class ClientsService {
   }
 
   /**
-   * The `User` row every client hangs off. No password is set, so `login`
-   * rejects it until the client claims the account themselves.
+   * The account a client already opened on the site themselves, if any.
+   *
+   * Registration assumed the office always meets a person first (1B-14), so the
+   * `User` row was always created fresh — and anyone who had signed up on
+   * gksedu.mn before walking in could not be registered at all: their address
+   * was taken by their own login. That account is exactly the one their service
+   * belongs on, so it is adopted rather than refused, and the case opens in the
+   * cabinet they are already using (1B-20).
+   *
+   * A genuine duplicate is still a 409, now saying which: the address is on a
+   * client we already have, or on a member of staff.
    */
-  private createAccount(db: Db, dto: CreateClientDto) {
-    return db.user.create({
-      data: {
-        email: dto.email?.trim().toLowerCase() ?? null,
-        name: `${dto.lastName.trim()} ${dto.firstName.trim()}`,
-        phone: dto.phone,
+  private async accountToAdopt(email: string | undefined): Promise<{ id: string; hasLogin: boolean } | null> {
+    const address = email?.trim().toLowerCase();
+    if (!address) return null;
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: address },
+      select: {
+        id: true,
+        role: true,
+        password: true,
+        googleId: true,
+        client: { select: { code: true } },
       },
+    });
+    if (!user) return null;
+
+    if (user.client) {
+      throw new ConflictException(`Энэ имэйлээр ${user.client.code} үйлчлүүлэгч бүртгэлтэй байна`);
+    }
+    if (user.role !== Role.USER) {
+      throw new ConflictException('Энэ имэйл ажилтны бүртгэлд ашиглагдаж байна');
+    }
+
+    // A login they own means no claim invitation: `AccountClaimService.invite`
+    // refuses those rows, and a "set your password" mail would puzzle someone
+    // who already has one.
+    return { id: user.id, hasLogin: Boolean(user.password ?? user.googleId) };
+  }
+
+  /**
+   * The `User` row the client hangs off — the one {@link accountToAdopt} found,
+   * or a new one. A fresh row has no password, so `login` rejects it until the
+   * client claims the account themselves; an adopted row keeps its own
+   * credentials and only takes the name and phone the form just recorded.
+   */
+  private async resolveAccount(
+    db: Db,
+    existing: { id: string } | null,
+    dto: CreateClientDto,
+  ): Promise<{ id: string }> {
+    const identity = {
+      name: `${dto.lastName.trim()} ${dto.firstName.trim()}`,
+      phone: dto.phone,
+    };
+
+    if (existing) {
+      await db.user.update({ where: { id: existing.id }, data: identity });
+      return { id: existing.id };
+    }
+
+    return db.user.create({
+      data: { ...identity, email: dto.email?.trim().toLowerCase() ?? null },
       select: { id: true },
     });
   }

@@ -62,6 +62,18 @@ const saveError = ref<string | null>(null);
  */
 const contractNotice = ref<{ text: string; warn: boolean } | null>(null);
 
+/**
+ * Registration linked the client to the login they had already opened on the
+ * site, rather than making a second one (1B-20). Staff need to know once: no
+ * invitation went out, because the client can already sign in.
+ */
+const accountNotice = ref(route.query.linked === '1');
+
+function dismissAccountNotice() {
+  accountNotice.value = false;
+  router.replace({ query: { ...route.query, linked: undefined } });
+}
+
 const { universities, loading: universitiesLoading, load: loadUniversities } = useUniversityCatalogue();
 
 const STATUS_OPTIONS = selectOptions(CLIENT_STATUS_LABELS);
@@ -158,6 +170,14 @@ useHead({
       </form>
 
       <template v-else>
+        <DsCard v-if="accountNotice">
+          <p class="gks-ws__notice">
+            Энэ хүн сайт дээр өмнө нь бүртгүүлсэн байсан тул үйлчилгээг нь тухайн бүртгэл дээр нь холболоо —
+            өөрийн кабинетаараа шууд харна. Урилга илгээгээгүй.
+            <button type="button" class="gks-ws__notice-close" @click="dismissAccountNotice">Ойлголоо</button>
+          </p>
+        </DsCard>
+
         <DsCard v-if="contractNotice" :accent="contractNotice.warn">
           <p class="gks-ws__notice" :class="{ 'gks-ws__notice--warn': contractNotice.warn }">
             {{ contractNotice.text }}
@@ -230,6 +250,16 @@ useHead({
 .gks-ws__error { color: var(--danger-fg); }
 .gks-ws__notice { font-size: var(--fs-body-sm); }
 .gks-ws__notice--warn { color: var(--danger-fg); }
+.gks-ws__notice-close {
+  margin-left: var(--sp-2);
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--text-accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
 .gks-ws__empty { font-size: var(--fs-body-sm); color: var(--text-muted); }
 </style>
 
