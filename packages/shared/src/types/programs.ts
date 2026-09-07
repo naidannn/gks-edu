@@ -1,11 +1,12 @@
 /**
  * Programmes and tuition (ARCHITECTURE.md §3.3).
  *
- * The module answers one question — "who teaches marketing, and what does it
- * cost?" — and it can only answer it because a programme is filed under a
- * canonical `StudyField` while keeping the school's own wording for display.
- * Every school words the same subject differently; the taxonomy is what makes
- * them one row on a filter panel.
+ * The catalogue is three levels and no more: a university, the colleges it is
+ * organised into (танхим / 단과대학), and the departments inside them with what
+ * each one costs. There is deliberately no canonical subject taxonomy above
+ * that — every school words the same subject differently, so a canonical list
+ * is a second vocabulary somebody maintains forever. What a visitor types is a
+ * word, and the search answers it off the names the schools publish.
  *
  * Nullable money is genuinely unknown, never zero. A tuition figure with no
  * `tuitionYear` on it is shown as "мэдээлэл шинэчлэгдэж байна", not as current:
@@ -21,28 +22,20 @@ export type InstructionLanguage = 'KOREAN' | 'ENGLISH' | 'KOREAN_ENGLISH';
 /** Where a programme's figures came from. `AI_ASSISTED` means a human saved them. */
 export type ProgramSource = 'MANUAL' | 'AI_ASSISTED' | 'IMPORTED';
 
-/** One canonical subject, as it appears on a programme row. */
-export interface StudyFieldRef {
+/** One college of one university, as it appears on a programme row. */
+export interface FacultyRef {
   id: string;
-  slug: string;
   nameMn: string;
-  nameEn: string;
+  nameEn: string | null;
+  /** The school's own word for it — 공과대학 — and what staff match a prospectus against. */
   nameKo: string | null;
-  /** Null on a group. Groups are headings; programmes hang off the subjects. */
-  parentId: string | null;
 }
 
-/** A subject with its programme count, as the filter panel needs it. */
-export interface StudyField extends StudyFieldRef {
-  aliases: string[];
+/** A college as the admin screen lists it, with how many departments sit in it. */
+export interface Faculty extends FacultyRef {
+  universityId: string;
   sortOrder: number;
-  isActive: boolean;
   programCount: number;
-}
-
-/** A group with the subjects inside it. `programCount` rolls its children up. */
-export interface StudyFieldGroup extends StudyField {
-  children: StudyField[];
 }
 
 /** The school columns a programme row carries — less than a catalogue card. */
@@ -63,8 +56,8 @@ export interface ProgramUniversity {
   theKoreaRank: number | null;
 }
 
-/** One programme as a visitor sees it. */
-export interface ProgramListItem {
+/** One programme as a visitor sees it, without the school it belongs to. */
+export interface ProgramRow {
   id: string;
   universityId: string;
   level: ProgramLevel;
@@ -72,8 +65,6 @@ export interface ProgramListItem {
   nameMn: string;
   nameEn: string | null;
   nameKo: string | null;
-  /** The school's own college (경영대학), free text beside the canonical subject. */
-  faculty: string | null;
   durationYears: number | null;
 
   /** Per semester, KRW — the figure Korean schools publish. */
@@ -94,7 +85,12 @@ export interface ProgramListItem {
   acceptsInternational: boolean;
   sourceUrl: string | null;
 
-  studyField: StudyFieldRef | null;
+  /** The college this department sits in. Null is normal, not a defect. */
+  faculty: FacultyRef | null;
+}
+
+/** A programme row with its school on it — what `/programs` returns. */
+export interface ProgramListItem extends ProgramRow {
   university: ProgramUniversity;
 }
 
@@ -103,6 +99,8 @@ export interface ProgramFacets {
   levels: { value: ProgramLevel; count: number }[];
   languages: { value: InstructionLanguage; count: number }[];
   regions: { value: string; label: string; count: number }[];
+  /** Schools by slug — the "just this university's departments" cut. */
+  universities: { value: string; label: string; count: number }[];
   /** Across every priced programme — the axis a budget filter is drawn on. */
   tuition: { minKrw: number | null; maxKrw: number | null; avgKrw: number | null };
 }
@@ -112,7 +110,7 @@ export interface ProgramFacets {
  * ------------------------------------------------------------------------- */
 
 export interface AdminProgram extends ProgramListItem {
-  studyFieldId: string | null;
+  facultyId: string | null;
   sourceType: ProgramSource;
   /** No `verifiedAt` means nobody has checked this against the school. */
   verifiedAt: string | null;
@@ -132,8 +130,8 @@ export interface AdminProgramStats {
   draft: number;
   /** No tuition figure at all — the row cannot answer the question it exists for. */
   missingTuition: number;
-  /** Not filed under a subject, so a subject search will never find it. */
-  unclassified: number;
+  /** Not filed under any college yet. */
+  noFaculty: number;
   unverified: number;
   /** Priced against a fee table older than last year's. */
   staleTuition: number;
@@ -145,35 +143,6 @@ export interface BulkProgramResult {
   skipped: number;
   createdNames: string[];
   skippedNames: string[];
-}
-
-/** What `POST /admin/study-fields/:id/assign` did. */
-export interface AssignStudyFieldResult {
-  assigned: number;
-  /** Wordings now remembered, so the next school naming it this way is matched. */
-  learnedAliases: string[];
-}
-
-export interface RematchRow {
-  programId: string;
-  programName: string;
-  universityNameMn: string;
-  fieldId: string;
-  fieldSlug: string;
-  score: number;
-  /** The alias or name that matched — the answer to "why this subject?". */
-  matchedOn: string;
-  wasClassified: boolean;
-}
-
-/** `POST /admin/study-fields/rematch`. Defaults to a dry run, and says which it was. */
-export interface RematchResult {
-  dryRun: boolean;
-  scanned: number;
-  matched: number;
-  unmatched: number;
-  /** Capped at 300 — the counters above are the whole picture. */
-  rows: RematchRow[];
 }
 
 /* ------------------------------------------------------------------------- *
@@ -195,8 +164,7 @@ export interface ProgramCandidate {
   /** The department name as the school writes it. One of these two is always set. */
   nameKo: string | null;
   nameEn: string | null;
-  /** A slug from the taxonomy we sent the model, or null. Never one it coined. */
-  fieldSlug: string | null;
+  /** The college, as the school writes it. Null when the school publishes none. */
   faculty: string | null;
   durationYears: number | null;
   tuitionPerTermKrw: number | null;
@@ -223,6 +191,11 @@ export interface ProgramResearchRun {
   year: number;
   status: ProgramResearchStatus;
   model: string;
+  /**
+   * True when no `GEMINI_API_KEY` is configured: the run is a fixture, not a
+   * search, and the same thirteen candidates come back for every school.
+   */
+  mock: boolean;
   candidates: ProgramCandidate[] | null;
   sources: string[];
   error: string | null;

@@ -22,6 +22,17 @@ const { data: partnerUniversities } = await useApiFetch<{ items: UniversityCard[
   lazy: true,
 });
 
+/**
+ * "Юугаар сурах вэ" comes before "аль сургуульд", and the answer is a word
+ * somebody types rather than a list we maintain. This box is the same search
+ * the catalogue runs — it just carries the word there.
+ */
+const programSearch = ref('');
+function searchPrograms() {
+  const q = programSearch.value.trim();
+  return navigateTo(q ? { path: '/programs', query: { q } } : '/programs');
+}
+
 const featured = computed(() => featuredUniversities.value?.items ?? []);
 const trustWall = computed(() =>
   (partnerUniversities.value?.items ?? []).filter((university) => university.logoPath),
@@ -250,6 +261,28 @@ useSeoMeta({
     <HomeRoadmapTimeline />
 
     <HomeActiveAdmissions />
+
+    <section>
+      <div class="gks-section__head">
+        <h2 class="gks-section__title">Юугаар сурах вэ?</h2>
+        <NuxtLink to="/programs" class="gks-section__link">
+          Бүх ангиуд <DsIcon name="arrow-right" :size="14" />
+        </NuxtLink>
+      </div>
+      <p class="gks-fields-lede">
+        Мэргэжлийнхээ нэрийг бичээд хайхад Солонгосын сургуулиудын тохирох ангиуд
+        сургалтын төлбөр, шаардлагынх нь хамт гарч ирнэ.
+      </p>
+      <form class="gks-prog-search" @submit.prevent="searchPrograms">
+        <DsInput
+          v-model="programSearch"
+          label="Мэргэжил, ангийн нэрээр хайх"
+          placeholder="IT, маркетинг, 경영…"
+          icon-left="search"
+        />
+        <DsButton type="submit" icon-right="arrow-right">Хайх</DsButton>
+      </form>
+    </section>
 
     <section>
       <div class="gks-section__head">
@@ -493,6 +526,16 @@ useSeoMeta({
 }
 .gks-section__link:hover { color: var(--brand-700); }
 .gks-section__head + ul { margin-top: var(--sp-5); }
+
+/* ---- The search that opens the catalogue ---- */
+.gks-fields-lede { margin-top: var(--sp-3); max-width: 62ch; color: var(--text-muted); font-size: var(--fs-body-sm); line-height: 1.7; }
+/* Field and button on one baseline: the label above the input makes the button
+   sit high unless it is pushed down to meet it. */
+.gks-prog-search { display: flex; align-items: flex-end; gap: var(--sp-3); max-width: 560px; margin-top: var(--sp-4); }
+.gks-prog-search > :first-child { flex: 1 1 auto; }
+@media (max-width: 640px) {
+  .gks-prog-search { flex-direction: column; align-items: stretch; }
+}
 
 /* ---- Services ---- */
 .gks-services {

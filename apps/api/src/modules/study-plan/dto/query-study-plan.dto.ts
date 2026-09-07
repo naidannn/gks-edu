@@ -28,7 +28,13 @@ export class QueryStudyPlanDto {
   @IsOptional()
   topik = 0;
 
-  @ApiPropertyOptional({ description: 'Canonical subject slug; unset = хараахан шийдээгүй' })
+  /**
+   * A word, not a slug: "IT", "маркетинг", "경영". Matched against the same
+   * columns `/programs` searches, so the plan and the catalogue it links to
+   * always agree about how many programmes exist. `any` means the wizard's
+   * "хараахан шийдээгүй" and matches everything.
+   */
+  @ApiPropertyOptional({ description: 'Subject keyword; unset or "any" = хараахан шийдээгүй' })
   @IsString()
   @MaxLength(80)
   @IsOptional()

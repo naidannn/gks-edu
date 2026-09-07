@@ -1,10 +1,4 @@
-import type {
-  AdminProgram,
-  InstructionLanguage,
-  ProgramCandidate,
-  ProgramLevel,
-  StudyFieldGroup,
-} from '@gks/shared';
+import type { AdminProgram, InstructionLanguage, ProgramCandidate, ProgramLevel } from '@gks/shared';
 
 /**
  * The programme form's shape, validation and payload, shared by the manual and
@@ -22,9 +16,14 @@ export interface ProgramForm {
   nameMn: string;
   nameEn: string;
   nameKo: string;
-  /** Empty = let the API match it from the names. */
-  studyFieldId: string;
-  faculty: string;
+  /** An existing college of this school, or empty for "none". */
+  facultyId: string;
+  /**
+   * A college by *name* — what a research candidate carries and what somebody
+   * can type for a college the school has not got a row for yet. The API
+   * creates it. `facultyId` wins when both are set.
+   */
+  facultyName: string;
   durationYears: string;
   tuitionPerTermKrw: string;
   tuitionPerYearKrw: string;
@@ -52,8 +51,8 @@ export function emptyProgramForm(universityId = ''): ProgramForm {
     nameMn: '',
     nameEn: '',
     nameKo: '',
-    studyFieldId: '',
-    faculty: '',
+    facultyId: '',
+    facultyName: '',
     durationYears: '',
     tuitionPerTermKrw: '',
     tuitionPerYearKrw: '',
@@ -81,8 +80,8 @@ export function fillProgramForm(form: ProgramForm, program: AdminProgram): void 
   form.nameMn = program.nameMn;
   form.nameEn = program.nameEn ?? '';
   form.nameKo = program.nameKo ?? '';
-  form.studyFieldId = program.studyFieldId ?? '';
-  form.faculty = program.faculty ?? '';
+  form.facultyId = program.facultyId ?? '';
+  form.facultyName = '';
   form.durationYears = numberInput(program.durationYears);
   form.tuitionPerTermKrw = numberInput(program.tuitionPerTermKrw);
   form.tuitionPerYearKrw = numberInput(program.tuitionPerYearKrw);
@@ -110,17 +109,16 @@ export function fillProgramForm(form: ProgramForm, program: AdminProgram): void 
  * pre-filled from the English name so the box is never empty, and it is the
  * first thing the reviewer sees.
  */
-export function fillProgramFormFromCandidate(
-  form: ProgramForm,
-  candidate: ProgramCandidate,
-  fieldIdBySlug: Map<string, string>,
-): void {
+export function fillProgramFormFromCandidate(form: ProgramForm, candidate: ProgramCandidate): void {
   form.level = candidate.level;
   form.nameKo = candidate.nameKo ?? '';
   form.nameEn = candidate.nameEn ?? '';
   form.nameMn = candidate.nameEn ?? candidate.nameKo ?? '';
-  form.studyFieldId = (candidate.fieldSlug && fieldIdBySlug.get(candidate.fieldSlug)) || '';
-  form.faculty = candidate.faculty ?? '';
+  // A candidate carries a college *name* off a prospectus, never an id: the
+  // API resolves it, creating the row if this is the first department we have
+  // seen from that college.
+  form.facultyId = '';
+  form.facultyName = candidate.faculty ?? '';
   form.durationYears = numberInput(candidate.durationYears);
   form.tuitionPerTermKrw = numberInput(candidate.tuitionPerTermKrw);
   form.tuitionPerYearKrw = numberInput(candidate.tuitionPerYearKrw);
@@ -166,10 +164,10 @@ export function programPayload(form: ProgramForm, options: { includeUniversity: 
     nameMn: form.nameMn.trim(),
     nameEn: text(form.nameEn),
     nameKo: text(form.nameKo),
-    // Undefined, not null: leaving it blank asks the API to match the subject
-    // from the names, while null would mean "definitely no subject".
-    ...(form.studyFieldId ? { studyFieldId: form.studyFieldId } : {}),
-    faculty: text(form.faculty),
+    // An explicit null is meaningful — "this department has no college" — so
+    // the id is always sent. The typed name only goes when no id was chosen.
+    facultyId: form.facultyId || null,
+    ...(form.facultyId ? {} : { facultyName: text(form.facultyName) }),
     durationYears: number(form.durationYears),
     tuitionPerTermKrw: number(form.tuitionPerTermKrw),
     tuitionPerYearKrw: number(form.tuitionPerYearKrw),
@@ -193,7 +191,7 @@ export function programPayload(form: ProgramForm, options: { includeUniversity: 
  * One research candidate as a `bulk` entry — the shape saved when a reviewer
  * ticks several at once instead of opening each in the form.
  */
-export function candidateToBulkEntry(candidate: ProgramCandidate, fieldIdBySlug: Map<string, string>) {
+export function candidateToBulkEntry(candidate: ProgramCandidate) {
   return {
     level: candidate.level,
     // The school's own English name is the closest thing to a Mongolian one we
@@ -201,10 +199,7 @@ export function candidateToBulkEntry(candidate: ProgramCandidate, fieldIdBySlug:
     nameMn: (candidate.nameEn ?? candidate.nameKo ?? '').slice(0, 200),
     nameEn: candidate.nameEn,
     nameKo: candidate.nameKo,
-    ...(candidate.fieldSlug && fieldIdBySlug.has(candidate.fieldSlug)
-      ? { studyFieldId: fieldIdBySlug.get(candidate.fieldSlug) }
-      : {}),
-    faculty: candidate.faculty,
+    facultyName: candidate.faculty,
     durationYears: candidate.durationYears,
     tuitionPerTermKrw: candidate.tuitionPerTermKrw,
     tuitionPerYearKrw: candidate.tuitionPerYearKrw,
@@ -219,27 +214,6 @@ export function candidateToBulkEntry(candidate: ProgramCandidate, fieldIdBySlug:
     // Saved from a research run is not the same as checked against the school.
     verified: false,
   };
-}
-
-/** Slug → id, so a candidate's `fieldSlug` can become a real foreign key. */
-export function studyFieldIdBySlug(groups: StudyFieldGroup[]): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const group of groups) {
-    map.set(group.slug, group.id);
-    for (const child of group.children) map.set(child.slug, child.id);
-  }
-  return map;
-}
-
-/** Groups as `<optgroup>`-flavoured options: a heading, then its subjects. */
-export function studyFieldOptions(groups: StudyFieldGroup[], placeholder = 'Ангилаагүй') {
-  return [
-    { value: '', label: placeholder },
-    ...groups.flatMap((group) => [
-      { value: group.id, label: group.nameMn },
-      ...group.children.map((child) => ({ value: child.id, label: `   ${child.nameMn}` })),
-    ]),
-  ];
 }
 
 function numberInput(value: number | null | undefined): string {

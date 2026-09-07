@@ -5,7 +5,7 @@ import { AdmissionsService } from '../admissions/admissions.service.js';
 import { FxService } from '../fx/fx.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { PROGRAM_CARD_FIELDS } from '../programs/programs.service.js';
-import { StudyFieldsService } from '../programs/study-fields.service.js';
+import { programSearchWhere } from '../programs/programs.service.js';
 import type { QueryStudyPlanDto } from './dto/query-study-plan.dto.js';
 import {
   FALLBACK_TOPIK_REQUIREMENT,
@@ -64,7 +64,6 @@ interface LivingCostJson {
 export class StudyPlanService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly studyFields: StudyFieldsService,
     private readonly admissions: AdmissionsService,
     private readonly pricing: PricingService,
     private readonly fx: FxService,
@@ -78,21 +77,18 @@ export class StudyPlanService {
     // simply gets planned as language prep, which is where that person starts.
     const goal = isGoalReachable(query.education, query.goal) ? query.goal : ProgramLevel.LANGUAGE_PREP;
     const topik = Math.min(Math.max(query.topik ?? 0, 0), 6);
-    // `any` is what the wizard's "хараахан шийдээгүй" writes into the URL, and it
-    // has to mean the same thing here as it does there. Left as a slug it
-    // resolves to no subject at all, and a shared link comes back empty.
+    // `any` is what the wizard's "хараахан шийдээгүй" writes into the URL, and
+    // it has to mean the same thing here as it does there: no subject at all,
+    // rather than a search for the literal word "any".
     const rawField = query.field?.trim() || null;
     const field = rawField === ANY_FIELD ? null : rawField;
     const region = query.region?.trim() || null;
     const budgetKrw = query.budget ?? null;
 
-    const [fieldIds, fieldName] = field
-      ? await Promise.all([this.studyFields.resolveFieldIds(field), this.fieldName(field)])
-      : [null, null];
-    const goalWhere = this.programWhere({ level: goal, fieldIds, region, budgetKrw });
+    const goalWhere = this.programWhere({ level: goal, field, region, budgetKrw });
     // The language gate is decided on the four questions the visitor answered,
     // never on the region and budget chips — see `needsLanguageStage`.
-    const gateWhere = this.programWhere({ level: goal, fieldIds });
+    const gateWhere = this.programWhere({ level: goal, field });
 
     // Round one settles the one branch the rest of the plan hangs off: is the
     // language stage in the path or not?
@@ -120,7 +116,7 @@ export class StudyPlanService {
     // region leaves exactly one chip — the one already selected — with no way
     // back to the others.
     const regionWhere = this.withTopikGate(
-      this.programWhere({ level: goal, fieldIds, budgetKrw }),
+      this.programWhere({ level: goal, field, budgetKrw }),
       needsPrep ? targetTopik : topik,
     );
 
@@ -187,7 +183,7 @@ export class StudyPlanService {
           unlocked !== null && unlocked > total ? { topik: topik + 1, count: unlocked - total } : null,
       },
       cost,
-      consultationNote: this.buildNote({ goal, topik, fieldName, regions, region, stages, matchCount: total }),
+      consultationNote: this.buildNote({ goal, topik, fieldName: field, regions, region, stages, matchCount: total }),
     };
   }
 
@@ -205,17 +201,19 @@ export class StudyPlanService {
    */
   private programWhere(options: {
     level: ProgramLevel;
-    fieldIds?: string[] | null;
+    field?: string | null;
     region?: string | null;
     budgetKrw?: number | null;
   }): Prisma.UniversityProgramWhereInput {
-    const { level, fieldIds, region, budgetKrw } = options;
+    const { level, field, region, budgetKrw } = options;
     return {
       isPublished: true,
       acceptsInternational: true,
       level,
-      // An unknown slug must match nothing rather than everything.
-      ...(fieldIds ? { studyFieldId: { in: fieldIds } } : {}),
+      // The keyword the visitor typed, matched exactly the way `/programs`
+      // matches it — a plan that counts programmes the catalogue would not
+      // list is a plan that falls apart on the next click.
+      ...(field ? { AND: [programSearchWhere(field)] } : {}),
       // Same rule as `/programs`: a budget filter is about published prices, so
       // a programme with no figure is out of a budgeted list rather than
       // silently counted as affordable.
@@ -254,12 +252,6 @@ export class StudyPlanService {
         },
       ],
     };
-  }
-
-  /** The subject's own name, for the note a consultant reads. Null for an unknown slug. */
-  private async fieldName(slug: string): Promise<string | null> {
-    const field = await this.prisma.studyField.findUnique({ where: { slug }, select: { nameMn: true } });
-    return field?.nameMn ?? null;
   }
 
   /** The easiest Korean-taught door in this match set — the target of the language stage. */

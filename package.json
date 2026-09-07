@@ -25,7 +25,6 @@
     "prisma:studio": "pnpm --filter @gks/api prisma:studio",
     "prisma:seed": "pnpm --filter @gks/api prisma:seed",
     "ranking:import": "pnpm --filter @gks/api ranking:import",
-    "study-fields:import": "pnpm --filter @gks/api study-fields:import",
     "universities:import": "pnpm --filter @gks/api universities:import",
     "clients:import": "pnpm --filter @gks/api clients:import",
     "contract:template:import": "pnpm --filter @gks/api contract:template:import",

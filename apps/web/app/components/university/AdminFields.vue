@@ -200,7 +200,8 @@ function removeAdvantage(index: number) {
       <p class="gks-uform__note">
         Times Higher Education-ий Солонгосын рэйтингийг <code>pnpm ranking:import</code>
         бөглөнө — эдгээр нүд нь тааруулж чадаагүй ганц нэг сургуульд зориулагдсан.
-        GKS эрэмбийг систем өөрөө тооцоолох тул зөвхөн засварын оноог гараар өгнө.
+        GKS эрэмбийг систем тооцоолно — гараар өгөх хоёр бариул нь доорх онооны засвар
+        (автомат горимд) ба каталогийн байр (гар горимд).
       </p>
       <div class="gks-uform__grid">
         <DsInput
@@ -229,9 +230,22 @@ function removeAdvantage(index: number) {
           type="number"
           step="0.5"
           :error="errors.gksRankBoost"
-          hint="-25 … +25 оноо. 0 = засваргүй"
+          hint="-25 … +25 оноо. 0 = засваргүй. Автомат горимд ажиллана"
+        />
+        <DsInput
+          v-model="form.gksManualRank"
+          label="Каталогийн байр (гар эрэмбэ)"
+          type="number"
+          min="1"
+          step="1"
+          :error="errors.gksManualRank"
+          hint="1 = хамгийн эхэнд. Хоосон = систем байрлуулна. Зөвхөн гар горимд ажиллана"
         />
       </div>
+      <p class="gks-uform__note">
+        Бүтэн жагсаалтыг чирж эрэмбэлэх, горим сонгохыг
+        <NuxtLink to="/admin/universities/ranking">GKS эрэмбэ</NuxtLink> хуудаснаас хийнэ.
+      </p>
     </DsCard>
   </div>
 </template>

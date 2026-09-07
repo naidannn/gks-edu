@@ -13,20 +13,26 @@ import { toBoolean } from './university-program.dto.js';
 export const PROGRAM_SORTS = ['university', 'tuition', 'name', 'topik', 'duration'] as const;
 export type ProgramSort = (typeof PROGRAM_SORTS)[number];
 
+
 export class QueryProgramsDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ description: "Free text over the programme's three names and the school" })
+  @ApiPropertyOptional({
+    description: "Free text over the programme's three names, its college and its school — the way in",
+  })
   @IsString()
   @MaxLength(120)
   @IsOptional()
   q?: string;
 
-  @ApiPropertyOptional({
-    description: 'Canonical subject slug — "marketing". A group slug matches every subject inside it.',
-  })
+  @ApiPropertyOptional({ description: 'University slug — the "just this school" cut' })
   @IsString()
-  @MaxLength(80)
+  @MaxLength(120)
   @IsOptional()
-  field?: string;
+  university?: string;
+
+  @ApiPropertyOptional({ description: 'One college of one school (단과대학)' })
+  @IsUUID()
+  @IsOptional()
+  facultyId?: string;
 
   @ApiPropertyOptional({ enum: ProgramLevel })
   @IsEnum(ProgramLevel)
@@ -84,6 +90,18 @@ export class QueryProgramsDto extends PaginationQueryDto {
   @IsOptional()
   gks?: boolean;
 
+  /**
+   * "Is there a scholarship?" is the third question every enquiry asks, right
+   * after "where" and "what does it cost". A programme whose discount we have
+   * not recorded is not thereby without one — so this narrows to the ones we
+   * can actually promise, and is never inverted into "these have none".
+   */
+  @ApiPropertyOptional({ description: 'Only programmes with a recorded discount for foreign students' })
+  @Transform(toBoolean)
+  @IsBoolean()
+  @IsOptional()
+  scholarship?: boolean;
+
   @ApiPropertyOptional({ enum: PROGRAM_SORTS, default: 'university' })
   @IsIn(PROGRAM_SORTS)
   @IsOptional()
@@ -101,11 +119,11 @@ export class QueryProgramsDto extends PaginationQueryDto {
  * for.
  */
 export class QueryAdminProgramsDto extends QueryProgramsDto {
-  @ApiPropertyOptional({ description: 'Only programmes not yet filed under a canonical subject' })
+  @ApiPropertyOptional({ description: 'Only programmes not filed under any college yet' })
   @Transform(toBoolean)
   @IsBoolean()
   @IsOptional()
-  unclassified?: boolean;
+  noFaculty?: boolean;
 
   @ApiPropertyOptional({ description: 'Only programmes with no tuition figure at all' })
   @Transform(toBoolean)

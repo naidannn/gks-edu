@@ -1,12 +1,13 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import type { Queue } from 'bullmq';
-import { Prisma } from '../../../prisma/client.js';
+import { Prisma, type GksRankingMode } from '../../../prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import { CacheService } from '../../../redis/cache.service.js';
 import { GKS_RANKING_JOB, GKS_RANKING_QUEUE } from '../../../queue/queue.constants.js';
 import { LIST_CACHE_PATTERN } from '../universities.service.js';
 import type { UpdateRankingConfigDto } from '../dto/ranking-config.dto.js';
+import type { ReorderManualRankingDto } from '../dto/manual-ranking.dto.js';
 import {
   buildContext,
   rankAll,
@@ -19,12 +20,39 @@ import {
 const CONFIG_ID = 'default';
 
 /**
+ * What the ordering screen needs per school. Deliberately narrow: it lists all
+ * 135 rows at once, and a drag-and-drop list has no use for intros or JSON.
+ */
+const MANUAL_ROW_FIELDS = {
+  id: true,
+  slug: true,
+  nameMn: true,
+  nameEn: true,
+  cityMn: true,
+  logoPath: true,
+  isPublished: true,
+  agentContractStatus: true,
+  theKoreaRank: true,
+  gksScore: true,
+  gksRank: true,
+  gksManualRank: true,
+} satisfies Prisma.UniversitySelect;
+
+/**
  * Applications whose outcome is known. `DEFERRED` is deliberately absent: a
  * postponed decision is not a failure and should not drag a school's pass rate.
  */
 const DECIDED_STATUSES = ['ACCEPTED', 'REJECTED'] as const;
 
+/** The ordering screen's payload: the whole catalogue, in shown order. */
+export interface ManualRankingList {
+  mode: GksRankingMode;
+  total: number;
+  rows: Prisma.UniversityGetPayload<{ select: typeof MANUAL_ROW_FIELDS }>[];
+}
+
 export interface RecomputeSummary {
+  mode: GksRankingMode;
   scored: number;
   ranked: number;
   durationMs: number;
@@ -94,11 +122,12 @@ export class GksRankingService {
     const startedAt = Date.now();
     const [config, inputs] = await Promise.all([this.getConfig(), this.collectInputs()]);
 
-    const scored = rankAll(inputs, buildContext(inputs), this.toWeights(config));
+    const scored = rankAll(inputs, buildContext(inputs), this.toWeights(config), config.mode);
     await this.persist(scored);
     await this.invalidate();
 
     const summary: RecomputeSummary = {
+      mode: config.mode,
       scored: scored.length,
       ranked: scored.length ? scored[scored.length - 1]!.rank : 0,
       durationMs: Date.now() - startedAt,
@@ -118,15 +147,16 @@ export class GksRankingService {
    * Scores without writing, so the office can see what a weight change would do
    * before committing to it (1A-31).
    */
-  async preview(overrides: Partial<RankingWeights>, limit = 30) {
+  async preview(overrides: Partial<RankingWeights>, limit = 30, mode?: GksRankingMode) {
     const [config, inputs] = await Promise.all([this.getConfig(), this.collectInputs()]);
     // A validated DTO carries every declared property, `undefined` included, so
     // a plain spread would blank out the weights the caller did not override.
     const weights = { ...this.toWeights(config), ...stripUndefined(overrides) };
-    const scored = rankAll(inputs, buildContext(inputs), weights);
+    const scored = rankAll(inputs, buildContext(inputs), weights, mode ?? config.mode);
 
     return {
       weights,
+      mode: mode ?? config.mode,
       total: scored.length,
       rows: scored.slice(0, limit).map((row) => ({
         rank: row.rank,
@@ -134,13 +164,121 @@ export class GksRankingService {
         nameEn: row.nameEn,
         score: row.score,
         boost: row.boost,
+        manualRank: row.manualRank,
         theKoreaRank: row.theKoreaRank,
         parts: row.parts,
       })),
     };
   }
 
+  /**
+   * The whole catalogue in the order it is actually shown — what the ordering
+   * screen drags around (1A-35).
+   *
+   * Read straight off `gksRank` rather than rescored: every write path here
+   * recomputes before returning, so the column is never behind, and 135 rows
+   * of five columns is one cheap query.
+   */
+  async manualList(): Promise<ManualRankingList> {
+    const [config, rows] = await Promise.all([
+      this.getConfig(),
+      this.prisma.university.findMany({
+        select: MANUAL_ROW_FIELDS,
+        orderBy: [{ gksRank: { sort: 'asc', nulls: 'last' } }, { nameMn: 'asc' }],
+      }),
+    ]);
+
+    return { mode: config.mode, total: rows.length, rows };
+  }
+
+  /**
+   * Writes the order staff put the schools in, and switches the catalogue to
+   * MANUAL — dragging a list into shape is the act of taking the wheel, and
+   * leaving the mode alone would silently throw the work away.
+   *
+   * The array is the whole catalogue, not a page of it: a school missing from
+   * it loses its number and falls back to the formula. The screen always sends
+   * every row, which is also why reordering is refused while a filter is on.
+   */
+  async setManualOrder(dto: ReorderManualRankingDto, updatedById?: string): Promise<ManualRankingList> {
+    const ids = dto.order;
+    if (new Set(ids).size !== ids.length) {
+      throw new BadRequestException('Жагсаалтад нэг сургууль хоёр удаа орсон байна.');
+    }
+
+    const known = await this.prisma.university.count({ where: { id: { in: ids } } });
+    if (known !== ids.length) {
+      throw new BadRequestException('Жагсаалтад байхгүй сургууль орсон байна. Хуудсыг дахин ачаална уу.');
+    }
+
+    await this.writeManualOrder(ids);
+    await this.setMode('MANUAL', updatedById);
+    await this.recompute();
+    return this.manualList();
+  }
+
+  /**
+   * Numbers every school 1…n by the order it is shown in right now — the way
+   * out of an empty manual list, and the way to tidy duplicate numbers typed
+   * on the edit form. Leaves the mode alone: this is preparation, not a switch.
+   */
+  async seedManualOrder(): Promise<ManualRankingList> {
+    const rows = await this.prisma.university.findMany({
+      select: { id: true },
+      orderBy: [{ gksRank: { sort: 'asc', nulls: 'last' } }, { nameMn: 'asc' }],
+    });
+
+    await this.writeManualOrder(rows.map((row) => row.id));
+    await this.recompute();
+    return this.manualList();
+  }
+
+  /** Drops every hand-typed number and hands the catalogue back to the formula. */
+  async clearManualOrder(updatedById?: string): Promise<ManualRankingList> {
+    await this.prisma.university.updateMany({
+      where: { gksManualRank: { not: null } },
+      data: { gksManualRank: null },
+    });
+    await this.setMode('AUTO', updatedById);
+    await this.recompute();
+    return this.manualList();
+  }
+
   // --- Internals ---
+
+  /** One statement for the numbers, one for the schools that lost theirs. */
+  private async writeManualOrder(ids: string[]): Promise<void> {
+    if (!ids.length) return;
+
+    const positions = ids.map(
+      (id, index) => Prisma.sql`(${id}::uuid, ${index + 1}::integer)`,
+    );
+    const idList = Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`));
+
+    // Atomic: half-written positions would order the catalogue by accident.
+    await this.prisma.$transaction([
+      this.prisma.$executeRaw`
+        UPDATE "universities" AS u
+           SET "gksManualRank" = v.pos
+          FROM (VALUES ${Prisma.join(positions)}) AS v(id, pos)
+         WHERE u."id" = v.id
+      `,
+      this.prisma.$executeRaw`
+        UPDATE "universities"
+           SET "gksManualRank" = NULL
+         WHERE "gksManualRank" IS NOT NULL
+           AND "id" NOT IN (${idList})
+      `,
+    ]);
+  }
+
+  private async setMode(mode: GksRankingMode, updatedById?: string) {
+    return this.prisma.gksRankingConfig.upsert({
+      where: { id: CONFIG_ID },
+      create: { id: CONFIG_ID, mode, updatedById: updatedById ?? null },
+      update: { mode, updatedById: updatedById ?? null },
+    });
+  }
 
   private toWeights(config: {
     weightBaseRank: number;
@@ -187,6 +325,7 @@ export class GksRankingService {
           logoPath: true,
           livingCost: true,
           gksRankBoost: true,
+          gksManualRank: true,
           _count: { select: { savedBy: true, cases: true, programs: true, intakes: true } },
         },
       }),
@@ -242,6 +381,7 @@ export class GksRankingService {
         programCount: university._count.programs,
         intakeCount: university._count.intakes,
         gksRankBoost: university.gksRankBoost,
+        gksManualRank: university.gksManualRank,
       } satisfies RankingInput;
     });
   }

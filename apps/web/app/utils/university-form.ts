@@ -74,6 +74,8 @@ export interface UniversityForm {
   theRankYear: string;
   /** Staff nudge to the GKS score, in points. `gksScore`/`gksRank` are computed. */
   gksRankBoost: string;
+  /** Hand-set position, 1 = first. Empty = let the formula place the school. */
+  gksManualRank: string;
 }
 
 export function emptyUniversityForm(): UniversityForm {
@@ -89,7 +91,7 @@ export function emptyUniversityForm(): UniversityForm {
     dormMealIncluded: '', dormDepositKrw: '', dormNote: '',
     acceptsLanguagePrep: false, acceptsFromMongolia: true, isGksEligible: false,
     agentContractStatus: 'NONE', commissionNote: '', internalNote: '', isPublished: false,
-    theKoreaRank: '', theWorldRank: '', theRankYear: '', gksRankBoost: '0',
+    theKoreaRank: '', theWorldRank: '', theRankYear: '', gksRankBoost: '0', gksManualRank: '',
   };
 }
 
@@ -155,6 +157,7 @@ export function fillFromUniversity(form: UniversityForm, u: AdminUniversityDetai
   form.theWorldRank = str(u.theWorldRank);
   form.theRankYear = num(u.theRankYear);
   form.gksRankBoost = String(u.gksRankBoost ?? 0);
+  form.gksManualRank = num(u.gksManualRank);
 }
 
 /** Required text fields, by form key → label used in the error message. */
@@ -186,6 +189,7 @@ const NUMERIC: [keyof UniversityForm, { min: number; max: number; integer: boole
   ['theRankYear', { min: 2000, max: new Date().getFullYear() + 1, integer: true }],
   // Mirrors `MAX_RANK_BOOST` on the API — a bigger number is rejected there.
   ['gksRankBoost', { min: -25, max: 25, integer: false }],
+  ['gksManualRank', { min: 1, max: 1000, integer: true }],
 ];
 
 export function validateUniversityForm(form: UniversityForm, errors: Record<string, string>): boolean {
@@ -290,5 +294,8 @@ export function universityPayload(form: UniversityForm): Record<string, unknown>
     theRankYear: number(form.theRankYear),
     // NOT NULL on the column, so an empty box means "no nudge", not "unknown".
     gksRankBoost: number(form.gksRankBoost) ?? 0,
+    // Nullable, and an empty box means exactly that: hand the school back to
+    // the formula, which places it below every numbered school.
+    gksManualRank: number(form.gksManualRank),
   };
 }

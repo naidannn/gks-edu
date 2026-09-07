@@ -8,8 +8,8 @@ import type { ProgramCandidate } from './program-candidate.parser.js';
  *
  * The figures are the shape of real Korean ones — a private university charges
  * roughly ₩3.5-5m a semester, a national one about half that, and 입학금 sits
- * near ₩1m — so the review screen, the tick-and-save step and the study-field
- * matcher are all exercisable end to end without a key. Everything comes back
+ * near ₩1m — so the review screen and the tick-and-save step, colleges and all,
+ * are exercisable end to end without a key. Everything comes back
  * MEDIUM with a note saying it is a fixture, so a mock answer can never be
  * mistaken for research.
  */
@@ -19,7 +19,8 @@ export function mockProgramResearchAnswer(year: number, levels: ProgramLevel[]):
   const candidates: ProgramCandidate[] = wanted.flatMap((level) => {
     if (level === ProgramLevel.LANGUAGE_PREP) {
       return [
-        fixture(level, '한국어교육원 정규과정', 'Korean Language Program', 'korean-language-program', {
+        // A language institute sits under no college, which is the normal case.
+        fixture(level, '한국어교육원 정규과정', 'Korean Language Program', null, {
           tuitionPerTermKrw: 1_700_000,
           durationYears: 1,
           admissionFeeKrw: 60_000,
@@ -28,15 +29,17 @@ export function mockProgramResearchAnswer(year: number, levels: ProgramLevel[]):
       ];
     }
 
+    // Two colleges, so a mock run exercises the "select all and save" path
+    // with more than one faculty to create.
     const departments: [string, string, string][] = [
-      ['경영학과', 'Business Administration', 'business-administration'],
-      ['마케팅전공', 'Marketing', 'marketing'],
-      ['컴퓨터공학과', 'Computer Engineering', 'computer-science'],
-      ['호텔경영학과', 'Hotel Management', 'hotel-management'],
+      ['경영학과', 'Business Administration', '경영대학'],
+      ['마케팅전공', 'Marketing', '경영대학'],
+      ['컴퓨터공학과', 'Computer Engineering', '공과대학'],
+      ['호텔경영학과', 'Hotel Management', '경영대학'],
     ];
 
-    return departments.map(([nameKo, nameEn, fieldSlug]) =>
-      fixture(level, nameKo, nameEn, fieldSlug, {
+    return departments.map(([nameKo, nameEn, faculty]) =>
+      fixture(level, nameKo, nameEn, faculty, {
         tuitionPerTermKrw: level === ProgramLevel.BACHELOR ? 4_150_000 : 5_300_000,
         durationYears: level === ProgramLevel.BACHELOR ? 4 : level === ProgramLevel.MASTER ? 2 : 3,
         admissionFeeKrw: 990_000,
@@ -56,7 +59,7 @@ export function mockProgramResearchAnswer(year: number, levels: ProgramLevel[]):
     level: ProgramLevel,
     nameKo: string,
     nameEn: string,
-    fieldSlug: string,
+    faculty: string | null,
     values: {
       tuitionPerTermKrw: number;
       durationYears: number;
@@ -68,8 +71,7 @@ export function mockProgramResearchAnswer(year: number, levels: ProgramLevel[]):
       level,
       nameKo,
       nameEn,
-      fieldSlug,
-      faculty: null,
+      faculty,
       durationYears: values.durationYears,
       tuitionPerTermKrw: values.tuitionPerTermKrw,
       tuitionPerYearKrw: null,

@@ -26,8 +26,7 @@
     "postinstall": "prisma generate",
     "email:preview": "tsx scripts/preview-emails.ts",
     "contract:preview": "tsx scripts/preview-contract.ts",
-    "checklist:preview": "tsx scripts/preview-checklist.ts",
-    "study-fields:import": "tsx prisma/import-study-fields.ts"
+    "checklist:preview": "tsx scripts/preview-checklist.ts"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",

@@ -293,4 +293,14 @@ export class CreateUniversityDto {
   @Max(MAX_RANK_BOOST)
   @IsOptional()
   gksRankBoost?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Hand-set position, 1 = first. Read while the ranking runs in MANUAL mode; null = let the formula place it',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  gksManualRank?: number | null;
 }

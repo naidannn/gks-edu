@@ -29,7 +29,7 @@ export interface StudyPlanInput {
   education: EducationLevel;
   goal: ProgramLevel;
   topik: TopikLevel;
-  /** Canonical `StudyField` slug, or null for "хараахан шийдээгүй". */
+  /** The subject keyword the visitor typed, or null for "хараахан шийдээгүй". */
   field: string | null;
   /** `regionEn`, set by the region chips on the result itself. */
   region: string | null;

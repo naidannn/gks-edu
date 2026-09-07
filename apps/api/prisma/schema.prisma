@@ -179,6 +179,14 @@ enum AgentContractStatus {
   EXPIRED
 }
 
+/// How the catalogue's order is decided (ARCHITECTURE.md §3.1).
+/// AUTO — the weighted formula alone. MANUAL — the order staff typed, with the
+/// formula left to place whatever nobody has numbered yet.
+enum GksRankingMode {
+  AUTO
+  MANUAL
+}
+
 /// A brokerage service line (ARCHITECTURE.md §5).
 enum ServiceType {
   LANGUAGE_PREP
@@ -293,9 +301,13 @@ model University {
   gksScore      Float?
   /// Dense rank over `gksScore`, 1 = shown first. The default catalogue order.
   gksRank       Int?
-  /// Staff thumb on the scale, in score points (-25 … +25) — the one part of
-  /// the score a human sets by hand.
+  /// Staff thumb on the scale, in score points (-25 … +25) — the formula's own
+  /// handle, used while the ranking runs in AUTO mode.
   gksRankBoost  Float     @default(0)
+  /// The position a human typed, 1 = first. Read only in MANUAL mode, where it
+  /// outranks `gksScore` outright; `null` there means "the formula places it",
+  /// which puts it below every numbered school.
+  gksManualRank Int?
   /// Per-component contributions of the last run, so the admin screen can say
   /// why a school sits where it does: { base, partnership, fit, demand, practical }.
   gksScoreParts Json?
@@ -315,7 +327,8 @@ model University {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  programs UniversityProgram[]
+  faculties Faculty[]
+  programs  UniversityProgram[]
   intakes  IntakeTerm[]
   savedBy  SavedUniversity[]
   cases    Case[]
@@ -332,6 +345,7 @@ model University {
   @@index([regionEn])
   @@index([type])
   @@index([gksRank])
+  @@index([gksManualRank])
   @@index([theKoreaRank])
   @@map("universities")
 }
@@ -342,6 +356,10 @@ model University {
 /// `ServicePricing` (CLAUDE.md, gksedu.md §5.4).
 model GksRankingConfig {
   id String @id @default("default")
+
+  /// AUTO — the weights below decide the order. MANUAL — `University.gksManualRank`
+  /// decides it, and the weights only order the schools nobody has numbered.
+  mode GksRankingMode @default(AUTO)
 
   /// The five component weights. They need not sum to 100 — the score is
   /// normalised by their total, so raising one lowers the others' share.
@@ -363,47 +381,40 @@ model GksRankingConfig {
   @@map("gks_ranking_config")
 }
 
-/// The canonical name of a subject, and the reason "маркетинг" can be one
-/// question rather than 135 (ARCHITECTURE.md §3.3).
+/// One college of one university — 단과대학 (`공과대학`, `경영대학`), the level
+/// a Korean prospectus organises its departments under.
 ///
-/// Every school words the same subject differently — 경영학과 마케팅전공,
-/// Department of Marketing, "Маркетинг менежмент" — so a programme keeps the
-/// school's own wording in `UniversityProgram.nameMn/nameEn/nameKo` and is
-/// *filed* under one of these. Search and the public filters run on the
-/// canonical row; the school's wording is what gets displayed.
+/// It is the school's own structure, kept as the school publishes it. There is
+/// no canonical taxonomy above it and deliberately so: a subject list that
+/// every school words differently is a list somebody has to maintain forever,
+/// and what a visitor actually types is a word ("IT", "маркетинг"), which the
+/// search answers directly off the names below.
 ///
-/// Two levels deep, no more: a group ("Бизнес, эдийн засаг") and the subjects
-/// inside it. `aliases` is how staff teach the matcher a new school's naming —
-/// adding one and re-running the match is the whole maintenance loop.
-model StudyField {
-  id     String  @id @default(uuid()) @db.Uuid
-  slug   String  @unique
+/// A programme may sit under no faculty at all. A research run often cannot
+/// find one, and a graduate department usually lives under 대학원 rather than a
+/// college — an invented parent would be worse than an honest gap.
+model Faculty {
+  id           String     @id @default(uuid()) @db.Uuid
+  universityId String     @db.Uuid
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  /// Ours, for the list. The Korean name is the school's own and is what staff
+  /// match against a prospectus.
   nameMn String
-  nameEn String
+  nameEn String?
   nameKo String?
 
-  /// Every other wording seen for this subject, in any of the three languages.
-  /// `study-field.matcher.ts` normalises against these — a Korean entry needs
-  /// no 학과/학부/전공 suffix, the matcher strips those.
-  aliases String[] @default([])
-
-  /// The broad group this subject sits in. Null on a group itself.
-  parentId String?      @db.Uuid
-  parent   StudyField?  @relation("StudyFieldTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children StudyField[] @relation("StudyFieldTree")
-
-  /// Order inside its group on the filter panel; ties fall back to `nameMn`.
-  sortOrder Int     @default(100)
-  isActive  Boolean @default(true)
+  /// Order inside the school; ties fall back to `nameMn`.
+  sortOrder Int @default(100)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   programs UniversityProgram[]
 
-  @@index([parentId])
-  @@index([isActive])
-  @@map("study_fields")
+  @@unique([universityId, nameMn])
+  @@index([universityId])
+  @@map("faculties")
 }
 
 /// One programme (анги) a university runs, with what it costs.
@@ -424,16 +435,12 @@ model UniversityProgram {
   nameEn String?
   nameKo String?
 
-  /// The canonical subject this programme is filed under — what makes
-  /// "бүх сургуулийн маркетинг" one query. Null = not yet classified; the
-  /// admin screen lists those separately so they do not quietly go missing.
-  studyFieldId String?     @db.Uuid
-  studyField   StudyField? @relation(fields: [studyFieldId], references: [id], onDelete: SetNull)
+  /// The college this department sits in (단과대학). Nullable on purpose: a
+  /// graduate department usually has none, and a research run often cannot
+  /// find one. The admin list groups those under "танхим тодорхойгүй".
+  facultyId String?  @db.Uuid
+  faculty   Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
 
-  /// The school's own college/faculty, as it appears in the prospectus
-  /// (경영대학, College of Engineering). Free text next to the canonical field,
-  /// not a substitute for it.
-  faculty       String?
   durationYears Float?
 
   // --- Tuition (the reason this module exists) ---
@@ -487,7 +494,7 @@ model UniversityProgram {
   @@unique([universityId, level, nameMn])
   @@index([universityId])
   @@index([level])
-  @@index([studyFieldId])
+  @@index([facultyId])
   @@index([tuitionPerYearKrw])
   @@map("university_programs")
 }

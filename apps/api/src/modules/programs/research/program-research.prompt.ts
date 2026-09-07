@@ -8,8 +8,6 @@ export interface ProgramResearchSubject {
   officialWebsite: string | null;
   year: number;
   levels: ProgramLevel[];
-  /** The canonical taxonomy, as `slug — Korean (English)` lines the model picks from. */
-  fieldMenu: string;
 }
 
 const LEVEL_HINTS: Record<ProgramLevel, string> = {
@@ -67,8 +65,9 @@ For each department report:
   level                 one of LANGUAGE_PREP, BACHELOR, MASTER, PHD
   nameKo                the department name exactly as the school writes it (경영학과)
   nameEn                the school's own English name for it, if published
-  fieldSlug             the closest subject from the CANONICAL SUBJECTS list below, or null
-  faculty               the college it sits in (경영대학), if published
+  faculty               the college it sits in, EXACTLY as the school writes it
+                        (경영대학, 공과대학). Null if the school does not publish
+                        one for this department — do not guess a plausible college.
   durationYears         4 for a Korean bachelor, 2 for a master's, and so on
   tuitionPerTermKrw     tuition for ONE SEMESTER in KRW, as published (한 학기 등록금)
   tuitionPerYearKrw     tuition for the YEAR in KRW, only if the school publishes an annual figure
@@ -84,10 +83,6 @@ For each department report:
   sourceUrl             the exact page the figures came from
   note                  IN MONGOLIAN, what is uncertain and why (or null)
 
-CANONICAL SUBJECTS — pick "fieldSlug" from this list, or null if nothing fits.
-Do NOT invent a slug.
-${subject.fieldMenu}
-
 RULES — these matter more than completeness:
   0. SEARCH FIRST, ALWAYS. Every figure you report must come from a page you
      opened during this search. Answering from memory is a failed run, and an
@@ -102,13 +97,15 @@ RULES — these matter more than completeness:
   5. If tuition differs across departments, report each department's own figure.
      If the school publishes one figure per college, repeat it and say so in note.
   6. scholarshipNote and note are written in Mongolian; everything else is data.
+  7. Group nothing and rename nothing. One entry per department the school
+     lists, under the college the school lists it in.
 
 Answer with JSON only, no prose and no markdown fence:
 {
   "candidates": [
     {
       "level": "BACHELOR", "nameKo": "경영학과", "nameEn": "Business Administration",
-      "fieldSlug": "business-administration", "faculty": "경영대학",
+      "faculty": "경영대학",
       "durationYears": 4,
       "tuitionPerTermKrw": 4200000, "tuitionPerYearKrw": null, "admissionFeeKrw": 990000,
       "tuitionYear": ${subject.year},

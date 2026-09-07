@@ -4,12 +4,12 @@ import { GKS_RANKING_QUEUE, PROGRAM_RESEARCH_QUEUE } from '../../queue/queue.con
 import { AdmissionsModule } from '../admissions/admissions.module.js';
 import { AdminProgramsController } from './admin-programs.controller.js';
 import { AdminProgramsService } from './admin-programs.service.js';
-import { AdminStudyFieldsController } from './admin-study-fields.controller.js';
+import { AdminFacultiesController } from './admin-faculties.controller.js';
 import { ProgramsController } from './programs.controller.js';
 import { ProgramsService } from './programs.service.js';
 import { ProgramResearchProcessor } from './research/program-research.processor.js';
 import { ProgramResearchService } from './research/program-research.service.js';
-import { StudyFieldsService } from './study-fields.service.js';
+import { FacultiesService } from './faculties.service.js';
 
 /**
  * Programmes and tuition (ARCHITECTURE.md §3.3).
@@ -29,14 +29,14 @@ import { StudyFieldsService } from './study-fields.service.js';
     BullModule.registerQueue({ name: PROGRAM_RESEARCH_QUEUE }, { name: GKS_RANKING_QUEUE }),
     AdmissionsModule,
   ],
-  controllers: [ProgramsController, AdminProgramsController, AdminStudyFieldsController],
+  controllers: [ProgramsController, AdminProgramsController, AdminFacultiesController],
   providers: [
     ProgramsService,
     AdminProgramsService,
-    StudyFieldsService,
+    FacultiesService,
     ProgramResearchService,
     ProgramResearchProcessor,
   ],
-  exports: [ProgramsService, AdminProgramsService, StudyFieldsService],
+  exports: [ProgramsService, AdminProgramsService, FacultiesService],
 })
 export class ProgramsModule {}

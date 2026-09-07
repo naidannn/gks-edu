@@ -23,10 +23,9 @@ export const toBoolean = ({ value }: { value: unknown }) =>
 /**
  * One programme (анги) at one university, with what it costs.
  *
- * `nameMn` is unique per university and level, so the same subject can be run
- * at several levels. `studyFieldId` is the canonical subject; leaving it out is
- * normal — the service matches the name against the taxonomy and files the
- * programme itself, and a human can always overrule that afterwards.
+ * `nameMn` is unique per university and level, so the same department can be
+ * run at several levels. The college is optional: a graduate department usually
+ * has none, and inventing one would be worse than the gap.
  */
 export class CreateProgramDto {
   @ApiProperty()
@@ -55,16 +54,22 @@ export class CreateProgramDto {
   @IsOptional()
   nameKo?: string | null;
 
-  @ApiPropertyOptional({ description: 'Canonical subject. Omitted = matched from the name.' })
+  @ApiPropertyOptional({ description: 'The college this department sits in. Null = none.' })
   @IsUUID()
   @IsOptional()
-  studyFieldId?: string | null;
+  facultyId?: string | null;
 
-  @ApiPropertyOptional({ description: "The school's own college, as printed: 경영대학" })
+  /**
+   * The other way to say the same thing: a college *name*, which is what a
+   * form lets somebody type and what a research run reads off a prospectus.
+   * Resolved to a row — created if the school has not got one — before the
+   * write. `facultyId` wins when both are given.
+   */
+  @ApiPropertyOptional({ description: "A college by name, as printed: 공과대학. Created if new." })
   @IsString()
   @MaxLength(200)
   @IsOptional()
-  faculty?: string | null;
+  facultyName?: string | null;
 
   @ApiPropertyOptional({ example: 4 })
   @Type(() => Number)

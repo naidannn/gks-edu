@@ -476,7 +476,6 @@ async function main(): Promise<void> {
   await seedNotificationTemplates();
   await seedAdmissionConfig();
   await seedIntakeTerms();
-  await seedStudyFields();
   await seedUniversityPrograms();
 
   console.log(
@@ -564,54 +563,6 @@ async function seedIntakeTerms(): Promise<void> {
   console.log(`Seeded ${created} intake terms across ${universities.length} universities (${year})`);
 }
 
-/**
- * The canonical subject taxonomy. `pnpm study-fields:import` is the same list
- * with a dry-run mode and an alias merge; this is here so a fresh database
- * comes up with the filters already populated.
- *
- * Only missing rows are inserted — after the first run this table belongs to
- * the office, and an alias staff added must survive a re-seed.
- */
-async function seedStudyFields(): Promise<void> {
-  let created = 0;
-
-  for (const [groupIndex, group] of STUDY_FIELD_TAXONOMY.entries()) {
-    const groupRow = await prisma.studyField.upsert({
-      where: { slug: group.slug },
-      update: {},
-      create: {
-        slug: group.slug,
-        nameMn: group.nameMn,
-        nameEn: group.nameEn,
-        nameKo: group.nameKo ?? null,
-        aliases: group.aliases ?? [],
-        sortOrder: (groupIndex + 1) * 100,
-      },
-      select: { id: true, createdAt: true, updatedAt: true },
-    });
-    if (groupRow.createdAt.getTime() === groupRow.updatedAt.getTime()) created += 1;
-
-    for (const [childIndex, child] of (group.children ?? []).entries()) {
-      const childRow = await prisma.studyField.upsert({
-        where: { slug: child.slug },
-        update: {},
-        create: {
-          slug: child.slug,
-          nameMn: child.nameMn,
-          nameEn: child.nameEn,
-          nameKo: child.nameKo ?? null,
-          aliases: child.aliases ?? [],
-          parentId: groupRow.id,
-          sortOrder: (groupIndex + 1) * 100 + childIndex + 1,
-        },
-        select: { createdAt: true, updatedAt: true },
-      });
-      if (childRow.createdAt.getTime() === childRow.updatedAt.getTime()) created += 1;
-    }
-  }
-
-  console.log(`Seeded ${created} study fields`);
-}
 
 /**
  * A handful of programmes with tuition, on the same six schools as the seeded
@@ -636,31 +587,41 @@ async function seedUniversityPrograms(): Promise<void> {
     return;
   }
 
-  const fields = await prisma.studyField.findMany({ select: { id: true, slug: true } });
-  const fieldId = (slug: string) => fields.find((field) => field.slug === slug)?.id ?? null;
-
   const year = new Date().getFullYear();
   const catalogue: {
     level: ProgramLevel;
     nameMn: string;
     nameEn: string;
     nameKo: string;
-    slug: string;
+    /** The college it sits in, as a Korean school prints it. Null for the language institute. */
+    faculty: string | null;
     termKrw: number;
     years: number;
     topik: number | null;
   }[] = [
-    { level: ProgramLevel.LANGUAGE_PREP, nameMn: 'Солонгос хэлний бэлтгэл', nameEn: 'Korean Language Program', nameKo: '한국어교육원 정규과정', slug: 'korean-language-program', termKrw: 1_700_000, years: 1, topik: null },
-    { level: ProgramLevel.BACHELOR, nameMn: 'Маркетинг', nameEn: 'Marketing', nameKo: '마케팅전공', slug: 'marketing', termKrw: 4_150_000, years: 4, topik: 3 },
-    { level: ProgramLevel.BACHELOR, nameMn: 'Бизнесийн удирдлага', nameEn: 'Business Administration', nameKo: '경영학과', slug: 'business-administration', termKrw: 4_150_000, years: 4, topik: 3 },
-    { level: ProgramLevel.BACHELOR, nameMn: 'Компьютерийн ухаан', nameEn: 'Computer Engineering', nameKo: '컴퓨터공학과', slug: 'computer-science', termKrw: 4_680_000, years: 4, topik: 3 },
-    { level: ProgramLevel.BACHELOR, nameMn: 'Зочид буудлын менежмент', nameEn: 'Hotel Management', nameKo: '호텔경영학과', slug: 'hotel-management', termKrw: 4_020_000, years: 4, topik: 3 },
-    { level: ProgramLevel.MASTER, nameMn: 'Бизнесийн удирдлага', nameEn: 'Business Administration', nameKo: '경영학과 석사과정', slug: 'business-administration', termKrw: 5_300_000, years: 2, topik: 4 },
-    { level: ProgramLevel.MASTER, nameMn: 'Компьютерийн ухаан', nameEn: 'Computer Engineering', nameKo: '컴퓨터공학과 석사과정', slug: 'computer-science', termKrw: 5_600_000, years: 2, topik: 4 },
+    { level: ProgramLevel.LANGUAGE_PREP, nameMn: 'Солонгос хэлний бэлтгэл', nameEn: 'Korean Language Program', nameKo: '한국어교육원 정규과정', faculty: null, termKrw: 1_700_000, years: 1, topik: null },
+    { level: ProgramLevel.BACHELOR, nameMn: 'Маркетинг', nameEn: 'Marketing', nameKo: '마케팅전공', faculty: '경영대학', termKrw: 4_150_000, years: 4, topik: 3 },
+    { level: ProgramLevel.BACHELOR, nameMn: 'Бизнесийн удирдлага', nameEn: 'Business Administration', nameKo: '경영학과', faculty: '경영대학', termKrw: 4_150_000, years: 4, topik: 3 },
+    { level: ProgramLevel.BACHELOR, nameMn: 'Компьютерийн ухаан', nameEn: 'Computer Engineering', nameKo: '컴퓨터공학과', faculty: '공과대학', termKrw: 4_680_000, years: 4, topik: 3 },
+    { level: ProgramLevel.BACHELOR, nameMn: 'Зочид буудлын менежмент', nameEn: 'Hotel Management', nameKo: '호텔경영학과', faculty: '호텔관광대학', termKrw: 4_020_000, years: 4, topik: 3 },
+    { level: ProgramLevel.MASTER, nameMn: 'Бизнесийн удирдлага', nameEn: 'Business Administration', nameKo: '경영학과 석사과정', faculty: '경영대학', termKrw: 5_300_000, years: 2, topik: 4 },
+    { level: ProgramLevel.MASTER, nameMn: 'Компьютерийн ухаан', nameEn: 'Computer Engineering', nameKo: '컴퓨터공학과 석사과정', faculty: '공과대학', termKrw: 5_600_000, years: 2, topik: 4 },
   ];
 
   let created = 0;
   for (const university of universities) {
+    // The colleges first, so every programme below can point at one.
+    const facultyIds = new Map<string, string>();
+    for (const name of new Set(catalogue.map((entry) => entry.faculty).filter((name): name is string => !!name))) {
+      const faculty = await prisma.faculty.upsert({
+        where: { universityId_nameMn: { universityId: university.id, nameMn: name } },
+        update: {},
+        create: { universityId: university.id, nameMn: name, nameKo: name },
+        select: { id: true },
+      });
+      facultyIds.set(name, faculty.id);
+    }
+
     for (const entry of catalogue) {
       const result = await prisma.universityProgram.upsert({
         where: {
@@ -673,7 +634,7 @@ async function seedUniversityPrograms(): Promise<void> {
           nameMn: entry.nameMn,
           nameEn: entry.nameEn,
           nameKo: entry.nameKo,
-          studyFieldId: fieldId(entry.slug),
+          facultyId: entry.faculty ? (facultyIds.get(entry.faculty) ?? null) : null,
           durationYears: entry.years,
           tuitionPerTermKrw: entry.termKrw,
           tuitionPerYearKrw: entry.termKrw * 2,

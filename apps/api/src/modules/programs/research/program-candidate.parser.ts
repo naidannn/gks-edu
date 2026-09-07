@@ -14,9 +14,9 @@ import { InstructionLanguage, ProgramLevel } from '../../../prisma/client.js';
  *  - a per-year figure reported as per-semester → both are bounds-checked, and
  *    an annual figure smaller than the semester one is dropped rather than
  *    quietly kept;
- *  - a subject the model invented → `fieldSlug` is checked against the
- *    taxonomy we sent it, and an unknown slug becomes `null`, which lands the
- *    programme in "ангилаагүй" where somebody will look at it.
+ *  - a college nobody publishes → `faculty` is free text and simply absent
+ *    when the model did not read one, which lands the programme under "танхим
+ *    тодорхойгүй" where somebody will look at it.
  *
  * Unknown values are dropped rather than defaulted, so a reviewer sees an empty
  * field, never a fabricated one.
@@ -28,8 +28,7 @@ export interface ProgramCandidate {
   level: ProgramLevel;
   nameKo: string | null;
   nameEn: string | null;
-  /** A slug from the taxonomy we sent, or null. Never a slug the model coined. */
-  fieldSlug: string | null;
+  /** The college (단과대학) as the school writes it, or null when none was found. */
   faculty: string | null;
   durationYears: number | null;
   tuitionPerTermKrw: number | null;
@@ -53,8 +52,6 @@ export interface ProgramResearchResult {
 export class ProgramResearchParseError extends Error {}
 
 export interface ParseProgramOptions {
-  /** Slugs from the taxonomy the prompt offered. Anything else is discarded. */
-  knownFieldSlugs: Set<string>;
   /**
    * Whether Google's grounding trail came back with the reply — the one claim
    * in the exchange the model cannot author. An empty trail means every figure
@@ -144,9 +141,6 @@ function parseCandidate(entry: unknown, options: ParseProgramOptions): ProgramCa
   // Confidence without a search behind it is a memory. Say that louder.
   if (!grounded) confidence = 'LOW';
 
-  const slug = typeof entry.fieldSlug === 'string' ? entry.fieldSlug.trim().toLowerCase() : '';
-  const fieldSlug = options.knownFieldSlugs.has(slug) ? slug : null;
-
   const language =
     typeof entry.language === 'string' && LANGUAGES.includes(entry.language.toUpperCase())
       ? (entry.language.toUpperCase() as InstructionLanguage)
@@ -166,7 +160,6 @@ function parseCandidate(entry: unknown, options: ParseProgramOptions): ProgramCa
     level: level as ProgramLevel,
     nameKo,
     nameEn,
-    fieldSlug,
     faculty: toText(entry.faculty, 200),
     durationYears: toBoundedFloat(entry.durationYears, 0.5, 10),
     tuitionPerTermKrw: perTerm,

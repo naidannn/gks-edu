@@ -154,8 +154,7 @@ export class UniversitiesService {
                 level: true,
                 nameMn: true,
                 nameEn: true,
-                faculty: true,
-                durationYears: true,
+                                durationYears: true,
                 tuitionPerTermKrw: true,
                 tuitionPerYearKrw: true,
                 admissionFeeKrw: true,
@@ -167,9 +166,7 @@ export class UniversitiesService {
                 otherRequirements: true,
                 language: true,
                 acceptsInternational: true,
-                studyField: {
-                  select: { id: true, slug: true, nameMn: true, nameEn: true, nameKo: true, parentId: true },
-                },
+                faculty: { select: { id: true, nameMn: true, nameEn: true, nameKo: true } },
               },
             },
             // Drafts never reach a visitor; a cancelled round is not news either.

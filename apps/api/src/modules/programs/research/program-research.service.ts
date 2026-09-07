@@ -6,7 +6,6 @@ import { IntakeResearchStatus, Prisma, type ProgramLevel } from '../../../prisma
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import { AdmissionConfigService } from '../../admissions/admission-config.service.js';
 import { GeminiService, extractJson } from '../../admissions/research/gemini.service.js';
-import { StudyFieldsService } from '../study-fields.service.js';
 import {
   ProgramResearchParseError,
   parseProgramResearchResult,
@@ -50,7 +49,6 @@ export class ProgramResearchService {
     private readonly prisma: PrismaService,
     private readonly gemini: GeminiService,
     private readonly config: AdmissionConfigService,
-    private readonly studyFields: StudyFieldsService,
     @InjectQueue(PROGRAM_RESEARCH_QUEUE) private readonly queue: Queue,
   ) {}
 
@@ -134,7 +132,6 @@ export class ProgramResearchService {
     let rawResponse: string | null = null;
 
     try {
-      const fields = await this.studyFields.findAll();
       const links = (run.university.links ?? {}) as { officialWebsite?: string | null };
 
       const prompt = buildProgramResearchPrompt({
@@ -145,7 +142,6 @@ export class ProgramResearchService {
         officialWebsite: links.officialWebsite ?? null,
         year: run.year,
         levels: run.levels,
-        fieldMenu: this.buildFieldMenu(fields),
       });
 
       const answer = await this.gemini.generateJson({
@@ -167,14 +163,10 @@ export class ProgramResearchService {
         );
       }
 
-      const knownFieldSlugs = new Set(
-        fields.flatMap((group) => [group.slug, ...group.children.map((child) => child.slug)]),
-      );
-
       // Two guards, in order: the reply must be JSON, and the JSON must be the
       // shape we asked for. Anything else is a failed run, not a half-filled
       // review list for somebody to untangle.
-      const parsed = parseProgramResearchResult(extractJson(answer.text), { knownFieldSlugs, grounded });
+      const parsed = parseProgramResearchResult(extractJson(answer.text), { grounded });
       const candidates = this.dedupe(parsed.candidates);
       const sources = [...new Set([...answer.sources, ...parsed.sources])];
 
@@ -215,24 +207,6 @@ export class ProgramResearchService {
   }
 
   /**
-   * The taxonomy as lines the model picks a slug from. Groups are listed as
-   * headings and are not offered as answers: "Бизнес" is never the right
-   * filing for a department, and offering it invites the model to take the
-   * easy option.
-   */
-  private buildFieldMenu(fields: Awaited<ReturnType<StudyFieldsService['findAll']>>): string {
-    return fields
-      .filter((group) => group.children.length > 0)
-      .map((group) => {
-        const children = group.children
-          .map((child) => `    ${child.slug} — ${child.nameKo ?? child.nameEn} (${child.nameEn})`)
-          .join('\n');
-        return `  ${group.nameEn}:\n${children}`;
-      })
-      .join('\n');
-  }
-
-  /**
    * Collapses duplicate departments, keeping the best-evidenced one. A model
    * asked to search reports the same department twice from two pages often
    * enough that the review list is unreadable without this.
@@ -261,6 +235,14 @@ export class ProgramResearchService {
       universityNameMn: university.nameMn,
       universityNameEn: university.nameEn,
       candidates: (candidates as ProgramCandidate[] | null) ?? null,
+      // No key configured means every run is the same thirteen fixtures. It is
+      // said on each candidate's note too, but a reviewer scanning a list of
+      // thirteen plausible departments reads the list, not the notes — and then
+      // wonders why the school only teaches four subjects. This is the current
+      // mode, not the mode the run executed in; for a run you are looking at
+      // now those are the same thing, and "what am I about to trust" is the
+      // question being answered.
+      mock: this.gemini.isMock,
     };
   }
 }

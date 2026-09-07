@@ -79,8 +79,8 @@ Do not restate that here; extend it when infrastructure changes.
 | Зуучлалын гэрээ | `Contract` | |
 | Барьцааны гэрээ | `CollateralContract` | metadata only — never priced or automated (`gksedu.md` §5.4) |
 | Урьдчилгаа / үлдэгдэл төлбөр | `Payment` kind `PREPAYMENT` / `BALANCE` | |
-| Анги / хөтөлбөр | `UniversityProgram` | one subject at one school, with its tuition |
-| Судлах чиглэл | `StudyField` | canonical subject; every school words the same one differently |
+| Танхим | `Faculty` | one college of one school (단과대학); a programme may have none |
+| Анги / хөтөлбөр | `UniversityProgram` | one department at one school, with its tuition |
 | Материал / бичиг баримт | `DocumentTemplate` → `CaseDocument` | template vs. instance |
 | Мэдүүлэг | `Application` | GKS has two decision rounds |
 | Урилга | `Invitation` | |
@@ -108,16 +108,18 @@ Full entity definitions and state machines: `docs/ARCHITECTURE.md` §3–§9.
 - **Prices and prepayment are admin configuration**, not constants. 1,200,000₮ / 5,000,000₮
   and the 200,000₮ / 1,500,000₮ prepayments are *current values* stored in `ServicePricing`
   (`gksedu.md` §5.4).
-- **A school's own wording for a programme is not the subject it teaches.**
-  `경영학과(마케팅전공)`, `마케팅학부` and "Department of Marketing" are three schools'
-  names for one thing, so `UniversityProgram` keeps the school's wording and points at a
-  canonical `StudyField` — that link is the only reason "маркетинг" is one query instead of
-  135. Filing is suggested by `study-field.matcher.ts` and always overridable; a programme
-  it cannot place shows up under "ангилаагүй" rather than being guessed at. Tuition is
-  stored the way Korean schools publish it — **per semester**, with `tuitionYear` saying
-  which year's table it came from; never write the ×2 annual figure into the database.
-  `tuitionYear` is a staff signal, not a public one: the admin list sorts and flags on it
-  (`staleTuition`), the public card does not carry it (`ARCHITECTURE.md` §3.3).
+- **The catalogue is `Сургууль → Танхим → Анги`, and there is no subject taxonomy.**
+  A `Faculty` is the school's own college (단과대학) and belongs to one school; a programme
+  may have none, which is normal for a graduate department. There used to be a canonical
+  `StudyField` list mapping every school's wording onto one subject — it is gone on purpose:
+  it was a second vocabulary somebody maintained forever, and what a visitor types is a word.
+  Search (`programSearchWhere`) matches that word against the programme's three names, the
+  faculty's three names, and — only for terms of 4+ characters — the school's, because "IT"
+  is two and "Univers**it**y" contains it. Tuition is stored the way Korean schools publish
+  it — **per semester**, with `tuitionYear` saying which year's table it came from; never
+  write the ×2 annual figure into the database. `tuitionYear` is a staff signal, not a public
+  one: the admin list sorts and flags on it (`staleTuition`), the public card does not carry
+  it (`ARCHITECTURE.md` §3.3).
 
 ## University reference data
 
@@ -141,10 +143,16 @@ A university carries a **base rank** and a **GKS rank**, and they are not interc
   ranking over it, and that is the **default order of the catalogue and of every search**.
   Never public: it orders the list, it does not appear on the card.
 
-`gksScore` and `gksRank` are computed columns — only `GksRankingService` writes them. The one
-handle staff get is `gksRankBoost` (±25 points). Weights live in `GksRankingConfig`, which is
-admin configuration like `ServicePricing`, not constants. The components are relative to each
-other, so the whole catalogue is always rescored together — there is no rescoring one row.
+`gksScore` and `gksRank` are computed columns — only `GksRankingService` writes them. Weights
+live in `GksRankingConfig`, which is admin configuration like `ServicePricing`, not constants.
+The components are relative to each other, so the whole catalogue is always rescored together —
+there is no rescoring one row.
+
+Staff get two handles, and which one works depends on `GksRankingConfig.mode`:
+`gksRankBoost` (±25 score points) nudges the formula in `AUTO`; `University.gksManualRank`
+(1 = first) *replaces* it in `MANUAL`, where the catalogue is simply the order the office put
+the schools in and the formula only places whatever nobody has numbered — below the rest. The
+ordering screen is `/admin/universities/ranking` (`ARCHITECTURE.md` §3.1).
 
 ## Working on tasks
 
@@ -165,7 +173,6 @@ pnpm dev              # web :3000 + api :3001
 pnpm prisma:migrate   # after any schema change
 pnpm prisma:seed
 pnpm ranking:import   # THE South Korea rank → theKoreaRank (--dry to preview)
-pnpm study-fields:import  # canonical subject taxonomy (--dry, --match)
 pnpm typecheck && pnpm lint && pnpm test
 pnpm tasks            # roadmap progress
 ```

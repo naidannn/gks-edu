@@ -10,9 +10,8 @@ import { LIST_CACHE_PATTERN } from '../universities/universities.service.js';
 import type { BulkCreateProgramsDto } from './dto/bulk-programs.dto.js';
 import type { QueryAdminProgramsDto } from './dto/query-programs.dto.js';
 import type { CreateProgramDto, UpdateProgramDto } from './dto/university-program.dto.js';
+import { FacultiesService } from './faculties.service.js';
 import { PROGRAM_CARD_FIELDS, ProgramsService } from './programs.service.js';
-import { matchStudyField, type StudyFieldIndex } from './study-field.matcher.js';
-import { StudyFieldsService } from './study-fields.service.js';
 
 /**
  * The columns a DTO can set. The three that identify a programme are passed
@@ -23,7 +22,7 @@ type ProgramWriteData = Omit<Prisma.UniversityProgramUncheckedCreateInput, 'univ
 /** Everything the public row carries, plus the columns only staff may see. */
 const ADMIN_PROGRAM_FIELDS = {
   ...PROGRAM_CARD_FIELDS,
-  studyFieldId: true,
+  facultyId: true,
   sourceType: true,
   verifiedAt: true,
   verifiedBy: { select: { id: true, name: true } },
@@ -49,14 +48,14 @@ export class AdminProgramsService extends ProgramsService {
   constructor(
     prisma: PrismaService,
     cache: CacheService,
-    studyFields: StudyFieldsService,
+    private readonly faculties: FacultiesService,
     @InjectQueue(GKS_RANKING_QUEUE) private readonly rankingQueue: Queue,
   ) {
-    super(prisma, cache, studyFields);
+    super(prisma, cache);
   }
 
   async findAllAdmin(query: QueryAdminProgramsDto) {
-    const where = await this.buildAdminWhere(query);
+    const where = this.buildAdminWhere(query);
 
     const [items, total] = await Promise.all([
       this.prisma.universityProgram.findMany({
@@ -73,18 +72,18 @@ export class AdminProgramsService extends ProgramsService {
   }
 
   /**
-   * The four numbers this screen is judged on: how much of the catalogue is
-   * priced, classified and checked. All three gaps are invisible on the list
-   * itself — a programme with no tuition looks like any other row.
+   * The numbers this screen is judged on: how much of the catalogue is priced,
+   * filed under a college and checked. Every one of those gaps is invisible on
+   * the list itself — a programme with no tuition looks like any other row.
    */
   async stats() {
-    const [total, published, missingTuition, unclassified, unverified, staleTuition] = await Promise.all([
+    const [total, published, missingTuition, noFaculty, unverified, staleTuition] = await Promise.all([
       this.prisma.universityProgram.count(),
       this.prisma.universityProgram.count({ where: { isPublished: true } }),
       this.prisma.universityProgram.count({
         where: { tuitionPerYearKrw: null, tuitionPerTermKrw: null },
       }),
-      this.prisma.universityProgram.count({ where: { studyFieldId: null } }),
+      this.prisma.universityProgram.count({ where: { facultyId: null } }),
       this.prisma.universityProgram.count({ where: { verifiedAt: null } }),
       // A price with a year older than last year's is the one that gets quoted
       // to a client and turns out to be wrong.
@@ -93,7 +92,7 @@ export class AdminProgramsService extends ProgramsService {
       }),
     ]);
 
-    return { total, published, draft: total - published, missingTuition, unclassified, unverified, staleTuition };
+    return { total, published, draft: total - published, missingTuition, noFaculty, unverified, staleTuition };
   }
 
   async findOne(id: string) {
@@ -109,7 +108,7 @@ export class AdminProgramsService extends ProgramsService {
     const university = await this.requireUniversity(dto.universityId);
     await this.assertNameFree(dto.universityId, dto.level, dto.nameMn);
 
-    const data = this.toWriteData(dto, userId, await this.studyFields.index());
+    const data = this.toWriteData(dto, userId, await this.resolveFaculty(dto.universityId, dto));
     const program = await this.prisma.universityProgram.create({
       data: { ...data, universityId: dto.universityId, level: dto.level, nameMn: dto.nameMn },
       select: ADMIN_PROGRAM_FIELDS,
@@ -134,7 +133,7 @@ export class AdminProgramsService extends ProgramsService {
 
     const program = await this.prisma.universityProgram.update({
       where: { id },
-      data: this.toWriteData(dto, userId, await this.studyFields.index()),
+      data: this.toWriteData(dto, userId, await this.resolveFaculty(current.universityId, dto)),
       select: ADMIN_PROGRAM_FIELDS,
     });
 
@@ -187,10 +186,13 @@ export class AdminProgramsService extends ProgramsService {
     });
     const taken = new Set(existing.map((program) => `${program.level}:${program.nameMn.trim().toLowerCase()}`));
 
-    // The matcher index is built once for the whole batch: a research run
-    // brings back sixty departments, and re-reading ninety taxonomy rows per
-    // department would be sixty round trips to a database 115 ms away.
-    const index = await this.studyFields.index();
+    // Colleges are resolved once for the whole batch: a research run brings
+    // back sixty departments across eight of them, and resolving each on its
+    // own would be sixty round trips to a database ~115 ms away.
+    const facultyIds = await this.faculties.resolveMany(
+      dto.universityId,
+      dto.programs.map((entry) => entry.facultyName),
+    );
 
     const created: string[] = [];
     const skipped: string[] = [];
@@ -204,7 +206,12 @@ export class AdminProgramsService extends ProgramsService {
       }
       taken.add(key);
 
-      const data = this.toWriteData({ ...entry, sourceType: entry.sourceType ?? ProgramSource.AI_ASSISTED }, userId, index);
+      const facultyId = entry.facultyName ? (facultyIds.get(entry.facultyName.trim()) ?? null) : null;
+      const data = this.toWriteData(
+        { ...entry, sourceType: entry.sourceType ?? ProgramSource.AI_ASSISTED },
+        userId,
+        facultyId,
+      );
       rows.push({ ...data, universityId: dto.universityId, level: entry.level, nameMn: entry.nameMn });
       created.push(entry.nameMn);
     }
@@ -230,10 +237,10 @@ export class AdminProgramsService extends ProgramsService {
 
   // --- Internals ---
 
-  private async buildAdminWhere(query: QueryAdminProgramsDto): Promise<Prisma.UniversityProgramWhereInput> {
-    const where = await this.buildWhere(query, { publicOnly: false });
+  private buildAdminWhere(query: QueryAdminProgramsDto): Prisma.UniversityProgramWhereInput {
+    const where = this.buildWhere(query, { publicOnly: false });
 
-    if (query.unclassified) where.studyFieldId = null;
+    if (query.noFaculty) where.facultyId = null;
     if (query.unverified) where.verifiedAt = null;
     if (query.published !== undefined) where.isPublished = query.published;
     if (query.missingTuition) {
@@ -255,22 +262,25 @@ export class AdminProgramsService extends ProgramsService {
   /**
    * Turns a DTO into columns.
    *
-   * Two things happen here rather than in the controller. `verified` is a
-   * checkbox but two columns, and an unset `studyFieldId` is matched from the
-   * programme's own names — which is what keeps the catalogue classified as it
-   * grows, without asking whoever typed the row to know the taxonomy.
+   * `verified` is one checkbox but two columns, and `facultyName` is a name the
+   * caller typed (or a research run reported) which the caller has no id for —
+   * both are resolved before this, and dropped here so neither reaches Prisma
+   * as a column that does not exist.
    */
   private toWriteData(
     dto: Partial<CreateProgramDto>,
     userId: string | null,
-    index: StudyFieldIndex,
+    facultyId: string | null | undefined,
   ): ProgramWriteData {
     const { verified, ...rest } = dto;
-    // `universityId` is dropped here rather than destructured out: it belongs
-    // to the row's identity, which `create` passes separately and `update`
-    // must never move.
+    // `universityId` and `facultyName` are dropped by key rather than
+    // destructured out: the first belongs to the row's identity, which `create`
+    // passes separately and `update` must never move, and the second is a name
+    // this method is handed the resolved id for.
     const data = Object.fromEntries(
-      Object.entries(rest).filter(([key, value]) => value !== undefined && key !== 'universityId'),
+      Object.entries(rest).filter(
+        ([key, value]) => value !== undefined && key !== 'universityId' && key !== 'facultyName',
+      ),
     ) as ProgramWriteData;
 
     if (verified !== undefined) {
@@ -278,12 +288,27 @@ export class AdminProgramsService extends ProgramsService {
       data.verifiedById = verified ? userId : null;
     }
 
-    if (dto.studyFieldId === undefined && (dto.nameMn || dto.nameEn || dto.nameKo)) {
-      const match = matchStudyField(index, [dto.nameKo, dto.nameEn, dto.nameMn, dto.faculty]);
-      if (match) data.studyFieldId = match.fieldId;
-    }
+    if (facultyId !== undefined) data.facultyId = facultyId;
 
     return data;
+  }
+
+  /**
+   * The college this write should point at.
+   *
+   * An explicit `facultyId` wins — including an explicit `null`, which is how
+   * somebody says "this department has no college". A `facultyName` is the
+   * other way in: whoever typed it, or a research run that read `공과대학` off
+   * a prospectus, gets the row created for them. Neither given means the
+   * column is left exactly as it is.
+   */
+  private async resolveFaculty(
+    universityId: string,
+    dto: Partial<CreateProgramDto>,
+  ): Promise<string | null | undefined> {
+    if (dto.facultyId !== undefined) return dto.facultyId;
+    if (dto.facultyName === undefined) return undefined;
+    return this.faculties.resolve(universityId, dto.facultyName);
   }
 
   private async requireUniversity(id: string) {
@@ -320,7 +345,6 @@ export class AdminProgramsService extends ProgramsService {
       this.cache.del(`university:${slug}`),
       this.cache.del('universities:facets'),
       this.cache.del('programs:facets'),
-      this.cache.del('study-fields:tree'),
       this.cache.delByPattern(LIST_CACHE_PATTERN),
       this.rankingQueue
         .add(GKS_RANKING_JOB, {}, { jobId: 'recompute', removeOnComplete: true, delay: 5_000 })

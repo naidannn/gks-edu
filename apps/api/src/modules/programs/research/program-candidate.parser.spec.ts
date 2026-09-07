@@ -2,15 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { InstructionLanguage } from '../../../prisma/client.js';
 import { ProgramResearchParseError, parseProgramResearchResult } from './program-candidate.parser.js';
 
-const knownFieldSlugs = new Set(['marketing', 'business-administration', 'computer-science']);
 const parse = (payload: unknown, grounded = true) =>
-  parseProgramResearchResult(payload, { knownFieldSlugs, grounded });
+  parseProgramResearchResult(payload, { grounded });
 
 const candidate = (overrides: Record<string, unknown> = {}) => ({
   level: 'BACHELOR',
   nameKo: '경영학과',
   nameEn: 'Business Administration',
-  fieldSlug: 'business-administration',
   faculty: '경영대학',
   durationYears: 4,
   tuitionPerTermKrw: 4_200_000,
@@ -33,8 +31,7 @@ describe('parseProgramResearchResult', () => {
     expect(result.candidates).toHaveLength(1);
     expect(result.candidates[0]).toMatchObject({
       nameKo: '경영학과',
-      fieldSlug: 'business-administration',
-      tuitionPerTermKrw: 4_200_000,
+          tuitionPerTermKrw: 4_200_000,
       confidence: 'HIGH',
     });
     expect(result.sources).toEqual(['https://example.ac.kr/tuition']);
@@ -50,9 +47,12 @@ describe('parseProgramResearchResult', () => {
     expect(result.candidates).toHaveLength(2);
   });
 
-  it('drops a subject the model invented rather than storing it', () => {
-    const [row] = parse({ candidates: [candidate({ fieldSlug: 'quantum-astrology' })] }).candidates;
-    expect(row?.fieldSlug).toBeNull();
+  it("keeps the college as the school writes it, and null when there is none", () => {
+    const [withCollege] = parse({ candidates: [candidate()] }).candidates;
+    expect(withCollege?.faculty).toBe('경영대학');
+
+    const [without] = parse({ candidates: [candidate({ faculty: null })] }).candidates;
+    expect(without?.faculty).toBeNull();
   });
 
   it('will not let a candidate claim HIGH with no page behind it', () => {
@@ -90,11 +90,11 @@ describe('parseProgramResearchResult', () => {
       candidates: [
         candidate({ nameKo: null, nameEn: null }),
         candidate({ level: 'DIPLOMA' }),
-        candidate({ nameKo: '컴퓨터공학과', fieldSlug: 'computer-science' }),
+        candidate({ nameKo: '컴퓨터공학과', faculty: '공과대학' }),
       ],
     });
     expect(result.candidates).toHaveLength(1);
-    expect(result.candidates[0]?.fieldSlug).toBe('computer-science');
+    expect(result.candidates[0]?.faculty).toBe('공과대학');
   });
 
   it('defaults an unreadable language to Korean rather than guessing', () => {

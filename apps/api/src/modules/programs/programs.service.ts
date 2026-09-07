@@ -4,7 +4,6 @@ import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
 import type { ProgramSort, QueryProgramsDto } from './dto/query-programs.dto.js';
-import { StudyFieldsService } from './study-fields.service.js';
 
 /**
  * The school columns a programme row carries. Less than a catalogue card — a
@@ -27,14 +26,12 @@ const UNIVERSITY_FIELDS = {
   theKoreaRank: true,
 } satisfies Prisma.UniversitySelect;
 
-const STUDY_FIELD_FIELDS = {
+const FACULTY_FIELDS = {
   id: true,
-  slug: true,
   nameMn: true,
   nameEn: true,
   nameKo: true,
-  parentId: true,
-} satisfies Prisma.StudyFieldSelect;
+} satisfies Prisma.FacultySelect;
 
 /** Everything a visitor may see about a programme. `internalNote` is absent by design. */
 export const PROGRAM_CARD_FIELDS = {
@@ -44,7 +41,6 @@ export const PROGRAM_CARD_FIELDS = {
   nameMn: true,
   nameEn: true,
   nameKo: true,
-  faculty: true,
   durationYears: true,
   tuitionPerTermKrw: true,
   tuitionPerYearKrw: true,
@@ -58,15 +54,15 @@ export const PROGRAM_CARD_FIELDS = {
   language: true,
   acceptsInternational: true,
   sourceUrl: true,
-  studyField: { select: STUDY_FIELD_FIELDS },
+  faculty: { select: FACULTY_FIELDS },
   university: { select: UNIVERSITY_FIELDS },
 } satisfies Prisma.UniversityProgramSelect;
 
 /**
  * `university` is the default: the recommendation order of the catalogue,
- * carried over so a subject search opens with the schools we would actually
- * suggest. Postgres sorts ASC nulls-last, which is what an unscored school
- * deserves; the explicit `nulls` is spelled out where the order is DESC.
+ * carried over so a search opens with the schools we would actually suggest.
+ * Postgres sorts ASC nulls-last, which is what an unscored school deserves;
+ * the explicit `nulls` is spelled out where the order is DESC.
  */
 const ORDER_BY: Record<
   ProgramSort,
@@ -87,12 +83,15 @@ const FACETS_CACHE_KEY = 'programs:facets';
 const FACETS_CACHE_TTL_MS = 300_000;
 
 /**
- * Programme search across every school (ARCHITECTURE.md §3.3).
+ * The programme catalogue: one flat list of departments, searched by word
+ * (ARCHITECTURE.md §3.3).
  *
- * The question this answers is "who teaches marketing, and what does it cost?"
- * — one subject, every university, tuition alongside. It works because a
- * programme is filed under a canonical `StudyField` while keeping the school's
- * own wording for display.
+ * There is no canonical subject taxonomy behind this, and that is the design
+ * rather than a gap. Every school words the same subject differently, so a
+ * canonical list is a second vocabulary somebody has to maintain forever; what
+ * a visitor types is a word — "IT", "маркетинг", "경영" — and the search
+ * answers it straight off the names the schools themselves publish, plus the
+ * college the department sits in.
  */
 @Injectable()
 export class ProgramsService {
@@ -101,11 +100,10 @@ export class ProgramsService {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly cache: CacheService,
-    protected readonly studyFields: StudyFieldsService,
   ) {}
 
   async findAll(query: QueryProgramsDto) {
-    const where = await this.buildWhere(query, { publicOnly: true });
+    const where = this.buildWhere(query, { publicOnly: true });
 
     // Read-only pair under `Promise.all`, never `$transaction` — the pooler is
     // ~115 ms away and a transaction pays for BEGIN and COMMIT too (CLAUDE.md).
@@ -129,13 +127,15 @@ export class ProgramsService {
    * Deliberately not narrowed by the caller's current filters: they are cached
    * as one object, and the number a visitor wants next to "Сөүл" is how many
    * programmes Seoul has, not how many survive the filters already applied.
-   * The subject counts live on `GET /study-fields`, which is the same idea.
    */
   async facets() {
     return this.cache.wrap(
       FACETS_CACHE_KEY,
       async () => {
-        const where = { isPublished: true, university: { isPublished: true } } satisfies Prisma.UniversityProgramWhereInput;
+        const where = {
+          isPublished: true,
+          university: { isPublished: true },
+        } satisfies Prisma.UniversityProgramWhereInput;
 
         const [levels, languages, byUniversity, tuition, total, universities] = await Promise.all([
           this.prisma.universityProgram.groupBy({ by: ['level'], where, _count: { _all: true } }),
@@ -150,18 +150,21 @@ export class ProgramsService {
           this.prisma.universityProgram.count({ where }),
           this.prisma.university.findMany({
             where: { isPublished: true },
-            select: { id: true, regionEn: true, regionMn: true },
+            select: { id: true, slug: true, nameMn: true, nameEn: true, regionEn: true, regionMn: true },
           }),
         ]);
 
         // Regions cannot be grouped through the relation, so the per-school
         // counts are rolled up here. 135 rows — cheaper than a raw query and
         // easier to read than one.
-        const regionOf = new Map(universities.map((row) => [row.id, row]));
+        const universityById = new Map(universities.map((row) => [row.id, row]));
         const regions = new Map<string, { value: string; label: string; count: number }>();
+        const schools: { value: string; label: string; count: number }[] = [];
+
         for (const row of byUniversity) {
-          const university = regionOf.get(row.universityId);
+          const university = universityById.get(row.universityId);
           if (!university) continue;
+
           const entry = regions.get(university.regionEn) ?? {
             value: university.regionEn,
             label: university.regionMn,
@@ -169,6 +172,8 @@ export class ProgramsService {
           };
           entry.count += row._count._all;
           regions.set(university.regionEn, entry);
+
+          schools.push({ value: university.slug, label: university.nameEn, count: row._count._all });
         }
 
         return {
@@ -176,6 +181,9 @@ export class ProgramsService {
           levels: levels.map((row) => ({ value: row.level, count: row._count._all })),
           languages: languages.map((row) => ({ value: row.language, count: row._count._all })),
           regions: [...regions.values()].sort((a, b) => b.count - a.count),
+          // The school filter a flat list needs: with no subject to narrow by,
+          // "just this university's departments" is the most-asked cut.
+          universities: schools.sort((a, b) => a.label.localeCompare(b.label)),
           tuition: {
             minKrw: tuition._min.tuitionPerYearKrw,
             maxKrw: tuition._max.tuitionPerYearKrw,
@@ -193,10 +201,10 @@ export class ProgramsService {
    * `publicOnly` is the whole difference: a draft programme, or one at an
    * unpublished school, must never reach a visitor.
    */
-  protected async buildWhere(
+  protected buildWhere(
     query: QueryProgramsDto,
     options: { publicOnly: boolean },
-  ): Promise<Prisma.UniversityProgramWhereInput> {
+  ): Prisma.UniversityProgramWhereInput {
     const where: Prisma.UniversityProgramWhereInput = {};
     const university: Prisma.UniversityWhereInput = {};
     // Every condition that is itself an OR goes in here. Two of them cannot
@@ -210,33 +218,13 @@ export class ProgramsService {
       university.isPublished = true;
     }
 
-    if (query.q) {
-      // `contains` compiles to ILIKE '%q%', which the pg_trgm GIN indexes serve.
-      const contains = { contains: query.q, mode: 'insensitive' } as const;
-      and.push({
-        OR: [
-          { nameMn: contains },
-          { nameEn: contains },
-          { nameKo: contains },
-          { faculty: contains },
-          { university: { nameMn: contains } },
-          { university: { nameEn: contains } },
-          { studyField: { nameMn: contains } },
-        ],
-      });
-    }
-
-    if (query.field) {
-      // A group slug stands for every subject inside it, so "Бизнес" answers
-      // with marketing and accounting rather than with nothing.
-      const ids = await this.studyFields.resolveFieldIds(query.field);
-      // An unknown slug must return nothing, not everything.
-      where.studyFieldId = ids.length ? { in: ids } : { in: [] };
-    }
+    if (query.q) and.push(programSearchWhere(query.q));
 
     if (query.level) where.level = query.level;
     if (query.language) where.language = query.language;
     if (query.universityId) where.universityId = query.universityId;
+    if (query.university) university.slug = query.university;
+    if (query.facultyId) where.facultyId = query.facultyId;
     if (query.region) university.regionEn = query.region;
     if (query.type) university.type = query.type;
     if (query.gks) university.isGksEligible = true;
@@ -246,6 +234,13 @@ export class ProgramsService {
         ...(query.tuitionMin !== undefined ? { gte: query.tuitionMin } : {}),
         ...(query.tuitionMax !== undefined ? { lte: query.tuitionMax } : {}),
       };
+    }
+
+    if (query.scholarship) {
+      // A programme with no recorded discount is not a programme without one,
+      // so this narrows to what we can actually promise. There is deliberately
+      // no inverse filter.
+      where.scholarshipMaxPercent = { gt: 0 };
     }
 
     if (query.topikMax !== undefined) {
@@ -258,4 +253,43 @@ export class ProgramsService {
     if (Object.keys(university).length) where.university = university;
     return where;
   }
+}
+
+/**
+ * What a typed word matches.
+ *
+ * Every wording of the programme and of the college it sits in, in all three
+ * languages, because whoever is typing may know the subject in any of them and
+ * the catalogue holds all three. `contains` compiles to ILIKE '%q%', which the
+ * pg_trgm GIN indexes on these columns serve.
+ *
+ * The school's name is searched too, but only for a term of four characters or
+ * more. "IT" is two, and "Univers**it**y" contains it — a short word matched
+ * against school names returns the entire catalogue, which is the one answer a
+ * search box must never give. Whoever actually wants one school has a dropdown
+ * listing every school with its count.
+ *
+ * Exported so the study planner searches on exactly these columns: two
+ * definitions of "matches" is how a plan and the catalogue it links to start
+ * disagreeing about how many programmes exist.
+ */
+export const SCHOOL_NAME_SEARCH_MIN_LENGTH = 4;
+
+export function programSearchWhere(term: string): Prisma.UniversityProgramWhereInput {
+  const trimmed = term.trim();
+  const contains = { contains: trimmed, mode: 'insensitive' } as const;
+
+  return {
+    OR: [
+      { nameMn: contains },
+      { nameEn: contains },
+      { nameKo: contains },
+      { faculty: { nameMn: contains } },
+      { faculty: { nameEn: contains } },
+      { faculty: { nameKo: contains } },
+      ...(trimmed.length >= SCHOOL_NAME_SEARCH_MIN_LENGTH
+        ? [{ university: { nameMn: contains } }, { university: { nameEn: contains } }]
+        : []),
+    ],
+  };
 }

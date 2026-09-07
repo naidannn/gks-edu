@@ -6,7 +6,7 @@
  */
 
 import type { IntakePhase, IntakeProgramOverride } from './admissions';
-import type { InstructionLanguage, ProgramSource, StudyFieldRef } from './programs';
+import type { FacultyRef, InstructionLanguage, ProgramSource } from './programs';
 
 export type UniversityType = 'NATIONAL' | 'PUBLIC' | 'PRIVATE';
 export type ProgramLevel = 'LANGUAGE_PREP' | 'BACHELOR' | 'MASTER' | 'PHD';
@@ -97,7 +97,6 @@ export interface UniversityProgram {
   level: ProgramLevel;
   nameMn: string;
   nameEn: string | null;
-  faculty: string | null;
   durationYears: number | null;
   /** Per semester, KRW — the figure Korean schools publish. */
   tuitionPerTermKrw: number | null;
@@ -113,8 +112,8 @@ export interface UniversityProgram {
   otherRequirements: string | null;
   language: InstructionLanguage;
   acceptsInternational: boolean;
-  /** The canonical subject this is filed under; null = not yet classified. */
-  studyField: StudyFieldRef | null;
+  /** The college it sits in; null is normal — a graduate department has none. */
+  faculty: FacultyRef | null;
 }
 
 /**
@@ -224,6 +223,8 @@ export interface AdminUniversityRow {
   gksRank: number | null;
   /** The staff thumb on the scale, in score points. */
   gksRankBoost: number;
+  /** The position a human typed. Decides the order while the ranking is MANUAL. */
+  gksManualRank: number | null;
   gksScoredAt: string | null;
   _count: { programs: number; intakes: number; cases: number };
 }
@@ -231,7 +232,7 @@ export interface AdminUniversityRow {
 export interface AdminUniversityProgram extends UniversityProgram {
   universityId: string;
   nameKo: string | null;
-  studyFieldId: string | null;
+  facultyId: string | null;
   sourceUrl: string | null;
   sourceType: ProgramSource;
   /** No `verifiedAt` means nobody has checked this against the school. */
@@ -327,9 +328,18 @@ export interface UniversityRegionOption {
  * and the search results for every visitor.
  * ------------------------------------------------------------------------- */
 
+/**
+ * How the catalogue's order is decided.
+ *
+ * `AUTO` — the weighted formula alone. `MANUAL` — the order staff put the
+ * schools in, with the formula left to place whatever nobody has numbered.
+ */
+export type GksRankingMode = 'AUTO' | 'MANUAL';
+
 /** The five weights plus the neutral floor, as the office tunes them. */
 export interface GksRankingConfig {
   id: string;
+  mode: GksRankingMode;
   weightBaseRank: number;
   weightPartnership: number;
   weightFit: number;
@@ -341,7 +351,10 @@ export interface GksRankingConfig {
   updatedById: string | null;
 }
 
-export type GksRankingWeights = Omit<GksRankingConfig, 'id' | 'updatedAt' | 'updatedById'>;
+export type GksRankingWeights = Omit<
+  GksRankingConfig,
+  'id' | 'mode' | 'updatedAt' | 'updatedById'
+>;
 
 export interface GksRankingPreviewRow {
   rank: number;
@@ -349,6 +362,8 @@ export interface GksRankingPreviewRow {
   nameEn: string;
   score: number;
   boost: number;
+  /** What staff typed, so a preview row can say hand or formula. */
+  manualRank: number | null;
   theKoreaRank: number | null;
   parts: GksScoreParts;
 }
@@ -356,14 +371,49 @@ export interface GksRankingPreviewRow {
 /** A dry run: what the catalogue would look like under different weights. */
 export interface GksRankingPreview {
   weights: GksRankingWeights;
+  mode: GksRankingMode;
   total: number;
   rows: GksRankingPreviewRow[];
 }
 
 export interface GksRankingRecomputeSummary {
+  mode: GksRankingMode;
   scored: number;
   /** Distinct positions handed out — fewer than `scored` when schools tie. */
   ranked: number;
   durationMs: number;
   top: { rank: number; nameMn: string; nameEn: string; score: number }[];
+}
+
+/* ------------------------------------------------------------------------- *
+ * Hand-ordering the catalogue (1A-35)
+ *
+ * The weights answer "what generally belongs at the top"; this answers "put
+ * this school there". Staff drag the list — or type a position — and the order
+ * is written as `University.gksManualRank`, 1 = first.
+ * ------------------------------------------------------------------------- */
+
+/** One school on the ordering screen. Narrow on purpose: 135 rows load at once. */
+export interface GksManualRankingRow {
+  id: string;
+  slug: string;
+  nameMn: string;
+  nameEn: string;
+  cityMn: string;
+  logoPath: string | null;
+  isPublished: boolean;
+  agentContractStatus: AgentContractStatus;
+  theKoreaRank: number | null;
+  gksScore: number | null;
+  /** Where the school actually sits today, hand-set or not. */
+  gksRank: number | null;
+  /** The number a human gave it; null = the formula places it, below the rest. */
+  gksManualRank: number | null;
+}
+
+/** The whole catalogue in shown order, plus which mode wrote that order. */
+export interface GksManualRanking {
+  mode: GksRankingMode;
+  total: number;
+  rows: GksManualRankingRow[];
 }

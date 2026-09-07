@@ -37,6 +37,7 @@ function blankSchool(overrides: Partial<RankingInput> = {}): RankingInput {
     programCount: 0,
     intakeCount: 0,
     gksRankBoost: 0,
+    gksManualRank: null,
     ...overrides,
   };
 }
@@ -195,5 +196,80 @@ describe('rankAll', () => {
 
     const ranked = rankAll([fresh, unlucky], buildContext([fresh, unlucky]), DEFAULT_RANKING_WEIGHTS);
     expect(ranked[0]!.id).toBe('fresh');
+  });
+});
+
+/** 1A-35 — MANUAL mode: the order the office typed wins over the formula. */
+describe('rankAll in MANUAL mode', () => {
+  const weights = DEFAULT_RANKING_WEIGHTS;
+
+  it('puts the hand-numbered schools first, in the order they were numbered', () => {
+    const best = blankSchool({ id: 'snu', nameMn: 'Сөүлийн их сургууль', theKoreaRank: 1 });
+    const chosen = blankSchool({ id: 'chosen', nameMn: 'Сонгосон', gksManualRank: 1 });
+
+    const ranked = rankAll([best, chosen], buildContext([best, chosen]), weights, 'MANUAL');
+
+    expect(ranked.map((row) => row.id)).toEqual(['chosen', 'snu']);
+    expect(ranked.map((row) => row.rank)).toEqual([1, 2]);
+  });
+
+  it('leaves the same schools to the formula in AUTO mode', () => {
+    const best = blankSchool({ id: 'snu', nameMn: 'Сөүлийн их сургууль', theKoreaRank: 1 });
+    const chosen = blankSchool({ id: 'chosen', nameMn: 'Сонгосон', gksManualRank: 1 });
+
+    const ranked = rankAll([best, chosen], buildContext([best, chosen]), weights, 'AUTO');
+    expect(ranked[0]!.id).toBe('snu');
+  });
+
+  it('drops an unnumbered school below every numbered one, however good it is', () => {
+    const numbered = blankSchool({ id: 'last', nameMn: 'Сүүлчийн', gksManualRank: 9 });
+    const strong = blankSchool({
+      id: 'strong',
+      nameMn: 'Хүчтэй',
+      theKoreaRank: 1,
+      agentContractStatus: 'SIGNED',
+    });
+
+    const ranked = rankAll([strong, numbered], buildContext([strong, numbered]), weights, 'MANUAL');
+    expect(ranked.map((row) => row.id)).toEqual(['last', 'strong']);
+  });
+
+  it('hands out consecutive positions — a hand-made order has no ties', () => {
+    const schools = [
+      blankSchool({ id: 'a', nameMn: 'Аа', gksManualRank: 2 }),
+      blankSchool({ id: 'b', nameMn: 'Бб', gksManualRank: 1 }),
+      blankSchool({ id: 'c', nameMn: 'Вв' }),
+      blankSchool({ id: 'd', nameMn: 'Гг' }),
+    ];
+
+    const ranked = rankAll(schools, buildContext(schools), weights, 'MANUAL');
+
+    expect(ranked.map((row) => row.id)).toEqual(['b', 'a', 'c', 'd']);
+    expect(ranked.map((row) => row.rank)).toEqual([1, 2, 3, 4]);
+  });
+
+  it('separates two schools left on the same number by their score', () => {
+    // The edit form lets a number be typed straight in, so duplicates happen.
+    const weak = blankSchool({ id: 'weak', nameMn: 'Сул', gksManualRank: 1 });
+    const strong = blankSchool({
+      id: 'strong',
+      nameMn: 'Хүчтэй',
+      gksManualRank: 1,
+      theKoreaRank: 1,
+    });
+
+    const ranked = rankAll([weak, strong], buildContext([weak, strong]), weights, 'MANUAL');
+    expect(ranked.map((row) => row.id)).toEqual(['strong', 'weak']);
+  });
+
+  it('ignores a nonsense position rather than ordering by it', () => {
+    const zero = blankSchool({ id: 'zero', nameMn: 'Тэг', gksManualRank: 0 });
+    const first = blankSchool({ id: 'first', nameMn: 'Нэг', gksManualRank: 1 });
+
+    const ranked = rankAll([zero, first], buildContext([zero, first]), weights, 'MANUAL');
+
+    expect(ranked.map((row) => row.id)).toEqual(['first', 'zero']);
+    expect(ranked[0]!.manualRank).toBe(1);
+    expect(ranked[1]!.manualRank).toBeNull();
   });
 });

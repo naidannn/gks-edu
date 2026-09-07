@@ -14,7 +14,7 @@
  *  2. **Nothing here reads `isPublished`.** Draft schools are scored too — the
  *     admin preview is the reason the ranking is worth tuning before launch.
  */
-import type { AgentContractStatus } from '../../../prisma/client.js';
+import type { AgentContractStatus, GksRankingMode } from '../../../prisma/client.js';
 import { THE_KOREA_RANK_FLOOR } from './the-korea-ranking.js';
 
 /** The five weights plus the one tunable constant, as stored in `GksRankingConfig`. */
@@ -64,6 +64,8 @@ export interface RankingInput {
   programCount: number;
   intakeCount: number;
   gksRankBoost: number;
+  /** The position a human typed, or null. Read only in MANUAL mode. */
+  gksManualRank: number | null;
 }
 
 /** Dataset-wide extremes, so the relative components compare like with like. */
@@ -92,6 +94,8 @@ export interface ScoredUniversity {
   score: number;
   parts: ScoreParts;
   boost: number;
+  /** What staff typed, echoed back so the admin list can show hand vs formula. */
+  manualRank: number | null;
   theKoreaRank: number | null;
   rank: number;
 }
@@ -244,17 +248,28 @@ export function blend(parts: ScoreParts, weights: RankingWeights, boost: number)
 }
 
 /**
- * Scores every school and hands back a dense ranking, best first.
+ * Scores every school and hands back the order the catalogue will be shown in.
  *
- * Dense (1, 2, 2, 3) rather than competition ranking: two schools that genuinely
- * tie should read as tied, and the catalogue's secondary sort by name keeps the
- * page order stable anyway. Scores are rounded to two decimals *before* the
- * comparison so a tie is a real tie and not a float artefact.
+ * `mode` decides what that order means (ARCHITECTURE.md §3.1):
+ *
+ *  - `AUTO` — the score alone, as a **dense** ranking (1, 2, 2, 3): two schools
+ *    that genuinely tie should read as tied, and the secondary sort by name
+ *    keeps the page order stable anyway. Scores are rounded to two decimals
+ *    *before* the comparison so a tie is a real tie and not a float artefact.
+ *  - `MANUAL` — the numbers staff typed lead, in that order, and the score is
+ *    left to place whatever nobody has numbered yet, below them. Positions are
+ *    1…n with no ties here: the office put these schools in an order on
+ *    purpose, and sharing a number would quietly undo half of it.
+ *
+ * Every school is scored either way. The score is what the admin screen shows
+ * as the reason a school sits where it does, and in MANUAL mode it is still
+ * the only thing placing a school nobody has got to yet.
  */
 export function rankAll(
   inputs: RankingInput[],
   context: RankingContext,
   weights: RankingWeights,
+  mode: GksRankingMode = 'AUTO',
 ): ScoredUniversity[] {
   const scored = inputs.map((input) => {
     const parts = scoreParts(input, context, weights);
@@ -265,20 +280,37 @@ export function rankAll(
       score: Math.round(blend(parts, weights, input.gksRankBoost) * 100) / 100,
       parts,
       boost: input.gksRankBoost,
+      manualRank: normaliseManualRank(input.gksManualRank),
       theKoreaRank: input.theKoreaRank,
       rank: 0,
-    };
+    } satisfies ScoredUniversity;
   });
 
-  scored.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    // Same score: the school with the outside rank goes first, then by name, so
-    // two runs over unchanged data always produce the same list.
-    const aRank = a.theKoreaRank ?? Number.MAX_SAFE_INTEGER;
-    const bRank = b.theKoreaRank ?? Number.MAX_SAFE_INTEGER;
-    if (aRank !== bRank) return aRank - bRank;
-    return a.nameMn.localeCompare(b.nameMn, 'mn');
-  });
+  return mode === 'MANUAL' ? rankByHand(scored) : rankByScore(scored);
+}
+
+/** A position is a whole number ≥ 1; anything else means "not numbered". */
+function normaliseManualRank(value: number | null): number | null {
+  if (value === null || !Number.isFinite(value)) return null;
+  const rounded = Math.round(value);
+  return rounded >= 1 ? rounded : null;
+}
+
+/**
+ * Best score first. Ties fall back to the outside rank and then the name, so
+ * two runs over unchanged data always produce the same list.
+ */
+function byScoreDesc(a: ScoredUniversity, b: ScoredUniversity): number {
+  if (b.score !== a.score) return b.score - a.score;
+  const aRank = a.theKoreaRank ?? Number.MAX_SAFE_INTEGER;
+  const bRank = b.theKoreaRank ?? Number.MAX_SAFE_INTEGER;
+  if (aRank !== bRank) return aRank - bRank;
+  return a.nameMn.localeCompare(b.nameMn, 'mn');
+}
+
+/** AUTO: dense ranking over the score. */
+function rankByScore(scored: ScoredUniversity[]): ScoredUniversity[] {
+  scored.sort(byScoreDesc);
 
   let rank = 0;
   let previousScore = Number.NaN;
@@ -290,6 +322,30 @@ export function rankAll(
     row.rank = rank;
   }
 
+  return scored;
+}
+
+/**
+ * MANUAL: the numbered schools in the order they were numbered, then the rest
+ * by score. Two schools left on the same number — the price of letting one be
+ * typed straight into the edit form — are separated by their score, so the
+ * order is still deterministic and the office can tidy the numbers later.
+ */
+function rankByHand(scored: ScoredUniversity[]): ScoredUniversity[] {
+  const numbered = scored.filter((row) => row.manualRank !== null);
+  const rest = scored.filter((row) => row.manualRank === null);
+
+  numbered.sort((a, b) => (a.manualRank! - b.manualRank!) || byScoreDesc(a, b));
+  rest.sort(byScoreDesc);
+
+  const ordered = [...numbered, ...rest];
+  ordered.forEach((row, index) => {
+    row.rank = index + 1;
+  });
+
+  // The caller hands the array straight to the writer, so keep it one array.
+  scored.length = 0;
+  scored.push(...ordered);
   return scored;
 }
 

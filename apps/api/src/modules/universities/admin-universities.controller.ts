@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -23,6 +24,7 @@ import { Role } from '../../prisma/client.js';
 import { AdminUniversitiesService } from './admin-universities.service.js';
 import { GksRankingService } from './ranking/gks-ranking.service.js';
 import { PreviewRankingDto, UpdateRankingConfigDto } from './dto/ranking-config.dto.js';
+import { ReorderManualRankingDto } from './dto/manual-ranking.dto.js';
 import {
   CreateIntakeTermForUniversityDto,
   UpdateIntakeTermForUniversityDto,
@@ -87,8 +89,9 @@ export class AdminUniversitiesController {
   @Get('ranking/preview')
   @ApiOperation({ summary: 'Dry-run the ranking with different weights — nothing is written' })
   rankingPreview(@Query() query: PreviewRankingDto) {
-    const { limit, ...overrides } = query;
-    return this.ranking.preview(overrides, limit);
+    // `mode` is not a weight — pass it separately or it lands in the blend.
+    const { limit, mode, ...overrides } = query;
+    return this.ranking.preview(overrides, limit, mode);
   }
 
   @Patch('ranking/config')
@@ -97,6 +100,40 @@ export class AdminUniversitiesController {
   @ApiOperation({ summary: 'Retune the weights — recomputes every school (1A-29)' })
   updateRankingConfig(@Body() dto: UpdateRankingConfigDto, @CurrentUser() user: AuthenticatedUser) {
     return this.ranking.updateConfig(dto, user.id);
+  }
+
+  @Get('ranking/manual')
+  @ApiOperation({ summary: 'The whole catalogue in shown order, for hand-ordering (1A-35)' })
+  manualRanking() {
+    return this.ranking.manualList();
+  }
+
+  @Put('ranking/manual')
+  @Roles(Role.ADMIN)
+  @Audit({ action: 'university.ranking.manual', entity: 'University' })
+  @ApiOperation({ summary: 'Save the order staff dragged — switches the catalogue to MANUAL (1A-35)' })
+  reorderManualRanking(
+    @Body() dto: ReorderManualRankingDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ranking.setManualOrder(dto, user.id);
+  }
+
+  @Post('ranking/manual/seed')
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Audit({ action: 'university.ranking.manual.seed', entity: 'University' })
+  @ApiOperation({ summary: 'Number every school 1…n by the order shown right now (1A-35)' })
+  seedManualRanking() {
+    return this.ranking.seedManualOrder();
+  }
+
+  @Delete('ranking/manual')
+  @Roles(Role.ADMIN)
+  @Audit({ action: 'university.ranking.manual.clear', entity: 'University' })
+  @ApiOperation({ summary: 'Drop every hand-set position and go back to AUTO (1A-35)' })
+  clearManualRanking(@CurrentUser() user: AuthenticatedUser) {
+    return this.ranking.clearManualOrder(user.id);
   }
 
   @Post('ranking/recompute')

@@ -84,7 +84,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { to: '/admin/settings/document-templates', label: 'Материалын загвар', icon: 'folder-cog', keywords: 'document template' },
       { to: '/admin/settings/notifications', label: 'Мэдэгдлийн загвар', icon: 'bell-ring', keywords: 'notification email' },
       { to: '/admin/settings/admissions', label: 'Элсэлтийн тохиргоо', icon: 'calendar-cog', keywords: 'intake config' },
-      { to: '/admin/settings/study-fields', label: 'Судлах чиглэл', icon: 'tags', keywords: 'study field мэргэжил чиглэл нэршил' },
       { to: '/admin/content', label: 'Контент', icon: 'newspaper', keywords: 'blog content' },
       { to: '/admin/settings/staff', label: 'Системийн хэрэглэгч', icon: 'user-cog', keywords: 'staff user role ажилтан эрх хэрэглэгч' },
     ],

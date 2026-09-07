@@ -22,7 +22,6 @@ definePageMeta({ middleware: 'staff', layout: 'admin' });
 const api = useApi();
 const route = useRoute();
 const catalogue = useUniversityCatalogue();
-const studyFields = useStudyFields({ admin: true });
 
 const editingId = computed(() => (typeof route.query.id === 'string' ? route.query.id : null));
 useHead({ title: () => (editingId.value ? 'Хөтөлбөр засах · Админ' : 'Шинэ хөтөлбөр · Админ') });
@@ -31,6 +30,11 @@ useHead({ title: () => (editingId.value ? 'Хөтөлбөр засах · Адм
 // programmes for me" without the person having to find the tab.
 const mode = ref<'manual' | 'research'>(route.query.mode === 'research' ? 'research' : 'manual');
 const form = reactive(emptyProgramForm());
+// The colleges of whichever school the form has selected — a faculty belongs to
+// one school, so this follows the picker rather than loading a global list. It
+// has to come after `form`: the watch inside it reads `form.universityId`
+// immediately, and above the declaration that is a temporal-dead-zone crash.
+const faculties = useFaculties(() => form.universityId);
 const errors = ref<ProgramFormErrors>({});
 const saving = ref(false);
 const saveError = ref<string | null>(null);
@@ -49,11 +53,10 @@ const TOPIK_OPTIONS = [
 
 const universityOptions = computed(() =>
   toUniversityOptions(catalogue.universities.value, 'Сургууль сонгоно уу'));
-const fieldOptions = computed(() => studyFieldOptions(studyFields.groups.value, 'Ангилаагүй (нэрээр нь таамаглана)'));
+const facultyOptions = computed(() => faculties.options.value);
 
 onMounted(async () => {
   catalogue.load();
-  studyFields.load();
   if (typeof route.query.universityId === 'string') form.universityId = route.query.universityId;
   if (editingId.value) await loadExisting(editingId.value);
 });
@@ -218,7 +221,7 @@ onBeforeUnmount(() => clearInterval(poll));
 
 /** Fills the form from one candidate — and only the form. Nothing is saved. */
 function applyCandidate(candidate: ProgramCandidate) {
-  fillProgramFormFromCandidate(form, candidate, studyFields.idBySlug.value);
+  fillProgramFormFromCandidate(form, candidate);
   mode.value = 'manual';
   errors.value = {};
 }
@@ -238,8 +241,7 @@ async function savePicked() {
     bulkResult.value = await api.post<BulkProgramResult>('/admin/programs/bulk', {
       universityId: form.universityId,
       researchRunId: run.value?.id,
-      programs: pickedCandidates.value.map((candidate) =>
-        candidateToBulkEntry(candidate, studyFields.idBySlug.value)),
+      programs: pickedCandidates.value.map((candidate) => candidateToBulkEntry(candidate)),
     });
     picked.value = new Set();
   } catch (err) {
@@ -348,6 +350,19 @@ function candidateAnnual(candidate: ProgramCandidate): string {
         <NuxtLink to="/admin/programs">Жагсаалтаас харах</NuxtLink>
       </p>
 
+      <!-- Without a key every run is the same thirteen fixtures. Said once, at
+           the top, because a reviewer reads the list of candidates and not the
+           note under each of them. -->
+      <p v-if="run && run.mock" class="gks-prog-form__mock">
+        <DsIcon name="triangle-alert" :size="15" />
+        <span>
+          <strong>GEMINI_MOCK горим</strong> — жинхэнэ хайлт хийгдээгүй.
+          Сургууль хамаарахгүй ижил <strong>13</strong> жишээ мөр буцаж байна, төлбөр нь ч
+          зохиомол. Бодит судалгаа хийхийн тулд <code>.env</code>-д
+          <code>GEMINI_API_KEY</code> тохируулна уу.
+        </span>
+      </p>
+
       <template v-if="run && run.status === 'SUCCEEDED'">
         <div v-if="!candidates.length" class="gks-prog-form__note">
           Энэ сургуулийн ангиудыг олсонгүй. Сургуулийн сайтаас гараар шалгаж оруулна уу.
@@ -356,7 +371,9 @@ function candidateAnnual(candidate: ProgramCandidate): string {
         <template v-else>
           <div class="gks-prog-form__picker">
             <span class="gks-tnum">{{ candidates.length }} санал · {{ pickedCandidates.length }} сонгосон</span>
-            <DsButton variant="ghost" size="sm" @click="pickAll">Бүгдийг сонгох</DsButton>
+            <DsButton variant="secondary" size="sm" icon-left="check-check" @click="pickAll">
+              Бүгдийг сонгох ({{ candidates.length }})
+            </DsButton>
             <DsButton variant="ghost" size="sm" :disabled="!pickedCandidates.length" @click="pickNone">
               Сонголтыг цуцлах
             </DsButton>
@@ -387,6 +404,11 @@ function candidateAnnual(candidate: ProgramCandidate): string {
                   <span>
                     <strong>{{ candidateName(candidate) }}</strong>
                     <small v-if="candidate.nameEn && candidate.nameKo">{{ candidate.nameEn }}</small>
+                    <!-- The college, so "all of this school's departments" reads
+                         as the school's own structure rather than a flat list. -->
+                    <small v-if="candidate.faculty" class="gks-prog-form__candidate-faculty">
+                      {{ candidate.faculty }}
+                    </small>
                   </span>
                 </label>
                 <DsBadge :tone="PROGRAM_CONFIDENCE_TONE[candidate.confidence]">
@@ -469,19 +491,26 @@ function candidateAnnual(candidate: ProgramCandidate): string {
           <DsInput v-model="form.nameMn" label="Монгол нэр" :error="errors.nameMn" />
           <DsInput v-model="form.nameEn" label="Англи нэр" placeholder="Business Administration" />
           <DsInput v-model="form.nameKo" label="Солонгос нэр" placeholder="경영학과" />
-          <DsInput v-model="form.faculty" label="Сургуулийн салбар (단과대학)" placeholder="경영대학" />
         </div>
 
-        <DsSelect
-          v-model="form.studyFieldId"
-          label="Судлах чиглэл"
-          :options="fieldOptions"
-          :loading="studyFields.loading.value"
-        />
+        <div class="gks-form-grid">
+          <DsSelect
+            v-model="form.facultyId"
+            label="Танхим (단과대학)"
+            :options="facultyOptions"
+            :loading="faculties.loading.value"
+            :disabled="!form.universityId"
+          />
+          <DsInput
+            v-model="form.facultyName"
+            label="Эсвэл шинэ танхимын нэр"
+            placeholder="공과대학"
+            :disabled="Boolean(form.facultyId)"
+          />
+        </div>
         <p class="gks-prog-form__hint">
-          Чиглэлээр л "бүх сургуулийн маркетинг" нэг дор гарч ирдэг. Хоосон орхивол систем
-          нэрнээс нь таамаглаж ангилна — таарахгүй бол
-          <NuxtLink to="/admin/settings/study-fields">чиглэлийн жагсаалтад</NuxtLink> нэршлийг нь нэмнэ үү.
+          Танхим заавал биш — магистр, докторын анги ихэвчлэн 대학원-д багтдаг тул хоосон
+          орхиж болно. Жагсаалтад байхгүй танхимын нэрийг бичвэл шинээр үүсгэнэ.
         </p>
 
         <h3 class="gks-prog-form__section">Сургалтын төлбөр</h3>
@@ -604,6 +633,28 @@ function candidateAnnual(candidate: ProgramCandidate): string {
 .gks-prog-form__candidate-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-2); margin-top: var(--sp-3); }
 .gks-prog-form__candidate-facts dt { color: var(--text-subtle); font-size: var(--fs-caption); }
 .gks-prog-form__candidate-facts dd { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); }
+.gks-prog-form__candidate-faculty { color: var(--text-subtle); }
+
+/* Not an error — the feature is working exactly as configured. It is a warning
+   about what the numbers below are worth. */
+.gks-prog-form__mock {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--radius-1);
+  border: var(--border-hair) solid var(--amber-100);
+  background: var(--amber-050);
+  color: var(--amber-700);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-loose);
+}
+.gks-prog-form__mock .gks-icon { flex: none; margin-top: 2px; }
+.gks-prog-form__mock code {
+  padding: 1px 4px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+  font-family: var(--font-mono);
+}
 .gks-prog-form__candidate-note { margin-top: var(--sp-3); color: var(--text-subtle); font-size: var(--fs-caption); line-height: 1.6; }
 .gks-prog-form__candidate-warn { color: var(--amber-700); }
 .gks-prog-form__candidate-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--line-soft); }

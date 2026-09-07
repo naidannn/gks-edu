@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { GksRankingMode } from '../../../prisma/client.js';
 
 /** Weights are relative, so any non-negative number is legal; this is a sanity ceiling. */
 const MAX_WEIGHT = 100;
@@ -13,6 +14,15 @@ const MAX_WEIGHT = 100;
  * normalises by their total (see `blend`).
  */
 export class UpdateRankingConfigDto {
+  @ApiPropertyOptional({
+    enum: GksRankingMode,
+    default: GksRankingMode.AUTO,
+    description: 'AUTO — the weights order the catalogue; MANUAL — the positions staff typed do',
+  })
+  @IsEnum(GksRankingMode)
+  @IsOptional()
+  mode?: GksRankingMode;
+
   @ApiPropertyOptional({ description: 'THE South Korea rank', default: 40 })
   @Type(() => Number)
   @IsNumber()
@@ -70,6 +80,9 @@ export class UpdateRankingConfigDto {
  * Lets the office see the reshuffled top of the catalogue before saving.
  */
 export class PreviewRankingDto extends UpdateRankingConfigDto {
+  // `mode` is inherited: previewing AUTO from a catalogue running MANUAL is
+  // how the office sees what the formula would do before handing it back.
+
   @ApiPropertyOptional({ description: 'How many rows of the preview to return', default: 30 })
   @Type(() => Number)
   @IsInt()

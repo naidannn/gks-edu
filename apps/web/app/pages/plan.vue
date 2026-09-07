@@ -3,7 +3,6 @@ import { STUDY_PLAN_GOALS } from '@gks/shared';
 import type {
   EducationLevel,
   ProgramLevel,
-  StudyFieldGroup,
   StudyPlanResult,
   TopikLevel,
 } from '@gks/shared';
@@ -88,8 +87,6 @@ const STEP_TITLES = [
   'Ямар чиглэлээр?',
 ] as const;
 
-const { data: fields } = await useApiFetch<StudyFieldGroup[]>('/study-fields', { lazy: true });
-
 /** Only the goals this person's diploma actually reaches (the API re-checks). */
 const goalChoices = computed(() => {
   const education = answers.value.education;
@@ -98,18 +95,22 @@ const goalChoices = computed(() => {
   return GOAL_CHOICES.filter((choice) => allowed.includes(choice.value));
 });
 
-/** Twelve subject groups plus the honest answer most visitors want to give. */
-const fieldChoices = computed(() => [
-  { value: ANY_FIELD, label: 'Хараахан шийдээгүй', icon: 'circle-dashed' },
-  ...(fields.value ?? [])
-    .filter((group) => group.programCount > 0)
-    .map((group) => ({
-      value: group.slug,
-      label: group.nameMn,
-      hint: `${group.programCount} анги`,
-      icon: FIELD_ICONS[group.slug] ?? 'book-open',
-    })),
-]);
+/**
+ * The fourth question is a word, not a menu.
+ *
+ * A menu of subjects is a vocabulary somebody has to maintain, and it was never
+ * the vocabulary a visitor used: they say "IT", "маркетинг", "경영". The word
+ * goes to the same search the catalogue runs, so the plan and the "бүх ангийг
+ * харах" link it ends with can never disagree about how many programmes exist.
+ */
+const fieldInput = ref(answers.value.field === ANY_FIELD ? '' : answers.value.field);
+watch(() => answers.value.field, (value) => {
+  fieldInput.value = value === ANY_FIELD ? '' : value;
+});
+
+function answerField() {
+  answerStep('field', fieldInput.value.trim() || ANY_FIELD);
+}
 
 function answerStep(key: 'education' | 'goal' | 'topik' | 'field', value: string | number) {
   // A different diploma can invalidate the goal already chosen — drop it rather
@@ -256,13 +257,21 @@ useSeoMeta({
         :label="STEP_TITLES[2]"
         @update:model-value="answerStep('topik', $event)"
       />
-      <PlanChoiceGrid
-        v-else
-        :choices="fieldChoices"
-        :model-value="answers.field"
-        :label="STEP_TITLES[3]"
-        @update:model-value="answerStep('field', $event)"
-      />
+      <form v-else class="gks-wizard__field" @submit.prevent="answerField">
+        <DsInput
+          v-model="fieldInput"
+          :label="STEP_TITLES[3]"
+          placeholder="IT, маркетинг, 경영…"
+          icon-left="search"
+          hint="Мэргэжлийнхээ нэрийг бичнэ үү. Шийдээгүй бол алгасаад цааш үргэлжлүүлж болно."
+        />
+        <div class="gks-wizard__field-actions">
+          <DsButton type="submit" icon-right="arrow-right">Үргэлжлүүлэх</DsButton>
+          <DsButton variant="ghost" type="button" @click="answerStep('field', ANY_FIELD)">
+            Хараахан шийдээгүй
+          </DsButton>
+        </div>
+      </form>
 
       <footer v-if="step > 0" class="gks-wizard__foot">
         <DsButton variant="ghost" size="sm" icon-left="chevron-left" @click="step -= 1">Буцах</DsButton>
@@ -545,6 +554,9 @@ useSeoMeta({
   font-size: var(--fs-h3);
   letter-spacing: var(--ls-heading);
 }
+
+.gks-wizard__field { display: grid; gap: var(--sp-4); }
+.gks-wizard__field-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 
 .gks-wizard__foot {
   margin-top: var(--sp-5);

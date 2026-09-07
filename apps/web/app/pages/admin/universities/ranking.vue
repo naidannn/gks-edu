@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import type {
+  GksManualRanking,
+  GksManualRankingRow,
   GksRankingConfig,
+  GksRankingMode,
   GksRankingPreview,
   GksRankingRecomputeSummary,
   GksScoreParts,
 } from '@gks/shared';
 
 /**
- * GKS ranking configuration (1A-29 … 1A-31).
+ * GKS ranking configuration (1A-29 … 1A-31, 1A-35).
  *
  * The catalogue and every search result are ordered by `gksRank`, so this
- * screen decides what all visitors see first. Weights are relative — the score
- * normalises by their total — which is why the form shows each one's share as a
- * percentage next to the raw number.
+ * screen decides what all visitors see first. It offers two ways to decide it:
+ *
+ *  - **Автомат** — the weighted formula. Weights are relative (the score
+ *    normalises by their total), which is why each one's real share is shown as
+ *    a percentage next to the raw number.
+ *  - **Гар** — the office puts the schools in order itself, by dragging or by
+ *    typing a position. The formula still scores every school, and still places
+ *    the ones nobody has numbered — below the ones somebody has.
  */
 definePageMeta({ middleware: 'admin', layout: 'admin' });
 
@@ -55,6 +63,19 @@ const COMPONENTS: { key: keyof Weights; part: keyof GksScoreParts; label: string
   },
 ];
 
+const MODES: { value: GksRankingMode; label: string; description: string }[] = [
+  {
+    value: 'MANUAL',
+    label: 'Гар эрэмбэ — дарааллыг би тогтооно',
+    description: 'Доорх жагсаалтыг чирж эсвэл байрны дугаар шивж эрэмбэлнэ. Дугааргүй үлдсэн сургуулийг систем доор нь байрлуулна.',
+  },
+  {
+    value: 'AUTO',
+    label: 'Автомат — томьёо тогтооно',
+    description: 'Таван бүрэлдэхүүнийг жингээр холиод эрэмбэлнэ. Гар дугаар хадгалагдана, гэхдээ ажиллахгүй.',
+  },
+];
+
 type Weights = Pick<
   GksRankingConfig,
   | 'weightBaseRank'
@@ -77,13 +98,17 @@ const form = reactive<Record<keyof Weights, string>>({
 
 const config = ref<GksRankingConfig | null>(null);
 const preview = ref<GksRankingPreview | null>(null);
+const mode = ref<GksRankingMode>('AUTO');
 const pending = ref(true);
-const busy = ref<'save' | 'preview' | 'recompute' | null>(null);
+const busy = ref<'save' | 'preview' | 'recompute' | 'mode' | 'order' | 'seed' | 'clear' | null>(null);
 const errorMsg = ref<string | null>(null);
 const okMsg = ref<string | null>(null);
 
+/* --- Weights ----------------------------------------------------------- */
+
 function fill(from: GksRankingConfig) {
   config.value = from;
+  mode.value = from.mode;
   for (const key of Object.keys(form) as (keyof Weights)[]) form[key] = String(from[key]);
 }
 
@@ -113,11 +138,141 @@ const dirty = computed(() => {
   );
 });
 
+/* --- Hand-ordering (1A-35) ---------------------------------------------- */
+
+const rows = ref<GksManualRankingRow[]>([]);
+/** The order as the server last confirmed it — the thing "хадгалаагүй" compares against. */
+const savedOrder = ref<string[]>([]);
+const search = ref('');
+const dragFrom = ref<number | null>(null);
+
+const filtering = computed(() => search.value.trim().length > 0);
+
+const visibleRows = computed(() => {
+  const query = search.value.trim().toLowerCase();
+  const numbered = rows.value.map((row, index) => ({ row, index }));
+  if (!query) return numbered;
+  return numbered.filter(({ row }) =>
+    [row.nameMn, row.nameEn, row.cityMn, row.slug].some((field) =>
+      field?.toLowerCase().includes(query),
+    ),
+  );
+});
+
+const orderDirty = computed(
+  () =>
+    rows.value.length === savedOrder.value.length
+    && rows.value.some((row, index) => row.id !== savedOrder.value[index]),
+);
+
+function applyList(list: GksManualRanking) {
+  rows.value = list.rows;
+  savedOrder.value = list.rows.map((row) => row.id);
+  mode.value = list.mode;
+  if (config.value) config.value = { ...config.value, mode: list.mode };
+}
+
+/** Lifts one school out of the list and drops it back at another index. */
+function moveRow(from: number, to: number) {
+  if (from === to || from < 0 || to < 0 || from >= rows.value.length) return;
+  const next = [...rows.value];
+  const [moved] = next.splice(from, 1);
+  if (!moved) return;
+  next.splice(Math.min(to, next.length), 0, moved);
+  rows.value = next;
+}
+
+/** The "байр" box: a typed position, clamped to the list. */
+function moveTo(index: number, value: string) {
+  const position = Number(value);
+  if (!Number.isFinite(position)) return;
+  moveRow(index, Math.min(Math.max(Math.round(position), 1), rows.value.length) - 1);
+}
+
+function onDrop(to: number) {
+  if (dragFrom.value !== null) moveRow(dragFrom.value, to);
+  dragFrom.value = null;
+}
+
+async function loadList() {
+  applyList(await api.get<GksManualRanking>('/admin/universities/ranking/manual'));
+}
+
+async function saveOrder() {
+  busy.value = 'order';
+  errorMsg.value = null;
+  okMsg.value = null;
+  try {
+    applyList(
+      await api.put<GksManualRanking>('/admin/universities/ranking/manual', {
+        order: rows.value.map((row) => row.id),
+      }),
+    );
+    okMsg.value = 'Эрэмбийг хадгаллаа — каталог энэ дарааллаар харагдана.';
+    await runPreview();
+  } catch (err) {
+    errorMsg.value = apiErrorMessage(err, 'Эрэмбийг хадгалж чадсангүй');
+  } finally {
+    busy.value = null;
+  }
+}
+
+async function seedOrder() {
+  busy.value = 'seed';
+  errorMsg.value = null;
+  okMsg.value = null;
+  try {
+    applyList(await api.post<GksManualRanking>('/admin/universities/ranking/manual/seed'));
+    okMsg.value = 'Одоогийн эрэмбээр 1-ээс эхлэн дугаарлалаа.';
+    await runPreview();
+  } catch (err) {
+    errorMsg.value = apiErrorMessage(err, 'Дугаарлаж чадсангүй');
+  } finally {
+    busy.value = null;
+  }
+}
+
+async function clearOrder() {
+  busy.value = 'clear';
+  errorMsg.value = null;
+  okMsg.value = null;
+  try {
+    applyList(await api.delete<GksManualRanking>('/admin/universities/ranking/manual'));
+    okMsg.value = 'Гар эрэмбийг цэвэрлэж, автомат горимд шилжлээ.';
+    await runPreview();
+  } catch (err) {
+    errorMsg.value = apiErrorMessage(err, 'Цэвэрлэж чадсангүй');
+  } finally {
+    busy.value = null;
+  }
+}
+
+async function changeMode(next: GksRankingMode) {
+  if (next === config.value?.mode) return;
+  busy.value = 'mode';
+  errorMsg.value = null;
+  okMsg.value = null;
+  try {
+    fill(await api.patch<GksRankingConfig>('/admin/universities/ranking/config', { mode: next }));
+    okMsg.value = next === 'MANUAL'
+      ? 'Гар горимд шилжлээ — каталог доорх дарааллаар харагдана.'
+      : 'Автомат горимд шилжлээ — томьёо эрэмбийг тогтооно.';
+    await Promise.all([loadList(), runPreview()]);
+  } catch (err) {
+    mode.value = config.value?.mode ?? 'AUTO';
+    errorMsg.value = apiErrorMessage(err, 'Горимыг солиж чадсангүй');
+  } finally {
+    busy.value = null;
+  }
+}
+
+/* --- Loading and the preview ------------------------------------------- */
+
 async function load() {
   pending.value = true;
   try {
     fill(await api.get<GksRankingConfig>('/admin/universities/ranking/config'));
-    await runPreview();
+    await Promise.all([loadList(), runPreview()]);
   } catch {
     errorMsg.value = 'Тохиргоог ачаалж чадсангүй';
   } finally {
@@ -147,7 +302,7 @@ async function save() {
   try {
     fill(await api.patch<GksRankingConfig>('/admin/universities/ranking/config', numeric.value));
     okMsg.value = 'Хадгаллаа — бүх сургуулийн эрэмбэ дахин тооцоологдлоо.';
-    await runPreview();
+    await Promise.all([loadList(), runPreview()]);
   } catch (err) {
     errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
@@ -164,7 +319,7 @@ async function recompute() {
       '/admin/universities/ranking/recompute',
     );
     okMsg.value = `${summary.scored} сургуулийг дахин эрэмблэлээ (${summary.durationMs} мс).`;
-    await runPreview();
+    await Promise.all([loadList(), runPreview()]);
   } catch (err) {
     errorMsg.value = apiErrorMessage(err, 'Тооцоолж чадсангүй');
   } finally {
@@ -196,8 +351,8 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
         <span class="gks-eyebrow">Каталог</span>
         <h1 class="gks-page__title">GKS эрэмбэ</h1>
         <p class="gks-page__hint">
-          Нийтийн каталог, хайлтын үр дүн бүр энэ эрэмбээр харагдана. Жин нь харьцангуй —
-          нийлбэр нь 100 байх шаардлагагүй, доорх хувь нь бодит жинг харуулна.
+          Нийтийн каталог, хайлтын үр дүн бүр энэ эрэмбээр харагдана. Дарааллыг өөрөө
+          тогтоох эсвэл томьёонд даалгах хоёр горимтой.
         </p>
       </div>
       <NuxtLink to="/admin/universities" class="gks-page__back">
@@ -213,7 +368,136 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
     </div>
 
     <template v-else>
+      <DsCard title="Эрэмбийг хэн тогтоох вэ">
+        <DsRadio
+          name="ranking-mode"
+          :options="MODES"
+          :model-value="mode"
+          @update:model-value="changeMode($event as GksRankingMode)"
+        />
+      </DsCard>
+
+      <DsCard :title="`Гар эрэмбэ · ${rows.length} сургууль`">
+        <p class="gks-rank__note">
+          <template v-if="mode === 'MANUAL'">
+            Каталог яг энэ дарааллаар харагдана. Мөрийг чирж, эсвэл байрны дугаарыг шивж
+            зөөнө. Дараа нь <strong>Эрэмбэ хадгалах</strong> дарна.
+          </template>
+          <template v-else>
+            Одоо автомат горимд байна — доорх дараалал зөвхөн одоогийн байдлыг харуулж байна.
+            Хадгалбал гар горимд шилжинэ.
+          </template>
+        </p>
+
+        <div class="gks-rank__toolbar">
+          <DsInput
+            v-model="search"
+            placeholder="Сургууль хайх…"
+            icon-left="search"
+            class="gks-rank__search"
+          />
+          <DsButton
+            :loading="busy === 'order'"
+            :disabled="!orderDirty"
+            variant="accent"
+            icon-left="save"
+            @click="saveOrder"
+          >
+            Эрэмбэ хадгалах
+          </DsButton>
+          <DsButton v-if="orderDirty" variant="ghost" @click="loadList">Буцаах</DsButton>
+          <span class="gks-form-actions__spacer" />
+          <DsButton
+            :loading="busy === 'seed'"
+            variant="secondary"
+            icon-left="list-ordered"
+            @click="seedOrder"
+          >
+            Одоогийн эрэмбээр дугаарлах
+          </DsButton>
+          <DsButton
+            :loading="busy === 'clear'"
+            variant="ghost"
+            icon-left="eraser"
+            @click="clearOrder"
+          >
+            Гар эрэмбийг цэвэрлэх
+          </DsButton>
+        </div>
+
+        <p v-if="orderDirty" class="gks-rank__warn">
+          Хадгалаагүй өөрчлөлт байна.
+        </p>
+        <p v-if="filtering" class="gks-rank__note">
+          Хайлт идэвхтэй үед чирэх боломжгүй — байрны дугаарыг шивж зөөнө үү.
+        </p>
+
+        <ul class="gks-order">
+          <li
+            v-for="{ row, index } in visibleRows"
+            :key="row.id"
+            class="gks-order__row"
+            :class="{ 'gks-order__row--dragging': dragFrom === index }"
+            :draggable="!filtering"
+            @dragstart="dragFrom = index"
+            @dragover.prevent
+            @drop.prevent="onDrop(index)"
+            @dragend="dragFrom = null"
+          >
+            <DsIcon
+              v-if="!filtering"
+              name="grip-vertical"
+              :size="16"
+              class="gks-order__grip"
+            />
+            <span class="gks-tnum gks-order__pos">{{ index + 1 }}</span>
+
+            <span class="gks-order__name">
+              <NuxtLink :to="`/admin/universities/${row.id}`">{{ universityName(row) }}</NuxtLink>
+              <span class="gks-order__meta">
+                {{ universitySubName(row) ?? row.cityMn }}
+                <template v-if="row.theKoreaRank"> · THE #{{ row.theKoreaRank }}</template>
+                <template v-if="row.gksScore !== null"> · оноо {{ row.gksScore.toFixed(1) }}</template>
+              </span>
+            </span>
+
+            <DsBadge v-if="!row.isPublished" tone="neutral">Ноорог</DsBadge>
+            <DsBadge v-if="row.agentContractStatus === 'SIGNED'" tone="success">Гэрээтэй</DsBadge>
+
+            <span class="gks-order__actions">
+              <input
+                class="gks-order__jump gks-tnum"
+                type="number"
+                min="1"
+                :max="rows.length"
+                :value="index + 1"
+                :aria-label="`${row.nameMn} — байр`"
+                @change="moveTo(index, ($event.target as HTMLInputElement).value)"
+              >
+              <DsIconButton
+                icon="chevron-up"
+                label="Дээш"
+                size="sm"
+                :disabled="index === 0"
+                @click="moveRow(index, index - 1)"
+              />
+              <DsIconButton
+                icon="chevron-down"
+                label="Доош"
+                size="sm"
+                :disabled="index === rows.length - 1"
+                @click="moveRow(index, index + 1)"
+              />
+            </span>
+          </li>
+        </ul>
+      </DsCard>
+
       <DsCard title="Жин">
+        <p v-if="mode === 'MANUAL'" class="gks-rank__note">
+          Гар горимд жин нь зөвхөн <strong>дугаарлаагүй</strong> сургуулиудын дарааллыг
+          болон админд харагдах оноог тогтооно.
+        </p>
         <div class="gks-rank__weights">
           <div v-for="component in COMPONENTS" :key="component.key" class="gks-rank__weight">
             <DsInput
@@ -283,7 +567,10 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
                   @click="expanded = expanded === row.rank ? null : row.rank"
                 >
                   <td class="gks-tnum gks-table__num">{{ row.rank }}</td>
-                  <td>{{ universityName(row) }}</td>
+                  <td>
+                    {{ universityName(row) }}
+                    <DsBadge v-if="preview.mode === 'MANUAL' && row.manualRank !== null" tone="ink">гар</DsBadge>
+                  </td>
                   <td class="gks-tnum gks-table__num">{{ row.score.toFixed(2) }}</td>
                   <td class="gks-tnum gks-table__num">
                     <span v-if="row.boost">{{ row.boost > 0 ? '+' : '' }}{{ row.boost }}</span>
@@ -331,6 +618,7 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
 }
 .gks-rank__floor { margin-top: var(--sp-5); max-width: 48ch; }
 .gks-rank__note { margin-top: var(--sp-3); color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-rank__warn { margin-top: var(--sp-3); color: var(--text-strong); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
 .gks-rank__detail > td { background: var(--surface-sunken); }
 .gks-rank__parts { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; }
 .gks-rank__parts li { display: grid; grid-template-columns: 22ch 1fr 4ch; align-items: center; gap: var(--sp-3); }
@@ -338,8 +626,56 @@ useHead({ title: 'GKS эрэмбэ · CRM' });
 .gks-rank__part-value { font-size: var(--fs-caption); font-weight: var(--fw-semibold); text-align: right; }
 .gks-rank__bar { display: block; height: 6px; background: var(--surface-card); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-pill); overflow: hidden; }
 .gks-rank__bar-fill { display: block; height: 100%; background: var(--text-strong); }
+
+/* --- The ordering list (1A-35) --- */
+.gks-rank__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+.gks-rank__search { flex: 1 1 22ch; max-width: 32ch; }
+
+.gks-order {
+  margin-top: var(--sp-4);
+  max-height: 34rem;
+  overflow-y: auto;
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-md);
+}
+.gks-order__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: var(--border-hair) solid var(--line-hairline);
+  background: var(--surface-card);
+}
+.gks-order__row:last-child { border-bottom: 0; }
+.gks-order__row--dragging { opacity: 0.4; }
+.gks-order__grip { flex: none; cursor: grab; color: var(--text-subtle); }
+.gks-order__pos {
+  flex: none;
+  min-width: 3.5ch;
+  text-align: right;
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+}
+.gks-order__name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gks-order__meta { color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-order__actions { flex: none; display: flex; align-items: center; gap: var(--sp-2); }
+.gks-order__jump {
+  width: 6ch;
+  padding: var(--sp-1) var(--sp-2);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-page);
+  color: var(--text-strong);
+  text-align: right;
+}
 @media (max-width: 900px) {
 .gks-rank__weights { grid-template-columns: 1fr; }
+.gks-order__meta { display: none; }
 }
 </style>
-

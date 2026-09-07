@@ -18,12 +18,10 @@ type Paginated = PaginatedResult<AdminProgram>;
 
 const api = useApi();
 const route = useRoute();
-const studyFields = useStudyFields({ admin: true });
 
 const PAGE_SIZE = 25;
 
 const q = ref(typeof route.query.q === 'string' ? route.query.q : '');
-const field = ref(typeof route.query.field === 'string' ? route.query.field : '');
 /** Set when arriving from one school's page; there is no control for it. */
 const universityId = ref(typeof route.query.universityId === 'string' ? route.query.universityId : '');
 const level = ref<ProgramLevel | ''>('');
@@ -33,7 +31,7 @@ const tuitionMax = ref('');
 const topikMax = ref('');
 const sort = ref('university');
 const order = ref<'asc' | 'desc'>('asc');
-const unclassified = ref(false);
+const noFaculty = ref(false);
 const missingTuition = ref(false);
 const unverified = ref(false);
 const page = ref(1);
@@ -73,14 +71,6 @@ const TUITION_OPTIONS = [
   { value: '10000000', label: 'Жилд ₩10 сая хүртэл' },
 ];
 
-const fieldOptions = computed(() => [
-  { value: '', label: 'Бүх чиглэл' },
-  ...studyFields.groups.value.flatMap((group) => [
-    { value: group.slug, label: `${group.nameMn} (${group.programCount})` },
-    ...group.children.map((child) => ({ value: child.slug, label: `   ${child.nameMn} (${child.programCount})` })),
-  ]),
-]);
-
 const regionOptions = computed(() => [
   { value: '', label: 'Бүх бүс' },
   ...regions.value.map((entry) => ({ value: entry.value, label: `${entry.label} (${entry.count})` })),
@@ -94,14 +84,13 @@ const query = computed(() => {
     sort: sortKey,
     order: sortOrder ?? order.value,
     ...(q.value ? { q: q.value } : {}),
-    ...(field.value ? { field: field.value } : {}),
     ...(universityId.value ? { universityId: universityId.value } : {}),
     ...(level.value ? { level: level.value } : {}),
     ...(region.value ? { region: region.value } : {}),
     ...(language.value ? { language: language.value } : {}),
     ...(tuitionMax.value ? { tuitionMax: tuitionMax.value } : {}),
     ...(topikMax.value ? { topikMax: topikMax.value } : {}),
-    ...(unclassified.value ? { unclassified: true } : {}),
+    ...(noFaculty.value ? { noFaculty: true } : {}),
     ...(missingTuition.value ? { missingTuition: true } : {}),
     ...(unverified.value ? { unverified: true } : {}),
   };
@@ -130,7 +119,7 @@ async function loadAside() {
   regions.value = facets?.regions ?? [];
 }
 
-watch([field, level, region, language, tuitionMax, topikMax, sort, unclassified, missingTuition, unverified], () => {
+watch([level, region, language, tuitionMax, topikMax, sort, noFaculty, missingTuition, unverified], () => {
   page.value = 1;
   load();
 });
@@ -149,7 +138,6 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(() => {
   load();
   loadAside();
-  studyFields.load();
 });
 
 const totalPages = computed(() => meta.value?.totalPages ?? 1);
@@ -168,10 +156,8 @@ function annual(program: AdminProgram): string {
         <span class="gks-eyebrow">Каталог</span>
         <h1 class="gks-page__title">Хөтөлбөр, сургалтын төлбөр</h1>
         <p class="gks-page__hint">
-          Бүх сургуулийн ангиудыг нэг дороос. Чиглэлээр шүүвэл сургууль бүр өөрөөр нэрлэсэн ч
-          нэг дор гарч ирнэ — нэршлийг
-          <NuxtLink to="/admin/settings/study-fields">судлах чиглэлийн жагсаалт</NuxtLink>
-          нэгтгэдэг.
+          Бүх сургуулийн ангиудыг нэг дороос. Хайлт нь ангийн монгол, англи, солонгос нэр,
+          танхим болон сургуулийн нэр дээр ажиллана.
         </p>
       </div>
       <DsButton variant="accent" icon-left="plus" @click="navigateTo('/admin/programs/new')">
@@ -188,9 +174,9 @@ function annual(program: AdminProgram): string {
         <span>Төлбөргүй</span>
         <strong class="gks-tnum">{{ stats.missingTuition }}</strong>
       </li>
-      <li class="gks-stat" :class="{ 'gks-stat--warn': stats.unclassified > 0 }">
-        <span>Ангилаагүй</span>
-        <strong class="gks-tnum">{{ stats.unclassified }}</strong>
+      <li class="gks-stat" :class="{ 'gks-stat--warn': stats.noFaculty > 0 }">
+        <span>Танхимгүй</span>
+        <strong class="gks-tnum">{{ stats.noFaculty }}</strong>
       </li>
       <li class="gks-stat">
         <span>Хянагдаагүй</span>
@@ -211,7 +197,6 @@ function annual(program: AdminProgram): string {
           icon-left="search"
           placeholder="Хөтөлбөр, сургуулийн нэрээр хайх…"
         />
-        <DsSelect v-model="field" :options="fieldOptions" aria-label="Чиглэл" />
         <DsSelect v-model="level" :options="LEVEL_OPTIONS" aria-label="Түвшин" />
         <DsSelect v-model="region" :options="regionOptions" aria-label="Бүс" />
         <DsSelect v-model="language" :options="LANGUAGE_OPTIONS" aria-label="Хичээлийн хэл" />
@@ -220,7 +205,7 @@ function annual(program: AdminProgram): string {
         <DsSelect v-model="sort" :options="SORT_OPTIONS" aria-label="Эрэмбэ" />
       </div>
       <div class="gks-toggles">
-        <DsTag clickable :selected="unclassified" @click="unclassified = !unclassified">Ангилаагүй</DsTag>
+        <DsTag clickable :selected="noFaculty" @click="noFaculty = !noFaculty">Танхимгүй</DsTag>
         <DsTag clickable :selected="missingTuition" @click="missingTuition = !missingTuition">Төлбөргүй</DsTag>
         <DsTag clickable :selected="unverified" @click="unverified = !unverified">Хянагдаагүй</DsTag>
         <span class="gks-result-count gks-tnum">{{ meta?.total ?? 0 }} хөтөлбөр</span>
@@ -244,7 +229,7 @@ function annual(program: AdminProgram): string {
           <tr>
             <th scope="col">Сургууль</th>
             <th scope="col">Хөтөлбөр</th>
-            <th scope="col">Чиглэл</th>
+            <th scope="col">Танхим</th>
             <th scope="col">Түвшин</th>
             <th scope="col">Жилийн төлбөр</th>
             <th scope="col">Улирлын</th>
@@ -272,9 +257,9 @@ function annual(program: AdminProgram): string {
               <small v-if="row.nameKo">{{ row.nameKo }}</small>
               <small v-else-if="row.nameEn">{{ row.nameEn }}</small>
             </td>
-            <td data-label="Чиглэл">
-              <DsBadge v-if="row.studyField" tone="neutral">{{ row.studyField.nameMn }}</DsBadge>
-              <DsBadge v-else tone="warning">Ангилаагүй</DsBadge>
+            <td data-label="Танхим">
+              <DsBadge v-if="row.faculty" tone="neutral">{{ row.faculty.nameKo ?? row.faculty.nameMn }}</DsBadge>
+              <DsBadge v-else tone="warning">Танхимгүй</DsBadge>
             </td>
             <td data-label="Түвшин">
               {{ PROGRAM_LEVEL_LABELS[row.level] }}

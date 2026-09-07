@@ -5,11 +5,16 @@ import type {
   ProgramFacets,
   ProgramLevel,
   ProgramListItem,
-  StudyFieldGroup,
 } from '@gks/shared';
 
 /**
- * The public programme catalogue: one subject, every school, tuition beside it.
+ * The programme catalogue: every department, found by typing a word.
+ *
+ * One row is one department, and the search box is the way in — "IT",
+ * "маркетинг", "경영", a school's name, a college's name. There is no subject
+ * taxonomy behind it: what somebody types is matched against the names the
+ * schools themselves publish, so nothing has to be filed under a vocabulary
+ * we maintain (ARCHITECTURE.md §3.3).
  *
  * Ordered by our own recommendation by default, exactly like the university
  * catalogue — `gksRank` decides what a visitor sees first and never appears on
@@ -46,6 +51,15 @@ const TOPIK_OPTIONS = [
   { value: '', label: 'TOPIK хамаагүй' },
   ...[1, 2, 3, 4, 5, 6].map((value) => ({ value: String(value), label: `TOPIK ${value} ба доош` })),
 ];
+/**
+ * There is no "тэтгэлэггүй" option on purpose. A programme whose discount we
+ * have not recorded is not a programme without one, and offering the inverse
+ * would turn a gap in our data into a claim about a school.
+ */
+const SCHOLARSHIP_OPTIONS = [
+  { value: '', label: 'Тэтгэлэг хамаагүй' },
+  { value: 'true', label: 'Тэтгэлэгтэй нь' },
+];
 
 const str = (value: unknown): string => (typeof value === 'string' ? value : '');
 const num = (value: unknown, fallback: number): number => {
@@ -53,16 +67,17 @@ const num = (value: unknown, fallback: number): number => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-// The URL is the state: a filtered search survives a reload and a shared link,
-// which is how a consultant sends "these are your marketing options" to a client.
+// The URL is the state: a search survives a reload and a shared link, which is
+// how a consultant sends "these are your options" to a client.
 const filters = computed(() => ({
   q: str(route.query.q),
-  field: str(route.query.field),
   level: str(route.query.level) as ProgramLevel | '',
+  university: str(route.query.university),
   region: str(route.query.region),
   language: str(route.query.language) as InstructionLanguage | '',
   tuitionMax: str(route.query.tuitionMax),
   topikMax: str(route.query.topikMax),
+  scholarship: str(route.query.scholarship),
   sort: str(route.query.sort) || DEFAULT_SORT,
   page: num(route.query.page, 1),
 }));
@@ -105,41 +120,32 @@ const query = computed(() => {
     sort,
     ...(order ? { order } : {}),
     ...(filters.value.q ? { q: filters.value.q } : {}),
-    ...(filters.value.field ? { field: filters.value.field } : {}),
     ...(filters.value.level ? { level: filters.value.level } : {}),
+    ...(filters.value.university ? { university: filters.value.university } : {}),
     ...(filters.value.region ? { region: filters.value.region } : {}),
     ...(filters.value.language ? { language: filters.value.language } : {}),
     ...(filters.value.tuitionMax ? { tuitionMax: filters.value.tuitionMax } : {}),
     ...(filters.value.topikMax ? { topikMax: filters.value.topikMax } : {}),
+    ...(filters.value.scholarship ? { scholarship: filters.value.scholarship } : {}),
   };
 });
 
 const { data, status, error } = await useApiFetch<Paginated>('/programs', { query, lazy: true });
 const { data: facets } = await useApiFetch<ProgramFacets>('/programs/facets', { lazy: true });
-const { data: fields } = await useApiFetch<StudyFieldGroup[]>('/study-fields', { lazy: true });
 
 const items = computed(() => data.value?.items ?? []);
 const total = computed(() => data.value?.meta.total ?? 0);
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 const activeFilterCount = computed(() =>
   [
-    filters.value.field,
     filters.value.level,
+    filters.value.university,
     filters.value.region,
     filters.value.language,
     filters.value.tuitionMax,
     filters.value.topikMax,
+    filters.value.scholarship,
   ].filter(Boolean).length);
-
-const fieldOptions = computed(() => [
-  { value: '', label: 'Бүх чиглэл' },
-  ...(fields.value ?? []).flatMap((group) => [
-    { value: group.slug, label: `${group.nameMn} (${group.programCount})` },
-    ...group.children
-      .filter((child) => child.programCount > 0)
-      .map((child) => ({ value: child.slug, label: `   ${child.nameMn} (${child.programCount})` })),
-  ]),
-]);
 
 const levelOptions = computed(() => [
   { value: '', label: 'Бүх түвшин' },
@@ -147,6 +153,11 @@ const levelOptions = computed(() => [
     value: row.value,
     label: `${PROGRAM_LEVEL_LABELS[row.value]} (${row.count})`,
   })),
+]);
+
+const universityOptions = computed(() => [
+  { value: '', label: 'Бүх сургууль' },
+  ...(facets.value?.universities ?? []).map((row) => ({ value: row.value, label: `${row.label} (${row.count})` })),
 ]);
 
 const regionOptions = computed(() => [
@@ -162,17 +173,6 @@ const languageOptions = computed(() => [
   })),
 ]);
 
-/** The heading of the current subject, when one is filtered on. */
-const activeField = computed(() => {
-  if (!filters.value.field) return null;
-  for (const group of fields.value ?? []) {
-    if (group.slug === filters.value.field) return group;
-    const child = group.children.find((entry) => entry.slug === filters.value.field);
-    if (child) return child;
-  }
-  return null;
-});
-
 /**
  * The annual figure, worked out from a semester price when that is all the
  * school published. Returns the number, not a string: an unknown price is
@@ -183,12 +183,19 @@ function annual(program: ProgramListItem): number | null {
   return annualTuitionKrw(program);
 }
 
-useHead({ title: 'Солонгосын сургуулиудын хөтөлбөр, сургалтын төлбөр' });
+/** "Yonsei University · 공과대학 · Сөүл" — where this department actually is. */
+function placeLine(program: ProgramListItem): string {
+  return [program.faculty?.nameKo ?? program.faculty?.nameMn, universityPlace(program.university)]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+useHead({ title: 'Солонгосын сургуулиудын ангиуд, сургалтын төлбөр' });
 useSeoMeta({
   description:
-    'Солонгосын их, дээд сургуулиудын гадаад оюутан элсдэг ангиуд, тэдгээрийн сургалтын төлбөр. ' +
-    'Мэргэжлийн чиглэл, түвшин, төлбөрийн хэмжээ, TOPIK шаардлагаар шүүж харьцуулна уу.',
-  ogTitle: 'Хөтөлбөр, сургалтын төлбөр · GKS Edu',
+    'Солонгосын их, дээд сургуулиудын гадаад оюутан элсдэг ангиуд — сургалтын төлбөр, TOPIK ' +
+    'шаардлага, хичээлийн хэлийн хамт. Мэргэжлийнхээ нэрээр хайгаад харьцуулна уу.',
+  ogTitle: 'Ангиуд, сургалтын төлбөр · GKS Edu',
   ogType: 'website',
 });
 // Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
@@ -198,14 +205,14 @@ useListingSeo('/programs');
 <template>
   <div class="gks-prog">
     <header class="gks-prog__head">
-      <span class="gks-eyebrow">Хөтөлбөрийн сан</span>
+      <span class="gks-eyebrow">Ангиуд, сургалтын төлбөр</span>
       <h1 class="gks-prog__title">
-        {{ activeField ? `${activeField.nameMn} — аль сургуульд?` : 'Хөтөлбөр, сургалтын төлбөр' }}
+        <template v-if="filters.q">«{{ filters.q }}» — {{ total }} анги</template>
+        <template v-else>Ямар мэргэжлээр сурах вэ?</template>
       </h1>
       <p class="gks-prog__lede">
-        Солонгосын сургуулиуд нэг л мэргэжлийг өөр өөрөөр нэрлэдэг. Энд тэдгээрийг нэг чиглэлд
-        нэгтгэсэн тул "маркетинг" гэж сонгоход түүнийг заадаг бүх сургууль төлбөрийнх нь хамт
-        нэг дор гарч ирнэ.
+        Мэргэжлийнхээ нэрийг бичээд хайна уу — «IT», «маркетинг», «경영». Солонгосын
+        сургуулиудын гадаад оюутан элсүүлдэг ангиуд төлбөр, шаардлагынх нь хамт гарч ирнэ.
       </p>
       <p v-if="facets?.tuition.avgKrw" class="gks-prog__stat">
         <DsIcon name="wallet" :size="16" />
@@ -219,27 +226,27 @@ useListingSeo('/programs');
 
     <CatalogFilterBar
       v-model:search="searchInput"
-      search-placeholder="Мэргэжил эсвэл сургуулийн нэрээр хайх"
-      search-label="Мэргэжил эсвэл сургуулийн нэрээр хайх"
+      search-placeholder="Мэргэжил, анги, сургуулийн нэрээр хайх"
+      search-label="Мэргэжил, анги, сургуулийн нэрээр хайх"
       :active-count="activeFilterCount"
       :count="total"
-      count-noun="хөтөлбөр"
+      count-noun="анги"
       :loading="status === 'pending' && !items.length"
       :failed="!!error"
       :can-clear="activeFilterCount > 0 || !!filters.q"
       @clear="router.push({ query: {} })"
     >
       <DsSelect
-        :model-value="filters.field"
-        :options="fieldOptions"
-        aria-label="Мэргэжлийн чиглэл"
-        @update:model-value="apply({ field: String($event) })"
-      />
-      <DsSelect
         :model-value="filters.level"
         :options="levelOptions"
         aria-label="Түвшин"
         @update:model-value="apply({ level: String($event) })"
+      />
+      <DsSelect
+        :model-value="filters.university"
+        :options="universityOptions"
+        aria-label="Сургууль"
+        @update:model-value="apply({ university: String($event) })"
       />
       <DsSelect
         :model-value="filters.region"
@@ -260,6 +267,12 @@ useListingSeo('/programs');
         @update:model-value="apply({ tuitionMax: String($event) })"
       />
       <DsSelect
+        :model-value="filters.scholarship"
+        :options="SCHOLARSHIP_OPTIONS"
+        aria-label="Тэтгэлэг"
+        @update:model-value="apply({ scholarship: String($event) })"
+      />
+      <DsSelect
         :model-value="filters.topikMax"
         :options="TOPIK_OPTIONS"
         aria-label="TOPIK шаардлага"
@@ -274,7 +287,7 @@ useListingSeo('/programs');
     </CatalogFilterBar>
 
     <DsCard v-if="error" accent class="gks-prog__state">
-      Хөтөлбөрийн мэдээллийг ачаалахад алдаа гарлаа. Хуудсаа дахин ачаална уу.
+      Ангиудын мэдээллийг ачаалахад алдаа гарлаа. Хуудсаа дахин ачаална уу.
     </DsCard>
 
     <div v-else-if="status === 'pending' && !items.length" class="gks-prog__grid">
@@ -282,7 +295,9 @@ useListingSeo('/programs');
     </div>
 
     <DsCard v-else-if="!items.length" class="gks-prog__state">
-      Энэ шүүлтүүрт тохирох хөтөлбөр олдсонгүй. Шүүлтүүрээ өөрчилж үзээрэй, эсвэл
+      <template v-if="filters.q">«{{ filters.q }}» гэсэн хайлтад тохирох анги олдсонгүй.</template>
+      <template v-else>Энэ шүүлтүүрт тохирох анги олдсонгүй.</template>
+      Өөр үгээр хайж үзээрэй, эсвэл
       <NuxtLink to="/consultation">зөвлөгөө авах хүсэлт</NuxtLink> илгээгээрэй — бид тухайн
       мэргэжлээр аль сургуульд сурч болохыг тодруулж өгнө.
     </DsCard>
@@ -306,7 +321,7 @@ useListingSeo('/programs');
             {{ program.nameKo ?? program.nameEn }}
           </p>
 
-          <!-- The school is the second fact, not a competing headline. -->
+          <!-- Сургууль → танхим → анги: the two levels above this row, in one line. -->
           <div class="gks-prog-card__school">
             <img
               v-if="program.university.logoPath"
@@ -321,7 +336,7 @@ useListingSeo('/programs');
             </span>
             <span>
               <strong>{{ program.university.nameEn }}</strong>
-              <small>{{ universityPlace(program.university) }}</small>
+              <small>{{ placeLine(program) }}</small>
             </span>
           </div>
 
@@ -367,6 +382,7 @@ useListingSeo('/programs');
           </p>
 
           <footer class="gks-prog-card__foot">
+            <span class="gks-prog-card__year">{{ tuitionYearLabel(program.tuitionYear) }}</span>
             <NuxtLink :to="`/universities/${program.university.slug}`">
               Сургуулийн мэдээлэл <DsIcon name="arrow-right" :size="14" />
             </NuxtLink>
@@ -429,7 +445,7 @@ useListingSeo('/programs');
 .gks-prog-card__name a:hover { color: var(--text-link-hover); }
 .gks-prog-card__native { margin-top: calc(var(--sp-3) * -1 + 2px); color: var(--text-subtle); font-size: var(--fs-caption); }
 
-/* The school: the second fact on the card, never a competing headline. */
+/* The school and the college it sits in: the address of this row. */
 .gks-prog-card__school { display: flex; align-items: center; gap: var(--sp-3); }
 .gks-prog-card__school img,
 .gks-prog-card__logo {
@@ -519,11 +535,13 @@ useListingSeo('/programs');
 .gks-prog-card__foot {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
   margin-top: auto;
   padding-top: var(--sp-3);
   border-top: var(--border-hair) solid var(--line-hairline);
 }
+.gks-prog-card__year { color: var(--text-disabled); font-size: var(--fs-caption); font-variant-numeric: var(--num-tabular); }
 .gks-prog-card__foot a {
   display: inline-flex;
   align-items: center;

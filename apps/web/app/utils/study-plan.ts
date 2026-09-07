@@ -46,22 +46,6 @@ export const TOPIK_CHOICES: PlanChoice<TopikLevel>[] = [
   { value: 6, label: 'TOPIK 6', icon: 'signal-high' },
 ];
 
-/** An icon per subject group, so the field question reads as pictures. */
-export const FIELD_ICONS: Record<string, string> = {
-  business: 'briefcase',
-  it: 'cpu',
-  engineering: 'wrench',
-  'natural-science': 'flask-conical',
-  medical: 'stethoscope',
-  'social-science': 'scale',
-  humanities: 'book-open',
-  education: 'school',
-  'arts-design': 'palette',
-  'media-communication': 'radio',
-  'tourism-service': 'plane',
-  'agriculture-food': 'sprout',
-};
-
 /** Round numbers a family budgets in — the same ladder as the catalogue's. */
 export const BUDGET_CHOICES = [
   { value: '', label: 'Хамаагүй' },

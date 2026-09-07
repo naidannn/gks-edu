@@ -113,6 +113,79 @@ function researchPrograms() {
   return navigateTo(`/admin/programs/new?universityId=${id.value}&mode=research`);
 }
 
+// ── Faculties (танхим) ─────────────────────────────────────────────────────
+//
+// A research run creates these from whatever the prospectus said, which means
+// most of them start life named `공과대학`. Without somewhere to word them in
+// Mongolian they stay Korean forever, so this is a rename list first and a
+// CRUD screen second.
+const faculties = useFaculties(id);
+const facultyDraft = ref<Record<string, string>>({});
+const facultySaving = ref<string | null>(null);
+const facultyError = ref<string | null>(null);
+const newFaculty = ref('');
+
+watch(faculties.items, (items) => {
+  facultyDraft.value = Object.fromEntries(items.map((faculty) => [faculty.id, faculty.nameMn]));
+});
+
+async function renameFaculty(facultyId: string) {
+  const nameMn = (facultyDraft.value[facultyId] ?? '').trim();
+  const current = faculties.items.value.find((faculty) => faculty.id === facultyId);
+  if (!nameMn || !current || nameMn === current.nameMn) return;
+
+  facultySaving.value = facultyId;
+  facultyError.value = null;
+  try {
+    await api.patch(`/admin/faculties/${facultyId}`, { nameMn });
+    await faculties.load();
+  } catch (err) {
+    facultyError.value = apiErrorMessage(err, 'Танхимын нэрийг хадгалж чадсангүй');
+  } finally {
+    facultySaving.value = null;
+  }
+}
+
+async function addFaculty() {
+  const nameMn = newFaculty.value.trim();
+  if (!nameMn) return;
+
+  facultySaving.value = 'new';
+  facultyError.value = null;
+  try {
+    await api.post('/admin/faculties', { universityId: id.value, nameMn });
+    newFaculty.value = '';
+    await faculties.load();
+  } catch (err) {
+    facultyError.value = apiErrorMessage(err, 'Танхим нэмж чадсангүй');
+  } finally {
+    facultySaving.value = null;
+  }
+}
+
+/**
+ * Deleting a college does not delete its departments — they come back as
+ * "танхимгүй". The confirmation says so, because the opposite is what somebody
+ * pressing this button is afraid of.
+ */
+async function removeFaculty(facultyId: string, programCount: number) {
+  const suffix = programCount
+    ? ` ${programCount} анги нь "танхимгүй" болж үлдэнэ, устахгүй.`
+    : '';
+  if (!globalThis.confirm(`Энэ танхимыг устгах уу?${suffix}`)) return;
+
+  facultySaving.value = facultyId;
+  facultyError.value = null;
+  try {
+    await api.delete(`/admin/faculties/${facultyId}`);
+    await faculties.load();
+  } catch (err) {
+    facultyError.value = apiErrorMessage(err, 'Танхимыг устгаж чадсангүй');
+  } finally {
+    facultySaving.value = null;
+  }
+}
+
 const text = (value: string) => (value.trim() ? value.trim() : null);
 
 // ── Intake terms (1A-27) ───────────────────────────────────────────────────
@@ -301,6 +374,45 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
         </div>
       </form>
 
+      <!-- ── Faculties ─────────────────────────────────────────────────── -->
+      <DsCard title="Танхим" :eyebrow="`${faculties.items.value.length} танхим`">
+        <p class="gks-form-page__hint">
+          Сургуулийн 단과대학-ууд. Судалгаанаас солонгос нэрээрээ үүсдэг тул монголоор нэрлэж
+          өгнө үү — жагсаалт, картан дээр энэ нэр гарна.
+        </p>
+        <p v-if="facultyError" class="gks-form-page__error">{{ facultyError }}</p>
+
+        <ul v-if="faculties.items.value.length" class="gks-faculties">
+          <li v-for="faculty in faculties.items.value" :key="faculty.id">
+            <DsInput
+              v-model="facultyDraft[faculty.id]"
+              :label="faculty.nameKo ?? faculty.nameEn ?? 'Танхим'"
+              @blur="renameFaculty(faculty.id)"
+            />
+            <span class="gks-faculties__count gks-tnum">{{ faculty.programCount }} анги</span>
+            <DsIconButton
+              icon="trash-2"
+              label="Танхимыг устгах"
+              variant="outline"
+              size="sm"
+              :disabled="facultySaving === faculty.id"
+              @click="removeFaculty(faculty.id, faculty.programCount)"
+            />
+          </li>
+        </ul>
+        <p v-else class="gks-form-page__empty">
+          Танхим бүртгэгдээгүй байна. Ангиудыг судлуулах эсвэл гараар нэмэхэд танхим нь
+          өөрөө үүснэ.
+        </p>
+
+        <form class="gks-faculties__add" @submit.prevent="addFaculty">
+          <DsInput v-model="newFaculty" label="Шинэ танхим" placeholder="Инженерийн танхим" />
+          <DsButton type="submit" variant="secondary" icon-left="plus" :loading="facultySaving === 'new'">
+            Нэмэх
+          </DsButton>
+        </form>
+      </DsCard>
+
       <!-- ── Programmes ────────────────────────────────────────────────── -->
       <DsCard title="Хөтөлбөр, төлбөр" :eyebrow="`${university.programs.length} хөтөлбөр`">
         <template #action>
@@ -322,7 +434,7 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
               <tr>
                 <th>Түвшин</th>
                 <th>Нэр</th>
-                <th>Чиглэл</th>
+                <th>Танхим</th>
                 <th class="gks-table__num">Улирлын төлбөр</th>
                 <th class="gks-table__num">Жилийн төлбөр</th>
                 <th class="gks-table__num">TOPIK</th>
@@ -339,8 +451,8 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
                   <span v-else-if="p.nameEn" class="gks-cell-sub">{{ p.nameEn }}</span>
                 </td>
                 <td>
-                  <DsBadge v-if="p.studyField" tone="neutral">{{ p.studyField.nameMn }}</DsBadge>
-                  <DsBadge v-else tone="warning">Ангилаагүй</DsBadge>
+                  <DsBadge v-if="p.faculty" tone="neutral">{{ p.faculty.nameKo ?? p.faculty.nameMn }}</DsBadge>
+                  <DsBadge v-else tone="warning">Танхимгүй</DsBadge>
                 </td>
                 <td class="gks-tnum gks-table__num">{{ formatKrw(p.tuitionPerTermKrw) ?? '—' }}</td>
                 <td class="gks-tnum gks-table__num">
@@ -518,6 +630,19 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
 .gks-form-page__loading { color: var(--text-muted); }
 .gks-form-page__error { color: var(--danger-fg); font-size: var(--fs-body-sm); margin-bottom: var(--sp-3); }
 .gks-form-page__empty { color: var(--text-muted); font-size: var(--fs-body-sm); }
+
+/* Танхим: a rename list. The Korean name is the label, the editable field is
+   ours — so the two are never confused for one another. */
+.gks-faculties { display: grid; gap: var(--sp-3); margin-top: var(--sp-4); list-style: none; }
+.gks-faculties > li { display: flex; align-items: flex-end; gap: var(--sp-3); }
+.gks-faculties > li > :first-child { flex: 1 1 auto; min-width: 0; }
+.gks-faculties__count { flex: none; padding-bottom: 10px; color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-faculties__add { display: flex; align-items: flex-end; gap: var(--sp-3); margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: var(--border-hair) solid var(--line-hairline); }
+.gks-faculties__add > :first-child { flex: 1 1 auto; }
+@media (max-width: 640px) {
+  .gks-faculties > li,
+  .gks-faculties__add { flex-wrap: wrap; }
+}
 .gks-form-page__saved { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--success-fg); font-size: var(--fs-body-sm); }
 .gks-form-page__confirm { margin-right: auto; font-size: var(--fs-body-sm); }
 .gks-sub-form {
