@@ -23,7 +23,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user || !required.includes(user.role)) {
-      throw new ForbiddenException('Insufficient permissions for this resource');
+      throw new ForbiddenException('Энэ үйлдлийг гүйцэтгэх эрх алга байна');
     }
 
     return true;

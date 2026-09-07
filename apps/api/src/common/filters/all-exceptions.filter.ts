@@ -66,14 +66,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientValidationError) {
       return {
         status: HttpStatus.BAD_REQUEST,
-        message: 'Invalid query parameters',
+        message: 'Хүсэлтийн утга буруу байна',
         error: 'PrismaClientValidationError',
       };
     }
 
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Internal server error',
+      message: 'Дотоод алдаа гарлаа. Түр хүлээгээд дахин оролдоно уу',
       error: 'InternalServerError',
     };
   }
@@ -85,29 +85,29 @@ export class AllExceptionsFilter implements ExceptionFilter {
   } {
     switch (exception.code) {
       case 'P2002': {
-        const target = (exception.meta?.target as string[] | undefined)?.join(', ') ?? 'field';
+        const target = (exception.meta?.target as string[] | undefined)?.join(', ') ?? 'утга';
         return {
           status: HttpStatus.CONFLICT,
-          message: `A record with this ${target} already exists`,
+          message: `Ийм ${target} утгатай бичлэг аль хэдийн бүртгэгдсэн байна`,
           error: 'UniqueConstraintViolation',
         };
       }
       case 'P2025':
         return {
           status: HttpStatus.NOT_FOUND,
-          message: 'Record not found',
+          message: 'Бичлэг олдсонгүй',
           error: 'NotFound',
         };
       case 'P2003':
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Related record does not exist',
+          message: 'Холбогдох бичлэг олдсонгүй',
           error: 'ForeignKeyConstraintViolation',
         };
       default:
         return {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Database error',
+          message: 'Мэдээллийн сангийн алдаа гарлаа',
           error: `Prisma${exception.code}`,
         };
     }

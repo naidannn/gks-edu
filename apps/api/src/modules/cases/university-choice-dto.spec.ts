@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
+import { VALIDATION_PIPE_OPTIONS } from '../../common/validation/validation-pipe.options.js';
 import { ConvertLeadDto } from '../clients/dto/convert-lead.dto.js';
 import { CreateClientDto } from '../clients/dto/create-client.dto.js';
 import { UpdateClientDto } from '../clients/dto/update-client.dto.js';
@@ -11,13 +12,13 @@ import { ReplaceUniversityChoicesDto } from './dto/replace-university-choices.dt
  * `OmitType`, which rebuild a class and copy its validation metadata across. If
  * that copy ever misses the nested array, the route does not fail loudly — the
  * global pipe runs with `forbidNonWhitelisted`, so the field simply becomes
- * "property universityChoices should not exist" and every school past the first
- * is silently unsubmittable.
+ * "Сонгосон сургуулиуд: ийм талбар байхгүй" and every school past the first is
+ * silently unsubmittable.
  *
  * So this asserts against the real pipe from `main.ts`, not against the classes.
  */
 
-const pipe = new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true });
+const pipe = new ValidationPipe(VALIDATION_PIPE_OPTIONS);
 
 const SNU = '11111111-1111-4111-8111-111111111111';
 const HANYANG = '33333333-3333-4333-8333-333333333333';

@@ -85,7 +85,7 @@ export class GksRankingService {
       await this.queue.add(GKS_RANKING_JOB, {}, { jobId: 'recompute', removeOnComplete: true, delay: 5_000 });
     } catch (error) {
       // Redis being down must not fail a catalogue edit; the nightly run catches up.
-      this.logger.warn(`Could not queue a ranking recompute: ${(error as Error).message}`);
+      this.logger.warn(`Рэйтинг дахин тооцоолол дараалалд орсонгүй: ${(error as Error).message}`);
     }
   }
 

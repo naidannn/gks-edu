@@ -105,7 +105,7 @@ export class VisaService {
    */
   async openForCase(caseId: string, dto: OpenVisaCaseDto = {}) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId } });
-    if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const visaType = dto.visaType ?? VISA_TYPE_BY_SERVICE[gksCase.serviceType];
     const visaCase = await this.prisma.visaCase.upsert({

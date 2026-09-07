@@ -39,7 +39,7 @@ export class FaqService {
 
   async findOneAdmin(id: string) {
     const faq = await this.prisma.faqItem.findUnique({ where: { id } });
-    if (!faq) throw new NotFoundException(`FAQ item ${id} not found`);
+    if (!faq) throw new NotFoundException(`Түгээмэл асуулт ${id} олдсонгүй`);
     return faq;
   }
 

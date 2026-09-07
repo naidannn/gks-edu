@@ -105,7 +105,7 @@ export class ContractsService {
         },
       },
     });
-    if (!gksCase) throw new NotFoundException(`Case ${dto.caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${dto.caseId} олдсонгүй`);
     if (gksCase.contract) throw new BadRequestException('Энэ үйлчилгээнд аль хэдийн гэрээ үүссэн байна');
     if (gksCase.stage !== CaseStage.CONTRACT_DRAFT) {
       throw new BadRequestException('Гэрээг зөвхөн CONTRACT_DRAFT шатанд үүсгэнэ');
@@ -420,7 +420,7 @@ export class ContractsService {
 
   private async getOrThrow(id: string) {
     const contract = await this.prisma.contract.findUnique({ where: { id }, include: { collateralContract: true } });
-    if (!contract) throw new NotFoundException(`Contract ${id} not found`);
+    if (!contract) throw new NotFoundException(`Гэрээ ${id} олдсонгүй`);
     return contract;
   }
 }

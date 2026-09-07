@@ -32,7 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException('Account is no longer active');
+      throw new UnauthorizedException('Таны бүртгэл идэвхгүй болсон байна');
     }
 
     return { id: user.id, email: user.email, role: user.role };

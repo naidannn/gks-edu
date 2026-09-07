@@ -70,7 +70,7 @@ export class UsersService {
       async () => {
         const user = await this.prisma.user.findUnique({ where: { id }, select: PUBLIC_FIELDS });
         if (!user) {
-          throw new NotFoundException(`User ${id} not found`);
+          throw new NotFoundException(`Хэрэглэгч ${id} олдсонгүй`);
         }
         return user;
       },

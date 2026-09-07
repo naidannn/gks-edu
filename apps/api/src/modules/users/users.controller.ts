@@ -150,7 +150,7 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     if (user.id !== id && user.role !== Role.ADMIN) {
-      throw new ForbiddenException('You can only update your own profile');
+      throw new ForbiddenException('Зөвхөн өөрийн мэдээллээ засах эрхтэй');
     }
     return this.users.update(id, dto);
   }

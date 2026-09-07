@@ -198,7 +198,7 @@ export class UniversitiesService {
         });
 
         if (!university) {
-          throw new NotFoundException(`University ${slug} not found`);
+          throw new NotFoundException(`Сургууль ${slug} олдсонгүй`);
         }
 
         // `phase` and the countdown are derived, not stored. They are computed

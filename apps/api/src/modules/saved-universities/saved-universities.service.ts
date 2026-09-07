@@ -21,7 +21,7 @@ export class SavedUniversitiesService {
       where: { id: universityId, isPublished: true },
       select: { id: true },
     });
-    if (!university) throw new NotFoundException(`University ${universityId} not found`);
+    if (!university) throw new NotFoundException(`Сургууль ${universityId} олдсонгүй`);
 
     await this.prisma.savedUniversity.upsert({
       where: { userId_universityId: { userId, universityId } },

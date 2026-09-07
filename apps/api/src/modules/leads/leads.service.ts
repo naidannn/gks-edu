@@ -75,7 +75,7 @@ export class LeadsService {
    */
   async createFromPublicForm(dto: CreatePublicLeadDto): Promise<PublicLeadResult> {
     if (dto.website) {
-      this.logger.warn('Honeypot triggered on the public lead form; submission dropped');
+      this.logger.warn('Нээлттэй сэжмийн формын honeypot ажиллаа — хүсэлтийг хассан');
       return { id: crypto.randomUUID(), merged: false };
     }
 
@@ -371,7 +371,7 @@ export class LeadsService {
         },
       },
     });
-    if (!lead) throw new NotFoundException(`Lead ${id} not found`);
+    if (!lead) throw new NotFoundException(`Сэжим ${id} олдсонгүй`);
     return lead;
   }
 
@@ -666,7 +666,7 @@ export class LeadsService {
 
   private async getOrThrow(id: string) {
     const lead = await this.prisma.lead.findUnique({ where: { id } });
-    if (!lead) throw new NotFoundException(`Lead ${id} not found`);
+    if (!lead) throw new NotFoundException(`Сэжим ${id} олдсонгүй`);
     return lead;
   }
 

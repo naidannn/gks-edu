@@ -5,6 +5,6 @@ export default defineNuxtRouteMiddleware(() => {
   if (import.meta.server) return;
 
   if (!auth.isAdmin) {
-    throw createError({ statusCode: 403, statusMessage: 'Admins only' });
+    throw createError({ statusCode: 403, statusMessage: 'Зөвхөн админы хандах хэсэг' });
   }
 });

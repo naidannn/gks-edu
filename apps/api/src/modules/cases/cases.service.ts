@@ -304,7 +304,7 @@ export class CasesService {
    */
   async applySystemTransition(db: Db, caseId: string, toStage: CaseStage): Promise<void> {
     const found = await db.case.findUnique({ where: { id: caseId } });
-    if (!found) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!found) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const rule = await db.caseFlowDefinition.findUnique({
       where: {
@@ -330,7 +330,7 @@ export class CasesService {
    */
   async applyDomainTransition(caseId: string, toStage: CaseStage, actorId: string | null, reason: string): Promise<boolean> {
     const found = await this.prisma.case.findUnique({ where: { id: caseId } });
-    if (!found) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!found) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
     if (found.stage === toStage) return false;
 
     const rule = await this.prisma.caseFlowDefinition.findUnique({
@@ -370,7 +370,7 @@ export class CasesService {
 
   private async getOrThrow(id: string, include?: Prisma.CaseInclude) {
     const found = await this.prisma.case.findUnique({ where: { id }, include });
-    if (!found) throw new NotFoundException(`Case ${id} not found`);
+    if (!found) throw new NotFoundException(`Үйлчилгээ ${id} олдсонгүй`);
     return found;
   }
 

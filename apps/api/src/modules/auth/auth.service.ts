@@ -45,7 +45,7 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<AuthSession> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) {
-      throw new ConflictException('An account with this email already exists');
+      throw new ConflictException('Энэ и-мэйлээр бүртгэл аль хэдийн үүссэн байна');
     }
 
     const user = await this.prisma.user.create({
@@ -70,7 +70,7 @@ export class AuthService {
       : await compare(dto.password, '$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidin');
 
     if (!user || !passwordMatches || !user.isActive) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('И-мэйл эсвэл нууц үг буруу байна');
     }
 
     return this.issueSession(user);
@@ -194,7 +194,7 @@ export class AuthService {
         secret: this.config.getOrThrow<string>('jwt.refreshSecret'),
       });
     } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      throw new UnauthorizedException('Сесс дууссан эсвэл хүчингүй байна. Дахин нэвтэрнэ үү');
     }
 
     const stored = await this.prisma.refreshToken.findUnique({
@@ -203,7 +203,7 @@ export class AuthService {
     });
 
     if (!stored || stored.revokedAt || stored.expiresAt < new Date() || stored.userId !== payload.sub) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      throw new UnauthorizedException('Сесс дууссан эсвэл хүчингүй байна. Дахин нэвтэрнэ үү');
     }
 
     // Rotate: the presented token is burned as the replacement is issued.

@@ -52,7 +52,7 @@ export class ChecklistPrintService {
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       }),
     ]);
-    if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const client = gksCase.user.client;
     return {

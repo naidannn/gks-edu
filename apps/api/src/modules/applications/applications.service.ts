@@ -133,7 +133,7 @@ export class ApplicationsService {
   /** Idempotent: one case has exactly one application (§5). */
   async createForCase(caseId: string, dto: CreateApplicationDto) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId } });
-    if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const existing = await this.prisma.application.findUnique({ where: { caseId } });
     if (existing) return this.prisma.application.findUnique({ where: { caseId }, include: APPLICATION_INCLUDE });

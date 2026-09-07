@@ -9,6 +9,6 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
   }
   if (!auth.isStaff) {
-    throw createError({ statusCode: 403, statusMessage: 'Staff only' });
+    throw createError({ statusCode: 403, statusMessage: 'Зөвхөн ажилтны хандах хэсэг' });
   }
 });

@@ -418,7 +418,7 @@ export class CaseDocumentsService {
   /** Staff see every case; a client only their own (ARCHITECTURE.md §11). */
   async assertCaseAccess(caseId: string, actor: AuthenticatedUser): Promise<void> {
     const found = await this.prisma.case.findUnique({ where: { id: caseId }, select: { userId: true } });
-    if (!found) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!found) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
     this.assertOwnership(found.userId, actor);
   }
 

@@ -55,7 +55,7 @@ export class PaymentsService {
   /** Self-service by design (gksedu.md §5.5: the user pays via QPay) — staff may also create one on a case they don't own. */
   async createForCase(caseId: string, dto: CreatePaymentDto, actor: AuthenticatedUser) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, include: { contract: true } });
-    if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
     if (!isCrmStaff(actor.role) && gksCase.userId !== actor.id) {
       throw new ForbiddenException('Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
     }
@@ -112,7 +112,7 @@ export class PaymentsService {
    */
   async registerManual(caseId: string, dto: RegisterManualPaymentDto, actorId: string, receipt?: Buffer) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, include: { contract: true } });
-    if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const contract = await this.assertReadyFor(gksCase, dto.kind);
 
@@ -206,7 +206,7 @@ export class PaymentsService {
   async handleWebhook(paymentId: string): Promise<{ ok: boolean }> {
     const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
     if (!payment) {
-      this.logger.warn(`QPay webhook for unknown payment ${paymentId}`);
+      this.logger.warn(`QPay webhook танихгүй төлбөр дээр ирлээ: ${paymentId}`);
       return { ok: true };
     }
     if (payment.status !== PaymentStatus.PENDING || !payment.qpayInvoiceId) return { ok: true };
@@ -246,7 +246,7 @@ export class PaymentsService {
 
     const confirmed = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({ where: { id: paymentId }, include: { case: { include: { contract: true } } } });
-      if (!payment) throw new NotFoundException(`Payment ${paymentId} not found`);
+      if (!payment) throw new NotFoundException(`Төлбөр ${paymentId} олдсонгүй`);
       if (payment.status === PaymentStatus.PAID) {
         alreadyPaid = true;
         return payment;
@@ -412,7 +412,7 @@ export class PaymentsService {
 
   private async getOrThrow(id: string) {
     const payment = await this.prisma.payment.findUnique({ where: { id }, include: { case: true } });
-    if (!payment) throw new NotFoundException(`Payment ${id} not found`);
+    if (!payment) throw new NotFoundException(`Төлбөр ${id} олдсонгүй`);
     return payment;
   }
 }

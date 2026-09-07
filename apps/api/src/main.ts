@@ -6,6 +6,7 @@ import compression from 'compression';
 import helmet from 'helmet';
 import 'reflect-metadata';
 import { AppModule } from './app.module.js';
+import { VALIDATION_PIPE_OPTIONS } from './common/validation/validation-pipe.options.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -25,17 +26,7 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      // No `enableImplicitConversion`: it coerces by the reflected design type,
-      // which turns the query string "false" into `Boolean('false') === true`
-      // and overrides a DTO's own @Transform. Query DTOs state their
-      // conversions explicitly with @Type / @Transform instead.
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe(VALIDATION_PIPE_OPTIONS));
 
   app.enableShutdownHooks();
 

@@ -57,7 +57,7 @@ export class PostsService {
       where: { slug, status: PostStatus.PUBLISHED },
       select: DETAIL_FIELDS,
     });
-    if (!post) throw new NotFoundException(`Post ${slug} not found`);
+    if (!post) throw new NotFoundException(`Нийтлэл ${slug} олдсонгүй`);
     return post;
   }
 
@@ -82,7 +82,7 @@ export class PostsService {
 
   async findOneAdmin(id: string) {
     const post = await this.prisma.post.findUnique({ where: { id }, select: DETAIL_FIELDS });
-    if (!post) throw new NotFoundException(`Post ${id} not found`);
+    if (!post) throw new NotFoundException(`Нийтлэл ${id} олдсонгүй`);
     return post;
   }
 
@@ -124,7 +124,7 @@ export class PostsService {
   private async assertSlugFree(slug: string, excludeId?: string): Promise<void> {
     const existing = await this.prisma.post.findUnique({ where: { slug }, select: { id: true } });
     if (existing && existing.id !== excludeId) {
-      throw new ConflictException(`Slug "${slug}" is already used`);
+      throw new ConflictException(`«${slug}» slug аль хэдийн ашиглагдсан байна`);
     }
   }
 

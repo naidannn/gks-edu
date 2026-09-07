@@ -262,7 +262,7 @@ export class AdminUniversitiesService {
       },
     });
 
-    if (!university) throw new NotFoundException(`University ${id} not found`);
+    if (!university) throw new NotFoundException(`Сургууль ${id} олдсонгүй`);
     return university;
   }
 
@@ -280,7 +280,7 @@ export class AdminUniversitiesService {
 
   async update(id: string, dto: UpdateUniversityDto) {
     const current = await this.prisma.university.findUnique({ where: { id }, select: { slug: true } });
-    if (!current) throw new NotFoundException(`University ${id} not found`);
+    if (!current) throw new NotFoundException(`Сургууль ${id} олдсонгүй`);
 
     this.assertNoNullOnRequired(dto);
     if (dto.slug && dto.slug !== current.slug) await this.assertSlugFree(dto.slug);
@@ -301,7 +301,7 @@ export class AdminUniversitiesService {
       where: { id },
       select: { slug: true, nameMn: true, _count: { select: { cases: true, clients: true, applications: true, requirementRules: true } } },
     });
-    if (!university) throw new NotFoundException(`University ${id} not found`);
+    if (!university) throw new NotFoundException(`Сургууль ${id} олдсонгүй`);
 
     const blockers = BLOCKING_RELATIONS
       .filter((relation) => university._count[relation.key] > 0)

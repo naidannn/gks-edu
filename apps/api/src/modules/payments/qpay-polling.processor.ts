@@ -17,7 +17,7 @@ export class QpayPollingProcessor extends WorkerHost {
     try {
       await this.payments.pollOnce(job.data.paymentId);
     } catch (error) {
-      this.logger.error(`QPay poll failed for payment ${job.data.paymentId}`, error instanceof Error ? error.stack : String(error));
+      this.logger.error(`QPay төлбөрийн шалгалт амжилтгүй боллоо: ${job.data.paymentId}`, error instanceof Error ? error.stack : String(error));
     }
   }
 }

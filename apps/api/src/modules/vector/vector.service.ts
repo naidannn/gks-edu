@@ -95,7 +95,7 @@ export class VectorService {
     });
 
     if (!document) {
-      throw new NotFoundException(`Document ${id} not found`);
+      throw new NotFoundException(`Баримт ${id} олдсонгүй`);
     }
 
     return document;

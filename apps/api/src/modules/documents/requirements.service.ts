@@ -57,7 +57,7 @@ export class RequirementsService {
       where: { id: caseId },
       include: { conditions: true, user: { select: { client: { select: { educationLevel: true } } } } },
     });
-    if (!gksCase) throw new NotFoundException(`Case ${caseId} not found`);
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const context: ResolutionContext = {
       serviceType: gksCase.serviceType,

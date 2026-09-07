@@ -24,7 +24,7 @@ export class SupabaseStorageDriver implements StorageDriver {
   async upload(path: string, buffer: Buffer): Promise<void> {
     const { error } = await this.client.storage.from(this.bucket).upload(path, buffer, { upsert: true });
     if (error) {
-      this.logger.error(`Upload failed for ${path}: ${error.message}`);
+      this.logger.error(`${path} байршуулж чадсангүй: ${error.message}`);
       throw error;
     }
   }
@@ -32,7 +32,7 @@ export class SupabaseStorageDriver implements StorageDriver {
   async read(path: string): Promise<Buffer> {
     const { data, error } = await this.client.storage.from(this.bucket).download(path);
     if (error || !data) {
-      this.logger.error(`Download failed for ${path}: ${error?.message}`);
+      this.logger.error(`${path} татаж чадсангүй: ${error?.message}`);
       throw error ?? new Error(`Failed to download ${path}`);
     }
     return Buffer.from(await data.arrayBuffer());

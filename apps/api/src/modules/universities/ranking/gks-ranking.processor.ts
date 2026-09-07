@@ -43,7 +43,7 @@ export class GksRankingProcessor extends WorkerHost implements OnModuleInit {
     } catch (error) {
       // A failed run leaves the previous ranking in place, which is a fine
       // fallback — the catalogue stays ordered, just a day stale.
-      this.logger.error(`GKS ranking recompute failed: ${(error as Error).message}`);
+      this.logger.error(`GKS рэйтинг дахин тооцоолоход алдаа гарлаа: ${(error as Error).message}`);
     }
   }
 }
