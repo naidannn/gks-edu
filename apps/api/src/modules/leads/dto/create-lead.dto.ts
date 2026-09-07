@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -6,45 +6,58 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
   Min,
-  IsUUID,
   MinLength,
 } from 'class-validator';
-import { EducationLevel, ServiceType } from '../../../prisma/client.js';
+import { EducationLevel, LeadSource, LeadStage, ServiceType } from '../../../prisma/client.js';
 
 const PHONE_PATTERN = /^(976)?\d{8}$/;
 const stripPhoneFormatting = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.replace(/[\s()+-]/g, '') : value;
 
-/** Staff edit of a lead's own fields. Stage moves through `POST /leads/:id/transitions` instead (1B-02). */
-export class UpdateLeadDto {
-  @ApiPropertyOptional()
+/**
+ * The stages a record may *start* in. Someone walking into the office has
+ * already been advised by the time anyone types them in, so the funnel is
+ * allowed to open part-way; the rest of the graph is still reached only
+ * through `POST /leads/:id/transitions` (1B-02).
+ */
+export const INITIAL_LEAD_STAGES = [LeadStage.NEW, LeadStage.CONTACTED, LeadStage.CONSULTED] as const;
+export type InitialLeadStage = (typeof INITIAL_LEAD_STAGES)[number];
+
+/**
+ * Staff registering a person they are talking to — the office walk-in (1B-19).
+ *
+ * Wider than `CreatePublicLeadDto`: a consultant asks for what the sale will
+ * later need (school, grades, language levels, who is handling it) instead of
+ * the few fields a website visitor is willing to type.
+ */
+export class CreateLeadDto {
+  @ApiProperty()
   @IsString()
   @MinLength(2)
   @MaxLength(60)
-  @IsOptional()
-  lastName?: string;
+  lastName!: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsString()
   @MinLength(2)
   @MaxLength(60)
-  @IsOptional()
-  firstName?: string;
+  firstName!: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty({ example: '99112233' })
   @Transform(stripPhoneFormatting)
   @IsString()
   @Matches(PHONE_PATTERN, { message: 'Утасны дугаар буруу байна' })
-  @IsOptional()
-  phone?: string;
+  phone!: string;
 
   @ApiPropertyOptional()
   @IsEmail()
@@ -52,7 +65,7 @@ export class UpdateLeadDto {
   @IsOptional()
   email?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ minimum: 14, maximum: 70 })
   @Type(() => Number)
   @IsInt()
   @Min(14)
@@ -71,7 +84,7 @@ export class UpdateLeadDto {
   @IsOptional()
   schoolName?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Grade average; the scale itself is unsettled (gksedu.md §24)' })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -85,13 +98,13 @@ export class UpdateLeadDto {
   @IsOptional()
   gpaScale?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'TOPIK 3' })
   @IsString()
   @MaxLength(60)
   @IsOptional()
   koreanLevel?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'IELTS 6.0' })
   @IsString()
   @MaxLength(60)
   @IsOptional()
@@ -117,11 +130,24 @@ export class UpdateLeadDto {
   @IsOptional()
   interestedMajor?: string;
 
-  @ApiPropertyOptional({ description: 'Staff-only free text, distinct from the visitor-submitted note' })
-  @IsString()
-  @MaxLength(2000)
+  @ApiPropertyOptional({
+    enum: LeadSource,
+    default: LeadSource.OFFICE,
+    description: 'Where the person came from; a staff-typed record is an office visit unless said otherwise',
+  })
+  @IsEnum(LeadSource)
   @IsOptional()
-  note?: string;
+  source?: LeadSource;
+
+  @ApiPropertyOptional({ enum: INITIAL_LEAD_STAGES, default: LeadStage.CONSULTED })
+  @IsIn(INITIAL_LEAD_STAGES)
+  @IsOptional()
+  stage?: InitialLeadStage;
+
+  @ApiPropertyOptional({ description: 'Staff member handling this person; omit to leave unassigned' })
+  @IsUUID()
+  @IsOptional()
+  assignedToId?: string;
 
   @ApiPropertyOptional()
   @IsDateString()
@@ -135,4 +161,10 @@ export class UpdateLeadDto {
   @Max(100)
   @IsOptional()
   winProbability?: number;
+
+  @ApiPropertyOptional({ description: 'What was said during the consultation; also opens the timeline' })
+  @IsString()
+  @MaxLength(2000)
+  @IsOptional()
+  note?: string;
 }

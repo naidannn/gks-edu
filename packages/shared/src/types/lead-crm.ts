@@ -79,6 +79,7 @@ export interface LeadDetail {
   email: string | null;
   age: number | null;
   educationLevel: EducationLevel | null;
+  schoolName: string | null;
   gpa: number | null;
   gpaScale: string | null;
   koreanLevel: string | null;
@@ -123,3 +124,10 @@ export const LEAD_STAGE_ORDER: LeadStage[] = [
   'WON',
   'LOST',
 ];
+
+/**
+ * The stages a record may open in. A walk-in has already been advised by the
+ * time staff type it in, so the funnel can start part-way (mirrors the API's
+ * `INITIAL_LEAD_STAGES`).
+ */
+export const INITIAL_LEAD_STAGES: LeadStage[] = ['NEW', 'CONTACTED', 'CONSULTED'];

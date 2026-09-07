@@ -768,6 +768,9 @@ model Lead {
 
   age            Int?
   educationLevel EducationLevel?
+  /// Which school they attend or graduated from — asked during the consultation,
+  /// carried into `Client.schoolName` on conversion.
+  schoolName     String?
   gpa            Float?
   /// gksedu.md §24 question 1 — the GPA scale in use is still undecided.
   gpaScale       String?

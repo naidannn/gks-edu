@@ -22,6 +22,7 @@ import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
+import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 import { MergeLeadDto } from './dto/merge-lead.dto.js';
 import { TransitionLeadDto } from './dto/transition-lead.dto.js';
@@ -44,6 +45,14 @@ export class LeadsController {
   @ApiOperation({ summary: 'Consultation request from the public website' })
   createPublic(@Body() dto: CreatePublicLeadDto) {
     return this.leads.createFromPublicForm(dto);
+  }
+
+  @Post()
+  @Roles(...STAFF_ROLES)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a walk-in consultation (staff) — 1B-19' })
+  create(@Body() dto: CreateLeadDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.leads.createByStaff(dto, user.id);
   }
 
   @Get()

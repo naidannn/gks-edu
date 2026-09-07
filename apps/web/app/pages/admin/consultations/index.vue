@@ -96,6 +96,11 @@ useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
         <h1 class="gks-page__title">Зөвлөгөө хүсэлт</h1>
         <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} хүсэлт</p>
       </div>
+      <div class="gks-page__actions">
+        <DsButton variant="accent" icon-left="user-plus" @click="navigateTo('/admin/consultations/new')">
+          Зөвлөгөө бүртгэх
+        </DsButton>
+      </div>
     </header>
 
     <DsCard>

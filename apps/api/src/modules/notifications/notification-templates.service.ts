@@ -53,30 +53,31 @@ export class NotificationTemplatesService implements OnApplicationBootstrap {
     return this.prisma.notificationTemplate.update({ where: { id }, data: patch });
   }
 
-  /** Idempotent — safe to call on every boot and from the seed script. */
+  /**
+   * Idempotent — safe to call on every boot and from the seed script.
+   *
+   * One `createMany` with `skipDuplicates`, not 58 `upsert`s: the unique
+   * `event_channel` index turns this into a single `INSERT ... ON CONFLICT DO
+   * NOTHING`, which is exactly "create if missing, never clobber an admin's
+   * wording". The loop it replaced ran 58 upserts one after another, and Prisma
+   * emulates an upsert as an interactive transaction — six round trips each to
+   * a pooler ~115 ms away. That is ~44 s, and it ran before `app.listen()`, so
+   * the API did not answer on :3001 for the whole of it; a `nest --watch`
+   * rebuild inside that window killed the process before it ever bound the port.
+   */
   async seedDefaults(): Promise<{ created: number; existing: number }> {
-    let created = 0;
-    let existing = 0;
+    const { count: created } = await this.prisma.notificationTemplate.createMany({
+      data: NOTIFICATION_TEMPLATES.map((template) => ({
+        event: template.event,
+        channel: template.channel,
+        titleMn: template.titleMn,
+        bodyMn: template.bodyMn,
+        linkMn: template.linkMn ?? null,
+      })),
+      skipDuplicates: true,
+    });
 
-    for (const template of NOTIFICATION_TEMPLATES) {
-      const result = await this.prisma.notificationTemplate.upsert({
-        where: { event_channel: { event: template.event, channel: template.channel } },
-        create: {
-          event: template.event,
-          channel: template.channel,
-          titleMn: template.titleMn,
-          bodyMn: template.bodyMn,
-          linkMn: template.linkMn ?? null,
-        },
-        // An empty update still returns the row — this is a "create if missing"
-        // that never clobbers an admin's edited wording.
-        update: {},
-        select: { createdAt: true, updatedAt: true },
-      });
-
-      if (result.createdAt.getTime() === result.updatedAt.getTime()) created += 1;
-      else existing += 1;
-    }
+    const existing = NOTIFICATION_TEMPLATES.length - created;
 
     this.logger.log(`Мэдэгдлийн загвар: ${created} шинэ, ${existing} хэвээр`);
     return { created, existing };

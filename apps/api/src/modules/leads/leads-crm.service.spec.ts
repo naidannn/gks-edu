@@ -227,6 +227,87 @@ describe('LeadsService.stats', () => {
   });
 });
 
+describe('LeadsService.createByStaff', () => {
+  function intakeStub(overrides: { universities?: { id: string }[]; assignee?: { id: string } | null } = {}) {
+    const prisma = {
+      lead: {
+        create: vi.fn().mockResolvedValue({ id: 'lead-new' }),
+        findUnique: vi.fn().mockResolvedValue({ id: 'lead-new', activities: [] }),
+      },
+      university: {
+        findMany: vi.fn().mockResolvedValue(overrides.universities ?? []),
+      },
+      user: {
+        findFirst: vi.fn().mockResolvedValue(
+          overrides.assignee === undefined ? { id: 'staff-1' } : overrides.assignee,
+        ),
+      },
+    };
+    return prisma as unknown as PrismaService & typeof prisma;
+  }
+
+  const walkIn = { lastName: 'Бат', firstName: 'Болд', phone: '99112233' };
+
+  it('opens an office walk-in at CONSULTED with a meeting on the timeline', async () => {
+    const prisma = intakeStub();
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+
+    await service.createByStaff(walkIn, 'actor-1');
+
+    const { data } = prisma.lead.create.mock.calls[0]![0] as {
+      data: { stage: LeadStage; source: string; activities: { create: { type: LeadActivityType; actorId: string } } };
+    };
+    expect(data.stage).toBe(LeadStage.CONSULTED);
+    expect(data.source).toBe('OFFICE');
+    expect(data.activities.create.type).toBe(LeadActivityType.MEETING);
+    expect(data.activities.create.actorId).toBe('actor-1');
+  });
+
+  it('keeps the desk quiet — a lead someone just typed in is not news', async () => {
+    const prisma = intakeStub();
+    const slack = slackStub();
+    const notifications = notificationsStub();
+    const email = emailStub();
+    const service = new LeadsService(prisma, notifications, email, slack);
+
+    await service.createByStaff({ ...walkIn, email: 'bat@example.mn' }, 'actor-1');
+
+    expect(slack.notify).not.toHaveBeenCalled();
+    expect(notifications.dispatch).not.toHaveBeenCalled();
+    expect(email.send).not.toHaveBeenCalled();
+  });
+
+  it('normalises the phone so duplicate detection can match it', async () => {
+    const prisma = intakeStub();
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+
+    await service.createByStaff({ ...walkIn, phone: '97699112233' }, 'actor-1');
+
+    const { data } = prisma.lead.create.mock.calls[0]![0] as { data: { phone: string } };
+    expect(data.phone).toBe('99112233');
+  });
+
+  it('drops university ids that no longer exist rather than storing them', async () => {
+    const prisma = intakeStub({ universities: [{ id: 'uni-1' }] });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+
+    await service.createByStaff({ ...walkIn, interestedUniversityIds: ['uni-1', 'uni-gone'] }, 'actor-1');
+
+    const { data } = prisma.lead.create.mock.calls[0]![0] as { data: { interestedUniversityIds: string[] } };
+    expect(data.interestedUniversityIds).toEqual(['uni-1']);
+  });
+
+  it('refuses an assignee who is not active staff', async () => {
+    const prisma = intakeStub({ assignee: null });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+
+    await expect(service.createByStaff({ ...walkIn, assignedToId: 'ghost' }, 'actor-1')).rejects.toThrow(
+      /Идэвхтэй ажилтан олдсонгүй/,
+    );
+    expect(prisma.lead.create).not.toHaveBeenCalled();
+  });
+});
+
 describe('Role', () => {
   it('carries the two staff roles added in 0-07', () => {
     expect(Role.CONSULTANT).toBe('CONSULTANT');

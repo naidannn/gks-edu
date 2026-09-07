@@ -10,6 +10,7 @@ import type {
 } from '@gks/shared';
 import { LEAD_STAGE_TRANSITIONS } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
+import { emptyLeadForm, fillLeadForm, leadUpdatePayload, validateLeadForm } from '~/utils/lead-form';
 
 /**
  * One consultation request: profile, stage moves, assignment, call history and
@@ -42,6 +43,67 @@ async function loadLead() {
   }
 }
 onMounted(loadLead);
+
+/**
+ * Correcting the record (1B-19). A walk-in is typed up while the conversation
+ * is still going, so half of it is written from memory afterwards — the same
+ * form the office registers with is the one it fixes with.
+ *
+ * The catalogue is only fetched when it is actually needed: to name the schools
+ * this person is interested in, or to pick more.
+ */
+const { universities, loading: universitiesLoading, load: loadUniversities } = useUniversityCatalogue();
+const universitiesRequested = ref(false);
+
+function ensureUniversities() {
+  if (universitiesRequested.value) return;
+  universitiesRequested.value = true;
+  void loadUniversities();
+}
+watch(lead, (value) => {
+  if (value?.interestedUniversityIds.length) ensureUniversities();
+});
+
+const interestedUniversityNames = computed(() => {
+  const names = (lead.value?.interestedUniversityIds ?? []).map((id) => {
+    const university = universities.value.find((row) => row.id === id);
+    return university ? universityName(university) : null;
+  });
+  return names.filter((name): name is string => Boolean(name)).join(', ') || null;
+});
+
+const editing = ref(false);
+const editForm = reactive(emptyLeadForm());
+const editErrors = reactive<Record<string, string>>({});
+const savingEdit = ref(false);
+const editError = ref<string | null>(null);
+
+function startEdit() {
+  if (!lead.value) return;
+  ensureUniversities();
+  fillLeadForm(editForm, lead.value);
+  editError.value = null;
+  editing.value = true;
+}
+
+async function saveEdit() {
+  editError.value = null;
+  if (!validateLeadForm(editForm, editErrors)) {
+    editError.value = 'Улаанаар тэмдэглэсэн талбаруудыг шалгана уу.';
+    return;
+  }
+
+  savingEdit.value = true;
+  try {
+    await api.patch(`/leads/${id.value}`, leadUpdatePayload(editForm));
+    await loadLead();
+    editing.value = false;
+  } catch (err) {
+    editError.value = apiErrorMessage(err, 'Хадгалахад алдаа гарлаа.');
+  } finally {
+    savingEdit.value = false;
+  }
+}
 
 // --- Activity timeline (1B-03) ---
 const activities = ref<LeadActivityItem[]>([]);
@@ -279,18 +341,42 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
           </DsCard>
 
           <!-- Facts -->
-          <DsCard title="Мэдээлэл">
+          <DsCard v-if="!editing" title="Мэдээлэл">
+            <template #action>
+              <DsButton size="sm" variant="secondary" icon-left="pencil" @click="startEdit">Засах</DsButton>
+            </template>
             <dl class="gks-facts">
               <CommonDataValue label="Нас" :value="lead.age ? `${lead.age} нас` : null" />
               <CommonDataValue label="Боловсрол" :value="lead.educationLevel ? EDUCATION_LEVEL_LABELS[lead.educationLevel as EducationLevel] : null" />
-              <CommonDataValue label="Дундаж (GPA)" :value="lead.gpa ? String(lead.gpa) : null" />
+              <CommonDataValue label="Сургууль" :value="lead.schoolName" />
+              <CommonDataValue label="Дундаж (GPA)" :value="lead.gpa ? [String(lead.gpa), lead.gpaScale].filter(Boolean).join(' / ') : null" />
               <CommonDataValue label="Солонгос хэл" :value="lead.koreanLevel" />
               <CommonDataValue label="Англи хэл" :value="lead.englishLevel" />
               <CommonDataValue label="Сонирхож буй үйлчилгээ" :value="lead.interestedServices.length ? lead.interestedServices.map((s: ServiceType) => SERVICE_LABELS[s]).join(', ') : null" />
               <CommonDataValue label="Сонирхож буй мэргэжил" :value="lead.interestedMajor" />
+              <CommonDataValue
+                v-if="lead.interestedUniversityIds.length"
+                label="Сонирхож буй сургууль"
+                :value="universitiesLoading ? '…' : interestedUniversityNames"
+              />
             </dl>
             <p v-if="lead.note" class="gks-lead__note">{{ lead.note }}</p>
           </DsCard>
+
+          <template v-else>
+            <CrmLeadFormFields
+              v-model="editForm"
+              variant="edit"
+              :errors="editErrors"
+              :universities="universities"
+              :loading-universities="universitiesLoading"
+            />
+            <p v-if="editError" class="gks-lead__error">{{ editError }}</p>
+            <div class="gks-lead__edit-actions">
+              <DsButton variant="secondary" @click="editing = false">Болих</DsButton>
+              <DsButton variant="accent" :loading="savingEdit" @click="saveEdit">Хадгалах</DsButton>
+            </div>
+          </template>
 
           <!-- Activity timeline -->
           <DsCard title="Түүх">
@@ -400,6 +486,7 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
 .gks-timeline__actor { margin-top: var(--sp-1); font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-lead__assignee { font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gks-lead__assign-actions { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
+.gks-lead__edit-actions { display: flex; justify-content: flex-end; gap: var(--sp-3); }
 @media (max-width: 900px) {
 .gks-lead__grid { grid-template-columns: minmax(0, 1fr); }
 }

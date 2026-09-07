@@ -10,6 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { SlackService } from '../notifications/slack.service.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import type { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
+import type { CreateLeadDto } from './dto/create-lead.dto.js';
 import type { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 import type { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import type { TransitionLeadDto } from './dto/transition-lead.dto.js';
@@ -241,6 +242,73 @@ export class LeadsService {
 
   // ─── Staff CRM (1B-01) ────────────────────────────────────────────────────
 
+  /**
+   * A consultant registering the person sitting in front of them (1B-19).
+   *
+   * Unlike the public form this is not an enquiry waiting to be answered — the
+   * consultation is already happening — so the record opens at `CONSULTED`, the
+   * desk is not paged about it, and no receipt is emailed to someone who was
+   * just advised in person. What it does write is the first timeline entry, so
+   * the visit itself is on the record and not only its outcome.
+   *
+   * Duplicates are not blocked here: the consultant is looking at the person
+   * and the form warns them about matching numbers before they save. Anything
+   * that slips through is what the merge tool is for (1B-09).
+   */
+  async createByStaff(dto: CreateLeadDto, actorId: string) {
+    const phone = normalizePhone(dto.phone);
+    const source = dto.source ?? LeadSource.OFFICE;
+    const stage = dto.stage ?? LeadStage.CONSULTED;
+
+    if (dto.assignedToId) {
+      const assignee = await this.prisma.user.findFirst({
+        where: { id: dto.assignedToId, role: { in: [...STAFF_ROLES] }, isActive: true },
+        select: { id: true },
+      });
+      if (!assignee) throw new BadRequestException('Идэвхтэй ажилтан олдсонгүй');
+    }
+
+    const universityIds = await this.existingUniversityIds(dto.interestedUniversityIds);
+
+    const lead = await this.prisma.lead.create({
+      data: {
+        firstName: dto.firstName.trim(),
+        lastName: dto.lastName.trim(),
+        phone,
+        email: dto.email?.trim().toLowerCase(),
+        age: dto.age,
+        educationLevel: dto.educationLevel,
+        schoolName: dto.schoolName?.trim(),
+        gpa: dto.gpa,
+        gpaScale: dto.gpaScale?.trim(),
+        koreanLevel: dto.koreanLevel?.trim(),
+        englishLevel: dto.englishLevel?.trim(),
+        interestedServices: dto.interestedServices ?? [],
+        interestedUniversityIds: universityIds,
+        interestedMajor: dto.interestedMajor?.trim(),
+        note: dto.note?.trim(),
+        source,
+        stage,
+        assignedToId: dto.assignedToId,
+        nextContactAt: dto.nextContactAt ? new Date(dto.nextContactAt) : undefined,
+        winProbability: dto.winProbability,
+        activities: {
+          create: {
+            // An office visit is a meeting; a consultant typing up a phone call
+            // or a referral is filing a note about one.
+            type: source === LeadSource.OFFICE ? LeadActivityType.MEETING : LeadActivityType.NOTE,
+            body: dto.note?.trim() || `${LEAD_SOURCE_LABELS[source]} — зөвлөгөө өгсөн`,
+            meta: { channel: 'staff_intake', source, stage } satisfies Prisma.InputJsonObject,
+            actorId,
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    return this.findOneStaff(lead.id);
+  }
+
   async findAllStaff(query: QueryLeadsDto) {
     const where = this.buildStaffWhere(query);
 
@@ -317,6 +385,9 @@ export class LeadsService {
         ...(dto.phone ? { phone: normalizePhone(dto.phone) } : {}),
         ...(dto.email ? { email: dto.email.trim().toLowerCase() } : {}),
         ...(dto.nextContactAt ? { nextContactAt: new Date(dto.nextContactAt) } : {}),
+        ...(dto.interestedUniversityIds
+          ? { interestedUniversityIds: await this.existingUniversityIds(dto.interestedUniversityIds) }
+          : {}),
       },
     });
   }
@@ -620,6 +691,16 @@ export class LeadsService {
     }
 
     return where;
+  }
+
+  /** Drops ids that no longer exist, so a stale pick cannot poison the record. */
+  private async existingUniversityIds(ids?: string[]): Promise<string[]> {
+    if (!ids?.length) return [];
+    const rows = await this.prisma.university.findMany({
+      where: { id: { in: [...new Set(ids)] } },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
   }
 
   private async resolveUniversityIds(slugs?: string[]): Promise<string[]> {
