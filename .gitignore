@@ -33,3 +33,6 @@ apps/api/tmp/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Local data dumps taken before a destructive maintenance script.
+.backups/
