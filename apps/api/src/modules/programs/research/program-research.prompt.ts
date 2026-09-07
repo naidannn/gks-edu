@@ -61,6 +61,20 @@ FIND, for academic year ${subject.year}, the departments open to INTERNATIONAL
 students at each of these levels:
 ${levels.map((level) => `  - ${level}: ${LEVEL_HINTS[level]}`).join('\n')}
 
+A DEPARTMENT IS NOT A COLLEGE. 공과대학, 인문대학 and 사회과학대학 are colleges
+(단과대학) and 일반대학원 is the graduate school — none of them is a thing a
+student applies to, and none of them belongs in "candidates". They belong in the
+"faculty" field of the departments inside them. If a page gives you only the
+college, open its 학과 소개 page and list the departments; if you cannot, leave
+that college out rather than returning it as a department.
+
+HOW MANY TO EXPECT. A comprehensive Korean university publishes roughly 40-80
+undergraduate departments across 8-15 colleges, and a similar number of graduate
+ones. Returning four or five for a school that size does not mean the school is
+small — it means the list is unfinished. Work college by college through the
+school's 학과 안내 / 대학·학과 page until you have covered them all, and if you
+had to stop early, say so in the "note" of the last entry.
+
 For each department report:
   level                 one of LANGUAGE_PREP, BACHELOR, MASTER, PHD
   nameKo                the department name exactly as the school writes it (경영학과)
@@ -92,8 +106,11 @@ RULES — these matter more than completeness:
   2. Do NOT convert between per-term and per-year. Report each one only if the
      school publishes it in that form. Most Korean schools publish per semester.
   3. Amounts are in KRW, as integers, with no separators or currency symbols.
-  4. Report the departments you found evidence for. Do not pad the list out with
-     departments a university of this size "would usually have".
+  4. Do not invent a department. Every entry must be one you saw named on a page
+     you opened — but "I only opened one page" is not a reason to stop at five:
+     open the department list and work through it. An entry whose name you read
+     but whose tuition you could not find is still worth reporting, with null
+     prices; a department left out entirely is one nobody can even ask about.
   5. If tuition differs across departments, report each department's own figure.
      If the school publishes one figure per college, repeat it and say so in note.
   6. scholarshipNote and note are written in Mongolian; everything else is data.
