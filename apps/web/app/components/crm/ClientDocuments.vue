@@ -80,6 +80,15 @@ async function openFile(fileId: string) {
   window.open(`${config.public.apiBase}/files/${signed.token}`, '_blank', 'noopener');
 }
 
+/**
+ * Building the admission list is the act that opens material collection: the
+ * API refuses it until the prepayment is confirmed, and moves the case on to
+ * `DOCUMENTS` once it succeeds (1D-04).
+ */
+const awaitingPrepayment = computed(
+  () => stage.value === 'ADMISSION' && PRE_PREPAYMENT_STAGES.includes(props.workspaceCase.stage),
+);
+
 /** Re-resolves the requirement rules after the questionnaire or a school request. */
 function resolveChecklist() {
   return act(() => api.post(`/cases/${caseId.value}/documents/resolve`, undefined, { query: { stage: stage.value } }));
@@ -148,7 +157,15 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           <DsButton size="sm" variant="secondary" icon-left="printer" :loading="busy" @click="printChecklist">
             Хэвлэх
           </DsButton>
-          <DsButton size="sm" variant="ghost" icon-left="refresh-cw" :loading="busy" @click="resolveChecklist">
+          <DsButton
+            size="sm"
+            variant="ghost"
+            icon-left="refresh-cw"
+            :loading="busy"
+            :disabled="awaitingPrepayment"
+            :title="awaitingPrepayment ? 'Урьдчилгаа төлбөр баталгаажсаны дараа' : undefined"
+            @click="resolveChecklist"
+          >
             Жагсаалт шинэчлэх
           </DsButton>
           <NuxtLink :to="`/admin/documents?caseId=${workspaceCase.id}`" class="gks-cdocs__link">
@@ -156,6 +173,10 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           </NuxtLink>
         </div>
       </div>
+
+      <p v-if="awaitingPrepayment" class="gks-cdocs__gate">
+        Урьдчилгаа төлбөр баталгаажсаны дараа материалын жагсаалт үүсэж, хэрэг «Материал бүрдүүлж буй» төлөвт шилжинэ.
+      </p>
 
       <DocumentsProgressBar
         v-if="progress"
@@ -204,6 +225,7 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
 .gks-cdocs__stages { display: flex; gap: var(--sp-2); }
 .gks-cdocs__head-actions { display: flex; align-items: center; gap: var(--sp-3); }
 .gks-cdocs__link { font-size: var(--fs-caption); color: var(--brand-700); text-decoration: none; }
+.gks-cdocs__gate { font-size: var(--fs-caption); color: var(--text-muted); }
 .gks-cdocs__list { display: flex; flex-direction: column; gap: var(--sp-3); }
 .gks-cdocs__muted { font-size: var(--fs-body-sm); color: var(--text-subtle); }
 .gks-cdocs__skeleton { height: 260px; background: linear-gradient(var(--n-050), var(--n-100)); border: var(--border-hair) solid var(--line-hairline); }

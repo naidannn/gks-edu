@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  CaseStage,
   DocStage,
   DocumentStatus,
   EducationLevel,
@@ -10,7 +11,14 @@ import {
   ServiceType,
 } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
+import type { CasesService } from '../cases/cases.service.js';
 import { buildRuleWhere, type ResolutionContext, RequirementsService } from './requirements.service.js';
+
+/** Only the one call the requirement engine makes into the case flow. */
+function casesStub(moved = true) {
+  const cases = { applyDomainTransition: vi.fn().mockResolvedValue(moved) };
+  return cases as unknown as CasesService & typeof cases;
+}
 
 const HIGH_SCHOOL_LEAVER: ResolutionContext = {
   serviceType: ServiceType.LANGUAGE_PREP,
@@ -74,12 +82,14 @@ function prismaStub(options: {
   rules: ReturnType<typeof rule>[];
   existing?: Record<string, unknown>[];
   conditions?: Record<string, unknown> | null;
+  stage?: CaseStage;
 }) {
   const prisma = {
     case: {
       findUnique: vi.fn().mockResolvedValue({
         id: 'case-1',
         serviceType: ServiceType.BACHELOR,
+        stage: options.stage ?? CaseStage.PREPAYMENT_PAID,
         universityId: null,
         // `??` would swallow a deliberate null, which is the point of one test.
         conditions:
@@ -107,7 +117,7 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
   it('creates one CaseDocument per matched rule', async () => {
     const prisma = prismaStub({ rules: [rule('r1', 't1'), rule('r2', 't2')] });
 
-    const summary = await new RequirementsService(prisma).resolveForCase('case-1', DocStage.ADMISSION);
+    const summary = await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(summary).toMatchObject({ created: 2, updated: 0, removed: 0 });
     expect(prisma.caseDocument.create).toHaveBeenCalledTimes(2);
@@ -123,7 +133,7 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
       ],
     });
 
-    const summary = await new RequirementsService(prisma).resolveForCase('case-1', DocStage.ADMISSION);
+    const summary = await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(summary).toMatchObject({ created: 0, updated: 1, removed: 1, keptDespiteUnmatched: 1 });
     expect(prisma.caseDocument.update).toHaveBeenCalledWith({
@@ -138,7 +148,7 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
       existing: [{ id: 'd1', templateId: 't1', status: DocumentStatus.NOT_STARTED, deletedAt: new Date() }],
     });
 
-    await new RequirementsService(prisma).resolveForCase('case-1', DocStage.ADMISSION);
+    await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(prisma.caseDocument.update).toHaveBeenCalledWith({
       where: { id: 'd1' },
@@ -149,7 +159,7 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
   it('lists a template once even when two rules name it', async () => {
     const prisma = prismaStub({ rules: [rule('r1', 't1'), rule('r2', 't1', { necessity: Necessity.OPTIONAL })] });
 
-    const summary = await new RequirementsService(prisma).resolveForCase('case-1', DocStage.ADMISSION);
+    const summary = await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(summary.created).toBe(1);
     // First in sort order wins, so a school override placed earlier decides.
@@ -161,7 +171,7 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
   it('falls back to the client record when the case questionnaire is unanswered (1D-06)', async () => {
     const prisma = prismaStub({ rules: [], conditions: null });
 
-    await new RequirementsService(prisma).resolveForCase('case-1', DocStage.ADMISSION);
+    await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(prisma.requirementRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -172,5 +182,57 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
         }),
       }),
     );
+  });
+});
+
+/**
+ * The checklist and the case stage are the same event seen twice: the material
+ * list is what the prepayment buys, and building it is the start of collecting
+ * it (gksedu.md §9).
+ */
+describe('RequirementsService.resolveForCase — stage coupling', () => {
+  it('refuses to build the admission list before the prepayment is confirmed', async () => {
+    const prisma = prismaStub({ rules: [rule('r1', 't1')], stage: CaseStage.CONTRACT_SIGNED });
+    const cases = casesStub();
+
+    await expect(new RequirementsService(prisma, cases).resolveForCase('case-1', DocStage.ADMISSION)).rejects.toThrow(
+      /Урьдчилгаа/,
+    );
+    expect(prisma.caseDocument.create).not.toHaveBeenCalled();
+    expect(cases.applyDomainTransition).not.toHaveBeenCalled();
+  });
+
+  it('moves the case on to DOCUMENTS once the list is built', async () => {
+    const prisma = prismaStub({ rules: [rule('r1', 't1')] });
+    const cases = casesStub();
+
+    const summary = await new RequirementsService(prisma, cases).resolveForCase('case-1', DocStage.ADMISSION, 'staff-1');
+
+    expect(summary.stageMoved).toBe(true);
+    expect(cases.applyDomainTransition).toHaveBeenCalledWith(
+      'case-1',
+      CaseStage.DOCUMENTS,
+      'staff-1',
+      expect.any(String),
+    );
+  });
+
+  it('never drags a case backwards when the list is re-resolved later on', async () => {
+    const prisma = prismaStub({ rules: [rule('r1', 't1')], stage: CaseStage.APPLICATION_SUBMITTED });
+    const cases = casesStub();
+
+    await new RequirementsService(prisma, cases).resolveForCase('case-1', DocStage.ADMISSION);
+
+    expect(prisma.caseDocument.create).toHaveBeenCalled();
+    expect(cases.applyDomainTransition).not.toHaveBeenCalled();
+  });
+
+  it('leaves the visa list alone — it is a later phase, not the one being opened', async () => {
+    const prisma = prismaStub({ rules: [rule('r1', 't1')], stage: CaseStage.VISA });
+    const cases = casesStub();
+
+    await new RequirementsService(prisma, cases).resolveForCase('case-1', DocStage.VISA);
+
+    expect(cases.applyDomainTransition).not.toHaveBeenCalled();
   });
 });

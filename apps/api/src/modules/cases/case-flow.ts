@@ -45,6 +45,16 @@ export const CASE_FLOWS: Record<ServiceType, CaseStage[]> = {
 
 /** Only `PaymentsService.confirmPayment` / `ContractsService.sign` may make these — never a manual staff click. */
 export const SYSTEM_ONLY_TARGETS = new Set<CaseStage>([CaseStage.CONTRACT_SIGNED, CaseStage.PREPAYMENT_PAID, CaseStage.BALANCE_PAID]);
+
+/**
+ * The stages a case passes through before its prepayment is confirmed.
+ *
+ * `PREPAYMENT_PAID` is a system-only target, so a case standing anywhere past
+ * it has, by construction, a confirmed prepayment behind it — reading the stage
+ * asks the same question as counting `PAID` payment rows, and cannot disagree
+ * with the stage graph the rest of the flow runs on (gksedu.md §9).
+ */
+export const PRE_PREPAYMENT_STAGES = new Set<CaseStage>([CaseStage.CONTRACT_DRAFT, CaseStage.CONTRACT_SIGNED]);
 export const ESCAPE_STAGES = [CaseStage.ON_HOLD, CaseStage.CANCELLED, CaseStage.REJECTED];
 const FLOW_STAFF_ROLES = [Role.ADMIN, Role.CONSULTANT];
 

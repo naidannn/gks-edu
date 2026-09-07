@@ -76,7 +76,7 @@ export class CaseDocumentsService {
       create: { caseId, ...dto, answeredById: actor.id },
       update: { ...dto, answeredById: actor.id },
     });
-    const resolution = await this.requirements.resolveForCase(caseId, stage);
+    const resolution = await this.requirements.resolveForCase(caseId, stage, actor.id);
     return { conditions, resolution };
   }
 

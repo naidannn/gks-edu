@@ -315,6 +315,13 @@ export const CASE_STAGE_LABELS: Record<CaseStage, string> = {
 };
 
 /**
+ * The stages a case sits in before its prepayment is confirmed. The material
+ * checklist is what that payment buys, so the screens grey out "build the list"
+ * until then — the API refuses it either way (gksedu.md §9).
+ */
+export const PRE_PREPAYMENT_STAGES: CaseStage[] = ['CONTRACT_DRAFT', 'CONTRACT_SIGNED'];
+
+/**
  * Badge tone per case stage. Every screen that shows a stage reads this map —
  * the same colour must mean the same thing on the list, the workspace and the
  * dashboard (UX: consistent status badges).

@@ -46,6 +46,10 @@ async function onSaveConditions(payload: Partial<CaseConditions>) {
   saving.value = true;
   try {
     await docs.saveConditions(payload);
+  } catch (error) {
+    // The engine refuses to build a list before the prepayment is confirmed,
+    // so the answer can come back rejected — say so instead of failing silently.
+    docs.error.value = apiErrorMessage(error, 'Хариултыг хадгалж чадсангүй');
   } finally {
     saving.value = false;
   }

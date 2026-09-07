@@ -83,9 +83,13 @@ export class CaseDocumentsController {
   @Post('documents/resolve')
   @Roles(...DOC_STAFF_ROLES)
   @ApiQuery({ name: 'stage', enum: DocStage, required: false })
-  @ApiOperation({ summary: 'Re-run the requirement engine for this case (1D-04)' })
-  resolve(@Param('caseId', ParseUUIDPipe) caseId: string, @Query('stage') stage: DocStage = DocStage.ADMISSION) {
-    return this.requirements.resolveForCase(caseId, stage);
+  @ApiOperation({ summary: 'Re-run the requirement engine for this case; opens the collection stage (1D-04)' })
+  resolve(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('stage') stage: DocStage = DocStage.ADMISSION,
+  ) {
+    return this.requirements.resolveForCase(caseId, stage, user.id);
   }
 
   @Get('documents/print')

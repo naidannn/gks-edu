@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   type CaseConditions,
-  type DocStage,
+  CaseStage,
+  DocStage,
   DocumentStatus,
   type EducationLevel,
   GuarantorType,
@@ -11,6 +12,8 @@ import {
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { restorePatch, softDeletePatch } from '../../prisma/soft-delete.js';
+import { PRE_PREPAYMENT_STAGES } from '../cases/case-flow.js';
+import { CasesService } from '../cases/cases.service.js';
 
 /** The case facts a rule is matched against (ARCHITECTURE.md §7.1). */
 export interface ResolutionContext {
@@ -29,6 +32,8 @@ export interface ResolutionSummary {
   removed: number;
   /** No longer required but already submitted — deliberately left in place (§7.1). */
   keptDespiteUnmatched: number;
+  /** Set when resolving also moved the case on to `DOCUMENTS` (1D-04). */
+  stageMoved?: boolean;
 }
 
 /**
@@ -42,7 +47,10 @@ export interface ResolutionSummary {
  */
 @Injectable()
 export class RequirementsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cases: CasesService,
+  ) {}
 
   /** Every active rule whose conditions the context satisfies, in display order. */
   async matchingRules(stage: DocStage, context: ResolutionContext): Promise<RequirementRule[]> {
@@ -52,12 +60,23 @@ export class RequirementsService {
     });
   }
 
-  async resolveForCase(caseId: string, stage: DocStage): Promise<ResolutionSummary> {
+  /**
+   * `actorId` is whoever pressed the button; it ends up on the `CaseTransition`
+   * this may write, so the history says who opened the collection phase.
+   */
+  async resolveForCase(caseId: string, stage: DocStage, actorId: string | null = null): Promise<ResolutionSummary> {
     const gksCase = await this.prisma.case.findUnique({
       where: { id: caseId },
       include: { conditions: true, user: { select: { client: { select: { educationLevel: true } } } } },
     });
     if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
+
+    // The admission checklist is what the prepayment buys: until it is
+    // confirmed there is nothing to hand the client (gksedu.md §9). The visa
+    // list is a later phase of the same case, so it is not gated again.
+    if (stage === DocStage.ADMISSION && PRE_PREPAYMENT_STAGES.has(gksCase.stage)) {
+      throw new BadRequestException('Урьдчилгаа төлбөр баталгаажаагүй байхад материалын жагсаалт үүсгэх боломжгүй');
+    }
 
     const context: ResolutionContext = {
       serviceType: gksCase.serviceType,
@@ -112,6 +131,20 @@ export class RequirementsService {
       } else {
         summary.keptDespiteUnmatched += 1;
       }
+    }
+
+    // Building the list *is* the start of collecting it, so the case follows
+    // the button rather than waiting for someone to remember the stage select.
+    // Only from `PREPAYMENT_PAID`: re-resolving later in the flow (a sponsor
+    // swap, a school's extra request) must not drag the case backwards, and
+    // resuming a case from `ON_HOLD` stays a staff decision.
+    if (stage === DocStage.ADMISSION && gksCase.stage === CaseStage.PREPAYMENT_PAID) {
+      summary.stageMoved = await this.cases.applyDomainTransition(
+        caseId,
+        CaseStage.DOCUMENTS,
+        actorId,
+        'Материал бүрдүүлэлтийн жагсаалт үүссэн',
+      );
     }
 
     return summary;
