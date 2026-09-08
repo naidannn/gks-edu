@@ -1,5 +1,6 @@
 import type { AuthSession, User } from '@gks/shared';
 import { defineStore } from 'pinia';
+import { singleFlight } from '~/utils/single-flight';
 
 const ACCESS_KEY = 'gks.accessToken';
 const REFRESH_KEY = 'gks.refreshToken';
@@ -72,23 +73,32 @@ export const useAuthStore = defineStore('auth', () => {
     apply(session);
   }
 
-  /** Returns false when the refresh token is gone or rejected. */
-  async function refresh(): Promise<boolean> {
-    if (!refreshToken.value) return false;
+  /**
+   * Returns false when the refresh token is gone or rejected.
+   *
+   * Single-flight: the API rotates refresh tokens, so parallel callers must
+   * share one round trip rather than each burn the same token — see
+   * {@link singleFlight}.
+   */
+  const refresh = singleFlight(async (): Promise<boolean> => {
+    const presented = refreshToken.value;
+    if (!presented) return false;
 
     try {
       const session = await $fetch<AuthSession>('/auth/refresh', {
         baseURL: config.public.apiBase,
         method: 'POST',
-        body: { refreshToken: refreshToken.value },
+        body: { refreshToken: presented },
       });
       apply(session);
       return true;
     } catch {
-      clear();
+      // Only tear the session down if it is still the one that just failed.
+      // A refresh that lost a race must not wipe the tokens the winner stored.
+      if (refreshToken.value === presented) clear();
       return false;
     }
-  }
+  });
 
   async function logout(): Promise<void> {
     const token = refreshToken.value;

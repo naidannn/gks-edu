@@ -26,15 +26,21 @@ export function useApi() {
         },
       }) as Promise<T>;
 
+    const presented = auth.accessToken;
+
     try {
-      return await send(auth.accessToken);
+      return await send(presented);
     } catch (error) {
       const status = (error as { statusCode?: number; response?: { status?: number } }).statusCode
         ?? (error as { response?: { status?: number } }).response?.status
         ?? 0;
 
       if (status === 401 && auth.refreshToken) {
-        const refreshed = await auth.refresh();
+        // A slow request can come back 401 holding a token that has already
+        // been replaced — retry with the current one rather than rotating
+        // again. `auth.refresh()` itself is single-flight, so parallel callers
+        // that do need one share the same round trip.
+        const refreshed = auth.accessToken !== presented || (await auth.refresh());
         if (refreshed) {
           return send(auth.accessToken);
         }

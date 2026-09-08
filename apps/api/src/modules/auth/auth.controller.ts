@@ -22,6 +22,11 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  // Every registration sends a welcome mail and pings the office on Slack, so
+  // an unthrottled one is a mail cannon pointed at any address someone types.
+  // Looser than `login`: a person mistyping their way through a sign-up form
+  // is not an attack, and a household behind one NAT address is not either.
+  @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @ApiOperation({ summary: 'Create an account and start a session' })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
