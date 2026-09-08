@@ -3,6 +3,7 @@ import { type DecimalLike, toNumber } from '../../common/utils/decimal.js';
 import { PrepaymentMode, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { DEFAULT_PAYMENT_DUE_DAYS } from './payment-terms.js';
 import type { CreateServicePricingDto } from './dto/create-service-pricing.dto.js';
 import type { UpdateServicePricingDto } from './dto/update-service-pricing.dto.js';
 
@@ -100,6 +101,7 @@ export class PricingService {
           prepaymentMode: dto.prepaymentMode,
           prepaymentValue: dto.prepaymentValue,
           balanceTrigger: dto.balanceTrigger,
+          paymentDueDays: dto.paymentDueDays ?? DEFAULT_PAYMENT_DUE_DAYS,
           effectiveFrom,
         },
       });
@@ -132,6 +134,7 @@ export class PricingService {
       prepaymentMode: dto.prepaymentMode ?? current.prepaymentMode,
       prepaymentValue: dto.prepaymentValue ?? toNumber(current.prepaymentValue as DecimalLike),
       balanceTrigger: dto.balanceTrigger ?? current.balanceTrigger,
+      paymentDueDays: dto.paymentDueDays ?? current.paymentDueDays,
     };
     PricingService.assertCoherent(merged);
 

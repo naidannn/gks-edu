@@ -54,6 +54,8 @@ const CASE_INCLUDE = {
       qrText: true,
       qrImage: true,
       paidAt: true,
+      // The client is chased on this date, so they get to see it.
+      dueAt: true,
       refundOfId: true,
       createdAt: true,
     },

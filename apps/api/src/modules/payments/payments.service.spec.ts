@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,6 +8,7 @@ import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { StorageService } from '../../storage/storage.service.js';
 import type { CasesService } from '../cases/cases.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
+import type { PricingService } from '../pricing/pricing.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
 import { PaymentsService } from './payments.service.js';
 import type { QpayClientService } from './qpay-client.service.js';
@@ -36,6 +37,7 @@ function buildHarness(options: {
   gksCase?: Record<string, unknown>;
   existingPayment?: Record<string, unknown> | null;
   flowRule?: Record<string, unknown> | null;
+  paymentDueDays?: number;
 } = {}) {
   const gksCase = options.gksCase ?? makeCase();
 
@@ -46,6 +48,17 @@ function buildHarness(options: {
       findUnique: vi.fn(),
       create: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => ({ id: 'payment-1', ...data })),
       update: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => ({ id: 'payment-1', ...data })),
+      // `confirmPayment` claims the row with a conditional update, so the fake
+      // has to honour the condition the way Postgres would — otherwise a row
+      // that is already PAID would still look claimable here.
+      updateMany: vi.fn().mockImplementation(async ({ where }: { where: { id: string; status: string } }) => {
+        const row = (await prisma.payment.findUnique({ where: { id: where.id } })) as { status?: string } | null;
+        return { count: row?.status === where.status ? 1 : 0 };
+      }),
+      findUniqueOrThrow: vi.fn().mockImplementation(({ where }: { where: { id: string } }) =>
+        prisma.payment.findUnique({ where }),
+      ),
+      count: vi.fn(),
     },
     contract: { update: vi.fn() },
     caseFlowDefinition: {
@@ -77,8 +90,12 @@ function buildHarness(options: {
     sign: vi.fn().mockReturnValue({ token: 'signed-token', expiresAt: new Date() }),
   } as unknown as StorageService;
 
-  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, slack, storage, pollQueue);
-  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications, storage };
+  const pricing = {
+    getActive: vi.fn().mockResolvedValue({ paymentDueDays: options.paymentDueDays ?? 7 }),
+  } as unknown as PricingService;
+
+  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, slack, storage, pricing, pollQueue);
+  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications, storage, pricing };
 }
 
 const student: AuthenticatedUser = { id: 'student-1', email: 's@gks.edu', role: Role.USER };
@@ -92,7 +109,13 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     const result = await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
 
     expect(prisma.payment.create).toHaveBeenCalledWith({
-      data: { caseId: 'case-1', kind: PaymentKind.PREPAYMENT, amountMnt: 200_000, status: PaymentStatus.PENDING },
+      data: {
+        caseId: 'case-1',
+        kind: PaymentKind.PREPAYMENT,
+        amountMnt: 200_000,
+        status: PaymentStatus.PENDING,
+        dueAt: expect.any(Date),
+      },
     });
     expect(qpay.createInvoice).toHaveBeenCalledWith(
       expect.objectContaining({ invoiceNo: 'payment-1', amount: 200_000 }),
@@ -129,6 +152,32 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     expect(result).toEqual({ id: 'payment-old', status: PaymentStatus.PENDING });
     expect(prisma.payment.create).not.toHaveBeenCalled();
     expect(qpay.createInvoice).not.toHaveBeenCalled();
+  });
+
+  it('gives the invoice a due date, so the reminder and the receivables report have one to run on', async () => {
+    // The regression this guards: `Payment.dueAt` had four readers — the
+    // "Төлбөрийн хугацаа болсон" sweep, the receivables count, mv_finance and
+    // the portal's overdue badge — and no writer, so all four reported zero.
+    const { service, prisma, pricing } = buildHarness({ paymentDueDays: 10 });
+
+    await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
+
+    expect(pricing.getActive).toHaveBeenCalledWith(ServiceType.LANGUAGE_PREP);
+    const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
+    const daysOut = Math.round((dueAt.getTime() - Date.now()) / 86_400_000);
+    expect(daysOut).toBe(10);
+  });
+
+  it('still raises the invoice when the service has no active price, on the default window', async () => {
+    // A mis-configured price must not stop the office invoicing a contract that
+    // is already signed — but the payment still needs a date to be chased on.
+    const { service, prisma, pricing } = buildHarness();
+    vi.mocked(pricing.getActive).mockRejectedValue(new NotFoundException('идэвхтэй үнэ алга'));
+
+    await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
+
+    const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
+    expect(Math.round((dueAt.getTime() - Date.now()) / 86_400_000)).toBe(7);
   });
 
   it('refuses a second prepayment once one is already PAID', async () => {
@@ -188,8 +237,10 @@ describe('PaymentsService.confirmPayment (1C-15 — payment confirmed advances t
 
     await harness.service.confirmPayment('payment-1', { qpayPaymentId: 'qpay-payment-9' });
 
-    expect(harness.prisma.payment.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
+    expect(harness.prisma.payment.updateMany).toHaveBeenCalledWith({
+      // Conditional on PENDING: the webhook and the poller both fire on this
+      // payment, and only one of them may credit it.
+      where: { id: 'payment-1', status: PaymentStatus.PENDING },
       data: expect.objectContaining({ status: PaymentStatus.PAID, qpayPaymentId: 'qpay-payment-9' }),
     });
     expect(harness.prisma.contract.update).toHaveBeenCalledWith({
@@ -198,6 +249,40 @@ describe('PaymentsService.confirmPayment (1C-15 — payment confirmed advances t
     });
     expect(harness.cases.applySystemTransition).toHaveBeenCalledWith(expect.anything(), 'case-1', CaseStage.PREPAYMENT_PAID);
     expect(harness.pollQueue.removeJobScheduler).toHaveBeenCalledWith('payment-1');
+  });
+
+  it('credits the money once when the webhook and the poller land together', async () => {
+    // Both confirm paths fire on the same payment within milliseconds. The
+    // claim is conditional on PENDING, so the loser finds nothing to update
+    // and takes the already-paid exit instead of transitioning the case a
+    // second time and thanking the client twice.
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+    harness.prisma.payment.updateMany.mockResolvedValue({ count: 0 });
+    harness.prisma.payment.findUnique.mockResolvedValueOnce({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PAID,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+
+    await harness.service.confirmPayment('payment-1', { qpayPaymentId: 'qpay-payment-9' });
+
+    expect(harness.cases.applySystemTransition).not.toHaveBeenCalled();
+    expect(harness.notifications.dispatch).not.toHaveBeenCalled();
   });
 
   it('does not touch the contract for a BALANCE payment', async () => {
@@ -265,8 +350,8 @@ describe('PaymentsService.registerManual (1C-27 — money that never went throug
 
     await harness.service.registerManual('case-1', { ...bankTransfer }, 'staff-1');
 
-    expect(harness.prisma.payment.update).toHaveBeenCalledWith({
-      where: { id: 'payment-1' },
+    expect(harness.prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: { id: 'payment-1', status: PaymentStatus.PENDING },
       data: expect.objectContaining({ status: PaymentStatus.PAID, paidAt: new Date('2026-09-01T00:00:00.000Z') }),
     });
   });

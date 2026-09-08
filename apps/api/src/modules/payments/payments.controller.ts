@@ -89,7 +89,7 @@ export class PaymentsController {
   @Post('payments/qpay/webhook')
   @Public()
   @ApiOperation({ summary: 'QPay callback (1C-13) — re-verified against QPay before crediting anything' })
-  webhook(@Query('paymentId') paymentId: string) {
+  webhook(@Query('paymentId', new ParseUUIDPipe({ optional: true })) paymentId?: string) {
     return this.payments.handleWebhook(paymentId);
   }
 

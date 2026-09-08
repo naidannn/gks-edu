@@ -1133,6 +1133,12 @@ model ServicePricing {
   prepaymentMode  PrepaymentMode
   prepaymentValue Decimal        @db.Decimal(14, 2)
   balanceTrigger  BalanceTrigger
+  /// How many days a client is given to pay an invoice once it is raised —
+  /// what `Payment.dueAt` is computed from, and therefore what the "Төлбөрийн
+  /// хугацаа болсон" reminder (§16) and the receivables report run on. A
+  /// payment term, so it is versioned with the price rather than being a
+  /// constant; 7 is the office's current practice, not a rule from the spec.
+  paymentDueDays  Int            @default(7)
   effectiveFrom   DateTime
   /// Null = currently active.
   effectiveTo     DateTime?
@@ -1395,7 +1401,9 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@index([caseId])
-  @@index([status])
+  /// Receivables: "pending, and past its date". The composite serves a plain
+  /// status lookup too, so there is no separate index on `status`.
+  @@index([status, dueAt])
   @@index([method])
   @@map("payments")
 }

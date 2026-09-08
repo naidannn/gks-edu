@@ -22,6 +22,7 @@ import { CasesService } from '../cases/cases.service.js';
 import { PAYMENT_KIND_LABELS, PAYMENT_METHOD_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
+import { DEFAULT_PAYMENT_DUE_DAYS, paymentDueAt } from '../pricing/payment-terms.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreatePaymentDto } from './dto/create-payment.dto.js';
 import type { QueryPaymentsDto } from './dto/query-payments.dto.js';
@@ -47,6 +48,7 @@ export class PaymentsService {
     private readonly notifications: NotificationsService,
     private readonly slack: SlackService,
     private readonly storage: StorageService,
+    private readonly pricing: PricingService,
     @InjectQueue(QPAY_POLL_QUEUE) private readonly pollQueue: Queue,
   ) {}
 
@@ -72,7 +74,13 @@ export class PaymentsService {
     const amountMnt = this.resolveAmount(dto.kind, contract);
 
     const payment = await this.prisma.payment.create({
-      data: { caseId, kind: dto.kind, amountMnt, status: PaymentStatus.PENDING },
+      data: {
+        caseId,
+        kind: dto.kind,
+        amountMnt,
+        status: PaymentStatus.PENDING,
+        dueAt: await this.dueAtFor(gksCase.serviceType),
+      },
     });
 
     const callbackUrl = `${this.config.getOrThrow<string>('qpay.callbackUrl')}?paymentId=${payment.id}`;
@@ -202,8 +210,21 @@ export class PaymentsService {
 
   // ─── Webhook + polling (1C-13, 1C-14) — both funnel into `confirmPayment` ───
 
-  /** `POST /payments/qpay/webhook?paymentId=...` — the callback is a trigger, never a trusted status. */
-  async handleWebhook(paymentId: string): Promise<{ ok: boolean }> {
+  /**
+   * `POST /payments/qpay/webhook?paymentId=...` — the callback is a trigger,
+   * never a trusted status.
+   *
+   * The route is public, so most of what reaches it is not QPay: scanners
+   * probe it with no parameter at all. That is not an error worth raising —
+   * answer the same `ok` a callback for an unknown payment gets, and never
+   * hand a non-id to Prisma, which would fail the request as a 500.
+   */
+  async handleWebhook(paymentId?: string): Promise<{ ok: boolean }> {
+    if (!paymentId) {
+      this.logger.warn('QPay webhook paymentId-гүй ирлээ');
+      return { ok: true };
+    }
+
     const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
     if (!payment) {
       this.logger.warn(`QPay webhook танихгүй төлбөр дээр ирлээ: ${paymentId}`);
@@ -247,20 +268,38 @@ export class PaymentsService {
     const confirmed = await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({ where: { id: paymentId }, include: { case: { include: { contract: true } } } });
       if (!payment) throw new NotFoundException(`Төлбөр ${paymentId} олдсонгүй`);
-      if (payment.status === PaymentStatus.PAID) {
-        alreadyPaid = true;
-        return payment;
-      }
-      if (payment.status !== PaymentStatus.PENDING) {
-        throw new BadRequestException(`${payment.status} төлөвт байгаа төлбөрийг баталгаажуулах боломжгүй`);
-      }
 
-      const updated = await tx.payment.update({
-        where: { id: paymentId },
+      // Claiming the row is one statement, and only a PENDING row can be
+      // claimed. The webhook and the polling job fire on the same payment
+      // within milliseconds of each other, so "read the status, then write it"
+      // lets both through: two stage transitions, and the client thanked twice
+      // for the same money. `updateMany` re-checks the status as it writes, so
+      // exactly one caller comes back with a count of 1.
+      const claimed = await tx.payment.updateMany({
+        where: { id: paymentId, status: PaymentStatus.PENDING },
         // A manual registration carries the date the money actually arrived, which
         // is rarely the date somebody got round to typing it in (1C-27).
         data: { status: PaymentStatus.PAID, paidAt: opts.paidAt ?? new Date(), qpayPaymentId: opts.qpayPaymentId },
       });
+
+      if (claimed.count === 0) {
+        // Either it was already PAID when we read it, or the other caller
+        // committed between our read and our write — re-read to tell those
+        // apart from a row that is genuinely in no state to be confirmed.
+        const settled = await tx.payment.findUnique({
+          where: { id: paymentId },
+          include: { case: { include: { contract: true } } },
+        });
+        if (settled?.status === PaymentStatus.PAID) {
+          alreadyPaid = true;
+          return settled;
+        }
+        throw new BadRequestException(
+          `${settled?.status ?? payment.status} төлөвт байгаа төлбөрийг баталгаажуулах боломжгүй`,
+        );
+      }
+
+      const updated = await tx.payment.findUniqueOrThrow({ where: { id: paymentId } });
 
       const targetStage = PROGRESS_TARGET[payment.kind];
       if (targetStage) {
@@ -386,6 +425,28 @@ export class PaymentsService {
       };
     }
     return where;
+  }
+
+  /**
+   * When this invoice falls due — the date the "Төлбөрийн хугацаа болсон"
+   * reminder, the receivables count and the portal's overdue badge all read.
+   *
+   * The window is a payment term on the *currently active* pricing, not on the
+   * contract's snapshot: see `payment-terms.ts`. A service left without an
+   * active price is a configuration fault, and it must not be able to stop the
+   * office raising an invoice on a contract that is already signed — so it
+   * falls back to the default loudly rather than throwing.
+   */
+  private async dueAtFor(serviceType: ServiceType): Promise<Date> {
+    let days = DEFAULT_PAYMENT_DUE_DAYS;
+    try {
+      days = (await this.pricing.getActive(serviceType)).paymentDueDays;
+    } catch {
+      this.logger.warn(
+        `${serviceType} үйлчилгээнд идэвхтэй үнэ алга — төлбөрийн хугацааг ${DEFAULT_PAYMENT_DUE_DAYS} хоногоор тооцлоо`,
+      );
+    }
+    return paymentDueAt(new Date(), days);
   }
 
   private resolveAmount(

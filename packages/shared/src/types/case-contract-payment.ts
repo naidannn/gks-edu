@@ -46,6 +46,8 @@ export interface ServicePricing {
   prepaymentMode: PrepaymentMode;
   prepaymentValue: string;
   balanceTrigger: BalanceTrigger;
+  /** Days a client is given to pay an invoice raised under this pricing (drives `PaymentItem.dueAt`). */
+  paymentDueDays: number;
   effectiveFrom: string;
   effectiveTo: string | null;
 }
@@ -117,6 +119,8 @@ export interface PaymentItem {
   qrText: string | null;
   qrImage: string | null;
   paidAt: string | null;
+  /** When this invoice falls due — set from `ServicePricing.paymentDueDays` when it is raised. */
+  dueAt: string | null;
   refundOfId: string | null;
   createdAt: string;
 }

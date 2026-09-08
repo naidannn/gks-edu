@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsPositive, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsPositive, Max, Min } from 'class-validator';
 import { BalanceTrigger, PrepaymentMode } from '../../../prisma/client.js';
+import { MAX_PAYMENT_DUE_DAYS } from '../payment-terms.js';
 
 /**
  * Corrects the row that is currently in effect (1C-19) — the typo fix a new
@@ -34,4 +35,11 @@ export class UpdateServicePricingDto {
   @IsEnum(BalanceTrigger)
   @IsOptional()
   balanceTrigger?: BalanceTrigger;
+
+  @ApiPropertyOptional({ description: 'Days a client is given to pay an invoice raised under this pricing' })
+  @IsInt()
+  @Min(1)
+  @Max(MAX_PAYMENT_DUE_DAYS)
+  @IsOptional()
+  paymentDueDays?: number;
 }

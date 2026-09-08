@@ -67,6 +67,13 @@ function formatPaymentDate(payment: PaymentListItem): string {
   return formatDateUtc(payment.paidAt);
 }
 
+/* The receivables tiles above count money that is late; this column is how a
+   collector finds *which* rows they mean. `dueAt` is stored at end of day UTC,
+   so it is read back in UTC like every other deadline. */
+function isOverdue(payment: PaymentListItem): boolean {
+  return payment.status === 'PENDING' && Boolean(payment.dueAt) && new Date(payment.dueAt!).getTime() < Date.now();
+}
+
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 /* Filters live in the URL: a filtered queue can be bookmarked, shared and
    survives a refresh. */
@@ -126,7 +133,7 @@ useHead({ title: 'Төлбөр · CRM' });
     <div v-else class="gks-table-wrap">
       <table class="gks-table gks-table--cards">
         <thead>
-          <tr><th>Хэрэг</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Суваг</th><th>Дүн</th><th>Төлөв</th><th>Огноо</th></tr>
+          <tr><th>Хэрэг</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Суваг</th><th>Дүн</th><th>Төлөв</th><th>Хугацаа</th><th>Огноо</th></tr>
         </thead>
         <tbody>
           <tr v-for="p in data.items" :key="p.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/cases/${p.case.id}`)" @keydown.enter="navigateTo(`/admin/cases/${p.case.id}`)">
@@ -136,6 +143,9 @@ useHead({ title: 'Төлбөр · CRM' });
             <td data-label="Суваг">{{ PAYMENT_METHOD_LABELS[p.method] }}</td>
             <td class="gks-tnum" data-label="Дүн">{{ formatMntOrDash(p.amountMnt) }}</td>
             <td data-label="Төлөв"><DsBadge :tone="PAYMENT_STATUS_TONE[p.status]">{{ PAYMENT_STATUS_LABELS[p.status] }}</DsBadge></td>
+            <td class="gks-tnum" data-label="Хугацаа" :class="{ 'gks-pay__late': isOverdue(p) }">
+              {{ p.status === 'PENDING' && p.dueAt ? formatNumericDateUtc(p.dueAt) : '—' }}
+            </td>
             <td class="gks-tnum" data-label="Огноо">{{ formatPaymentDate(p) }}</td>
           </tr>
         </tbody>
@@ -147,6 +157,7 @@ useHead({ title: 'Төлбөр · CRM' });
 </template>
 
 <style scoped>
+.gks-pay__late { color: var(--danger-fg); font-weight: var(--fw-semibold); }
 .gks-receivables { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); }
 .gks-receivables__card { display: flex; flex-direction: column; gap: var(--sp-1); }
 .gks-receivables__label { font-size: var(--fs-caption); color: var(--text-subtle); }
