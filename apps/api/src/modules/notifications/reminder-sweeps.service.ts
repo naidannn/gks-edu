@@ -21,10 +21,16 @@ import {
   formatDateMn,
 } from './notification-labels.js';
 import { NotificationsService } from './notifications.service.js';
+import { reminderOffsetFor } from './reminder-ladder.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Days before each deadline that the sweep raises a notification. */
+/**
+ * Days before each deadline that the sweep raises a notification — a ladder,
+ * not a single date. Which rung a given deadline has reached is
+ * {@link reminderOffsetFor}'s job; the order they are written in here is for
+ * a reader, and does not decide anything.
+ */
 const DOCUMENT_OFFSETS = [7, 3, 1] as const;
 const PAYMENT_OFFSETS = [3, 0] as const;
 const VISA_APPOINTMENT_OFFSETS = [3, 1] as const;
@@ -126,7 +132,7 @@ export class ReminderSweepsService {
     for (const doc of due) {
       if (!doc.dueAt) continue;
       const daysLeft = Math.ceil((doc.dueAt.getTime() - now.getTime()) / DAY_MS);
-      const offset = DOCUMENT_OFFSETS.find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(DOCUMENT_OFFSETS, daysLeft);
       if (offset === undefined) continue;
 
       sent += await this.notifications.dispatch({
@@ -165,7 +171,7 @@ export class ReminderSweepsService {
     for (const payment of due) {
       if (!payment.dueAt) continue;
       const daysLeft = Math.ceil((payment.dueAt.getTime() - now.getTime()) / DAY_MS);
-      const offset = PAYMENT_OFFSETS.find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(PAYMENT_OFFSETS, daysLeft);
       if (offset === undefined) continue;
 
       sent += await this.notifications.dispatch({
@@ -207,7 +213,7 @@ export class ReminderSweepsService {
     for (const visa of upcoming) {
       if (!visa.appointmentAt) continue;
       const daysLeft = Math.ceil((visa.appointmentAt.getTime() - now.getTime()) / DAY_MS);
-      const offset = VISA_APPOINTMENT_OFFSETS.find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(VISA_APPOINTMENT_OFFSETS, daysLeft);
       if (offset === undefined) continue;
 
       sent += await this.notifications.dispatch({
@@ -240,7 +246,7 @@ export class ReminderSweepsService {
     for (const visa of expiring) {
       if (!visa.expiresAt) continue;
       const daysLeft = Math.ceil((visa.expiresAt.getTime() - now.getTime()) / DAY_MS);
-      const offset = VISA_RENEWAL_OFFSETS.find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(VISA_RENEWAL_OFFSETS, daysLeft);
       if (offset === undefined) continue;
 
       sent += await this.notifications.dispatch({
@@ -277,7 +283,7 @@ export class ReminderSweepsService {
     for (const plan of upcoming) {
       if (!plan.departureAt) continue;
       const daysLeft = Math.ceil((plan.departureAt.getTime() - now.getTime()) / DAY_MS);
-      const offset = DEPARTURE_OFFSETS.find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(DEPARTURE_OFFSETS, daysLeft);
       if (offset === undefined) continue;
 
       sent += await this.notifications.dispatch({
@@ -399,8 +405,7 @@ export class ReminderSweepsService {
       if (!intake?.internalDeadline) continue;
 
       const daysLeft = Math.ceil((intake.internalDeadline.getTime() - now.getTime()) / DAY_MS);
-      // Sorted descending, so the first match is the tightest rung reached.
-      const offset = [...offsets].sort((a, b) => a - b).find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(offsets, daysLeft);
       if (offset === undefined) continue;
 
       const missing = row.documents.filter((doc) => !SETTLED_STATUSES.includes(doc.status)).length;
@@ -484,9 +489,7 @@ export class ReminderSweepsService {
       if (!intake?.internalDeadline) continue;
 
       const daysLeft = Math.ceil((intake.internalDeadline.getTime() - now.getTime()) / DAY_MS);
-      const offset = [...config.staffReminderOffsets]
-        .sort((a, b) => a - b)
-        .find((candidate) => daysLeft <= candidate);
+      const offset = reminderOffsetFor(config.staffReminderOffsets, daysLeft);
       if (offset === undefined) continue;
 
       const required = row.documents.length;
