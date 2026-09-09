@@ -798,6 +798,17 @@ CONTRACT_DRAFT → CONTRACT_SIGNED → PREPAYMENT_PAID → DOCUMENTS → APPLICA
 - `qpayInvoiceId` — **unique**, идемпотентын түлхүүр (доорх QPay урсгалыг үз). `qpayPaymentId`,
   `paidAt`, `receiptPath`, `dueAt`.
 
+**Мерчант (2026-09-09).** Production нь `GKS_EDU` мерчантаар `merchant.qpay.mn/v2` дээр
+амьдаар холбогдсон, нэхэмжлэлийн код `GKS_EDU_INVOICE`. **Sandbox данс байхгүй** —
+`merchant-sandbox.qpay.mn` эдгээр эрхийг хүлээж авахгүй — тиймээс хөгжүүлэлт нь өөр хост
+руу заахын оронд `QPAY_MOCK=true`-гээр хуурамч хариу буцаана. `QPAY_MOCK=false` нь зөвхөн
+production дээр: тэнд үүссэн нэхэмжлэл бүр жинхэнэ мөнгө.
+
+> QPay-ийн `auth/token` нь `expires_in`-г **үргэлжлэх хугацаа биш, absolute Unix timestamp**
+> (одоо + 86400 секунд)-аар буцаадаг. `Date.now()` дээр нэмбэл token гуч мянган жил
+> кэшлэгдэж, нэг хоногийн дараа дуудалт бүр 401 өгнө. `expiryFromQpay` (`qpay-client.service.ts`)
+> хэмжээгээр нь ялгаж, огноо мэт утгыг огноо гэж уншина.
+
 **QPay урсгал:** нэхэмжлэл үүсгэх → QR/deeplink буцаах → (a) webhook callback, (b) 10 сек
 тутам 15 минутын турш polling (BullMQ давтагдах ажил). Хоёулаа **идемпотент** —
 `qpayInvoiceId` дээр unique. Төлбөр `PAID` болмогц `Case` үе шат урагшилж, мэдэгдэл явна.

@@ -15,10 +15,11 @@ export interface QpayCheckResult {
 
 /**
  * QPay v2 REST client (1C-12): merchant auth (Basic → Bearer token, cached),
- * invoice creation, payment-check. No merchant account exists yet, so
- * `QPAY_MOCK=true` (the default — see .env.example) fakes every response
- * instead of calling QPay, so the rest of the flow is runnable and testable
- * without real credentials. Flip it off once sandbox credentials exist.
+ * invoice creation, payment-check. Production runs against the live merchant
+ * `GKS_EDU` on `merchant.qpay.mn` — there is no sandbox account, and the
+ * sandbox host rejects these credentials, so `QPAY_MOCK=true` stays the
+ * default everywhere else: it fakes every response instead of calling QPay,
+ * which keeps the flow runnable in development without minting real invoices.
  */
 @Injectable()
 export class QpayClientService {
@@ -102,7 +103,26 @@ export class QpayClientService {
     }
     const body = (await response.json()) as { access_token: string; expires_in?: number };
     this.accessToken = body.access_token;
-    this.tokenExpiresAt = Date.now() + ((body.expires_in ?? 3600) - 30) * 1000;
+    this.tokenExpiresAt = expiryFromQpay(body.expires_in);
     return this.accessToken;
   }
+}
+
+/**
+ * QPay's `expires_in` is not the OAuth duration the name promises — production
+ * answers with an absolute Unix timestamp (`now + 86400`, in seconds). Added to
+ * `Date.now()` that caches the token for thirty thousand years, so it is never
+ * refreshed and every call 401s a day after the process starts. Anything large
+ * enough to be a timestamp is therefore read as one; a genuine duration is still
+ * honoured, in case QPay ever sends what the field says.
+ */
+export function expiryFromQpay(expiresIn: number | undefined, now = Date.now()): number {
+  /** No plausible token lives 31 years, so a value this big is a date. */
+  const EPOCH_THRESHOLD_SECONDS = 1_000_000_000;
+  /** Refresh a little early rather than racing QPay's own clock. */
+  const SKEW_MS = 30_000;
+
+  const seconds = expiresIn ?? 3600;
+  const expiresAt = seconds >= EPOCH_THRESHOLD_SECONDS ? seconds * 1000 : now + seconds * 1000;
+  return expiresAt - SKEW_MS;
 }
