@@ -4,7 +4,7 @@ import type { EmailMessage } from './email-template.js';
  * The mails that are not notifications.
  *
  * A notification is something an admin may reword and a recipient may switch
- * off; these six carry a credential or a promise, so their copy lives in code
+ * off; these seven carry a credential or a promise, so their copy lives in code
  * and they are sent directly rather than through the dispatcher. Keeping them
  * here — as pure functions from data to message — also means the preview
  * script renders exactly what production sends, instead of a copy that drifts.
@@ -202,5 +202,46 @@ export function leadReceivedEmail(input: {
     ].join('\n'),
     cta: { label: 'Сургуулиуд харах', url: input.universitiesUrl },
     footerNote: `Яаралтай бол ${PHONE} дугаараар шууд холбогдоорой.`,
+  };
+}
+
+/**
+ * 1C-33 — the six digits that turn "I agree" into a signature.
+ *
+ * The code goes to the address the account is registered under, never to one
+ * typed on the page: an address the signer supplies at signing time verifies
+ * nothing. So the mail names the contract and its amount — landing in the
+ * right inbox is the check, and the reader is the one person who can tell
+ * whether what it describes is what they just agreed to.
+ */
+export function contractSignOtpEmail(input: {
+  name?: string | null;
+  code: string;
+  contractNumber: string;
+  totalAmount: string;
+  serviceName: string;
+  minutes: number;
+}): EmailMessage {
+  return {
+    subject: `Гэрээ баталгаажуулах код — ${input.contractNumber}`,
+    eyebrow: 'Гэрээ',
+    tone: 'info',
+    heading: 'Цахим гарын үсгээ баталгаажуулна уу',
+    preheader: 'Кабинетдаа оруулах 6 оронтой код.',
+    body: [
+      greeting(input.name),
+      '',
+      'Та зуучлалын гэрээний нөхцөлийг зөвшөөрлөө. Доорх кодыг кабинетдаа оруулснаар ' +
+        'гэрээ цахимаар гарын үсэг зурагдаж, хүчин төгөлдөр болно.',
+      '',
+      `Гэрээний дугаар: ${input.contractNumber}`,
+      `Үйлчилгээ: ${input.serviceName}`,
+      `Нийт төлбөр: ${input.totalAmount}₮`,
+    ].join('\n'),
+    code: { value: input.code, note: `Код ${input.minutes} минутын хугацаатай.` },
+    cta: null,
+    footerNote:
+      'Кодоо хэнд ч бүү дамжуулаарай — GKS EDU GROUP-ын ажилтан танаас код асуухгүй. Хэрэв ' +
+      `та гэрээ байгуулах хүсэлт илгээгээгүй бол кодыг оруулалгүй ${PHONE} руу яаралтай залгаарай.`,
   };
 }

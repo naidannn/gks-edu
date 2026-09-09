@@ -15,6 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
@@ -24,7 +25,6 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { Role, type ServiceType } from '../../prisma/client.js';
 import { ContractsService } from './contracts.service.js';
-import { AcceptContractDto } from './dto/accept-contract.dto.js';
 import { CreateContractDto } from './dto/create-contract.dto.js';
 import { CreateContractTemplateDto } from './dto/create-contract-template.dto.js';
 import { QueryContractsDto } from './dto/query-contracts.dto.js';
@@ -103,14 +103,21 @@ export class ContractsController {
     return new StreamableFile(buffer, { type: 'application/pdf' });
   }
 
+  // Each call sends a real email, and the button is a "resend" once the first
+  // one is out — so the ceiling is the resend rate a stuck client would need,
+  // not the request rate a browser can produce.
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
   @Post(':id/accept')
-  @ApiOperation({ summary: 'User accepts the terms; an OTP is sent to confirm (1C-08)' })
-  accept(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AcceptContractDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.contracts.accept(id, dto, user);
+  @ApiOperation({ summary: "User accepts the terms; an OTP is emailed to the account's address (1C-33)" })
+  accept(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.contracts.accept(id, user);
   }
 
+  // Six digits live for five minutes; ten guesses in that window keep the
+  // odds where the code length put them.
+  @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @Post(':id/verify-otp')
-  @ApiOperation({ summary: 'Verify the SMS OTP and sign the electronic contract (1C-08)' })
+  @ApiOperation({ summary: 'Verify the emailed OTP and sign the electronic contract (1C-08)' })
   verifyOtp(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyOtpDto,

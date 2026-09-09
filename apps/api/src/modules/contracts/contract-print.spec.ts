@@ -35,6 +35,7 @@ function subject(row: ReturnType<typeof contractRow> | null) {
     null as never,
     null as never,
     null as never,
+    null as never,
   );
   return { service, render };
 }

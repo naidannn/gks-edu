@@ -20,6 +20,7 @@ import { presentationFor } from '../src/modules/notifications/email/email-presen
 import {
   accountClaimEmail,
   clientWelcomeEmail,
+  contractSignOtpEmail,
   leadReceivedEmail,
   passwordChangedEmail,
   passwordResetEmail,
@@ -127,6 +128,14 @@ function transactionalPreviews(): Preview[] {
     ['password-changed', 'Нууц үг шинэчлэгдсэн', passwordChangedEmail({
       name: 'Батбаярын Тэмүүлэн',
       loginUrl: url('/login'),
+    })],
+    ['contract-sign-otp', 'Гэрээ баталгаажуулах код', contractSignOtpEmail({
+      name: 'Батбаярын Тэмүүлэн',
+      code: '408217',
+      contractNumber: 'СГ/26/001',
+      totalAmount: '5,000,000',
+      serviceName: 'БНСУ-ын Засгийн газрын тэтгэлэг (GKS)',
+      minutes: 5,
     })],
     ['lead-received', 'Зөвлөгөөний хүсэлт хүлээн авсан', leadReceivedEmail({
       name: 'Дорж Сарантуяа',

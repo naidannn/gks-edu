@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { paginate } from '../../common/dto/pagination.dto.js';
-import { OtpService } from '../../sms/otp.service.js';
+import { OTP_TTL_MINUTES, OtpService } from '../../otp/otp.service.js';
 import { StorageService } from '../../storage/storage.service.js';
 import { isCrmStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
@@ -17,6 +17,8 @@ import {
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
+import { EmailService } from '../notifications/email.service.js';
+import { contractSignOtpEmail } from '../notifications/email/transactional.js';
 import { SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
@@ -31,7 +33,6 @@ import {
   renderContractBody,
   universityNames,
 } from './contract-template.util.js';
-import type { AcceptContractDto } from './dto/accept-contract.dto.js';
 import type { CreateContractDto } from './dto/create-contract.dto.js';
 import type { CreateContractTemplateDto } from './dto/create-contract-template.dto.js';
 import type { QueryContractsDto } from './dto/query-contracts.dto.js';
@@ -86,6 +87,7 @@ export class ContractsService {
     private readonly pdf: ContractPdfService,
     private readonly storage: StorageService,
     private readonly otp: OtpService,
+    private readonly email: EmailService,
     private readonly notifications: NotificationsService,
     private readonly slack: SlackService,
   ) {}
@@ -341,17 +343,57 @@ export class ContractsService {
 
   // ─── Electronic e-sign flow (1C-08) ────────────────────────────────────────
 
-  async accept(id: string, dto: AcceptContractDto, user: AuthenticatedUser) {
+  /**
+   * "I agree" — which sends the code that will sign the contract (1C-33).
+   *
+   * The code goes to the address on the account, never to one supplied with
+   * the request: an address the signer types at signing time proves nothing
+   * about who they are. The phone is not asked for either — it is already a
+   * required field of the client record the contract is printed from.
+   *
+   * Order matters. The mail is sent before `acceptedAt` is written, so a
+   * Resend outage leaves the client on the "agree" step with a readable error
+   * rather than on the "enter the code" step with no code coming. And
+   * `acceptedAt` records the *first* agreement: resending a code is not
+   * agreeing again.
+   */
+  async accept(id: string, user: AuthenticatedUser) {
     const contract = await this.getOrThrow(id);
     this.assertOwner(contract, user);
     this.assertElectronicSendable(contract);
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: user.id }, data: { phone: dto.phone } }),
-      this.prisma.contract.update({ where: { id }, data: { acceptedAt: new Date() } }),
+    const [account, kase] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: user.id }, select: { email: true, name: true } }),
+      this.prisma.case.findUnique({ where: { id: contract.caseId }, select: { serviceType: true } }),
     ]);
-    await this.otp.issue(id, dto.phone);
-    return { sent: true };
+
+    // A staff-registered client who never claimed a login has no address of
+    // their own (1B-14), so there is nowhere to send a signature to.
+    if (!account?.email) {
+      throw new BadRequestException(
+        'Таны бүртгэлд имэйл хаяг алга байна — код илгээх боломжгүй тул хариуцсан зөвлөхтэйгээ холбогдоно уу',
+      );
+    }
+
+    const code = await this.otp.issue(id);
+    await this.email.send(
+      account.email,
+      contractSignOtpEmail({
+        name: account.name,
+        code,
+        contractNumber: contract.number,
+        totalAmount: formatAmount(contract.totalAmountSnapshot),
+        serviceName: kase ? SERVICE_TYPE_LABELS[kase.serviceType] : '—',
+        minutes: OTP_TTL_MINUTES,
+      }),
+      'contract_sign_otp',
+    );
+
+    if (!contract.acceptedAt) {
+      await this.prisma.contract.update({ where: { id }, data: { acceptedAt: new Date() } });
+    }
+
+    return { sent: true, email: account.email };
   }
 
   async verifyOtp(id: string, code: string, user: AuthenticatedUser, ip: string | undefined) {

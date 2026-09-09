@@ -20,6 +20,13 @@ export interface EmailCta {
   url: string;
 }
 
+export interface EmailCode {
+  /** The six digits themselves. */
+  value: string;
+  /** One line under them — how long they last, usually. */
+  note?: string;
+}
+
 export interface EmailMessage {
   subject: string;
   /** Big line inside the card. Defaults to the subject. */
@@ -31,6 +38,14 @@ export interface EmailMessage {
   body: string;
   /** Overrides the link found in the body. `null` suppresses the button. */
   cta?: EmailCta | null;
+  /**
+   * A one-time code, set apart from the prose. It is the whole point of the
+   * mails that carry one, so it is rendered large and monospaced under the
+   * body — where the button would otherwise be — and repeated in the text
+   * part on its own line, so a code is never lost to a client that strips
+   * HTML.
+   */
+  code?: EmailCode;
   /** One line under the divider — why this email arrived, what to do next. */
   footerNote?: string;
   /** Inbox preview line. Defaults to the first sentence of the body. */
@@ -72,6 +87,7 @@ export function renderEmail(message: EmailMessage, appUrl: string): RenderedEmai
     message.eyebrow ? eyebrow(message.eyebrow, message.tone ?? 'info') : '',
     `<h1 class="gks-h1" style="margin:0 0 20px;font-family:${EMAIL_FONT};font-size:23px;line-height:1.32;font-weight:700;color:${C.textStrong};letter-spacing:-0.01em">${escapeHtml(heading)}</h1>`,
     parsed.blocks.map((block) => renderBlock(block, message.tone ?? 'info')).join(''),
+    message.code ? codePanel(message.code, message.tone ?? 'info') : '',
     cta ? button(cta) : '',
     cta ? fallbackLink(cta.url) : '',
     '</td></tr>',
@@ -184,6 +200,20 @@ ${block.items
   }
 }
 
+/**
+ * The code, big enough to read off a phone held next to a laptop. Letter
+ * spacing rather than per-digit boxes: boxes are a `<table>` per digit in
+ * Outlook, and they break the moment somebody tries to select the code to
+ * copy it.
+ */
+function codePanel(code: EmailCode, tone: EmailTone): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="gks-panel" style="margin:4px 0 20px;background-color:${C.surfaceMuted};border:1px solid ${C.border};border-radius:12px">
+<tr><td align="center" style="padding:22px 18px 18px">
+<div class="gks-strong" style="font-family:${EMAIL_FONT_MONO};font-size:34px;line-height:1.15;font-weight:700;letter-spacing:0.22em;text-indent:0.11em;color:${EMAIL_TONES[tone].accent}">${escapeHtml(code.value)}</div>
+${code.note ? `<div class="gks-muted" style="padding-top:10px;font-family:${EMAIL_FONT};font-size:12px;line-height:1.5;color:${C.textMuted}">${escapeHtml(code.note)}</div>` : ''}
+</td></tr></table>`;
+}
+
 function eyebrow(label: string, tone: EmailTone): string {
   const { tint, text } = EMAIL_TONES[tone];
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px"><tr>
@@ -217,8 +247,16 @@ function fallbackLink(url: string): string {
 
 function plainText(message: EmailMessage, bodyUrl: string | null, cta: EmailCta | null): string {
   const url = cta?.url ?? bodyUrl;
-  const body = toPlainText(message.body, url, cta?.label);
-  return [body, '', '—', EMAIL_BRAND.legalName, `${EMAIL_BRAND.phone} · gksedu.mn`].join('\n');
+  // Indented and on its own line, the way the HTML sets the panel apart, and
+  // above the link for the same reason the panel sits above the button.
+  const code = message.code
+    ? `\n\n    ${message.code.value}${message.code.note ? `\n    ${message.code.note}` : ''}`
+    : '';
+  const body = toPlainText(`${message.body.trimEnd()}${code}`, url, cta?.label);
+  // The footer note is where "do not pass this code on" lives, so it belongs
+  // in the part a text-only client shows too.
+  const note = message.footerNote ? ['', message.footerNote] : [];
+  return [body, ...note, '', '—', EMAIL_BRAND.legalName, `${EMAIL_BRAND.phone} · gksedu.mn`].join('\n');
 }
 
 function firstSentence(blocks: EmailBlock[]): string | null {

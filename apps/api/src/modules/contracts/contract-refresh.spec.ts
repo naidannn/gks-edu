@@ -54,7 +54,7 @@ function serviceWith(rows: ReturnType<typeof contractRow>[]) {
   } as unknown as PrismaService;
 
   const stub = null as never;
-  return { service: new ContractsService(prisma, stub, stub, stub, stub, stub, stub, stub), update };
+  return { service: new ContractsService(prisma, stub, stub, stub, stub, stub, stub, stub, stub), update };
 }
 
 describe('ContractsService.refreshUnsignedForUser (1C-30)', () => {

@@ -37,6 +37,7 @@ import { UniversitiesModule } from './modules/universities/universities.module.j
 import { UsersModule } from './modules/users/users.module.js';
 import { VisaModule } from './modules/visa/visa.module.js';
 import { VectorModule } from './modules/vector/vector.module.js';
+import { OtpModule } from './otp/otp.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QueueModule } from './queue/queue.module.js';
 import { RedisModule } from './redis/redis.module.js';
@@ -59,6 +60,7 @@ import { StorageModule } from './storage/storage.module.js';
     QueueModule,
     StorageModule,
     SmsModule,
+    OtpModule,
     AuditModule,
     NotificationsModule,
     MetaModule,

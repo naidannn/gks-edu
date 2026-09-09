@@ -3,8 +3,9 @@ import type { PortalCaseDetail } from '@gks/shared';
 
 /**
  * The client's own contract screen (1C-08, 1C-23): read the terms → agree →
- * confirm the SMS code → the signed PDF. A physical contract is read-only
- * here; the office registers it after it is signed on paper (1C-09).
+ * confirm the code mailed to the account's address (1C-33) → the signed PDF.
+ * A physical contract is read-only here; the office registers it after it is
+ * signed on paper (1C-09).
  */
 definePageMeta({ middleware: 'auth', layout: 'portal' });
 
@@ -13,31 +14,46 @@ const api = useApi();
 const config = useRuntimeConfig();
 const { overview, refresh } = usePortal();
 const errorMsg = ref<string | null>(null);
+const noticeMsg = ref<string | null>(null);
 
 const contract = computed(() => gksCase.value?.contract ?? null);
 const isSigned = computed(() => Boolean(contract.value && ['SIGNED', 'ACTIVE', 'COMPLETED'].includes(contract.value.status)));
 
-// ── Step 1: agree, which sends the OTP ─────────────────────────────────────
-const phone = ref('');
+// ── Step 1: agree, which mails the OTP ─────────────────────────────────────
+// The address is the one the account is registered under — it is shown, never
+// typed, because a code sent to an address supplied at signing time would
+// verify nothing.
 const agreed = ref(false);
 const accepting = ref(false);
+const sentTo = ref<string | null>(null);
+const email = computed(() => sentTo.value ?? overview.value?.account.email ?? null);
 
-watchEffect(() => {
-  if (!phone.value && overview.value?.account.phone) phone.value = overview.value.account.phone;
-});
-
-async function accept() {
-  if (!contract.value || !phone.value.trim() || !agreed.value) return;
+async function sendCode(): Promise<boolean> {
+  if (!contract.value) return false;
   errorMsg.value = null;
+  noticeMsg.value = null;
   accepting.value = true;
   try {
-    await api.post(`/contracts/${contract.value.id}/accept`, { phone: phone.value.trim() });
-    await reload();
+    const { email: to } = await api.post<{ sent: boolean; email: string }>(`/contracts/${contract.value.id}/accept`);
+    sentTo.value = to;
+    // Nothing on screen changes on a resend, so without this the button just
+    // stops spinning and the client cannot tell whether anything happened.
+    noticeMsg.value = `Шинэ код ${to} хаяг руу илгээлээ.`;
+    return true;
   } catch (err) {
     errorMsg.value = apiErrorMessage(err, 'Хүсэлт амжилтгүй боллоо');
+    return false;
   } finally {
     accepting.value = false;
   }
+}
+
+async function accept() {
+  if (!agreed.value) return;
+  // Only reload on success: a failed send leaves `acceptedAt` unwritten on
+  // purpose, so the screen must stay on this step rather than move to a code
+  // that is not coming.
+  if (await sendCode()) await reload();
 }
 
 // ── Step 2: the six-digit code ──────────────────────────────────────────────
@@ -60,19 +76,6 @@ async function verify() {
   }
 }
 
-async function resend() {
-  if (!contract.value) return;
-  errorMsg.value = null;
-  accepting.value = true;
-  try {
-    await api.post(`/contracts/${contract.value.id}/accept`, { phone: phone.value.trim() });
-  } catch (err) {
-    errorMsg.value = apiErrorMessage(err, 'Код дахин илгээж чадсангүй');
-  } finally {
-    accepting.value = false;
-  }
-}
-
 const downloading = ref(false);
 async function downloadPdf() {
   if (!contract.value) return;
@@ -92,6 +95,7 @@ async function downloadPdf() {
 <template>
   <div class="gks-contract">
     <DsCard v-if="errorMsg" accent><p>{{ errorMsg }}</p></DsCard>
+    <DsCard v-else-if="noticeMsg"><p>{{ noticeMsg }}</p></DsCard>
 
     <DsCard v-if="!contract" title="Гэрээ">
       <p class="gks-contract__unknown">
@@ -141,9 +145,12 @@ async function downloadPdf() {
 
       <DsCard v-else-if="contract.type === 'ELECTRONIC' && !contract.acceptedAt" title="Зөвшөөрөх" accent>
         <p class="gks-contract__hint">
-          Дээрх нөхцөлийг уншиж танилцсаны дараа зөвшөөрнө үү. Утсанд тань 6 оронтой баталгаажуулах код очно.
+          Дээрх нөхцөлийг уншиж танилцсаны дараа зөвшөөрнө үү. Бүртгэлийн имэйл хаяг руу тань
+          6 оронтой баталгаажуулах код очно.
         </p>
-        <DsInput v-model="phone" label="Утасны дугаар" placeholder="99112233" hint="Код энэ дугаарт очно" />
+        <p v-if="email" class="gks-contract__hint">
+          Код очих хаяг: <strong>{{ email }}</strong>
+        </p>
         <DsCheckbox
           v-model="agreed"
           class="gks-contract__agree"
@@ -152,7 +159,7 @@ async function downloadPdf() {
         <DsButton
           class="gks-contract__action"
           variant="accent"
-          :disabled="!phone.trim() || !agreed"
+          :disabled="!agreed"
           :loading="accepting"
           @click="accept"
         >
@@ -161,13 +168,17 @@ async function downloadPdf() {
       </DsCard>
 
       <DsCard v-else-if="contract.type === 'ELECTRONIC'" title="Баталгаажуулах" accent>
-        <p class="gks-contract__hint">Таны утсанд илгээсэн 6 оронтой кодыг оруулна уу.</p>
+        <p class="gks-contract__hint">
+          <template v-if="email"><strong>{{ email }}</strong> хаяг руу илгээсэн</template>
+          <template v-else>Имэйл хаяг руу тань илгээсэн</template>
+          6 оронтой кодыг оруулна уу. Код 5 минутын хугацаатай — ирээгүй бол спам хавтсаа шалгаарай.
+        </p>
         <DsInput v-model="otpCode" label="Баталгаажуулах код" maxlength="6" inputmode="numeric" />
         <div class="gks-contract__row">
           <DsButton variant="accent" :disabled="otpCode.length !== 6" :loading="verifying" @click="verify">
             Баталгаажуулах
           </DsButton>
-          <DsButton variant="ghost" size="sm" :loading="accepting" @click="resend">Код дахин илгээх</DsButton>
+          <DsButton variant="ghost" size="sm" :loading="accepting" @click="sendCode">Код дахин илгээх</DsButton>
         </div>
       </DsCard>
 
