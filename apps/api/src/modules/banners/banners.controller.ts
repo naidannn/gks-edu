@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
@@ -29,6 +30,12 @@ export class BannersController {
 
   @Get()
   @Public()
+  // Every page on the public site asks for this in its layout, and the ones
+  // rendered on the server ask from the server's own address — so this handler
+  // sees the whole site's traffic under a single tracker no matter what
+  // `trust proxy` says. The global 120/min turned that into 574 rejected
+  // requests over 2026-09-06/07, each one a banner a visitor never saw.
+  @Throttle({ default: { limit: 600, ttl: 60_000 } })
   @ApiOperation({ summary: 'Одоо идэвхтэй баннерууд (нийтийн)' })
   findLive(@Query('placement') placement?: BannerPlacement) {
     return this.banners.findLive(placement);
