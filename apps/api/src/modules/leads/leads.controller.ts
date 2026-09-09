@@ -9,8 +9,10 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
@@ -27,6 +29,7 @@ import { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 import { MergeLeadDto } from './dto/merge-lead.dto.js';
 import { TransitionLeadDto } from './dto/transition-lead.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
+import { metaRequestContext } from '../meta/request-context.js';
 import { LeadsService } from './leads.service.js';
 
 @ApiTags('leads')
@@ -43,8 +46,11 @@ export class LeadsController {
   @Throttle({ default: { limit: 5, ttl: 60 * 60 * 1000 } })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Consultation request from the public website' })
-  createPublic(@Body() dto: CreatePublicLeadDto) {
-    return this.leads.createFromPublicForm(dto);
+  createPublic(@Body() dto: CreatePublicLeadDto, @Req() request: Request) {
+    // The visitor's address and user agent are read here rather than in the
+    // service: they belong to the HTTP request, and the service is also called
+    // from tests and (one day) a queue.
+    return this.leads.createFromPublicForm(dto, metaRequestContext(request));
   }
 
   @Post()

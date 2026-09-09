@@ -112,6 +112,22 @@ watch(searchInput, (value) => {
 });
 onBeforeUnmount(() => clearTimeout(searchTimer));
 
+/**
+ * `Search` (1A-38) — what a visitor types is the clearest statement of intent
+ * this site collects, and it is what a lookalike audience is worth building
+ * on. Fired off the applied query, not the keystrokes: the URL only changes
+ * once the 350ms debounce has settled.
+ */
+const meta = useMetaTracking();
+watch(
+  () => filters.value.q,
+  (value) => {
+    const term = value.trim();
+    if (term.length >= 2) meta.track('Search', { search_string: term, content_category: 'program' });
+  },
+);
+
+
 const query = computed(() => {
   const [sort, order] = filters.value.sort.split(':');
   return {

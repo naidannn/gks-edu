@@ -4,6 +4,7 @@ import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { EmailService } from '../notifications/email.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
+import type { MetaEventsService } from '../meta/meta-events.service.js';
 
 /** The CRM paths under test never notify; a no-op double keeps the ctor happy. */
 function notificationsStub() {
@@ -19,6 +20,11 @@ function emailStub() {
 
 function slackStub() {
   return { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
+}
+
+/** The Meta funnel is fire-and-forget; these tests only need it not to be undefined. */
+function metaStub() {
+  return { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService;
 }
 import { LEAD_STAGE_TRANSITIONS, LeadsService } from './leads.service.js';
 
@@ -62,7 +68,7 @@ describe('LEAD_STAGE_TRANSITIONS', () => {
 describe('LeadsService.transition', () => {
   it('rejects a jump that skips the funnel', async () => {
     const prisma = prismaStub({ lead: { id: 'lead-1', stage: LeadStage.NEW } });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await expect(service.transition('lead-1', { stage: LeadStage.WON }, 'actor-1')).rejects.toThrow(
       /NEW төлөвөөс WON рүү шилжих боломжгүй/,
@@ -72,7 +78,7 @@ describe('LeadsService.transition', () => {
 
   it('requires a reason when moving to LOST', async () => {
     const prisma = prismaStub({ lead: { id: 'lead-1', stage: LeadStage.NEW } });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await expect(service.transition('lead-1', { stage: LeadStage.LOST }, 'actor-1')).rejects.toThrow(
       /шалтгаан/,
@@ -81,7 +87,7 @@ describe('LeadsService.transition', () => {
 
   it('moves stage and logs a STAGE_CHANGE activity', async () => {
     const prisma = prismaStub({ lead: { id: 'lead-1', stage: LeadStage.NEW } });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.transition('lead-1', { stage: LeadStage.CONTACTED }, 'actor-1');
 
@@ -98,7 +104,7 @@ describe('LeadsService.transition', () => {
 describe('LeadsService.addActivity', () => {
   it('refuses a manually-logged STAGE_CHANGE — only /transitions may create one', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await expect(
       service.addActivity('lead-1', { type: LeadActivityType.STAGE_CHANGE }, 'actor-1'),
@@ -107,7 +113,7 @@ describe('LeadsService.addActivity', () => {
 
   it('logs a call note against the lead', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.addActivity('lead-1', { type: LeadActivityType.CALL, body: 'Дуудлага хийсэн' }, 'actor-1');
 
@@ -122,7 +128,7 @@ describe('LeadsService.addActivity', () => {
 describe('LeadsService.assign / autoAssign', () => {
   it('assigns to a named active staff member and logs a note', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.assign('lead-1', { assignedToId: 'staff-1' }, 'actor-1');
 
@@ -135,7 +141,7 @@ describe('LeadsService.assign / autoAssign', () => {
   it('rejects assigning to someone who is not active staff', async () => {
     const prisma = prismaStub();
     prisma.user.findFirst.mockResolvedValueOnce(null);
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await expect(service.assign('lead-1', { assignedToId: 'nope' }, 'actor-1')).rejects.toThrow(
       /Идэвхтэй ажилтан/,
@@ -144,7 +150,7 @@ describe('LeadsService.assign / autoAssign', () => {
 
   it('unassigns when no assignedToId is given', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.assign('lead-1', {}, 'actor-1');
 
@@ -156,7 +162,7 @@ describe('LeadsService.assign / autoAssign', () => {
       staff: [{ id: 'busy' }, { id: 'free' }],
       loads: [{ assignedToId: 'busy', _count: { _all: 5 } }],
     });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.autoAssign('lead-1', 'actor-1');
 
@@ -167,7 +173,7 @@ describe('LeadsService.assign / autoAssign', () => {
 
   it('refuses to auto-assign when no staff is active', async () => {
     const prisma = prismaStub({ staff: [] });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await expect(service.autoAssign('lead-1', 'actor-1')).rejects.toThrow(/Идэвхтэй ажилтан алга/);
   });
@@ -195,7 +201,7 @@ describe('LeadsService.stats', () => {
 
   it('fills every stage with 0 when the funnel is empty, even unrepresented ones', async () => {
     const prisma = statsStub({ byStage: [{ stage: LeadStage.NEW, _count: { _all: 3 } }] });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     const result = await service.stats('actor-1');
 
@@ -207,7 +213,7 @@ describe('LeadsService.stats', () => {
 
   it('reports total/unassigned/mine/recent counters in order', async () => {
     const prisma = statsStub({ counts: [12, 4, 2, 5] });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     const result = await service.stats('actor-1');
 
@@ -216,7 +222,7 @@ describe('LeadsService.stats', () => {
 
   it("scopes the 'mine' counter to this actor's open (non-WON/LOST) leads", async () => {
     const prisma = statsStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.stats('actor-42');
 
@@ -250,7 +256,7 @@ describe('LeadsService.createByStaff', () => {
 
   it('opens an office walk-in at CONSULTED with a meeting on the timeline', async () => {
     const prisma = intakeStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.createByStaff(walkIn, 'actor-1');
 
@@ -268,7 +274,7 @@ describe('LeadsService.createByStaff', () => {
     const slack = slackStub();
     const notifications = notificationsStub();
     const email = emailStub();
-    const service = new LeadsService(prisma, notifications, email, slack);
+    const service = new LeadsService(prisma, notifications, email, slack, metaStub());
 
     await service.createByStaff({ ...walkIn, email: 'bat@example.mn' }, 'actor-1');
 
@@ -279,7 +285,7 @@ describe('LeadsService.createByStaff', () => {
 
   it('normalises the phone so duplicate detection can match it', async () => {
     const prisma = intakeStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.createByStaff({ ...walkIn, phone: '97699112233' }, 'actor-1');
 
@@ -289,7 +295,7 @@ describe('LeadsService.createByStaff', () => {
 
   it('drops university ids that no longer exist rather than storing them', async () => {
     const prisma = intakeStub({ universities: [{ id: 'uni-1' }] });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await service.createByStaff({ ...walkIn, interestedUniversityIds: ['uni-1', 'uni-gone'] }, 'actor-1');
 
@@ -299,7 +305,7 @@ describe('LeadsService.createByStaff', () => {
 
   it('refuses an assignee who is not active staff', async () => {
     const prisma = intakeStub({ assignee: null });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     await expect(service.createByStaff({ ...walkIn, assignedToId: 'ghost' }, 'actor-1')).rejects.toThrow(
       /Идэвхтэй ажилтан олдсонгүй/,

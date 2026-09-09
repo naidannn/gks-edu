@@ -10,6 +10,7 @@ import type {
 /** Multi-step consultation request: contact → education → interest (1A-16). */
 const route = useRoute();
 const config = useRuntimeConfig();
+const meta = useMetaTracking();
 
 const STEPS = ['Холбоо барих', 'Боловсрол', 'Сонирхол'] as const;
 const step = ref(0);
@@ -158,13 +159,21 @@ async function submit() {
   }
 
   submitting.value = true;
+  // The id is minted before the request so that both halves of the conversion
+  // can carry it: the API fires its own `Lead` when the row is written, and
+  // Meta collapses the pair into one (1A-38).
+  const eventId = meta.newEventId();
   try {
     await $fetch<{ id: string; merged: boolean }>('/leads/public', {
       baseURL: config.public.apiBase,
       method: 'POST',
-      body: parsed.data satisfies PublicLeadPayload,
+      body: { ...parsed.data, tracking: trackingPayload(eventId) } satisfies PublicLeadPayload,
     });
     submitted.value = true;
+    meta.trackPaired('Lead', eventId, {
+      content_category: 'consultation',
+      content_name: form.interestedServices.join(', ') || 'Зөвлөгөө',
+    });
   } catch (error) {
     const status = (error as { statusCode?: number }).statusCode;
     formError.value =

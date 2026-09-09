@@ -153,6 +153,32 @@ class EnvironmentVariables {
   @IsOptional()
   SLACK_CHANNEL_ID?: string;
 
+  /** 1A-38 — Meta dataset (pixel) id. Same value as NUXT_PUBLIC_META_PIXEL_ID. */
+  @IsString()
+  @IsOptional()
+  META_PIXEL_ID?: string;
+
+  /** Conversions API system-user token. Unset logs instead of sending. */
+  @IsString()
+  @IsOptional()
+  META_CAPI_ACCESS_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  META_GRAPH_VERSION?: string;
+
+  @IsString()
+  @IsOptional()
+  META_TEST_EVENT_CODE?: string;
+
+  @IsString()
+  @IsOptional()
+  META_CAPI_TIMEOUT_MS?: string;
+
+  @IsString()
+  @IsOptional()
+  META_CAPI_MOCK?: string;
+
   @IsString()
   @IsOptional()
   STORAGE_DRIVER?: string;

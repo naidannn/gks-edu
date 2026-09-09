@@ -13,6 +13,7 @@ useNoIndex();
 
 const auth = useAuthStore();
 const route = useRoute();
+const meta = useMetaTracking();
 
 /** Without a client id there is no Google column at all — divider included. */
 const googleEnabled = Boolean(useRuntimeConfig().public.googleClientId);
@@ -43,8 +44,12 @@ async function submit() {
   }
 
   pending.value = true;
+  // Minted before the request, so the pixel's `CompleteRegistration` and the
+  // one the API fires when the row is written share an id (1A-38).
+  const eventId = meta.newEventId();
   try {
-    await auth.register(parsed.data.email, parsed.data.password, parsed.data.name);
+    await auth.register(parsed.data.email, parsed.data.password, parsed.data.name, trackingPayload(eventId));
+    meta.trackPaired('CompleteRegistration', eventId, { content_name: 'Бүртгэл' });
     // Into the cabinet, not a form: a new account has nothing to declare yet.
     await navigateTo((route.query.redirect as string) || '/app/cases');
   } catch (err) {
@@ -57,12 +62,18 @@ async function submit() {
 /**
  * Google covers registration too: an unknown address creates the account, a
  * known one just signs in. Either way it lands in the same place.
+ *
+ * Nothing is tracked here on purpose: the browser cannot know which of the two
+ * just happened, and firing `CompleteRegistration` for every Google click
+ * would count returning users as new ones. The API knows — it reports the
+ * conversion only on the branch that actually creates a row (1A-38) — so all
+ * that travels from here is the click context it needs to match the person.
  */
 async function submitGoogle(idToken: string) {
   error.value = null;
   pending.value = true;
   try {
-    await auth.loginWithGoogle(idToken);
+    await auth.loginWithGoogle(idToken, trackingPayload(meta.newEventId()));
     await navigateTo((route.query.redirect as string) || '/app/cases');
   } catch (err) {
     error.value = apiErrorMessage(err, 'Google-ээр бүртгүүлж чадсангүй');

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { metaTrackingSchema } from './tracking';
 
 /** Brokerage service lines (ARCHITECTURE.md §5). */
 export const serviceTypeSchema = z.enum([
@@ -54,6 +55,8 @@ export const publicLeadSchema = z.object({
       referrer: z.string().max(500).optional(),
     })
     .optional(),
+  /** Meta ad-click context, so the server-side `Lead` event dedups with the pixel's (1A-38). */
+  tracking: metaTrackingSchema.optional(),
   /** Honeypot — must stay empty. */
   website: z.string().max(200).optional(),
 });

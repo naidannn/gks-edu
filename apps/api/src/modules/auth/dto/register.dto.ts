@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { MetaTrackingDto } from '../../meta/dto/meta-tracking.dto.js';
 
 export class RegisterDto {
   @ApiProperty({ example: 'student@gks.edu' })
@@ -17,4 +19,11 @@ export class RegisterDto {
   @MaxLength(120)
   @IsOptional()
   name?: string;
+
+  /** Meta ad-click context — a registration is a conversion (1A-38). */
+  @ApiPropertyOptional({ type: MetaTrackingDto })
+  @ValidateNested()
+  @Type(() => MetaTrackingDto)
+  @IsOptional()
+  tracking?: MetaTrackingDto;
 }

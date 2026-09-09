@@ -105,11 +105,26 @@ STORAGE_DRIVER=local
 STORAGE_LOCAL_DIR=$STORAGE_DIR
 STORAGE_SIGNING_SECRET=$(secret)
 
+# --- Meta pixel + Conversions API (1A-38) -----------------------------------
+# One dataset written to from two sides. META_PIXEL_ID and
+# NUXT_PUBLIC_META_PIXEL_ID must hold the same value or the browser and the
+# server land in different datasets and nothing deduplicates. The token is a
+# system-user token from Events Manager -> Settings; the dataset id is public.
+# Unset either the id or the token and the API logs instead of sending, and the
+# web app injects no pixel script at all.
+META_PIXEL_ID=1858714955098486
+META_CAPI_ACCESS_TOKEN=
+# Set while checking the setup in Events Manager -> Test events, then clear it:
+# an event carrying a code is excluded from measurement.
+# META_TEST_EVENT_CODE=
+
 # --- Web --------------------------------------------------------------------
 NUXT_PUBLIC_API_BASE=https://$DOMAIN/api/v1
 NUXT_PUBLIC_SITE_URL=https://$DOMAIN
 # GA4 property for gksedu.mn.
 NUXT_PUBLIC_GA_ID=G-CZ24PGBE0Q
+# Same value as META_PIXEL_ID above — it is public by design.
+NUXT_PUBLIC_META_PIXEL_ID=1858714955098486
 EOF
 
 chmod 600 "$ENV_FILE"

@@ -11,6 +11,7 @@ import {
   ContractStatus,
   NotificationEvent,
   PaymentKind,
+  type PaymentMethod,
   PaymentStatus,
   type Prisma,
   type ServiceType,
@@ -22,6 +23,9 @@ import { CasesService } from '../cases/cases.service.js';
 import { PAYMENT_KIND_LABELS, PAYMENT_METHOD_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
+import type { MetaActionSource, MetaStandardEvent } from '../meta/meta-capi.types.js';
+import { MetaEventsService } from '../meta/meta-events.service.js';
+import type { MetaUserIdentity } from '../meta/meta-user-data.js';
 import { DEFAULT_PAYMENT_DUE_DAYS, paymentDueAt } from '../pricing/payment-terms.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreatePaymentDto } from './dto/create-payment.dto.js';
@@ -49,6 +53,7 @@ export class PaymentsService {
     private readonly slack: SlackService,
     private readonly storage: StorageService,
     private readonly pricing: PricingService,
+    private readonly meta: MetaEventsService,
     @InjectQueue(QPAY_POLL_QUEUE) private readonly pollQueue: Queue,
   ) {}
 
@@ -101,6 +106,15 @@ export class PaymentsService {
       { every: QPAY_POLL_INTERVAL_MS, limit: QPAY_POLL_LIMIT },
       { data: { paymentId: payment.id } },
     );
+
+    await this.reportPaymentToMeta('InitiateCheckout', {
+      paymentId: payment.id,
+      caseId,
+      userId: gksCase.userId,
+      kind: dto.kind,
+      amountMnt,
+      actionSource: 'website',
+    });
 
     return updated;
   }
@@ -347,10 +361,102 @@ export class PaymentsService {
           ],
           link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${withCase.case.id}` },
         });
+
+        await this.reportPaymentToMeta('Purchase', {
+          paymentId,
+          caseId: withCase.case.id,
+          userId: withCase.case.userId,
+          kind: withCase.kind,
+          amountMnt: withCase.amountMnt,
+          // Money that arrived over the counter is not a website conversion,
+          // whatever the campaign would prefer to believe.
+          actionSource: withCase.method === 'QPAY' ? 'website' : 'physical_store',
+          method: withCase.method,
+          occurredAt: withCase.paidAt ?? undefined,
+        });
       }
     }
 
     return confirmed;
+  }
+
+  /**
+   * `InitiateCheckout` and `Purchase` (1A-38).
+   *
+   * The `event_id` is the payment id, which is the neat part: the payment page
+   * fires the same two events in the browser and derives the same id from the
+   * same row, so the pair deduplicates without either side having to tell the
+   * other anything. It also survives the confirmation arriving twice — the
+   * QPay webhook and the polling fallback race each other on every payment.
+   *
+   * Identity comes from the `Client` record when there is one. That is the row
+   * the contract is written against, so it carries a verified name, birth date
+   * and phone — several matching signals a login-only `User` does not have.
+   */
+  private async reportPaymentToMeta(
+    eventName: Extract<MetaStandardEvent, 'InitiateCheckout' | 'Purchase'>,
+    payment: {
+      paymentId: string;
+      caseId: string;
+      userId: string;
+      kind: PaymentKind;
+      amountMnt: Prisma.Decimal | number;
+      actionSource: MetaActionSource;
+      method?: PaymentMethod;
+      occurredAt?: Date;
+    },
+  ): Promise<void> {
+    // Everything below is measurement, and measurement never fails a payment:
+    // `MetaEventsService.track` swallows its own errors, but the identity read
+    // in front of it is a database call like any other.
+    const user = await this.prisma.user
+      .findUnique({
+        where: { id: payment.userId },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          name: true,
+          client: {
+            select: { firstName: true, lastName: true, phone: true, email: true, gender: true, birthDate: true },
+          },
+        },
+      })
+      .catch((error: unknown) => {
+        this.logger.warn(
+          `Meta ${eventName}-д хэрэглэгчийн мэдээлэл уншигдсангүй: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        return null;
+      });
+
+    const client = user?.client;
+    const identity: MetaUserIdentity = {
+      email: client?.email ?? user?.email,
+      phone: client?.phone ?? user?.phone,
+      firstName: client?.firstName,
+      lastName: client?.lastName,
+      gender: client?.gender,
+      birthDate: client?.birthDate,
+      country: 'mn',
+      externalIds: [payment.userId],
+    };
+
+    await this.meta.track({
+      eventName,
+      eventId: payment.paymentId,
+      eventTime: payment.occurredAt,
+      actionSource: payment.actionSource,
+      identity,
+      customData: {
+        value: Number(payment.amountMnt),
+        currency: 'MNT',
+        content_type: 'product',
+        content_ids: [payment.kind],
+        content_name: PAYMENT_KIND_LABELS[payment.kind],
+        order_id: payment.paymentId,
+        ...(payment.method ? { status: payment.method } : {}),
+      },
+    });
   }
 
   // ─── Refund (1C-16) ─────────────────────────────────────────────────────────

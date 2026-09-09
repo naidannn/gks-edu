@@ -23,6 +23,7 @@ import { FaqModule } from './modules/faq/faq.module.js';
 import { GksEligibilityModule } from './modules/gks-eligibility/gks-eligibility.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
 import { MeModule } from './modules/me/me.module.js';
+import { MetaModule } from './modules/meta/meta.module.js';
 import { MessengerModule } from './modules/messenger/messenger.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
@@ -60,6 +61,7 @@ import { StorageModule } from './storage/storage.module.js';
     SmsModule,
     AuditModule,
     NotificationsModule,
+    MetaModule,
     HealthModule,
     AuthModule,
     UsersModule,

@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
+import type { MetaEventsService } from '../meta/meta-events.service.js';
 import { AuthService } from './auth.service.js';
 
 /**
@@ -44,6 +45,7 @@ function serviceStub(user: Record<string, unknown> | null) {
     config as unknown as ConfigService,
     { dispatch: vi.fn() } as unknown as NotificationsService,
     { notify: vi.fn() } as unknown as SlackService,
+    { track: vi.fn() } as unknown as MetaEventsService,
   );
 
   return { service, prisma };

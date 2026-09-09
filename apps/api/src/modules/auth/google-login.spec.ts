@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
+import type { MetaEventsService } from '../meta/meta-events.service.js';
 import { AuthService } from './auth.service.js';
 
 const { verifyIdToken } = vi.hoisted(() => ({ verifyIdToken: vi.fn() }));
@@ -69,6 +70,7 @@ function serviceStub(
     config as unknown as ConfigService,
     notifications as unknown as NotificationsService,
     { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService,
+    { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService,
   );
 
   return { service, prisma };

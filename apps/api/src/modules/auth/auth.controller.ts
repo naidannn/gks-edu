@@ -1,6 +1,7 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
@@ -10,6 +11,7 @@ import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/pa
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
+import { metaRequestContext } from '../meta/request-context.js';
 import { PasswordResetService } from './password-reset.service.js';
 
 @ApiTags('auth')
@@ -28,8 +30,8 @@ export class AuthController {
   // is not an attack, and a household behind one NAT address is not either.
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @ApiOperation({ summary: 'Create an account and start a session' })
-  register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  register(@Body() dto: RegisterDto, @Req() request: Request) {
+    return this.auth.register(dto, metaRequestContext(request));
   }
 
   @Public()
@@ -46,8 +48,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({ summary: 'Exchange a Google ID token for a token pair' })
-  google(@Body() dto: GoogleLoginDto) {
-    return this.auth.loginWithGoogle(dto.idToken);
+  google(@Body() dto: GoogleLoginDto, @Req() request: Request) {
+    return this.auth.loginWithGoogle(dto.idToken, dto.tracking, metaRequestContext(request));
   }
 
   @Public()

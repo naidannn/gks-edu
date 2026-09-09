@@ -8,6 +8,7 @@ const { gksCase, reload } = inject('caseDetail') as { gksCase: Ref<PortalCaseDet
 const api = useApi();
 const { refresh } = usePortal();
 const errorMsg = ref<string | null>(null);
+const meta = useMetaTracking();
 
 const payments = computed(() => gksCase.value?.payments ?? []);
 function latest(kind: PaymentKind): PaymentItem | undefined {
@@ -26,8 +27,17 @@ async function create(kind: PaymentKind) {
   errorMsg.value = null;
   creating.value = kind;
   try {
-    await api.post(`/cases/${gksCase.value.id}/payments`, { kind });
+    const payment = await api.post<PaymentItem>(`/cases/${gksCase.value.id}/payments`, { kind });
     await reload();
+    // Both halves of this conversion key on the payment id, so neither side
+    // has to tell the other anything — the API fires the same event when it
+    // writes the invoice, and Meta collapses the pair (1A-38).
+    meta.trackPaired('InitiateCheckout', payment.id, {
+      value: Number(payment.amountMnt),
+      currency: 'MNT',
+      content_type: 'product',
+      content_ids: [kind],
+    });
   } catch (err) {
     errorMsg.value = apiErrorMessage(err, 'Төлбөр үүсгэж чадсангүй');
   } finally {
@@ -47,6 +57,17 @@ watch(pendingPayment, (payment) => {
       // A confirmed payment moves the case on (1C-15), so the portal's own
       // "what next" answer is stale until it is re-read.
       await refresh();
+      if (fresh.status === 'PAID') {
+        // The API reports this one from the QPay webhook, under the same id.
+        // The browser copy exists because it is the half that carries the
+        // visitor's cookies — the webhook has no browser to read them from.
+        meta.trackPaired('Purchase', payment.id, {
+          value: Number(payment.amountMnt),
+          currency: 'MNT',
+          content_type: 'product',
+          content_ids: [payment.kind],
+        });
+      }
     }
   }, 3000);
 }, { immediate: true });

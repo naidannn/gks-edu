@@ -4,6 +4,7 @@ import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { EmailService } from '../notifications/email.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
+import type { MetaEventsService } from '../meta/meta-events.service.js';
 import { LeadsService, normalizePhone } from './leads.service.js';
 import type { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 
@@ -47,6 +48,11 @@ function slackStub() {
   return { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
 }
 
+/** The Meta funnel is fire-and-forget; these tests only need it not to be undefined. */
+function metaStub() {
+  return { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService;
+}
+
 const base: CreatePublicLeadDto = {
   lastName: 'Батбаяр',
   firstName: 'Тэмүүлэн',
@@ -67,7 +73,7 @@ describe('normalizePhone', () => {
 describe('LeadsService.createFromPublicForm', () => {
   it('creates a lead with an opening activity', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     const result = await service.createFromPublicForm({
       ...base,
@@ -87,7 +93,7 @@ describe('LeadsService.createFromPublicForm', () => {
 
   it('drops honeypot submissions without writing anything', async () => {
     const prisma = prismaStub();
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     const result = await service.createFromPublicForm({ ...base, website: 'http://spam.example' });
 
@@ -98,7 +104,7 @@ describe('LeadsService.createFromPublicForm', () => {
 
   it('merges a repeat submission from the same number into the existing lead', async () => {
     const prisma = prismaStub({ recentLead: { id: 'existing-lead' } });
-    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub());
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
 
     const result = await service.createFromPublicForm({ ...base, note: 'Дахин холбогдлоо' });
 

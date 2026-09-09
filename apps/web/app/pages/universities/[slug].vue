@@ -33,14 +33,39 @@ const quality = computed(() => uni.value.quality ?? {});
 const { ensureLoaded, isSaved, toggle: toggleSaved } = useSavedUniversities();
 onMounted(ensureLoaded);
 const savePending = ref(false);
+const meta = useMetaTracking();
 async function onToggleSaved() {
   savePending.value = true;
+  const wasSaved = isSaved(uni.value.id);
   try {
     await toggleSaved(uni.value.id);
+    // Only adding is a signal; un-saving is the visitor changing their mind,
+    // and reporting it as an intent event would teach the campaign nothing.
+    if (!wasSaved) {
+      meta.track('AddToWishlist', {
+        content_type: 'product',
+        content_ids: [uni.value.slug],
+        content_name: uni.value.nameMn,
+      });
+    }
   } finally {
     savePending.value = false;
   }
 }
+
+/**
+ * `ViewContent` — the school page is the closest thing this site has to a
+ * product page, and it is what a retargeting audience is built from (1A-38).
+ * In `onMounted` because the plugin is client-only.
+ */
+onMounted(() => {
+  meta.track('ViewContent', {
+    content_type: 'product',
+    content_ids: [uni.value.slug],
+    content_name: uni.value.nameMn,
+    content_category: 'university',
+  });
+});
 
 /**
  * Road distance to Seoul, rounded to the kilometre.

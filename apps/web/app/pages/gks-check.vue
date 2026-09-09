@@ -204,6 +204,36 @@ watch(query, () => {
 
 const verdict = computed(() => result.value?.eligibility.verdict ?? 'PASS');
 
+/**
+ * `GksCheckCompleted` (1A-38). Somebody who answered every question about
+ * their grades and their Korean is the most qualified audience this site
+ * produces — worth an event even though Meta has no standard name for it, and
+ * worth carrying the verdict, because "тэнцэх магадлалтай" and "энэ жил
+ * болохгүй" are two different people to advertise to.
+ *
+ * Once per verdict, not once per keystroke: the result panel re-fetches every
+ * time a slider on it moves.
+ *
+ * `immediate` matters here. A shared link arrives with every answer in the URL
+ * and renders on the server, so by the time the browser hydrates the result is
+ * already sitting there and a plain watcher never sees it change — the most
+ * qualified visitor of all would be the one who went uncounted.
+ */
+const meta = useMetaTracking();
+let reportedVerdict: string | null = null;
+watch(
+  result,
+  (value) => {
+    if (!value || value.eligibility.verdict === reportedVerdict) return;
+    reportedVerdict = value.eligibility.verdict;
+    meta.trackCustom('GksCheckCompleted', {
+      content_category: value.eligibility.verdict,
+      content_name: value.input.education,
+    });
+  },
+  { immediate: true },
+);
+
 /** The CTA carries the whole assessment into the consultation form. */
 const consultationLink = computed(() => {
   if (!result.value) return '/consultation?service=GKS_SCHOLARSHIP';

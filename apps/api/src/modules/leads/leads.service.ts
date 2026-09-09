@@ -8,6 +8,8 @@ import { leadReceivedEmail } from '../notifications/email/transactional.js';
 import { LEAD_SOURCE_LABELS, SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
+import { MetaEventsService } from '../meta/meta-events.service.js';
+import type { MetaRequestContext } from '../meta/request-context.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import type { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
 import type { CreateLeadDto } from './dto/create-lead.dto.js';
@@ -65,6 +67,7 @@ export class LeadsService {
     private readonly notifications: NotificationsService,
     private readonly email: EmailService,
     private readonly slack: SlackService,
+    private readonly meta: MetaEventsService,
   ) {}
 
   /**
@@ -73,7 +76,10 @@ export class LeadsService {
    * Bots are answered with a plausible-looking result and nothing is written —
    * telling a spammer their submission failed only invites a retry.
    */
-  async createFromPublicForm(dto: CreatePublicLeadDto): Promise<PublicLeadResult> {
+  async createFromPublicForm(
+    dto: CreatePublicLeadDto,
+    request: MetaRequestContext = {},
+  ): Promise<PublicLeadResult> {
     if (dto.website) {
       this.logger.warn('Нээлттэй сэжмийн формын honeypot ажиллаа — хүсэлтийг хассан');
       return { id: crypto.randomUUID(), merged: false };
@@ -110,6 +116,7 @@ export class LeadsService {
         link: { label: 'CRM дээр нээх', path: `/admin/leads/${recent.id}` },
       });
 
+      await this.reportLeadToMeta(dto, phone, recent.id, request);
       return { id: recent.id, merged: true };
     }
 
@@ -152,7 +159,49 @@ export class LeadsService {
 
     await this.notifyStaffOfNewLead(lead);
     await this.acknowledgeLead(lead);
+    await this.reportLeadToMeta(dto, phone, lead.id, request);
     return { id: lead.id, merged: false };
+  }
+
+  /**
+   * The `Lead` conversion (1A-38). Only the public form reports one: a
+   * consultant typing up a walk-in (`createByStaff`) is a real lead but not an
+   * *ad* conversion, and feeding those to Meta teaches the campaign to find
+   * people who were never going to click an ad.
+   *
+   * The event id comes from the browser, which fired its own `Lead` on the
+   * same submission — Meta collapses the pair into one conversion. When the
+   * pixel was blocked and no id arrived, the lead's own id is used: still
+   * stable, still deduplicated against a retry of the same request.
+   */
+  private async reportLeadToMeta(
+    dto: CreatePublicLeadDto,
+    phone: string,
+    leadId: string,
+    request: MetaRequestContext,
+  ): Promise<void> {
+    await this.meta.track({
+      eventName: 'Lead',
+      eventId: dto.tracking?.eventId || leadId,
+      actionSource: 'website',
+      eventSourceUrl: dto.tracking?.eventSourceUrl ?? dto.utm?.landingPage,
+      identity: {
+        email: dto.email,
+        phone,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        country: 'mn',
+        externalIds: [leadId, dto.tracking?.externalId],
+        fbp: dto.tracking?.fbp,
+        fbc: dto.tracking?.fbc,
+        ...request,
+      },
+      customData: {
+        content_category: 'consultation',
+        content_name: dto.interestedServices?.join(', ') || 'Зөвлөгөө',
+        ...(dto.interestedUniversitySlugs?.length ? { content_ids: dto.interestedUniversitySlugs } : {}),
+      },
+    });
   }
 
   /**

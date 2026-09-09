@@ -50,3 +50,12 @@ export const INTAKE_RESEARCH_JOB = 'research-intakes';
  */
 export const PROGRAM_RESEARCH_QUEUE = 'program-research';
 export const PROGRAM_RESEARCH_JOB = 'research-programs';
+
+/**
+ * Meta Conversions API delivery (1A-38) — one job per server event. Not a
+ * scheduler: jobs are added the moment a conversion happens, and the queue
+ * exists so that Facebook being slow or down can never hold up a lead, a
+ * registration or a payment confirmation.
+ */
+export const META_CAPI_QUEUE = 'meta-capi';
+export const META_CAPI_JOB = 'send-event';

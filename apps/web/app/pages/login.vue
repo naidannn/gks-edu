@@ -45,7 +45,10 @@ async function submitGoogle(idToken: string) {
   error.value = null;
   pending.value = true;
   try {
-    await auth.loginWithGoogle(idToken);
+    // A Google sign-in from here creates the account when the address is new,
+    // which the API reports as a `CompleteRegistration`; the click context has
+    // to travel with it or that conversion matches nobody (1A-38).
+    await auth.loginWithGoogle(idToken, trackingPayload(newEventId()));
     await navigateTo((route.query.redirect as string) || (auth.isStaff ? '/admin' : '/app'));
   } catch (err) {
     error.value = apiErrorMessage(err, 'Google-ээр нэвтэрч чадсангүй');

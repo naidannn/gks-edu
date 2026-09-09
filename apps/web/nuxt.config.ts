@@ -25,6 +25,11 @@ export default defineNuxtConfig({
       // NUXT_PUBLIC_GOOGLE_CLIENT_ID — OAuth 2.0 Web client id. Unset = no "Google-ээр
       // нэвтрэх" button; it must match GOOGLE_CLIENT_ID on the API side.
       googleClientId: '',
+      // NUXT_PUBLIC_META_PIXEL_ID — Meta dataset (pixel) id, public by design.
+      // Unset = no pixel script and no Conversions API relay. It must match
+      // META_PIXEL_ID on the API side, or the browser and the server write to
+      // two different datasets and nothing deduplicates (1A-38).
+      metaPixelId: '',
     },
   },
 

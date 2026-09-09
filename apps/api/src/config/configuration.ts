@@ -103,6 +103,24 @@ export interface AppConfig {
      *  feature is runnable without a key (same idea as `QPAY_MOCK`). */
     mock: boolean;
   };
+  meta: {
+    /**
+     * 1A-38 — the Meta dataset (pixel) id. Public by design: the browser
+     * carries the same value in `NUXT_PUBLIC_META_PIXEL_ID`, and the two must
+     * be identical or the pixel and the Conversions API write to different
+     * datasets and nothing deduplicates.
+     */
+    pixelId: string;
+    /** System-user token with the dataset's write scope. Empty = log instead of send. */
+    accessToken: string;
+    graphVersion: string;
+    /** Events Manager → Test events. Set it only while testing: events carrying
+     *  a code are shown in that tool and excluded from measurement. */
+    testEventCode: string;
+    timeoutMs: number;
+    /** Forces the log-instead-of-send path even when a token is present. */
+    mock: boolean;
+  };
   storage: {
     /** `local` writes to disk; `supabase` needs SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (0-08). */
     driver: 'local' | 'supabase';
@@ -180,6 +198,16 @@ export const configuration = (): AppConfig => ({
       botToken: process.env.SLACK_BOT_TOKEN ?? '',
       channelId: process.env.SLACK_CHANNEL_ID ?? '',
     },
+  },
+  meta: {
+    pixelId: process.env.META_PIXEL_ID ?? '',
+    accessToken: process.env.META_CAPI_ACCESS_TOKEN ?? '',
+    // Meta retires a Graph version roughly two years after it ships; bump this
+    // in `.env` rather than in code when the deprecation mail arrives.
+    graphVersion: process.env.META_GRAPH_VERSION ?? 'v26.0',
+    testEventCode: process.env.META_TEST_EVENT_CODE ?? '',
+    timeoutMs: Number.parseInt(process.env.META_CAPI_TIMEOUT_MS ?? '10000', 10),
+    mock: (process.env.META_CAPI_MOCK ?? 'false') === 'true',
   },
   storage: {
     driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',

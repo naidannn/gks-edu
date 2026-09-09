@@ -150,10 +150,20 @@ failing:
 | `QPAY_USERNAME` / `QPAY_PASSWORD` / `QPAY_INVOICE_CODE` | `QPAY_MOCK=true` — invoices are faked, no real payment is taken |
 | `GOOGLE_CLIENT_ID` / `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | the "Google-ээр нэвтрэх" button does not render; `POST /auth/google` returns 503 |
 | `RESEND_API_KEY` | emails are written to the log instead of sent |
+| `META_CAPI_ACCESS_TOKEN` | the pixel still fires in the browser; server-side conversions are logged, not sent |
 | SMS gateway | not chosen yet (`ARCHITECTURE.md` §18 q.10) — messages are logged |
 
 `NUXT_PUBLIC_GA_ID` **is** set (2026-09-06) to the `G-CZ24PGBE0Q` GA4 property.
 Development leaves it empty on purpose, so no local reload is counted.
+
+`META_PIXEL_ID` / `NUXT_PUBLIC_META_PIXEL_ID` **are** set (2026-09-09) to dataset
+`1858714955098486`. The two must never drift apart: the browser pixel and the
+Conversions API write to whichever dataset their own variable names, and a
+mismatch means every conversion is counted twice — once by each half — instead
+of deduplicated on `event_id`. Put `META_CAPI_ACCESS_TOKEN` in
+`deploy/.env.production` only; it is a long-lived system-user token and the
+only secret in this feature. Rotating it is a one-line edit plus
+`./deploy/restart.sh api`.
 
 `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` **are** set (2026-09-06): a consultation
 request, a new account, a signed contract and a received payment post to the

@@ -14,6 +14,9 @@ import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
+import type { MetaTrackingDto } from '../meta/dto/meta-tracking.dto.js';
+import { MetaEventsService } from '../meta/meta-events.service.js';
+import type { MetaRequestContext } from '../meta/request-context.js';
 import type { ChangePasswordDto } from './dto/password-reset.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
@@ -40,9 +43,10 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
     private readonly slack: SlackService,
+    private readonly meta: MetaEventsService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthSession> {
+  async register(dto: RegisterDto, request: MetaRequestContext = {}): Promise<AuthSession> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) {
       throw new ConflictException('Энэ и-мэйлээр бүртгэл аль хэдийн үүссэн байна');
@@ -57,6 +61,7 @@ export class AuthService {
     });
 
     await this.welcome(user, 'И-мэйл, нууц үг');
+    await this.reportRegistrationToMeta(user, 'password', dto.tracking, request);
     return this.issueSession(user);
   }
 
@@ -82,7 +87,11 @@ export class AuthService {
    * one of our sessions. There is no password involved either way — a row that
    * only ever signs in with Google keeps `password: null`.
    */
-  async loginWithGoogle(idToken: string): Promise<AuthSession> {
+  async loginWithGoogle(
+    idToken: string,
+    tracking?: MetaTrackingDto,
+    request: MetaRequestContext = {},
+  ): Promise<AuthSession> {
     const clientId = this.config.get<string>('google.clientId');
     if (!clientId) {
       throw new ServiceUnavailableException('Google-ээр нэвтрэх тохиргоо хийгдээгүй байна');
@@ -120,6 +129,9 @@ export class AuthService {
         data: { email: payload.email, googleId, name: payload.name ?? null },
       });
       await this.welcome(created, 'Google');
+      // Only the branch that actually creates a row reports the conversion —
+      // an existing user signing in with Google is a login, not a registration.
+      await this.reportRegistrationToMeta(created, 'google', tracking, request);
       return this.issueSession(created);
     }
 
@@ -256,6 +268,46 @@ export class AuthService {
       ],
       // No link: a fresh account has no `Client` row yet, and the admin list
       // has no URL-driven search to point at. The address above is the handle.
+    });
+  }
+
+  /**
+   * `CompleteRegistration` (1A-38) — both sign-up paths land here, and only
+   * when a row was genuinely created.
+   *
+   * The `event_id` is the browser's when it sent one. The Google button is the
+   * awkward case: the browser cannot know in advance whether the click will
+   * create an account or just sign an existing one in, so it fires nothing and
+   * the user id becomes the id instead — a server-only event, deduplicated
+   * against a repeated request rather than against a browser twin.
+   */
+  private async reportRegistrationToMeta(
+    user: Pick<User, 'id' | 'email' | 'name'>,
+    method: 'password' | 'google',
+    tracking: MetaTrackingDto | undefined,
+    request: MetaRequestContext,
+  ): Promise<void> {
+    // `User.name` is one field holding whatever the person typed; splitting it
+    // on the first space is the best guess available and a wrong guess only
+    // costs one matching signal.
+    const [firstName, ...rest] = (user.name ?? '').trim().split(/\s+/).filter(Boolean);
+
+    await this.meta.track({
+      eventName: 'CompleteRegistration',
+      eventId: tracking?.eventId || user.id,
+      actionSource: 'website',
+      eventSourceUrl: tracking?.eventSourceUrl,
+      identity: {
+        email: user.email,
+        firstName,
+        lastName: rest.join(' ') || undefined,
+        country: 'mn',
+        externalIds: [user.id, tracking?.externalId],
+        fbp: tracking?.fbp,
+        fbc: tracking?.fbc,
+        ...request,
+      },
+      customData: { content_name: 'Бүртгэл', status: method },
     });
   }
 

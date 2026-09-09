@@ -1,4 +1,4 @@
-import type { AuthSession, User } from '@gks/shared';
+import type { AuthSession, MetaTracking, User } from '@gks/shared';
 import { defineStore } from 'pinia';
 import { singleFlight } from '~/utils/single-flight';
 
@@ -51,11 +51,21 @@ export const useAuthStore = defineStore('auth', () => {
     apply(session);
   }
 
-  async function register(email: string, password: string, name?: string): Promise<void> {
+  /**
+   * `tracking` is the Meta ad-click context (1A-38) — it exists so the
+   * server-side `CompleteRegistration` carries the click and deduplicates
+   * against the pixel's. Optional: a registration must work with it absent.
+   */
+  async function register(
+    email: string,
+    password: string,
+    name?: string,
+    tracking?: MetaTracking,
+  ): Promise<void> {
     const session = await $fetch<AuthSession>('/auth/register', {
       baseURL: config.public.apiBase,
       method: 'POST',
-      body: { email, password, name },
+      body: { email, password, name, tracking },
     });
     apply(session);
   }
@@ -64,11 +74,11 @@ export const useAuthStore = defineStore('auth', () => {
    * `idToken` is the credential Google Identity Services hands the browser; the
    * API verifies it and either links it to the matching account or creates one.
    */
-  async function loginWithGoogle(idToken: string): Promise<void> {
+  async function loginWithGoogle(idToken: string, tracking?: MetaTracking): Promise<void> {
     const session = await $fetch<AuthSession>('/auth/google', {
       baseURL: config.public.apiBase,
       method: 'POST',
-      body: { idToken },
+      body: { idToken, tracking },
     });
     apply(session);
   }

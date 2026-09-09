@@ -11,6 +11,7 @@ import type { NotificationsService } from '../notifications/notifications.servic
 import { DEFAULT_PAYMENT_DUE_DAYS } from '../pricing/payment-terms.js';
 import type { PricingService } from '../pricing/pricing.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
+import type { MetaEventsService } from '../meta/meta-events.service.js';
 import { PaymentsService } from './payments.service.js';
 import type { QpayClientService } from './qpay-client.service.js';
 
@@ -62,6 +63,8 @@ function buildHarness(options: {
       count: vi.fn(),
     },
     contract: { update: vi.fn() },
+    // Read only to enrich the Meta conversion (1A-38); no test asserts on it.
+    user: { findUnique: vi.fn().mockResolvedValue({ id: 'student-1', email: 's@gks.edu', phone: null, name: null, client: null }) },
     caseFlowDefinition: {
       findUnique: vi.fn().mockResolvedValue(options.flowRule === undefined ? { isSystemOnly: true } : options.flowRule),
     },
@@ -95,8 +98,12 @@ function buildHarness(options: {
     getActive: vi.fn().mockResolvedValue({ paymentDueDays: options.paymentDueDays ?? 7 }),
   } as unknown as PricingService;
 
-  const service = new PaymentsService(prismaTyped, cases, qpay, config, notifications, slack, storage, pricing, pollQueue);
-  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications, storage, pricing };
+  const meta = { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService;
+
+  const service = new PaymentsService(
+    prismaTyped, cases, qpay, config, notifications, slack, storage, pricing, meta, pollQueue,
+  );
+  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications, storage, pricing, meta };
 }
 
 const student: AuthenticatedUser = { id: 'student-1', email: 's@gks.edu', role: Role.USER };

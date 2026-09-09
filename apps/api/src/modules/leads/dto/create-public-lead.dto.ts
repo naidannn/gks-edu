@@ -17,6 +17,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { EducationLevel, ServiceType } from '../../../prisma/client.js';
+import { MetaTrackingDto } from '../../meta/dto/meta-tracking.dto.js';
 
 /** Mongolian mobile numbers: 8 digits, optionally +976-prefixed. */
 const PHONE_PATTERN = /^(976)?\d{8}$/;
@@ -159,6 +160,17 @@ export class CreatePublicLeadDto {
   @Type(() => LeadUtmDto)
   @IsOptional()
   utm?: LeadUtmDto;
+
+  /**
+   * Meta ad-click context (1A-38). Not stored: it exists so the server-side
+   * `Lead` event carries the click even when an ad blocker stopped the pixel,
+   * and so the two events deduplicate into one conversion.
+   */
+  @ApiPropertyOptional({ type: MetaTrackingDto })
+  @ValidateNested()
+  @Type(() => MetaTrackingDto)
+  @IsOptional()
+  tracking?: MetaTrackingDto;
 
   /**
    * Honeypot. Real visitors never see this field, so anything in it is a bot;
