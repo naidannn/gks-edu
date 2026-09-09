@@ -8,6 +8,7 @@ import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { StorageService } from '../../storage/storage.service.js';
 import type { CasesService } from '../cases/cases.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
+import { DEFAULT_PAYMENT_DUE_DAYS } from '../pricing/payment-terms.js';
 import type { PricingService } from '../pricing/pricing.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
 import { PaymentsService } from './payments.service.js';
@@ -154,6 +155,20 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     expect(qpay.createInvoice).not.toHaveBeenCalled();
   });
 
+  /**
+   * The end of the UTC day `days` from now — exactly what `paymentDueAt` writes.
+   *
+   * Asserted as a date rather than as a rounded day count: the window is
+   * measured to the end of its last day, so `(dueAt - now) / 86_400_000` is a
+   * fraction that rounds to 10 in the afternoon and to 11 in the morning. That
+   * made the suite pass or fail on the hour it happened to run.
+   */
+  function endOfDayInDays(days: number): number {
+    const due = new Date(Date.now() + days * 86_400_000);
+    due.setUTCHours(23, 59, 59, 999);
+    return due.getTime();
+  }
+
   it('gives the invoice a due date, so the reminder and the receivables report have one to run on', async () => {
     // The regression this guards: `Payment.dueAt` had four readers — the
     // "Төлбөрийн хугацаа болсон" sweep, the receivables count, mv_finance and
@@ -164,8 +179,7 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
 
     expect(pricing.getActive).toHaveBeenCalledWith(ServiceType.LANGUAGE_PREP);
     const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
-    const daysOut = Math.round((dueAt.getTime() - Date.now()) / 86_400_000);
-    expect(daysOut).toBe(10);
+    expect(dueAt.getTime()).toBe(endOfDayInDays(10));
   });
 
   it('still raises the invoice when the service has no active price, on the default window', async () => {
@@ -177,7 +191,7 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
 
     const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
-    expect(Math.round((dueAt.getTime() - Date.now()) / 86_400_000)).toBe(7);
+    expect(dueAt.getTime()).toBe(endOfDayInDays(DEFAULT_PAYMENT_DUE_DAYS));
   });
 
   it('refuses a second prepayment once one is already PAID', async () => {
