@@ -29,12 +29,22 @@ const SERVICES: NavLink[] = [
   { to: '/services/graduate', label: 'Магистр, доктор' },
 ];
 
+/**
+ * The scholarship is two pages now, and the check is the one people are sent a
+ * link to — so it is a group rather than a sixth top-level entry, which is the
+ * ceiling this bar works to.
+ */
+const SCHOLARSHIP: NavLink[] = [
+  { to: '/gks-scholarship', label: 'Тэтгэлгийн тухай' },
+  { to: '/gks-check', label: 'Боломжоо шалгах' },
+];
+
 const NAV: NavItem[] = [
   { to: '/plan', label: 'Төлөвлөгөө' },
   { to: '/universities', label: 'Их сургуулиуд' },
   { to: '/admissions', label: 'Элсэлт' },
   { label: 'Үйлчилгээ', children: SERVICES },
-  { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
+  { label: 'Засгийн газрын тэтгэлэг', children: SCHOLARSHIP },
 ];
 
 /**
@@ -87,6 +97,7 @@ const FOOTER_SERVICES = [
   { to: '/services/bachelor', label: 'Бакалавр' },
   { to: '/services/graduate', label: 'Магистр, доктор' },
   { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
+  { to: '/gks-check', label: 'Тэтгэлгийн боломжоо шалгах' },
 ];
 
 /**

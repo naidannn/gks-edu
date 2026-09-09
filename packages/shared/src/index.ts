@@ -18,3 +18,4 @@ export * from './types/client-workspace';
 export * from './types/notifications';
 export * from './types/messenger';
 export * from './types/study-plan';
+export * from './types/gks-eligibility';

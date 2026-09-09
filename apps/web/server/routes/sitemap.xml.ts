@@ -80,6 +80,7 @@ export default defineEventHandler(async (event) => {
     ['/services/bachelor', 'weekly', '0.8'],
     ['/services/graduate', 'weekly', '0.8'],
     ['/gks-scholarship', 'weekly', '0.8'],
+    ['/gks-check', 'monthly', '0.8'],
     ['/blog', 'daily', '0.7'],
     ['/consultation', 'monthly', '0.6'],
     ['/about', 'monthly', '0.6'],

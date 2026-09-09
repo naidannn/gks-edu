@@ -122,6 +122,7 @@ export class LeadsService {
         age: dto.age,
         educationLevel: dto.educationLevel,
         gpa: dto.gpa,
+        gpaScale: dto.gpaScale,
         koreanLevel: dto.koreanLevel,
         englishLevel: dto.englishLevel,
         interestedServices: dto.interestedServices ?? [],

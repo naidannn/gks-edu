@@ -37,6 +37,8 @@ export const publicLeadSchema = z.object({
   age: z.number().int().min(14).max(70).optional(),
   educationLevel: educationLevelSchema.optional(),
   gpa: z.number().min(0).max(100).optional(),
+  /** Which scale that average is on — asked since the GKS self-check (§24 Q1). */
+  gpaScale: z.string().max(20).optional(),
   koreanLevel: z.string().max(60).optional(),
   englishLevel: z.string().max(60).optional(),
   interestedServices: z.array(serviceTypeSchema).max(5).optional(),

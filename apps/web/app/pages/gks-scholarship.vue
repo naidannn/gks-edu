@@ -66,13 +66,15 @@ useSeoMeta({
           Голч <strong>80%+</strong> бол тэтгэлгийн төлөө өрсөлдөх суурь боломж танд бий.
         </p>
         <div class="scholarship-hero__actions">
+          <!-- The strongest thing this page can do with somebody who is afraid
+               they would not qualify is show them, in a minute, that they do. -->
           <DsButton
             variant="accent"
             size="lg"
             icon-right="arrow-right"
-            @click="navigateTo('/consultation?service=GKS_SCHOLARSHIP')"
+            @click="navigateTo('/gks-check')"
           >
-            Боломжоо үнэлүүлэх
+            Боломжоо 1 минутад шалгах
           </DsButton>
           <a href="#schedule" class="scholarship-hero__text-link">
             Хугацаа харах
@@ -121,12 +123,18 @@ useSeoMeta({
         <p class="scholarship-kicker scholarship-kicker--light">ХЭНД БОЛОМЖТОЙ ВЭ?</p>
         <h2 id="access-title">Шалгуур нь ойлгомжтой.<br>Боломж нь өргөн.</h2>
       </div>
-      <ul>
-        <li v-for="item in ELIGIBILITY" :key="item">
-          <DsIcon name="circle-check" :size="20" />
-          <span>{{ item }}</span>
-        </li>
-      </ul>
+      <div>
+        <ul>
+          <li v-for="item in ELIGIBILITY" :key="item">
+            <DsIcon name="circle-check" :size="20" />
+            <span>{{ item }}</span>
+          </li>
+        </ul>
+        <NuxtLink to="/gks-check" class="scholarship-access__check">
+          Би эдгээр шалгуурыг хангах уу? — шалгах
+          <DsIcon name="arrow-right" :size="16" />
+        </NuxtLink>
+      </div>
     </section>
 
     <section id="schedule" class="scholarship-section scholarship-schedule" aria-labelledby="schedule-title">
@@ -368,6 +376,16 @@ useSeoMeta({
   font-weight: var(--fw-semibold);
 }
 .scholarship-access li :deep(.gks-icon) { color: var(--brand-200); }
+.scholarship-access__check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+  color: var(--n-000);
+  font-weight: var(--fw-semibold);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 
 .scholarship-schedule__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); margin-top: var(--sp-7); }
 .scholarship-schedule__card {

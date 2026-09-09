@@ -20,6 +20,7 @@ import { DepartureModule } from './modules/departure/departure.module.js';
 import { DocumentsModule } from './modules/documents/documents.module.js';
 import { FxModule } from './modules/fx/fx.module.js';
 import { FaqModule } from './modules/faq/faq.module.js';
+import { GksEligibilityModule } from './modules/gks-eligibility/gks-eligibility.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { MessengerModule } from './modules/messenger/messenger.module.js';
@@ -66,6 +67,7 @@ import { StorageModule } from './storage/storage.module.js';
     AdmissionsModule,
     ProgramsModule,
     StudyPlanModule,
+    GksEligibilityModule,
     SavedUniversitiesModule,
     LeadsModule,
     PricingModule,

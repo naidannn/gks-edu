@@ -30,15 +30,37 @@ const initialNote = (() => {
   return typeof value === 'string' ? value.slice(0, 2000) : '';
 })();
 
+/**
+ * A visitor arriving from the GKS self-check has already answered half of this
+ * form, and asking again is how a filled-in funnel loses people. The check
+ * links here with what it knows; anything absent stays empty.
+ */
+const q = (key: string): string => {
+  const value = route.query[key];
+  return typeof value === 'string' ? value : '';
+};
+
+const initialEducation = (() => {
+  const value = q('education');
+  return value in EDUCATION_LEVEL_LABELS ? (value as EducationLevel) : '';
+})();
+
+/** "TOPIK 3" — the free-text shape `Lead.koreanLevel` has always been written in. */
+const initialKorean = (() => {
+  const level = Number.parseInt(q('topik'), 10);
+  return Number.isFinite(level) && level > 0 ? `TOPIK ${level}` : '';
+})();
+
 const form = reactive({
   lastName: '',
   firstName: '',
   phone: '',
   email: '',
-  age: '',
-  educationLevel: '' as EducationLevel | '',
-  gpa: '',
-  koreanLevel: '',
+  age: q('age'),
+  educationLevel: initialEducation as EducationLevel | '',
+  gpa: q('gpa'),
+  gpaScale: q('gpaScale'),
+  koreanLevel: initialKorean,
   englishLevel: '',
   interestedServices: (initialService ? [initialService] : []) as ServiceType[],
   interestedMajor: '',
@@ -46,6 +68,17 @@ const form = reactive({
   /** Honeypot — a real visitor never sees this. */
   website: '',
 });
+
+/**
+ * The scale is a free-text note unless the visitor came from the self-check,
+ * which asks for it outright — so say which one we already have rather than
+ * asking a second time for something we know.
+ */
+const gpaHint = computed(() =>
+  form.gpaScale
+    ? `${form.gpaScale} шаталбараар бодсон гэж бүртгэнэ`
+    : 'Аль шаталбараар бодсоноо тэмдэглэлдээ бичээрэй',
+);
 
 const educationOptions = [
   { value: '', label: 'Сонгох…' },
@@ -90,6 +123,7 @@ function buildPayload() {
     age: number(form.age),
     educationLevel: form.educationLevel || undefined,
     gpa: number(form.gpa),
+    gpaScale: form.gpaScale || undefined,
     koreanLevel: form.koreanLevel || undefined,
     englishLevel: form.englishLevel || undefined,
     interestedServices: form.interestedServices.length ? form.interestedServices : undefined,
@@ -246,7 +280,7 @@ useSeoMeta({
               label="Голч дүн"
               type="number"
               step="0.01"
-              hint="Аль шаталбараар бодсоноо тэмдэглэлдээ бичээрэй"
+              :hint="gpaHint"
               :error="fieldErrors.gpa"
             />
             <DsInput v-model="form.koreanLevel" label="Солонгос хэлний түвшин" placeholder="TOPIK 3 / эхлэгч" />

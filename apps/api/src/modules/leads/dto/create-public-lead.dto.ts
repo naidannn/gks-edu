@@ -103,6 +103,18 @@ export class CreatePublicLeadDto {
   @IsOptional()
   gpa?: number;
 
+  /**
+   * The scale the grade above is on — "4.0", "100". Optional because the
+   * consultation form has never asked for it; the GKS self-check does, and a
+   * grade that arrives with its scale is one `gksedu.md` §24 question 1 no
+   * longer has to be guessed at in the CRM.
+   */
+  @ApiPropertyOptional({ example: '4.0' })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  gpaScale?: string;
+
   @ApiPropertyOptional({ example: 'TOPIK 3' })
   @IsString()
   @MaxLength(60)
