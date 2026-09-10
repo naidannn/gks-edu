@@ -5,6 +5,7 @@ import { INTAKE_RESEARCH_JOB, INTAKE_RESEARCH_QUEUE } from '../../../queue/queue
 import { IntakeResearchStatus, Prisma, type ProgramLevel } from '../../../prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import { AdmissionConfigService } from '../admission-config.service.js';
+import { DeepseekService } from './deepseek.service.js';
 import { GeminiService, extractJson } from './gemini.service.js';
 import {
   IntakeResearchParseError,
@@ -47,6 +48,7 @@ export class IntakeResearchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gemini: GeminiService,
+    private readonly deepseek: DeepseekService,
     private readonly config: AdmissionConfigService,
     @InjectQueue(INTAKE_RESEARCH_QUEUE) private readonly queue: Queue,
   ) {}
@@ -132,6 +134,7 @@ export class IntakeResearchService {
 
     try {
       const links = (run.university.links ?? {}) as { officialWebsite?: string | null };
+      const provider = this.provider(run.model);
       const prompt = buildResearchPrompt(
         {
           nameMn: run.university.nameMn,
@@ -144,10 +147,10 @@ export class IntakeResearchService {
         },
         // Ordering a search the request carries no tool for returns an empty
         // list, by that prompt's own rule 0.
-        { search: this.gemini.isSearchEnabled },
+        { search: this.searches(run.model) },
       );
 
-      const answer = await this.gemini.generateJson({
+      const answer = await provider.generateJson({
         model: run.model,
         prompt,
         mockAnswer: () => mockResearchAnswer(run.year, run.levels),
@@ -159,8 +162,8 @@ export class IntakeResearchService {
       // the dates were written from memory — which the lite models will happily
       // do, and label HIGH. A mock run has no trail by construction and says so
       // in its own notes, so it is exempt rather than marked down.
-      const grounded = this.gemini.isMock || answer.sources.length > 0;
-      if (!grounded && !this.gemini.isSearchEnabled) {
+      const grounded = provider.isMock || answer.sources.length > 0;
+      if (!grounded && !this.searches(run.model)) {
         // Expected here, not a fault: search is off, so the run is a recall by
         // design and LOW is the honest label for all of it.
         this.logger.log(`Хайлтгүй горим (${runId}): бүх санал LOW, шалгуулахаар тэмдэглэв`);
@@ -209,6 +212,25 @@ export class IntakeResearchService {
       });
       this.logger.error(`Элсэлтийн судалгаа амжилтгүй боллоо (${runId}): ${message}`);
     }
+  }
+
+  /**
+   * Which provider answers, decided by the model name alone — the same routing
+   * `ProgramResearchService` uses, because `AdmissionConfig.researchModel` is
+   * the same kind of field: free text an admin types. Anything `deepseek-`
+   * goes to DeepSeek, the rest to Gemini.
+   */
+  private provider(model: string): GeminiService | DeepseekService {
+    return model.startsWith('deepseek') ? this.deepseek : this.gemini;
+  }
+
+  /**
+   * Whether this run can search at all. DeepSeek has no grounding of any kind,
+   * so a search order in its prompt is an instruction it cannot follow — and
+   * rule 0 of that prompt then empties the list.
+   */
+  private searches(model: string): boolean {
+    return !model.startsWith('deepseek') && this.gemini.isSearchEnabled;
   }
 
   /**

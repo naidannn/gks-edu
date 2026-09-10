@@ -171,7 +171,7 @@ async function save() {
             v-model="researchModel"
             label="Элсэлтийн хугацаа — загвар"
             placeholder="gemini-3.1-flash-lite"
-            hint="Gemini байх ёстой. Төлбөртэй загварууд (жишээ нь -pro) үнэгүй эрхгүй тул 429 өгдөг — gemini-3.1-flash-lite найдвартай."
+            hint="deepseek- гэж эхэлбэл DeepSeek рүү, бусад нь Gemini рүү очно. -pro загварууд үнэгүй эрхгүй тул 429 өгдөг — gemini-3.1-flash-lite найдвартай."
           />
           <DsInput
             v-model="programResearchModel"
