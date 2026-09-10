@@ -548,3 +548,51 @@ kbd.gks-kbd {
   font-weight: var(--fw-semibold);
   line-height: 1;
 }
+
+/* ================================================================= reports */
+/* Shared by every panel under `components/reports/` — scoped styles cannot be
+   reached across components, and these five are the report screens' vocabulary. */
+
+/* Two cards side by side, stacking on a laptop. */
+.gks-reports__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+/* The sentence under a card that says what the figure above it does and does
+   not include. On these screens that sentence is not decoration: it is the
+   difference between income and money that merely passed through. */
+.gks-reports__note {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-body-sm);
+  color: var(--text-subtle);
+}
+.gks-reports__note:first-child { margin-top: 0; }
+.gks-reports__note strong { color: var(--text-strong); font-weight: var(--fw-semibold); }
+
+/* A second line inside a table cell: a Korean name, a role, a date under a badge. */
+.gks-reports__sub {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+}
+
+.gks-reports__section { margin-top: var(--sp-4); }
+
+/* The CSV button in a card's action slot. */
+.gks-reports__download {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-2);
+  border: var(--border-hair) solid var(--line-soft);
+  border-radius: var(--radius-1);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-reports__download:hover { border-color: var(--brand-400); color: var(--brand-700); }

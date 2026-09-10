@@ -100,3 +100,30 @@ export function formatNumericDateUtc(value: DateLike): string {
   const pad = (part: number) => String(part).padStart(2, '0');
   return `${date.getUTCFullYear()}.${pad(date.getUTCMonth() + 1)}.${pad(date.getUTCDate())}`;
 }
+
+/**
+ * `2026.09.09` — the same digits as {@link formatNumericDateUtc}, read in the
+ * viewer's own time zone.
+ *
+ * The two are not interchangeable. A deadline the API stamped at the end of its
+ * day in UTC must be read in UTC or it reads a day late; a timestamp that
+ * records when something *happened* — a payment fell due, a visa was decided,
+ * a report was computed — must be read locally or it reads a day early for
+ * anything after 16:00 UTC, which in Ulaanbaatar is most of the working day.
+ * Both are written in digits for the same reason: some Chrome builds ship no
+ * `mn` locale data and answer in English.
+ */
+export function formatNumericDateLocal(value: DateLike): string {
+  const date = parse(value);
+  if (date === null) return NO_DATE;
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
+}
+
+/** `2026.09.09 22:31` — {@link formatNumericDateLocal} with the clock on it. */
+export function formatNumericDateTimeLocal(value: DateLike): string {
+  const date = parse(value);
+  if (date === null) return NO_DATE;
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${formatNumericDateLocal(date)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}

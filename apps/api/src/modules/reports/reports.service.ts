@@ -1,324 +1,321 @@
-import { Injectable, Logger } from '@nestjs/common';
-import {
-  CaseStage,
-  LeadStage,
-  PaymentKind,
-  PaymentStatus,
-  type LeadSource,
-  type Role,
-  type ServiceType,
-} from '../../prisma/client.js';
+import { Injectable } from '@nestjs/common';
+import type { LeadSource } from '../../prisma/client.js';
+import type {
+  FinanceReport,
+  IntakeRiskReport,
+  ManagementOverview,
+  OutcomesReport,
+  PipelineReport,
+  ReportPeriodInfo,
+  StaffReport,
+} from './report-types.js';
+import { Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { CacheService } from '../../redis/cache.service.js';
+import { FinanceReportService } from './finance-report.service.js';
+import { IntakeRiskReportService, DEFAULT_HORIZON_DAYS } from './intake-risk-report.service.js';
+import { OutcomesReportService } from './outcomes-report.service.js';
+import { DEFAULT_STALL_DAYS, PipelineReportService } from './pipeline-report.service.js';
+import { changePercent, resolvePeriod, type ReportPeriod, type ReportPreset } from './report-period.js';
+import { CASE_DOC_PROGRESS, CLOSED_STAGES, inPeriod, inPreviousPeriod, money, percent } from './report-sql.js';
+import { StaffReportService } from './staff-report.service.js';
 
 /**
- * 1G-08…1G-11 — reporting.
+ * Reporting (gksedu.md §19, ARCHITECTURE.md §13).
  *
- * Everything here reads the four materialized views created in
- * `20260905010000_report_materialized_views`; Prisma cannot model a view, so
- * these are `$queryRaw` with hand-written row types. Nothing aggregates the
- * transactional tables directly (ARCHITECTURE.md §13) — except the handful of
- * "right now" counters on the dashboard, which must not be a night stale.
+ * **Why there are no materialized views any more.** The first version read four
+ * nightly `mv_*` views, which bought nothing this business needs and cost the
+ * one thing it cannot do without: a number a manager can act on this morning.
+ * "Авлага 4.2 сая₮" is a lie if somebody paid at nine. The tables these reports
+ * aggregate are small — thousands of cases, thousands of payments — and the
+ * expense against a Supabase pooler is the round trip, not the scan, so every
+ * report fires its queries in one `Promise.all` and reads live rows.
+ *
+ * What replaces the nightly refresh is a short Redis cache, keyed by report and
+ * period. Ten staff opening the same screen in the same minute compute it once;
+ * nothing is ever more than {@link REPORT_CACHE_TTL_MS} old, and the refresh
+ * button drops the key rather than rebuilding a view.
+ *
+ * Each report is its own service. They share one vocabulary — `report-sql.ts`
+ * for "when does a month start", "which document statuses are done", "what
+ * counts as income" — because two reports quietly disagreeing about a
+ * definition is how a dashboard loses the office's trust for good.
  */
 
-export interface FunnelRow {
-  month: Date;
-  source: LeadSource;
-  stage: LeadStage;
-  lead_count: bigint;
-  unassigned_count: bigint;
-  avg_age_days: string | null;
-}
+/** Long enough to absorb a morning rush, short enough that nobody rings a client who paid. */
+export const REPORT_CACHE_TTL_MS = 3 * 60 * 1000;
 
-export interface FinanceRow {
-  month: Date;
-  service_type: ServiceType;
-  kind: PaymentKind;
-  status: PaymentStatus;
-  payment_count: bigint;
-  total_mnt: string;
-  overdue_count: bigint;
-  overdue_mnt: string;
-}
+const CACHE_PREFIX = 'reports';
 
-export interface DocumentProgressRow {
-  case_id: string;
-  case_code: string;
-  service_type: ServiceType;
-  case_stage: CaseStage;
-  user_id: string;
-  doc_officer_id: string | null;
-  required_total: bigint;
-  required_done: bigint;
-  overdue_count: bigint;
-  next_due_at: Date | null;
+export interface ReportRequest {
+  preset?: ReportPreset;
+  from?: string;
+  to?: string;
+  stallDays?: number;
+  horizonDays?: number;
 }
-
-export interface StaffPerformanceRow {
-  staff_id: string;
-  staff_name: string | null;
-  staff_email: string | null;
-  role: Role;
-  leads_assigned: bigint;
-  leads_won: bigint;
-  leads_lost: bigint;
-  cases_as_consultant: bigint;
-  cases_as_doc_officer: bigint;
-  open_tasks: bigint;
-  overdue_tasks: bigint;
-  completed_tasks: bigint;
-  review_notes: bigint;
-  revenue_mnt: string;
-}
-
-/** Case stages that mean the client has physically left (§19 "явсан"). */
-const DEPARTED_STAGES: CaseStage[] = [CaseStage.DEPARTED, CaseStage.COMPLETED];
 
 @Injectable()
 export class ReportsService {
-  private readonly logger = new Logger(ReportsService.name);
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+    private readonly finance: FinanceReportService,
+    private readonly pipeline: PipelineReportService,
+    private readonly outcomes: OutcomesReportService,
+    private readonly intakeRisk: IntakeRiskReportService,
+    private readonly staff: StaffReportService,
+  ) {}
 
-  constructor(private readonly prisma: PrismaService) {}
-
-  /** Nightly job (1G-08). `CONCURRENTLY` needs the unique indexes the migration created. */
-  async refreshViews(): Promise<{ refreshed: string[]; durationMs: number }> {
-    const started = Date.now();
-    const views = ['mv_sales_funnel', 'mv_finance', 'mv_document_progress', 'mv_staff_performance'];
-
-    for (const view of views) {
-      try {
-        await this.prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW CONCURRENTLY "${view}"`);
-      } catch (error) {
-        // CONCURRENTLY fails on a view that has never been populated; the
-        // blocking form is correct for that first run.
-        this.logger.warn(`"${view}" CONCURRENTLY шинэчлэлт амжилтгүй, блоклох горимд шилжлээ`);
-        await this.prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW "${view}"`);
-        void error;
-      }
-    }
-
-    const durationMs = Date.now() - started;
-    this.logger.log(`Тайлангийн ${views.length} харагдац ${durationMs}ms-д шинэчлэгдлээ`);
-    return { refreshed: views, durationMs };
+  /** Drops every cached report; the "Одоо шинэчлэх" button and nothing else. */
+  async invalidate(): Promise<{ clearedAt: string }> {
+    await this.cache.delByPattern(`${CACHE_PREFIX}:*`);
+    return { clearedAt: new Date().toISOString() };
   }
 
-  // ── 1B-11 — sales funnel ─────────────────────────────────────────────────
+  financeReport(request: ReportRequest): Promise<FinanceReport> {
+    return this.cached('finance', request, (period, info) => this.finance.build(period, info));
+  }
 
-  async salesFunnel(months = 12) {
-    const rows = await this.prisma.$queryRawUnsafe<FunnelRow[]>(
-      `SELECT * FROM "mv_sales_funnel"
-        WHERE month >= date_trunc('month', now()) - make_interval(months => $1)
-        ORDER BY month DESC, source, stage`,
-      months,
+  pipelineReport(request: ReportRequest): Promise<PipelineReport> {
+    const stallDays = request.stallDays ?? DEFAULT_STALL_DAYS;
+    return this.cached('pipeline', { ...request, stallDays }, (period, info) =>
+      this.pipeline.build(period, info, stallDays),
     );
-
-    const bySource = new Map<LeadSource, { total: number; won: number; lost: number; unassigned: number }>();
-    const byStage = new Map<LeadStage, number>();
-    const byMonth = new Map<string, { month: string; total: number; won: number }>();
-
-    for (const row of rows) {
-      const count = Number(row.lead_count);
-      const source = bySource.get(row.source) ?? { total: 0, won: 0, lost: 0, unassigned: 0 };
-      source.total += count;
-      source.unassigned += Number(row.unassigned_count);
-      if (row.stage === LeadStage.WON) source.won += count;
-      if (row.stage === LeadStage.LOST) source.lost += count;
-      bySource.set(row.source, source);
-
-      byStage.set(row.stage, (byStage.get(row.stage) ?? 0) + count);
-
-      const key = row.month.toISOString().slice(0, 7);
-      const month = byMonth.get(key) ?? { month: key, total: 0, won: 0 };
-      month.total += count;
-      if (row.stage === LeadStage.WON) month.won += count;
-      byMonth.set(key, month);
-    }
-
-    const total = [...byStage.values()].reduce((sum, count) => sum + count, 0);
-    const won = byStage.get(LeadStage.WON) ?? 0;
-
-    return {
-      total,
-      won,
-      conversionRate: total ? Math.round((won / total) * 1000) / 10 : 0,
-      byStage: [...byStage.entries()].map(([stage, count]) => ({ stage, count })),
-      bySource: [...bySource.entries()].map(([source, stats]) => ({
-        source,
-        ...stats,
-        conversionRate: stats.total ? Math.round((stats.won / stats.total) * 1000) / 10 : 0,
-      })),
-      byMonth: [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month)),
-    };
   }
 
-  // ── 1G-10 — finance ──────────────────────────────────────────────────────
+  outcomesReport(request: ReportRequest): Promise<OutcomesReport> {
+    return this.cached('outcomes', request, (period, info) => this.outcomes.build(period, info));
+  }
 
-  async finance(months = 12) {
-    const rows = await this.prisma.$queryRawUnsafe<FinanceRow[]>(
-      `SELECT * FROM "mv_finance"
-        WHERE month >= date_trunc('month', now()) - make_interval(months => $1)
-        ORDER BY month DESC`,
-      months,
+  staffReport(request: ReportRequest): Promise<StaffReport> {
+    return this.cached('staff', request, (period, info) => this.staff.build(period, info));
+  }
+
+  /** No period: a deadline does not belong to a reporting month. */
+  intakeRiskReport(horizonDays: number = DEFAULT_HORIZON_DAYS): Promise<IntakeRiskReport> {
+    return this.cache.wrap(
+      `${CACHE_PREFIX}:intake-risk:${horizonDays}`,
+      () => this.intakeRisk.build(horizonDays),
+      REPORT_CACHE_TTL_MS,
     );
-
-    const totals = { revenue: 0, prepayment: 0, balance: 0, receivable: 0, overdue: 0, refunded: 0 };
-    const byService = new Map<ServiceType, { revenue: number; receivable: number; refunded: number; count: number }>();
-    const byMonth = new Map<string, { month: string; revenue: number; receivable: number }>();
-
-    for (const row of rows) {
-      const amount = Number(row.total_mnt);
-      const service = byService.get(row.service_type) ?? { revenue: 0, receivable: 0, refunded: 0, count: 0 };
-
-      if (row.status === PaymentStatus.PAID) {
-        // A refund is stored as its own PAID row; it reduces revenue.
-        if (row.kind === PaymentKind.REFUND) {
-          totals.refunded += amount;
-          service.refunded += amount;
-        } else {
-          totals.revenue += amount;
-          service.revenue += amount;
-          if (row.kind === PaymentKind.PREPAYMENT) totals.prepayment += amount;
-          if (row.kind === PaymentKind.BALANCE) totals.balance += amount;
-        }
-        service.count += Number(row.payment_count);
-
-        const key = row.month.toISOString().slice(0, 7);
-        const month = byMonth.get(key) ?? { month: key, revenue: 0, receivable: 0 };
-        if (row.kind !== PaymentKind.REFUND) month.revenue += amount;
-        byMonth.set(key, month);
-      }
-
-      if (row.status === PaymentStatus.PENDING) {
-        totals.receivable += amount;
-        totals.overdue += Number(row.overdue_mnt);
-        service.receivable += amount;
-
-        const key = row.month.toISOString().slice(0, 7);
-        const month = byMonth.get(key) ?? { month: key, revenue: 0, receivable: 0 };
-        month.receivable += amount;
-        byMonth.set(key, month);
-      }
-
-      byService.set(row.service_type, service);
-    }
-
-    return {
-      totals: { ...totals, netRevenue: totals.revenue - totals.refunded },
-      byService: [...byService.entries()].map(([serviceType, stats]) => ({ serviceType, ...stats })),
-      byMonth: [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month)),
-    };
   }
 
-  // ── 1G-11 — staff performance ────────────────────────────────────────────
+  // ── The management overview (§19) ─────────────────────────────────────────
 
-  async staffPerformance() {
-    const rows = await this.prisma.$queryRawUnsafe<StaffPerformanceRow[]>(
-      `SELECT * FROM "mv_staff_performance" ORDER BY revenue_mnt DESC, staff_name`,
+  /**
+   * The one screen a manager opens first, and the reason it is split in two:
+   *
+   * - **Урсгал** — what happened in the period, each figure beside the same
+   *   figure one period earlier. A number with nothing to compare it to is a
+   *   number nobody can act on.
+   * - **Байдал** — where the business stands right now: cases in flight, money
+   *   owed, deadlines closing. These carry no period, because they are not
+   *   about one.
+   *
+   * The old version mixed the two — an all-time lead count next to a 12-month
+   * revenue figure next to a live stage count — and so described no moment in
+   * time at all.
+   */
+  overview(request: ReportRequest): Promise<ManagementOverview> {
+    return this.cached('overview', request, async (period, periodInfo) => {
+      const [flow, finance, stageLoad, deadlineRisk, stock, sources] = await Promise.all([
+        this.flowCounters(period),
+        this.finance.build(period, periodInfo),
+        this.pipeline.stageLoad(request.stallDays ?? DEFAULT_STALL_DAYS),
+        this.intakeRisk.atRiskCount(request.horizonDays ?? DEFAULT_HORIZON_DAYS),
+        this.stockCounters(),
+        this.leadsBySource(period),
+      ]);
+
+      return {
+        period: periodInfo,
+        flow: {
+          newLeads: metric(flow.new_leads, flow.prev_new_leads),
+          newClients: metric(flow.new_clients, flow.prev_new_clients),
+          signedContracts: metric(flow.signed_contracts, flow.prev_signed_contracts),
+          contractValueMnt: metric(money(flow.contract_value), money(flow.prev_contract_value)),
+          netIncomeMnt: metric(finance.income.netMnt, finance.income.previousNetMnt),
+          refundedMnt: metric(finance.income.refundMnt, money(flow.prev_refunded)),
+          applicationsSubmitted: metric(flow.applications, flow.prev_applications),
+          admitted: metric(flow.admitted, flow.prev_admitted),
+          visaApproved: metric(flow.visa_approved, flow.prev_visa_approved),
+          departed: metric(flow.departed, flow.prev_departed),
+        },
+        stock: {
+          activeCases: stock.active_cases,
+          openLeads: stock.open_leads,
+          unassignedLeads: stock.unassigned_leads,
+          receivableMnt: finance.receivables.totalMnt,
+          overdueReceivableMnt: finance.receivables.overdueMnt,
+          uninvoicedContractMnt: finance.committed.amountMnt,
+          casesCollectingDocuments: stock.collecting_documents,
+          overdueDocuments: stock.overdue_documents,
+          deadlineRiskCases: deadlineRisk,
+          casesByStage: stageLoad,
+        },
+        leadsBySource: sources.map((row) => ({
+          source: row.source as LeadSource,
+          leads: row.leads,
+          won: row.won,
+          conversionRate: percent(row.won, row.leads),
+        })),
+        incomeByService: finance.byService.map((row) => ({
+          serviceType: row.serviceType,
+          netMnt: row.netMnt,
+          previousMnt: row.previousMnt,
+          changePercent: row.changePercent,
+        })),
+        incomeByMonth: finance.byMonth.map((row) => ({
+          month: row.month,
+          netMnt: row.netMnt,
+          refundMnt: row.refundMnt,
+          passThroughMnt: row.passThroughMnt,
+        })),
+      };
+    });
+  }
+
+  /** Everything that happened in the period, beside the same period before it. */
+  private async flowCounters(period: ReportPeriod) {
+    const created = Prisma.sql`l."createdAt"`;
+    const clientCreated = Prisma.sql`cl."createdAt"`;
+    const signed = Prisma.sql`ct."signedAt"`;
+    const submitted = Prisma.sql`a."submittedAt"`;
+    const transition = Prisma.sql`t."createdAt"`;
+    const paid = Prisma.sql`p."paidAt"`;
+
+    const rows = await this.prisma.$queryRaw<
+      Record<
+        | 'new_leads'
+        | 'prev_new_leads'
+        | 'new_clients'
+        | 'prev_new_clients'
+        | 'signed_contracts'
+        | 'prev_signed_contracts'
+        | 'contract_value'
+        | 'prev_contract_value'
+        | 'prev_refunded'
+        | 'applications'
+        | 'prev_applications'
+        | 'admitted'
+        | 'prev_admitted'
+        | 'visa_approved'
+        | 'prev_visa_approved'
+        | 'departed'
+        | 'prev_departed',
+        number
+      >[]
+    >`
+      SELECT
+        (SELECT count(*)::int FROM "leads" l WHERE l."mergedIntoId" IS NULL AND ${inPeriod(created, period)})         AS new_leads,
+        (SELECT count(*)::int FROM "leads" l WHERE l."mergedIntoId" IS NULL AND ${inPreviousPeriod(created, period)}) AS prev_new_leads,
+        (SELECT count(*)::int FROM "clients" cl WHERE ${inPeriod(clientCreated, period)})                             AS new_clients,
+        (SELECT count(*)::int FROM "clients" cl WHERE ${inPreviousPeriod(clientCreated, period)})                     AS prev_new_clients,
+        (SELECT count(*)::int FROM "contracts" ct WHERE ct."signedAt" IS NOT NULL AND ${inPeriod(signed, period)})         AS signed_contracts,
+        (SELECT count(*)::int FROM "contracts" ct WHERE ct."signedAt" IS NOT NULL AND ${inPreviousPeriod(signed, period)}) AS prev_signed_contracts,
+        (SELECT COALESCE(sum(ct."totalAmountSnapshot"), 0)::float8 FROM "contracts" ct
+          WHERE ct."signedAt" IS NOT NULL AND ${inPeriod(signed, period)})                                            AS contract_value,
+        (SELECT COALESCE(sum(ct."totalAmountSnapshot"), 0)::float8 FROM "contracts" ct
+          WHERE ct."signedAt" IS NOT NULL AND ${inPreviousPeriod(signed, period)})                                    AS prev_contract_value,
+        (SELECT COALESCE(sum(p."amountMnt"), 0)::float8 FROM "payments" p
+          WHERE p.status = 'PAID' AND p.kind = 'REFUND' AND ${inPreviousPeriod(paid, period)})                        AS prev_refunded,
+        (SELECT count(*)::int FROM "applications" a WHERE a."submittedAt" IS NOT NULL AND ${inPeriod(submitted, period)})         AS applications,
+        (SELECT count(*)::int FROM "applications" a WHERE a."submittedAt" IS NOT NULL AND ${inPreviousPeriod(submitted, period)}) AS prev_applications,
+        -- Counted off the transition trail, so "admitted in September" means
+        -- the case was admitted then, not that it happens to be admitted now.
+        (SELECT count(DISTINCT t."caseId")::int FROM "case_transitions" t
+          WHERE t."toStage" IN ('ADMITTED', 'GKS_ROUND1_PASSED', 'GKS_ROUND2_PASSED') AND ${inPeriod(transition, period)})         AS admitted,
+        (SELECT count(DISTINCT t."caseId")::int FROM "case_transitions" t
+          WHERE t."toStage" IN ('ADMITTED', 'GKS_ROUND1_PASSED', 'GKS_ROUND2_PASSED') AND ${inPreviousPeriod(transition, period)}) AS prev_admitted,
+        (SELECT count(DISTINCT t."caseId")::int FROM "case_transitions" t
+          WHERE t."toStage" = 'VISA_APPROVED' AND ${inPeriod(transition, period)})         AS visa_approved,
+        (SELECT count(DISTINCT t."caseId")::int FROM "case_transitions" t
+          WHERE t."toStage" = 'VISA_APPROVED' AND ${inPreviousPeriod(transition, period)}) AS prev_visa_approved,
+        (SELECT count(DISTINCT t."caseId")::int FROM "case_transitions" t
+          WHERE t."toStage" IN ('DEPARTED', 'COMPLETED') AND ${inPeriod(transition, period)})         AS departed,
+        (SELECT count(DISTINCT t."caseId")::int FROM "case_transitions" t
+          WHERE t."toStage" IN ('DEPARTED', 'COMPLETED') AND ${inPreviousPeriod(transition, period)}) AS prev_departed
+    `;
+
+    return rows[0]!;
+  }
+
+  /** Where the business stands now. No period touches any of these. */
+  private async stockCounters() {
+    const rows = await this.prisma.$queryRaw<
+      Record<'active_cases' | 'open_leads' | 'unassigned_leads' | 'collecting_documents' | 'overdue_documents', number>[]
+    >`
+      SELECT
+        (SELECT count(*)::int FROM "cases" c WHERE c.stage NOT IN ${CLOSED_STAGES})                     AS active_cases,
+        (SELECT count(*)::int FROM "leads" l
+          WHERE l."mergedIntoId" IS NULL AND l.stage NOT IN ('WON', 'LOST'))                            AS open_leads,
+        (SELECT count(*)::int FROM "leads" l
+          WHERE l."mergedIntoId" IS NULL AND l.stage NOT IN ('WON', 'LOST') AND l."assignedToId" IS NULL) AS unassigned_leads,
+        doc_totals.collecting                                                                            AS collecting_documents,
+        doc_totals.overdue                                                                               AS overdue_documents
+      FROM (
+        SELECT
+          count(*) FILTER (WHERE docs.required_total > 0 AND docs.required_done < docs.required_total)::int AS collecting,
+          COALESCE(sum(docs.overdue_docs), 0)::int AS overdue
+        FROM "cases" c
+        ${CASE_DOC_PROGRESS}
+        WHERE c.stage NOT IN ${CLOSED_STAGES}
+      ) doc_totals
+    `;
+
+    return rows[0]!;
+  }
+
+  /**
+   * Where enquiries came from, and how many of them became a signed client.
+   * Won is counted from the stage-change trail rather than the lead's current
+   * stage, so it belongs to the period the deal closed in.
+   */
+  private leadsBySource(period: ReportPeriod) {
+    const created = Prisma.sql`l."createdAt"`;
+    return this.prisma.$queryRaw<{ source: string; leads: number; won: number }[]>`
+      SELECT
+        l.source::text AS source,
+        count(*)::int  AS leads,
+        count(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM "lead_activities" la
+          WHERE la."leadId" = l.id AND la.type = 'STAGE_CHANGE' AND la.meta->>'to' = 'WON'
+        ))::int AS won
+      FROM "leads" l
+      WHERE l."mergedIntoId" IS NULL AND ${inPeriod(created, period)}
+      GROUP BY 1
+      ORDER BY 2 DESC
+    `;
+  }
+
+  // ── Internals ────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve the period once, stamp it, and memoise the result under a key that
+   * includes every input — a report cached under the wrong period is worse than
+   * no cache at all.
+   */
+  private async cached<T>(
+    name: string,
+    request: ReportRequest,
+    build: (period: ReportPeriod, info: ReportPeriodInfo) => Promise<T>,
+  ): Promise<T> {
+    const period = resolvePeriod(request.preset ?? 'month', { from: request.from, to: request.to });
+    const key = [CACHE_PREFIX, name, period.from, period.to, request.stallDays ?? '', request.horizonDays ?? ''].join(':');
+
+    return this.cache.wrap(
+      key,
+      () => build(period, { ...period, generatedAt: new Date().toISOString() }),
+      REPORT_CACHE_TTL_MS,
     );
-
-    return rows.map((row) => ({
-      staffId: row.staff_id,
-      name: row.staff_name,
-      email: row.staff_email,
-      role: row.role,
-      leadsAssigned: Number(row.leads_assigned),
-      leadsWon: Number(row.leads_won),
-      leadsLost: Number(row.leads_lost),
-      conversionRate: Number(row.leads_assigned)
-        ? Math.round((Number(row.leads_won) / Number(row.leads_assigned)) * 1000) / 10
-        : 0,
-      casesAsConsultant: Number(row.cases_as_consultant),
-      casesAsDocOfficer: Number(row.cases_as_doc_officer),
-      openTasks: Number(row.open_tasks),
-      overdueTasks: Number(row.overdue_tasks),
-      completedTasks: Number(row.completed_tasks),
-      reviewNotes: Number(row.review_notes),
-      revenueMnt: Number(row.revenue_mnt),
-    }));
-  }
-
-  // ── Document progress ────────────────────────────────────────────────────
-
-  async documentProgress(limit = 100) {
-    const rows = await this.prisma.$queryRawUnsafe<DocumentProgressRow[]>(
-      `SELECT * FROM "mv_document_progress"
-        WHERE required_total > 0
-        ORDER BY overdue_count DESC, next_due_at NULLS LAST
-        LIMIT $1`,
-      limit,
-    );
-
-    return rows.map((row) => ({
-      caseId: row.case_id,
-      caseCode: row.case_code,
-      serviceType: row.service_type,
-      caseStage: row.case_stage,
-      userId: row.user_id,
-      docOfficerId: row.doc_officer_id,
-      requiredTotal: Number(row.required_total),
-      requiredDone: Number(row.required_done),
-      percent: Number(row.required_total)
-        ? Math.round((Number(row.required_done) / Number(row.required_total)) * 100)
-        : 100,
-      overdueCount: Number(row.overdue_count),
-      nextDueAt: row.next_due_at,
-    }));
-  }
-
-  // ── 1G-09 — the 21 dashboard figures of gksedu.md §19 ────────────────────
-
-  async dashboard() {
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-
-    const [funnel, finance, docs, staff] = await Promise.all([
-      this.salesFunnel(12),
-      this.finance(12),
-      this.documentProgress(500),
-      this.staffPerformance(),
-    ]);
-
-    // Live counters — the stage of a case is exactly the kind of number that
-    // must not be a night old on a manager's screen.
-    const [newLeadsThisMonth, clients, byStage, applications] = await Promise.all([
-      this.prisma.lead.count({ where: { createdAt: { gte: monthStart }, mergedIntoId: null } }),
-      this.prisma.client.count(),
-      this.prisma.case.groupBy({ by: ['stage'], _count: { _all: true } }),
-      this.prisma.application.groupBy({ by: ['universityId'], _count: { _all: true } }),
-    ]);
-
-    const stageCount = new Map(byStage.map((row) => [row.stage, row._count._all]));
-    const countStages = (...stages: CaseStage[]) =>
-      stages.reduce((sum, stage) => sum + (stageCount.get(stage) ?? 0), 0);
-
-    return {
-      // Харилцагч ба борлуулалт
-      totalLeads: funnel.total,
-      newLeadsThisMonth,
-      contractedClients: clients,
-      conversionRate: funnel.conversionRate,
-      salesByService: finance.byService.map((row) => ({ serviceType: row.serviceType, revenue: row.revenue })),
-      applicationsByUniversity: applications.length,
-      // Санхүү
-      totalRevenue: finance.totals.revenue,
-      prepaymentTotal: finance.totals.prepayment,
-      balanceTotal: finance.totals.balance,
-      receivable: finance.totals.receivable,
-      overdueReceivable: finance.totals.overdue,
-      refunded: finance.totals.refunded,
-      // Материал
-      collectingDocuments: docs.filter((row) => row.percent < 100).length,
-      overdueDocuments: docs.reduce((sum, row) => sum + row.overdueCount, 0),
-      // Процессийн үе шат
-      submittedToUniversity: countStages(CaseStage.APPLICATION_SUBMITTED),
-      admitted: countStages(CaseStage.ADMITTED, CaseStage.GKS_ROUND1_PASSED, CaseStage.GKS_ROUND2_PASSED),
-      rejected: countStages(CaseStage.REJECTED),
-      invited: countStages(CaseStage.INVITATION_RECEIVED),
-      visaApproved: countStages(CaseStage.VISA_APPROVED),
-      departed: countStages(...DEPARTED_STAGES),
-      // Ажилтан ба суваг
-      staffPerformance: staff,
-      leadsBySource: funnel.bySource,
-    };
   }
 }
+
+/** A flow figure carries the previous period beside it, always. */
+function metric(value: number, previous: number) {
+  return { value, previous, changePercent: changePercent(value, previous) };
+}
+
+/** Re-exported so the controller states its defaults from one source. */
+export { DEFAULT_HORIZON_DAYS, DEFAULT_STALL_DAYS };

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ClientStats, LeadStats, PaymentStats, ReviewQueueItem } from '@gks/shared';
+import type { ClientStats, IntakeRiskReport, LeadStats, PaymentStats, ReviewQueueItem } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -20,6 +20,12 @@ const leads = ref<LeadStats | null>(null);
 const clients = ref<ClientStats | null>(null);
 const payments = ref<PaymentStats | null>(null);
 const dueDocuments = ref<ReviewQueueItem[]>([]);
+/**
+ * Cases whose own intake deadline is closing while the application is still
+ * unlodged (1M). Two months ahead, because translation and notarisation take
+ * weeks — a queue that only lights up inside a fortnight lights up too late.
+ */
+const deadlineRisk = ref(0);
 const pending = ref(true);
 const error = ref(false);
 
@@ -37,18 +43,20 @@ async function load() {
   try {
     // The document feed is document-officer scoped; a consultant without that
     // role still gets the rest of the board rather than an empty page.
-    const [leadStats, clientStats, paymentStats, reminders] = await Promise.all([
+    const [leadStats, clientStats, paymentStats, reminders, risk] = await Promise.all([
       api.get<LeadStats>('/leads/stats'),
       api.get<ClientStats>('/clients/stats'),
       api.get<PaymentStats>('/payments/stats'),
       auth.isDocStaff
         ? api.get<ReviewQueueItem[]>('/case-documents/reminders').catch(() => [])
         : Promise.resolve([]),
+      api.get<IntakeRiskReport>('/reports/intake-risk?horizonDays=60').catch(() => null),
     ]);
     leads.value = leadStats;
     clients.value = clientStats;
     payments.value = paymentStats;
     dueDocuments.value = reminders;
+    deadlineRisk.value = risk?.cases.length ?? 0;
   } catch {
     error.value = true;
   } finally {
@@ -105,6 +113,15 @@ const queues = computed(() => [
     icon: 'credit-card',
     urgent: (payments.value?.overdueCount ?? 0) > 0,
     to: '/admin/clients?attention=PENDING_PAYMENT',
+  },
+  {
+    key: 'deadline-risk',
+    label: 'Элсэлтэд амжихгүй',
+    value: deadlineRisk.value,
+    hint: 'Дотоод эцсийн хугацаа дөхсөн',
+    icon: 'calendar-clock',
+    urgent: deadlineRisk.value > 0,
+    to: '/admin/reports?tab=intake-risk',
   },
   {
     key: 'unassigned-clients',

@@ -1,22 +1,60 @@
-import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
-import { STAFF_ROLES } from '../../common/constants/roles.js';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Header,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
+
+import { DOC_STAFF_ROLES, STAFF_ROLES } from '../../common/constants/roles.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Role } from '../../prisma/client.js';
+import { ReportExportQueryDto, ReportQueryDto } from './dto/report-query.dto.js';
+import {
+  incomeCsv,
+  intakeRiskCsv,
+  outcomesCsv,
+  receivablesCsv,
+  staffCsv,
+  stalledCasesCsv,
+  type CsvFile,
+} from './report-csv.js';
+import type { ReportExport } from './report-types.js';
 import { ReportsService } from './reports.service.js';
 
-class MonthsQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(60)
-  months: number = 12;
-}
+/**
+ * Who may download what. One endpoint cannot carry two different `@Roles`, so a
+ * CSV must not become the back door into a report the caller cannot open —
+ * every export names the same audience its report does.
+ */
+const EXPORT_ROLES: Record<ReportExport, readonly Role[]> = {
+  receivables: [Role.ADMIN],
+  income: [Role.ADMIN],
+  staff: [Role.ADMIN],
+  outcomes: STAFF_ROLES,
+  'stalled-cases': STAFF_ROLES,
+  'intake-risk': DOC_STAFF_ROLES,
+};
 
+/**
+ * `/reports/*` (1M).
+ *
+ * Every endpoint takes the same period query, so one date control on the screen
+ * drives the whole set — except `intake-risk`, which is a countdown to a
+ * deadline and belongs to no month.
+ *
+ * Money is admin-only: `finance` and the income/receivable exports. The
+ * pipeline, outcomes and deadline reports are what consultants and document
+ * officers need to do the day's work, so they carry the staff roles.
+ */
 @ApiTags('reports')
 @ApiBearerAuth()
 @UseGuards(RolesGuard)
@@ -24,45 +62,95 @@ class MonthsQueryDto {
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 
-  @Get('dashboard')
+  @Get('overview')
   @Roles(...STAFF_ROLES)
-  @ApiOperation({ summary: '§19-ийн удирдлагын хяналтын самбар (1G-09)' })
-  dashboard() {
-    return this.reports.dashboard();
-  }
-
-  @Get('sales-funnel')
-  @Roles(...STAFF_ROLES)
-  @ApiOperation({ summary: 'Борлуулалтын юүлүүр: суваг, хөрвөлт (1B-11)' })
-  salesFunnel(@Query() query: MonthsQueryDto) {
-    return this.reports.salesFunnel(query.months);
+  @ApiOperation({ summary: 'Удирдлагын тойм: урсгал ба одоогийн байдал (§19)' })
+  overview(@Query() query: ReportQueryDto) {
+    return this.reports.overview(query);
   }
 
   @Get('finance')
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Санхүүгийн тайлан: орлого, авлага, буцаалт (1G-10)' })
-  finance(@Query() query: MonthsQueryDto) {
-    return this.reports.finance(query.months);
+  @ApiOperation({ summary: 'Санхүү: орлого, дамжин өнгөрөх мөнгө, авлагын насжилт' })
+  finance(@Query() query: ReportQueryDto) {
+    return this.reports.financeReport(query);
   }
 
-  @Get('staff-performance')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Ажилтны гүйцэтгэлийн тайлан (1G-11)' })
-  staffPerformance() {
-    return this.reports.staffPerformance();
+  @Get('pipeline')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Хэргийн юүлүүр: хөрвөлт, үе шатны хугацаа, гацсан хэрэг' })
+  pipeline(@Query() query: ReportQueryDto) {
+    return this.reports.pipelineReport(query);
   }
 
-  @Get('document-progress')
+  @Get('outcomes')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Үр дүн: сургууль тус бүрийн элсэлт, визийн зөвшөөрлийн хувь' })
+  outcomes(@Query() query: ReportQueryDto) {
+    return this.reports.outcomesReport(query);
+  }
+
+  @Get('intake-risk')
   @Roles(...STAFF_ROLES, Role.DOC_OFFICER)
-  @ApiOperation({ summary: 'Материалын явц, хугацаа хэтэрсэн үйлчилгээ' })
-  documentProgress() {
-    return this.reports.documentProgress();
+  @ApiOperation({ summary: 'Дотоод эцсийн хугацаанд амжихгүй эрсдэлтэй хэрэг (одоогийн байдлаар)' })
+  intakeRisk(@Query() query: ReportQueryDto) {
+    return this.reports.intakeRiskReport(query.horizonDays);
+  }
+
+  @Get('staff')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Ажилтны гүйцэтгэл — сонгосон хугацаанд' })
+  staff(@Query() query: ReportQueryDto) {
+    return this.reports.staffReport(query);
+  }
+
+  /**
+   * One CSV endpoint rather than six: the file always comes from a report the
+   * screen has already shown, so the only thing that varies is which one.
+   *
+   * The route lets every staff role in; `EXPORT_ROLES` then decides which file
+   * this caller may actually have.
+   */
+  @Get('export')
+  @Roles(...DOC_STAFF_ROLES)
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @ApiProduces('text/csv')
+  @ApiOperation({ summary: 'Тайланг CSV болгон татах (Excel-д зориулсан UTF-8 BOM-той)' })
+  async export(
+    @Query() query: ReportExportQueryDto,
+    @Res({ passthrough: true }) response: Response,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<string> {
+    const allowed = EXPORT_ROLES[query.report];
+    if (!allowed.includes(user.role)) throw new ForbiddenException('Энэ тайланг татах эрхгүй байна');
+
+    const file = await this.buildExport(query, query.report);
+    // Without this the CSV opens inline in the API's own domain (task 0-21).
+    response.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+    return file.content;
   }
 
   @Post('refresh')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Тайлангийн харагдацыг шууд шинэчлэх (1G-08)' })
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Тайлангийн кэшийг хаяж, дараагийн уншилтыг шууд тооцоолуулах' })
   refresh() {
-    return this.reports.refreshViews();
+    return this.reports.invalidate();
+  }
+
+  private async buildExport(query: ReportQueryDto, report: ReportExport): Promise<CsvFile> {
+    switch (report) {
+      case 'receivables':
+        return receivablesCsv(await this.reports.financeReport(query));
+      case 'income':
+        return incomeCsv(await this.reports.financeReport(query));
+      case 'outcomes':
+        return outcomesCsv(await this.reports.outcomesReport(query));
+      case 'staff':
+        return staffCsv(await this.reports.staffReport(query));
+      case 'intake-risk':
+        return intakeRiskCsv(await this.reports.intakeRiskReport(query.horizonDays));
+      case 'stalled-cases':
+        return stalledCasesCsv(await this.reports.pipelineReport(query));
+    }
   }
 }

@@ -853,6 +853,9 @@ model LeadActivity {
   createdAt  DateTime @default(now())
 
   @@index([leadId, occurredAt])
+  /// "Won this month" is answered here: the lead row only remembers the stage
+  /// it is in now, this trail remembers when it got there (1M).
+  @@index([type, occurredAt])
   @@map("lead_activities")
 }
 
@@ -1199,6 +1202,8 @@ model Case {
   @@index([stage])
   @@index([assignedConsultantId])
   @@index([assignedDocOfficerId])
+  /// The deadline countdown groups live cases by their intake round (1M).
+  @@index([intakeId])
   @@map("cases")
 }
 
@@ -1258,6 +1263,11 @@ model CaseTransition {
   createdAt DateTime  @default(now())
 
   @@index([caseId, createdAt])
+  /// The funnel reads milestones out of this trail: "which cases reached
+  /// ADMITTED in September" (1M).
+  @@index([toStage, createdAt])
+  /// What one staff member moved inside a period (1M).
+  @@index([actorId, createdAt])
   @@map("case_transitions")
 }
 
@@ -1326,6 +1336,8 @@ model Contract {
 
   @@index([userId])
   @@index([status])
+  /// Contract value signed inside a period (1M).
+  @@index([signedAt])
   @@map("contracts")
 }
 
@@ -1405,6 +1417,8 @@ model Payment {
   /// status lookup too, so there is no separate index on `status`.
   @@index([status, dueAt])
   @@index([method])
+  /// Revenue is reported by the month the money arrived (1M).
+  @@index([paidAt])
   @@map("payments")
 }
 
@@ -1644,6 +1658,8 @@ model DocumentReviewNote {
   createdAt DateTime @default(now())
 
   @@index([caseDocumentId, createdAt])
+  /// Documents one officer reviewed inside a period (1M).
+  @@index([authorId, createdAt])
   @@map("document_review_notes")
 }
 
@@ -1702,6 +1718,8 @@ model WorkTask {
   @@index([leadId])
   @@index([assigneeId, status])
   @@index([status, dueAt])
+  /// Tasks completed inside a period (1M).
+  @@index([completedAt])
   @@map("work_tasks")
 }
 
@@ -1810,6 +1828,8 @@ model Application {
 
   @@index([status])
   @@index([universityId])
+  /// Admission outcomes are timed by the submission, not by the case (1M).
+  @@index([submittedAt])
   @@map("applications")
 }
 
@@ -1883,6 +1903,8 @@ model SchoolInvoice {
 
   @@index([caseId])
   @@index([status])
+  /// Pass-through tuition and the transfer fee, by the month collected (1M).
+  @@index([paidAt])
   @@map("school_invoices")
 }
 
@@ -1984,6 +2006,8 @@ model VisaCase {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+  /// Visa approval and refusal rates, timed by the decision (1M).
+  @@index([decidedAt])
   @@map("visa_cases")
 }
 
