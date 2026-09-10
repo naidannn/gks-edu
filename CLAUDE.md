@@ -10,9 +10,10 @@ file — one source of truth). Read this before touching code.
 payment → document collection → university application → invitation → visa → departure.
 
 The business spec lives in `docs/gksedu.md` (Mongolian, authoritative). The technical
-design derived from it is `docs/ARCHITECTURE.md`. Work is tracked in `docs/ROADMAP.md`
-(phases) and `docs/TASKS.md` (open tasks + status); finished ones are archived in
-`docs/TASKS-DONE.md`, so read that only when you need the history.
+design derived from it is `docs/ARCHITECTURE.md`; the phase-2 AI assistant has its own
+design in `docs/AI-ASSISTANT.md` (read it before touching `modules/ai`). Work is tracked
+in `docs/ROADMAP.md` (phases) and `docs/TASKS.md` (open tasks + status); finished ones are
+archived in `docs/TASKS-DONE.md`, so read that only when you need the history.
 
 ### Scope rule — read this before adding a feature
 

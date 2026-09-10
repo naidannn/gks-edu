@@ -347,8 +347,8 @@
 
 ---
 
-## Үе шат 2 — AI чат туслах  `→ M2 (09.17 хэсэгчлэн)`
+## Үе шат 2 — AI чат туслах  `→ M2-α 09.24 · M2-β 10.15 · M2-γ 11.10`
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2-01` | pgvector суурь: `Document`/`DocumentChunk`, HNSW cosine индекс | done | M | 0-03 |
+| `2-01` | pgvector суурь: `Document`/`DocumentChunk`, HNSW cosine индекс *(2A-01-д `KnowledgeDocument`/`KnowledgeChunk` болно)* | done | M | 0-03 |
