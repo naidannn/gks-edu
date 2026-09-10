@@ -73,8 +73,9 @@ class EnvironmentVariables {
 
   /**
    * `false` drops the Google Search tool from the request and leaves the model
-   * answering from memory. Set on production because the account's grounding
-   * quota is exhausted; see `gemini.service.ts`.
+   * answering from memory — the fallback for a key whose Google project has no
+   * grounding quota, which answers every grounded call with a 429. See
+   * `gemini.service.ts`.
    */
   @IsString()
   @IsOptional()
