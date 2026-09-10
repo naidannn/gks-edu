@@ -78,6 +78,11 @@ function rule(id: string, templateId: string, overrides: Record<string, unknown>
   return { id, templateId, necessity: Necessity.REQUIRED, conditionNote: null, ...overrides };
 }
 
+/** A `CaseDocument` the engine produced — the kind it is allowed to withdraw. */
+function ruleRow(id: string, templateId: string, overrides: Record<string, unknown> = {}) {
+  return { id, templateId, ruleId: `rule-of-${templateId}`, status: DocumentStatus.NOT_STARTED, deletedAt: null, ...overrides };
+}
+
 function prismaStub(options: {
   rules: ReturnType<typeof rule>[];
   existing?: Record<string, unknown>[];
@@ -106,9 +111,13 @@ function prismaStub(options: {
     requirementRule: { findMany: vi.fn().mockResolvedValue(options.rules) },
     caseDocument: {
       findMany: vi.fn().mockResolvedValue(options.existing ?? []),
-      create: vi.fn().mockResolvedValue({}),
-      update: vi.fn().mockResolvedValue({}),
+      createMany: vi.fn().mockReturnValue({ __op: 'createMany' }),
+      update: vi.fn().mockReturnValue({ __op: 'update' }),
+      updateMany: vi.fn().mockReturnValue({ __op: 'updateMany' }),
     },
+    // The resolver batches its writes, so the stubs above return descriptors
+    // rather than promises and `$transaction` just collects them.
+    $transaction: vi.fn().mockImplementation((writes: unknown[]) => Promise.resolve(writes)),
   };
   return prisma as unknown as PrismaService & typeof prisma;
 }
@@ -120,32 +129,75 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
     const summary = await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(summary).toMatchObject({ created: 2, updated: 0, removed: 0 });
-    expect(prisma.caseDocument.create).toHaveBeenCalledTimes(2);
+    // One `createMany`, not one `create` per rule: N sequential writes against
+    // a database 115 ms away, and no two of them atomic (1N-52).
+    expect(prisma.caseDocument.createMany).toHaveBeenCalledTimes(1);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a submitted document that no longer matches, and drops an untouched one (§7.1)', async () => {
     const prisma = prismaStub({
       rules: [rule('r1', 't1')],
       existing: [
-        { id: 'd1', templateId: 't1', status: DocumentStatus.SUBMITTED, deletedAt: null },
-        { id: 'd2', templateId: 't-gone', status: DocumentStatus.SUBMITTED, deletedAt: null },
-        { id: 'd3', templateId: 't-unused', status: DocumentStatus.NOT_STARTED, deletedAt: null },
+        ruleRow('d1', 't1', { status: DocumentStatus.SUBMITTED }),
+        ruleRow('d2', 't-gone', { status: DocumentStatus.SUBMITTED }),
+        ruleRow('d3', 't-unused'),
       ],
     });
 
     const summary = await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
 
     expect(summary).toMatchObject({ created: 0, updated: 1, removed: 1, keptDespiteUnmatched: 1 });
-    expect(prisma.caseDocument.update).toHaveBeenCalledWith({
-      where: { id: 'd3' },
+    expect(prisma.caseDocument.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['d3'] } },
       data: { deletedAt: expect.any(Date) },
     });
+  });
+
+  /**
+   * 1N-18 — the client's own questionnaire re-runs this. A row with no `ruleId`
+   * was put there by hand (1D-22) or demanded by the school through the
+   * application (1E-04): the engine never issued it, so it never withdraws it.
+   * Deleting one silently made the readiness gate report "ready" without it.
+   */
+  it('never removes a hand-added or school-requested document, even untouched', async () => {
+    const prisma = prismaStub({
+      rules: [rule('r1', 't1')],
+      existing: [
+        ruleRow('d1', 't1'),
+        { id: 'd-manual', templateId: 't-manual', ruleId: null, status: DocumentStatus.NOT_STARTED, deletedAt: null },
+      ],
+    });
+
+    const summary = await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
+
+    expect(summary).toMatchObject({ removed: 0, keptDespiteUnmatched: 1 });
+    expect(prisma.caseDocument.updateMany).not.toHaveBeenCalled();
+  });
+
+  /**
+   * 1N-18 — `necessity` and `conditionNote` are the rule's opening offer, not
+   * its standing instruction: a staff member who softened one document for this
+   * client keeps that edit through the next re-resolve.
+   */
+  it('leaves a staff edit to necessity and the condition note alone on a re-run', async () => {
+    const prisma = prismaStub({
+      rules: [rule('r1', 't1', { necessity: Necessity.REQUIRED, conditionNote: 'Дүрмийн тайлбар' })],
+      existing: [ruleRow('d1', 't1', { necessity: Necessity.OPTIONAL, conditionNote: 'Энэ харилцагчид шаардлагагүй' })],
+    });
+
+    await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
+
+    const [[call]] = (prisma.caseDocument.update as unknown as { mock: { calls: [{ data: Record<string, unknown> }][] } }).mock.calls;
+    expect(call.data).not.toHaveProperty('necessity');
+    expect(call.data).not.toHaveProperty('conditionNote');
+    expect(call.data).toMatchObject({ ruleId: 'r1', sortOrder: 0, deletedAt: null });
   });
 
   it('restores a previously dropped document when its rule matches again', async () => {
     const prisma = prismaStub({
       rules: [rule('r1', 't1')],
-      existing: [{ id: 'd1', templateId: 't1', status: DocumentStatus.NOT_STARTED, deletedAt: new Date() }],
+      existing: [ruleRow('d1', 't1', { deletedAt: new Date() })],
     });
 
     await new RequirementsService(prisma, casesStub()).resolveForCase('case-1', DocStage.ADMISSION);
@@ -163,8 +215,8 @@ describe('RequirementsService.resolveForCase (1D-04)', () => {
 
     expect(summary.created).toBe(1);
     // First in sort order wins, so a school override placed earlier decides.
-    expect(prisma.caseDocument.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ ruleId: 'r1', necessity: Necessity.REQUIRED }),
+    expect(prisma.caseDocument.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ ruleId: 'r1', necessity: Necessity.REQUIRED })],
     });
   });
 
@@ -198,7 +250,7 @@ describe('RequirementsService.resolveForCase — stage coupling', () => {
     await expect(new RequirementsService(prisma, cases).resolveForCase('case-1', DocStage.ADMISSION)).rejects.toThrow(
       /Урьдчилгаа/,
     );
-    expect(prisma.caseDocument.create).not.toHaveBeenCalled();
+    expect(prisma.caseDocument.createMany).not.toHaveBeenCalled();
     expect(cases.applyDomainTransition).not.toHaveBeenCalled();
   });
 
@@ -223,7 +275,7 @@ describe('RequirementsService.resolveForCase — stage coupling', () => {
 
     await new RequirementsService(prisma, cases).resolveForCase('case-1', DocStage.ADMISSION);
 
-    expect(prisma.caseDocument.create).toHaveBeenCalled();
+    expect(prisma.caseDocument.createMany).toHaveBeenCalled();
     expect(cases.applyDomainTransition).not.toHaveBeenCalled();
   });
 

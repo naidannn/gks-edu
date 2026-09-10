@@ -33,24 +33,25 @@ import type { EnglishLevel, GksBlocker, GksCheckResult, GksDegree, GksStrength, 
  * can send one back with one thing changed. Nothing is stored server-side
  * until the visitor asks us to call.
  */
-const route = useRoute();
+// The answers live in the URL and nowhere else — see `utils/query-state.ts`.
 const router = useRouter();
+const { str, flag, apply: applyQuery } = useQueryState();
 
-const str = (value: unknown): string => (typeof value === 'string' ? value : '');
-const list = (value: unknown): string[] =>
-  str(value).split(',').map((part) => part.trim()).filter(Boolean);
+/** Multi-select answers travel as one comma-separated parameter. */
+const list = (value: string): string[] =>
+  value.split(',').map((part) => part.trim()).filter(Boolean);
 
 const answers = computed(() => ({
-  degree: str(route.query.degree) as GksDegree | '',
-  education: str(route.query.education),
-  graduating: str(route.query.graduating) === '1',
-  age: str(route.query.age),
-  gpa: str(route.query.gpa),
-  gpaScale: (str(route.query.gpaScale) || '100') as GpaScale,
-  topik: str(route.query.topik) || '0',
-  english: (str(route.query.english) || 'NONE') as EnglishLevel,
-  strengths: list(route.query.strengths) as GksStrength[],
-  blockers: list(route.query.blockers) as GksBlocker[],
+  degree: str('degree') as GksDegree | '',
+  education: str('education'),
+  graduating: flag('graduating'),
+  age: str('age'),
+  gpa: str('gpa'),
+  gpaScale: str('gpaScale', '100') as GpaScale,
+  topik: str('topik', '0'),
+  english: str('english', 'NONE') as EnglishLevel,
+  strengths: list(str('strengths')) as GksStrength[],
+  blockers: list(str('blockers')) as GksBlocker[],
 }));
 
 /**
@@ -63,21 +64,16 @@ const answers = computed(() => ({
  */
 const isReady = computed(
   () =>
-    str(route.query.ready) === '1' &&
+    flag('ready') &&
     Boolean(answers.value.degree) &&
     Boolean(answers.value.education) &&
     Boolean(answers.value.age) &&
     Boolean(answers.value.gpa),
 );
 
+/** This wizard has no paging, so nothing is reset when an answer changes. */
 function apply(patch: Record<string, string | number | undefined>) {
-  const merged = { ...(route.query as Record<string, string>), ...patch };
-  const query = Object.fromEntries(
-    Object.entries(merged)
-      .filter(([, value]) => value !== '' && value !== undefined && value !== null)
-      .map(([key, value]) => [key, String(value)]),
-  );
-  router.push({ query });
+  applyQuery(patch, false);
 }
 
 /* ---------------------------------------------------------------------- *
@@ -113,7 +109,7 @@ function firstOpenStep(): number {
  * question they were sent it for.
  */
 const step = computed(() => {
-  const raw = Number.parseInt(str(route.query.step), 10);
+  const raw = Number.parseInt(str('step'), 10);
   if (!Number.isFinite(raw)) return firstOpenStep();
   return Math.min(Math.max(raw, 0), STEP_TITLES.length - 1);
 });

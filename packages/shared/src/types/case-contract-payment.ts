@@ -84,12 +84,19 @@ export interface ContractDetail {
   prepaymentValueSnapshot: string;
   balanceTriggerSnapshot: BalanceTrigger;
   bodyMn: string;
-  pdfPath: string | null;
+  /**
+   * Storage paths and the signing IP are staff-only. A client payload leaves
+   * them out and carries `hasPdf` instead, so the portal can offer the
+   * download without being told where the file lives (1N-04).
+   */
+  pdfPath?: string | null;
   acceptedAt: string | null;
   otpVerifiedAt: string | null;
   signedAt: string | null;
-  signedIp: string | null;
-  physicalScanPath: string | null;
+  signedIp?: string | null;
+  physicalScanPath?: string | null;
+  /** Client payloads only — whether there is a signed PDF to download. */
+  hasPdf?: boolean;
   collateralContract?: CollateralContract | null;
   createdAt: string;
   updatedAt: string;

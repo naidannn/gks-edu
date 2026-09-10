@@ -72,8 +72,12 @@ export interface ProgramRow {
   tuitionPerYearKrw: number | null;
   /** 입학금 — the one-off entrance fee, paid in the first semester only. */
   admissionFeeKrw: number | null;
-  /** Which academic year the figures above are from. Null = unknown. */
-  tuitionYear: number | null;
+  /**
+   * Which academic year the figures above are from. A staff signal, not a
+   * public one — the admin list sorts and flags stale prices on it, and no
+   * public payload carries it (ARCHITECTURE.md §3.3).
+   */
+  tuitionYear?: number | null;
   /** Largest discount a foreign applicant can realistically get, in percent. */
   scholarshipMaxPercent: number | null;
   scholarshipNote: string | null;

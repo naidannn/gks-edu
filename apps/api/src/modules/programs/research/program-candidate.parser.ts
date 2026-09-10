@@ -1,4 +1,5 @@
 import { InstructionLanguage, ProgramLevel } from '../../../prisma/client.js';
+import { fold, isHttpUrl, isRecord, toText } from '../../admissions/research/candidate-parse.js';
 
 /**
  * The contract a Gemini programme reply must satisfy, and the guard that keeps
@@ -99,25 +100,6 @@ export function parseProgramResearchResult(
   return { candidates, sources };
 }
 
-/** Folds a list into one envelope — see `intake-candidate.parser.ts`. */
-function fold(entries: unknown[]): { candidates: unknown[]; sources: unknown[] } {
-  const candidates: unknown[] = [];
-  const sources: unknown[] = [];
-
-  for (const entry of entries) {
-    if (Array.isArray(entry)) {
-      candidates.push(...entry);
-    } else if (isRecord(entry) && Array.isArray(entry.candidates)) {
-      candidates.push(...entry.candidates);
-      if (Array.isArray(entry.sources)) sources.push(...entry.sources);
-    } else {
-      candidates.push(entry);
-    }
-  }
-
-  return { candidates, sources };
-}
-
 function parseCandidate(entry: unknown, options: ParseProgramOptions): ProgramCandidate | null {
   if (!isRecord(entry)) return null;
 
@@ -176,10 +158,6 @@ function parseCandidate(entry: unknown, options: ParseProgramOptions): ProgramCa
   };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function toNumber(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value !== 'string') return null;
@@ -189,6 +167,7 @@ function toNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** Lenient, unlike the intake parser's: a price arrives as "4,200,000원". */
 function toBoundedInt(value: unknown, min: number, max: number): number | null {
   const parsed = toNumber(value);
   if (parsed === null) return null;
@@ -202,18 +181,3 @@ function toBoundedFloat(value: unknown, min: number, max: number): number | null
   return parsed;
 }
 
-function toText(value: unknown, maxLength: number): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed ? trimmed.slice(0, maxLength) : null;
-}
-
-function isHttpUrl(value: unknown): value is string {
-  if (typeof value !== 'string' || value.length > 500) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}

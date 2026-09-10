@@ -12,8 +12,8 @@ import { AuthService } from './auth.service.js';
 /**
  * Changing your own password while signed in. The interesting cases are the
  * two ends: an account that has a password must prove it, and an account that
- * never had one (Google, or a staff-created row) must not be locked out of
- * getting one.
+ * has none has nothing to prove — so it is refused outright and sent to a
+ * route that asks for the inbox instead (1N-43).
  */
 
 /** Cheap rounds — these tests hash a handful of passwords, not a password file. */
@@ -94,12 +94,26 @@ describe('AuthService.changePassword', () => {
     expect(session.accessToken).toBe('signed.jwt.token');
   });
 
-  it('lets a password-less account (Google, or staff-created) set its first password', async () => {
-    const { service, prisma } = serviceStub({ ...ACTIVE, password: null });
-    await service.changePassword('user-1', { newPassword: 'brand-new-pw' });
-    const written = prisma.user.update.mock.calls[0]![0].data as Record<string, unknown>;
-    expect(written.password).toEqual(expect.any(String));
-    expect(written.claimedAt).toBeInstanceOf(Date);
+  /**
+   * 1N-43 — with nothing to prove, a leaked fifteen-minute access token was
+   * enough to mint a permanent credential, and the change revoked every session
+   * so the real owner was logged out on the way in.
+   */
+  it('refuses a staff-created account with no password, and points at the emailed route', async () => {
+    const { service, prisma } = serviceStub({ ...ACTIVE, password: null, googleId: null });
+    await expect(service.changePassword('user-1', { newPassword: 'brand-new-pw' })).rejects.toThrow(
+      /Нууц үгээ мартсан|урилга/,
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(prisma.refreshToken.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('refuses a Google-only account the same way', async () => {
+    const { service, prisma } = serviceStub({ ...ACTIVE, password: null, googleId: 'google-sub-1' });
+    await expect(service.changePassword('user-1', { newPassword: 'brand-new-pw' })).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('refuses a deactivated account', async () => {

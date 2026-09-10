@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -141,9 +142,11 @@ export class ApplicationsController {
   @ApiOperation({ summary: 'Attach the transfer receipt and mark the invoice paid (1E-08)' })
   attachReceipt(
     @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
+    // Without the guard `file.buffer` is a 500 on an empty multipart body.
+    if (!file) throw new BadRequestException('Файл сонгоогүй байна');
     return this.invoices.attachReceipt(id, file.buffer, user);
   }
 

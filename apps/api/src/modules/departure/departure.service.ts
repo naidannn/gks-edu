@@ -3,11 +3,9 @@ import { isStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { NotificationEvent, type Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { formatDateMn } from '../notifications/notification-labels.js';
+import { DAY_MS, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import type { CreateChecklistItemDto, UpdateChecklistItemDto, UpdateDeparturePlanDto } from './dto/departure.dto.js';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 const PLAN_INCLUDE = {
   items: { orderBy: { sortOrder: 'asc' } },
@@ -30,6 +28,11 @@ export class DepartureService {
   async ensurePlan(caseId: string) {
     const existing = await this.prisma.departurePlan.findUnique({ where: { caseId }, include: PLAN_INCLUDE });
     if (existing) return existing;
+
+    // Only on the create path, so the common call stays one query. Without it
+    // an unknown case surfaces the foreign-key violation as a 500 (1N-26).
+    const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, select: { id: true } });
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
     const templates = await this.prisma.departureChecklistTemplate.findMany({
       where: { isActive: true },
@@ -87,8 +90,10 @@ export class DepartureService {
     if (departureAt) await this.redateChecklist(updated.id, departureAt);
 
     // §16 "Онгоцны билетийн мэдээлэл шинэчлэгдсэн" — only when the flight
-    // itself moved; editing a dormitory note is not news to the client.
-    if (departureAt || dto.flightNo || dto.arrivalAt) {
+    // itself moved; editing a dormitory note is not news to the client. And
+    // never to the person who just typed it: telling a client about their own
+    // edit is noise, not news (1N-26).
+    if ((departureAt || dto.flightNo || dto.arrivalAt) && actor.id !== updated.case.userId) {
       await this.notifications.dispatch({
         event: NotificationEvent.FLIGHT_INFO_UPDATED,
         userIds: [updated.case.userId],
@@ -148,14 +153,27 @@ export class DepartureService {
       include: { template: { select: { offsetDays: true } } },
     });
 
+    // Items sharing an offset share a date, so a dozen seeded rows become two
+    // or three statements instead of a dozen round trips to a database 115 ms
+    // away — and the checklist is re-dated all at once or not at all.
+    const byOffset = new Map<number, string[]>();
     for (const item of items) {
       const offset = item.template?.offsetDays;
       if (offset === null || offset === undefined) continue;
-      await this.prisma.departureChecklistItem.update({
-        where: { id: item.id },
-        data: { dueAt: new Date(departureAt.getTime() - offset * DAY_MS) },
-      });
+      const ids = byOffset.get(offset);
+      if (ids) ids.push(item.id);
+      else byOffset.set(offset, [item.id]);
     }
+    if (!byOffset.size) return;
+
+    await this.prisma.$transaction(
+      [...byOffset.entries()].map(([offset, ids]) =>
+        this.prisma.departureChecklistItem.updateMany({
+          where: { id: { in: ids } },
+          data: { dueAt: new Date(departureAt.getTime() - offset * DAY_MS) },
+        }),
+      ),
+    );
   }
 
   private assertAccess(ownerId: string, actor: AuthenticatedUser): void {

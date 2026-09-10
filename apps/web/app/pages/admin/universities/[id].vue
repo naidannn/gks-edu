@@ -4,8 +4,6 @@ import type {
   AdminUniversityDetail,
   AdminUniversityProgram,
   GksScoreParts,
-  IntakeStatus,
-  ProgramLevel,
 } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 import { emptyUniversityForm, fillFromUniversity, universityPayload, validateUniversityForm } from '~/utils/university-form';
@@ -89,7 +87,6 @@ async function togglePublished() {
 }
 
 // ── Programmes (1A-27) ─────────────────────────────────────────────────────
-const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS);
 
 /**
  * Programmes are edited on their own screen, not inline here.
@@ -186,78 +183,18 @@ async function removeFaculty(facultyId: string, programCount: number) {
   }
 }
 
-const text = (value: string) => (value.trim() ? value.trim() : null);
-
-// ── Intake terms (1A-27) ───────────────────────────────────────────────────
-const MONTH_OPTIONS = [3, 6, 9, 12].map((m) => ({ value: String(m), label: INTAKE_MONTH_LABELS[m] as string }));
-const INTAKE_STATUS_OPTIONS = selectOptions(INTAKE_STATUS_LABELS);
-
-const blankIntake = () => ({
-  level: 'BACHELOR' as ProgramLevel,
-  year: String(new Date().getFullYear() + 1),
-  month: '3',
-  applicationDeadline: '',
-  status: 'PLANNED' as IntakeStatus,
-  note: '',
-});
-const intakeDraft = reactive(blankIntake());
-const intakeFormOpen = ref(false);
-const editingIntakeId = ref<string | null>(null);
-const intakeError = ref<string | null>(null);
-const intakeSaving = ref(false);
-
-function openIntakeForm(intake?: AdminIntakeTerm) {
-  Object.assign(intakeDraft, blankIntake());
-  intakeError.value = null;
-  editingIntakeId.value = intake?.id ?? null;
-  if (intake) {
-    Object.assign(intakeDraft, {
-      level: intake.level,
-      year: String(intake.year),
-      month: String(intake.month),
-      applicationDeadline: intake.applicationDeadline ? intake.applicationDeadline.slice(0, 10) : '',
-      status: intake.status,
-      note: intake.note ?? '',
-    });
-  }
-  intakeFormOpen.value = true;
-}
-
-async function saveIntake() {
-  intakeSaving.value = true;
-  intakeError.value = null;
-  try {
-    const payload = {
-      level: intakeDraft.level,
-      year: Number(intakeDraft.year),
-      month: Number(intakeDraft.month),
-      applicationDeadline: intakeDraft.applicationDeadline || null,
-      status: intakeDraft.status,
-      note: text(intakeDraft.note),
-    };
-    if (editingIntakeId.value) {
-      await api.patch(`/admin/universities/${id.value}/intakes/${editingIntakeId.value}`, payload);
-    } else {
-      await api.post(`/admin/universities/${id.value}/intakes`, payload);
-    }
-    intakeFormOpen.value = false;
-    await load();
-  } catch (err) {
-    intakeError.value = apiErrorMessage(err, 'Элсэлтийн улирал хадгалж чадсангүй.');
-  } finally {
-    intakeSaving.value = false;
-  }
-}
-
-async function removeIntake(intake: AdminIntakeTerm) {
-  intakeError.value = null;
-  try {
-    await api.delete(`/admin/universities/${id.value}/intakes/${intake.id}`);
-    await load();
-  } catch (err) {
-    intakeError.value = apiErrorMessage(err, 'Элсэлтийн улирал устгаж чадсангүй.');
-  }
-}
+/* ── Intake terms (1A-27) ───────────────────────────────────────────────────
+ *
+ * Read-only here, on purpose. This page used to carry its own little intake
+ * form, and it wrote three fields: the school's deadline, the status and a
+ * note. It never touched `internalDeadline` — the only date a client ever sees
+ * — nor the class start, nor the verified flag, so an office that edited a
+ * round here left our own deadline stale without being told. The full editor
+ * is `/admin/admissions/new`, which knows the lead-days rule; this table shows
+ * both dates (staff see both, CLAUDE.md) and links to it.
+ */
+const intakeEditHref = (intake: AdminIntakeTerm) => `/admin/admissions/new?id=${intake.id}`;
+const intakeAddHref = computed(() => `/admin/admissions/new?universityId=${id.value}`);
 
 // ── Delete (admin only) ────────────────────────────────────────────────────
 const confirmDelete = ref(false);
@@ -302,12 +239,6 @@ const scoreParts = computed(() => {
   if (!parts) return [];
   return SCORE_PART_LABELS.map(([key, label]) => ({ label, value: parts[key] }));
 });
-
-function intakeTone(status: IntakeStatus): BadgeTone {
-  if (status === 'OPEN') return 'success';
-  if (status === 'CLOSED') return 'neutral';
-  return 'info';
-}
 
 useHead({ title: () => `${universityName(university.value, 'Сургууль')} · CRM` });
 </script>
@@ -478,28 +409,21 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
       <!-- ── Intake terms ──────────────────────────────────────────────── -->
       <DsCard title="Элсэлтийн улирал" :eyebrow="`${university.intakes.length} улирал`">
         <template #action>
-          <DsButton variant="secondary" size="sm" icon-left="plus" @click="openIntakeForm()">Улирал нэмэх</DsButton>
+          <DsButton
+            variant="secondary"
+            size="sm"
+            icon-left="plus"
+            @click="navigateTo(intakeAddHref)"
+          >
+            Улирал нэмэх
+          </DsButton>
         </template>
 
-        <p v-if="intakeError" class="gks-form-page__error">{{ intakeError }}</p>
-
-        <div v-if="intakeFormOpen" class="gks-sub-form">
-          <div class="gks-form-grid">
-            <DsSelect v-model="intakeDraft.level" label="Түвшин" :options="LEVEL_OPTIONS" />
-            <DsInput v-model="intakeDraft.year" label="Он" type="number" />
-            <DsSelect v-model="intakeDraft.month" label="Элсэлтийн сар" :options="MONTH_OPTIONS" />
-            <DsInput v-model="intakeDraft.applicationDeadline" label="Материал хүлээн авах эцсийн хугацаа" type="date" />
-            <DsSelect v-model="intakeDraft.status" label="Төлөв" :options="INTAKE_STATUS_OPTIONS" />
-          </div>
-          <DsTextarea v-model="intakeDraft.note" label="Тэмдэглэл" :rows="2" />
-          <div class="gks-form-actions">
-            <span class="gks-form-actions__spacer" />
-            <DsButton variant="secondary" size="sm" @click="intakeFormOpen = false">Болих</DsButton>
-            <DsButton variant="accent" size="sm" icon-left="save" :loading="intakeSaving" @click="saveIntake">
-              {{ editingIntakeId ? 'Хадгалах' : 'Нэмэх' }}
-            </DsButton>
-          </div>
-        </div>
+        <p class="gks-page__hint">
+          Улирлыг элсэлтийн дэлгэц дээр засна — манай эцсийн хугацаа, хичээл эхлэх огноо,
+          хянасан тэмдэглэгээ тэнд бүрэн байдаг.
+          <NuxtLink to="/admin/admissions" class="gks-form-page__link">Бүх элсэлт</NuxtLink>
+        </p>
 
         <p v-if="!university.intakes.length" class="gks-form-page__empty">
           Элсэлтийн улирал бүртгэгдээгүй байна. Үйлчилгээ эхлүүлэхэд улирал сонгох шаардлагатай.
@@ -511,7 +435,9 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
               <tr>
                 <th>Түвшин</th>
                 <th>Элсэлт</th>
-                <th>Эцсийн хугацаа</th>
+                <th>Манай хугацаа</th>
+                <th>Сургуулийн хугацаа</th>
+                <th>Хичээл эхлэх</th>
                 <th>Төлөв</th>
                 <th>Тэмдэглэл</th>
                 <th />
@@ -521,12 +447,24 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
               <tr v-for="t in university.intakes" :key="t.id">
                 <td>{{ PROGRAM_LEVEL_LABELS[t.level] }}</td>
                 <td class="gks-tnum">{{ t.year }} · {{ INTAKE_MONTH_LABELS[t.month] }}</td>
-                <td class="gks-tnum">{{ formatDate(t.applicationDeadline) }}</td>
-                <td><DsBadge :tone="intakeTone(t.status)">{{ INTAKE_STATUS_LABELS[t.status] }}</DsBadge></td>
+                <td class="gks-tnum">
+                  {{ formatNumericDateUtc(t.internalDeadline) }}
+                  <small v-if="t.internalDeadlineIsManual">гараар</small>
+                </td>
+                <td class="gks-tnum">{{ formatNumericDateUtc(t.applicationDeadline) }}</td>
+                <td class="gks-tnum">{{ formatNumericDateUtc(t.classStartDate) }}</td>
+                <td>
+                  <DsBadge :tone="INTAKE_STATUS_TONE[t.status]">{{ INTAKE_STATUS_LABELS[t.status] }}</DsBadge>
+                  <DsBadge v-if="!t.verifiedAt" tone="warning">Хянагдаагүй</DsBadge>
+                </td>
                 <td>{{ t.note ?? '—' }}</td>
                 <td class="gks-table__actions">
-                  <DsIconButton icon="pencil" label="Засах" size="sm" @click="openIntakeForm(t)" />
-                  <DsIconButton icon="trash-2" label="Устгах" size="sm" @click="removeIntake(t)" />
+                  <DsIconButton
+                    icon="pencil"
+                    label="Засах"
+                    size="sm"
+                    @click="navigateTo(intakeEditHref(t))"
+                  />
                 </td>
               </tr>
             </tbody>

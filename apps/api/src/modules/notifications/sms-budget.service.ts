@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NotificationChannel, NotificationStatus } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { startOfDay } from './notification-labels.js';
 
 /**
  * 1G-04 — SMS cost control.
@@ -68,10 +69,4 @@ export class SmsBudgetService {
       perUserLimit: this.config.get<number>('sms.dailyLimitPerUser') ?? 3,
     };
   }
-}
-
-function startOfDay(now: Date): Date {
-  const day = new Date(now);
-  day.setHours(0, 0, 0, 0);
-  return day;
 }

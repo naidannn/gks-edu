@@ -45,27 +45,6 @@ onMounted(load);
 const totalCases = computed(() => groups.value.reduce((sum, group) => sum + group.cases.length, 0));
 const totalAtRisk = computed(() => groups.value.reduce((sum, group) => sum + group.atRiskCount, 0));
 
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function countdownLabel(days: number | null): string {
-  if (days === null) return 'Хугацаа оруулаагүй';
-  if (days < 0) return `${Math.abs(days)} хоногоор хэтэрсэн`;
-  if (days === 0) return 'Өнөөдөр хаагдана';
-  return `${days} хоног үлдлээ`;
-}
-
-function countdownTone(days: number | null): BadgeTone {
-  if (days === null) return 'warning';
-  if (days < 0) return 'danger';
-  if (days <= 7) return 'danger';
-  if (days <= 21) return 'warning';
-  return 'success';
-}
-
 /** Who to chase. An unassigned case is the worst version of this problem. */
 function ownerLabel(row: AdmissionBoardCase): string {
   const names = [row.assignedConsultant?.name, row.assignedDocOfficer?.name].filter(Boolean);
@@ -119,10 +98,10 @@ function ownerLabel(row: AdmissionBoardCase): string {
         <div class="gks-board__group-meta">
           <span>
             Манай эцсийн хугацаа
-            <strong class="gks-tnum">{{ formatDate(group.intake.internalDeadline) }}</strong>
+            <strong class="gks-tnum">{{ formatNumericDateUtc(group.intake.internalDeadline) }}</strong>
           </span>
-          <DsBadge :tone="countdownTone(group.intake.daysUntilInternalDeadline)">
-            {{ countdownLabel(group.intake.daysUntilInternalDeadline) }}
+          <DsBadge :tone="deadlineCountdownTone(group.intake.daysUntilInternalDeadline)">
+            {{ deadlineCountdownLabel(group.intake.daysUntilInternalDeadline) }}
           </DsBadge>
           <DsBadge v-if="group.atRiskCount" tone="danger">{{ group.atRiskCount }} эрсдэлтэй</DsBadge>
         </div>

@@ -8,7 +8,6 @@ import type { PaginatedResult, WorkTask, WorkTaskStatus, WorkTaskType } from '@g
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 
 type Paginated = PaginatedResult<WorkTask>;
-type StaffMember = { id: string; name: string | null; email: string | null; role: string };
 type Workload = { rows: { assigneeId: string | null; status: WorkTaskStatus; _count: { _all: number } }[]; overdue: number };
 
 const STATUS_OPTIONS = selectOptions(WORK_TASK_STATUS_LABELS, 'Бүх төлөв');
@@ -37,6 +36,7 @@ const query = computed(() => ({
 
 async function load() {
   pending.value = true;
+  error.value = null;
   try {
     const [list, people, load_] = await Promise.all([
       api.get<Paginated>('/work-tasks', { query: query.value }),
@@ -46,6 +46,10 @@ async function load() {
     data.value = list;
     staff.value = people;
     workload.value = load_;
+  } catch (e) {
+    // Uncaught, a failure rendered "даалгавар алга байна" — an empty queue,
+    // which is the one answer staff act on by doing nothing.
+    error.value = apiErrorMessage(e, 'Даалгаврын жагсаалтыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }

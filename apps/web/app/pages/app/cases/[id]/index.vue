@@ -13,27 +13,6 @@ function transitionLabel(transition: CaseTransitionItem): string {
 const admission = computed(() => gksCase.value?.documents.admission ?? null);
 const intake = computed(() => gksCase.value?.intake ?? null);
 
-/** `null` is "мэдээлэл шинэчлэгдэж байна", never a guessed date. */
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function countdownLabel(days: number | null): string {
-  if (days === null) return 'Хугацаа тодорхойгүй';
-  if (days < 0) return `Хугацаа ${Math.abs(days)} хоногоор хэтэрсэн`;
-  if (days === 0) return 'Өнөөдөр хаагдана';
-  return `${days} хоног үлдлээ`;
-}
-
-function countdownTone(days: number | null): BadgeTone {
-  if (days === null) return 'neutral';
-  if (days < 0) return 'danger';
-  if (days <= 7) return 'danger';
-  if (days <= 21) return 'warning';
-  return 'success';
-}
 const payments = computed(() => (gksCase.value?.payments ?? []).filter((p) => p.kind === 'PREPAYMENT' || p.kind === 'BALANCE'));
 const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
 </script>
@@ -44,8 +23,8 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
 
     <DsCard v-if="intake" title="Элсэлтийн хугацаа">
       <template #action>
-        <DsBadge :tone="countdownTone(intake.daysUntilInternalDeadline)">
-          {{ countdownLabel(intake.daysUntilInternalDeadline) }}
+        <DsBadge :tone="deadlineCountdownTone(intake.daysUntilInternalDeadline)">
+          {{ deadlineCountdownLabel(intake.daysUntilInternalDeadline) }}
         </DsBadge>
       </template>
       <p class="gks-overview__intake-term">
@@ -56,15 +35,15 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
       <dl class="gks-overview__dates">
         <div>
           <dt>Бүртгэлийн эцсийн хугацаа</dt>
-          <dd class="gks-tnum gks-overview__dates-ours">{{ formatDate(intake.internalDeadline) }}</dd>
+          <dd class="gks-tnum gks-overview__dates-ours">{{ formatNumericDateUtc(intake.internalDeadline) }}</dd>
         </div>
         <div>
           <dt>Хичээл эхлэх</dt>
-          <dd class="gks-tnum">{{ formatDate(intake.classStartDate) }}</dd>
+          <dd class="gks-tnum">{{ formatNumericDateUtc(intake.classStartDate) }}</dd>
         </div>
         <div v-if="intake.resultAnnouncedAt">
           <dt>Хариу зарлах</dt>
-          <dd class="gks-tnum">{{ formatDate(intake.resultAnnouncedAt) }}</dd>
+          <dd class="gks-tnum">{{ formatNumericDateUtc(intake.resultAnnouncedAt) }}</dd>
         </div>
       </dl>
       <p class="gks-overview__meta">
@@ -111,7 +90,7 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
       <p class="gks-overview__consultant">
         <DsIcon name="user-round" :size="16" /> {{ consultant.name ?? 'Хариуцагч томилогдсон' }}
       </p>
-      <p class="gks-overview__meta">Асуулт гарвал 7710-9000 дугаараар холбогдоно уу.</p>
+      <p class="gks-overview__meta">Асуулт гарвал {{ COMPANY.phoneLabel }} дугаараар холбогдоно уу.</p>
     </DsCard>
 
     <DsCard title="Явцын түүх">

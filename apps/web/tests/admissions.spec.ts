@@ -18,7 +18,8 @@ describe('homepage active admissions', () => {
   });
 
   it.each([
-    [21, 'OPEN'],
+    [22, 'OPEN'],
+    [21, 'CLOSING_SOON'],
     [20, 'CLOSING_SOON'],
     [8, 'CLOSING_SOON'],
     [7, 'URGENT'],
@@ -37,5 +38,12 @@ describe('homepage active admissions', () => {
 
   it('formats admission dates as month/day', () => {
     expect(formatAdmissionDate('2026-09-05T09:00:00+08:00')).toBe('09/05');
+  });
+
+  // A deadline is stamped at the end of its day in UTC; reading it locally in
+  // Ulaanbaatar (+08) would print the next day, which is the expensive way to
+  // be wrong about a deadline.
+  it('reads an end-of-day deadline in UTC, not locally', () => {
+    expect(formatAdmissionDate('2026-09-05T23:59:59.999Z')).toBe('09/05');
   });
 });

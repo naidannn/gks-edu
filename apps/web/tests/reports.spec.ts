@@ -5,7 +5,6 @@ import {
   barMax,
   barWidth,
   describeChange,
-  formatDaysLeft,
   formatRate,
   formatReportMonth,
   reportQueryString,
@@ -71,18 +70,6 @@ describe('formatReportMonth', () => {
 
   it('leaves anything it does not recognise alone', () => {
     expect(formatReportMonth('—')).toBe('—');
-  });
-});
-
-describe('formatDaysLeft', () => {
-  it('counts down, and counts past', () => {
-    expect(formatDaysLeft(12)).toBe('12 хоног үлдсэн');
-    expect(formatDaysLeft(0)).toBe('Өнөөдөр');
-    expect(formatDaysLeft(-3)).toBe('3 хоногоор хэтэрсэн');
-  });
-
-  it('admits when there is no deadline to count to', () => {
-    expect(formatDaysLeft(null)).toBe('Хугацаа тодорхойгүй');
   });
 });
 

@@ -348,6 +348,68 @@
 
 ---
 
+## 1N — Кодын аудит ба засвар (2026.09.11)
+
+> Бүх модулийн кодын аудит: 5 хянагч ~70 олдвор гаргаж, 5 засварчин хийсэн. API 536 → 732
+> тест, вэб 110 → 148. Үлдсэн гурван ажил `TASKS.md`-д (`1N-53`–`1N-55`).
+
+| ID | Таск | Төлөв | Хэмжээ | Хамаарал |
+| --- | --- | --- | --- | --- |
+| `1N-01` | **Аюулгүй байдал:** `POST /users/:id/claim-invite` — CONSULTANT зөвхөн USER бүртгэлд, `email` дарж бичихийг зөвхөн ADMIN-д зөвшөөрөх (одоо консультант хоосон ADMIN бүртгэлийг өөрийн имэйл рүү шилжүүлж эзэмшиж чадна) | done | S | — |
+| `1N-02` | **Аюулгүй байдал:** `/documents` (vector/RAG) контроллер ба web `/documents`, `/search` хуудсыг ADMIN-д хязгаарлах — одоо дурын нэвтэрсэн харилцагч RAG баримт нэмж/устгаж чадна | done | S | — |
+| `1N-03` | **Аюулгүй байдал:** Google нэвтрэлт нууц үгтэй, баталгаажаагүй бүртгэлд автоматаар холбогдохгүй (pre-account-takeover); `PATCH /users/:id`-ээс админ бус хэрэглэгчийн `email` солилтыг хасах | done | S | — |
+| `1N-04` | **Аюулгүй байдал:** `GET /payments/:id` ба `/me` гэрээ харилцагчид `note`, `receiptPath`, `qpayPaymentId`, `pdfPath`, `physicalScanPath`, `signedIp` буцаадаг — нэг `CLIENT_*_SELECT` | done | S | — |
+| `1N-05` | Audit цоорхой: `DELETE /users/:id` (guard + audit), `clients` create/update/from-lead, `leads` transitions/merge/assign, admin overrides, `PATCH /users/:id` | done | S | — |
+| `1N-06` | `ON_HOLD`-оос сэргээх дүрэм системийн-л шатууд (`CONTRACT_SIGNED`, `PREPAYMENT_PAID`, `BALANCE_PAID`, `COMPLETED`) руу нээлттэй — ажилтан төлбөргүй кейсийг "төлөгдсөн" болгож чадна. Зөвхөн өмнө нь байсан шат руу сэргээнэ | done | S | — |
+| `1N-07` | QPay `PAID` баталгаажуулалтыг шатны шилжилтээс салгах — шилжилтийн edge байхгүй бол одоо бүх транзакц rollback болж, мөнгө орсон ч бүртгэлгүй үлддэг. Төлбөрийг заавал бичээд, шилжилт бүтэхгүй бол лог + Slack | done | M | 1N-06 |
+| `1N-08` | Буцаалт: буцаалтын буцаалт хориглох, `refundOfId @unique`, эх төлбөрийг `REFUNDED` болгох (одоо хэзээ ч бичигддэггүй) | done | S | — |
+| `1N-09` | Давхар нэхэмжлэх: `payments(case_id, kind) WHERE status='PENDING'` partial unique; QPay алдаа гарвал мөрийг `FAILED`; 15 мин дараа `EXPIRED` болгож шинэ QR олгох; `findFirst` статус шүүлт + `orderBy` | done | M | — |
+| `1N-10` | Гараар бүртгэхэд хуучин QPay нэхэмжлэхийг цуцлах (`cancelInvoice`); PAID мөрөнд өөр `payment_id` ирвэл "давхар төлбөр" Slack; `paid_amount ≥ amountMnt` шалгах | done | M | 1N-09 |
+| `1N-11` | Гэрээний дугаарын он, хэвлэсэн огноо, төрсөн огноо оффисын цагаар (`Asia/Ulaanbaatar`) — одоо UTC серверийн `getFullYear`/`toLocaleDateString` | done | S | — |
+| `1N-12` | Гэрээний guard: биет гэрээ зөвхөн `DRAFT`, цахим `accept`/`verifyOtp` зөвхөн `SENT`; сканы бичилт транзакц дотор (одоо ACTIVE гэрээн дээр скан дарагдаад 400 буцна) | done | S | — |
+| `1N-13` | Кейсийн эхний сургуулийг солиход intake байвал үргэлж 400 (`assertSelectable` буруу дарааллаар); `startCase` `intakeId`-г `universityId`-гүй хүлээж авдаг | done | S | — |
+| `1N-14` | Шатны шилжилт атомик (`$transaction`) + optimistic (`updateMany where stage=from`) — одоо хоёр зэрэг дарахад хоёулаа бичигдэнэ | done | S | — |
+| `1N-15` | `POST /pricing` `effectiveFrom` валидаци (`@IsDateString`, идэвхтэй мөрөөс өмнөх огноо хориглох); `POST /me/cases` кейс+гэрээ нэг транзакц | done | S | — |
+| `1N-16` | Гэрээний OTP имэйлээр ирдэг — "утсанд тань код очно" бичвэрийг API `next-action` ба web `start.vue`, `terms.vue`-д засах | done | S | — |
+| `1N-17` | Сануулгын бүх sweep (материал, төлбөр, виз, явах) `CANCELLED`/`REJECTED`/`ON_HOLD`/`COMPLETED` кейсийг алгасах — одоо цуцалсан кейсийн харилцагчид SMS/имэйл явж байна | done | S | — |
+| `1N-18` | Шалгуурыг дахин тооцоход (`resolveForCase`) гараар/сургуулийн хүсэлтээр нэмсэн (`ruleId=null`) бичиг баримт устдаг; ажилтны `necessity`/`conditionNote` засвар дарагддаг | done | S | — |
+| `1N-19` | Виз татгалзал ба GKS `FAILED` кейсийг терминал `REJECTED` болгодог — `REAPPLY` ба нөөц сургуулийн зам (гэрээ §3.11) хаагддаг. Виз: кейс `VISA`-д үлдэнэ; GKS: `ON_HOLD` (ажилтан шийднэ); эцсийн татгалзлыг ажилтан гараар бичнэ | done | M | 1N-06 |
+| `1N-20` | `recordResult` урьдчилсан нөхцөл (`UNDER_REVIEW`/`INTERVIEW_SCHEDULED`/`DEFERRED`), 2-р шат бичигдсэн бол 1-р шат засахгүй; generic `transitions` endpoint-оор `ACCEPTED`/`REJECTED`/`APPROVED` руу орохыг хориглох | done | S | — |
+| `1N-21` | Илгээгдсэн бичиг баримтыг сургууль дахин шаардахад `RESUBMIT_REQUIRED` (одоо `SENT_TO_UNIVERSITY` хэвээр, харилцагчид юу ч харагдахгүй); `DOCUMENT_APPROVED` мэйлийн "үлдсэн" тоо кабинеттай зөрдөг | done | S | — |
+| `1N-22` | `notification-labels.formatDateMn` UTC getter (одоо TZ=UB бол хугацаа нэг өдөр хойшилж хэвлэгдэнэ); давхардсан `formatDeadlineMn`-ийг нэгтгэх; `PENDING` мэдэгдлийг дахин enqueue хийх ажил | done | S | — |
+| `1N-23` | Үхмэл `DocumentReminder` engine (service, processor, queue, model, endpoint) устгах — sweep нь `ReminderSweepsService`-д, энэ нь хэн ч уншдаггүй мөр бичдэг, шатлал нь зөрдөг | done | S | — |
+| `1N-24` | Бичиг баримтын төлөв бичилт optimistic (`updateMany where status=from`, 409); олон файл upload — эхлээд бүгдийг шалгаад, version-ийг транзакц дотор; `acceptedFileTypes` шалгах | done | S | — |
+| `1N-25` | Харилцагчийн checklist-д `workTasks`, `DocumentFile.path` алдагдахгүй; харилцагч `stage=VISA` checklist-ийг виз эхлэхээс өмнө үүсгэхгүй; `withinDays` DTO | done | S | — |
+| `1N-26` | Урилга засварлахад мэдэгдэл давхардахгүй; `fxRate` `@IsPositive`; файлгүй upload → 400; departure: кейс шалгах, өөрийн засварт мэдэгдэхгүй, checklist batch update; REAPPLY хуучин татгалзлыг цэвэрлэх | done | S | — |
+| `1N-27` | `applyDomainTransition` чимээгүй `false` буцаадаг — алгассан алхам кейсийг үлдэгдэл төлбөрийн өмнө гацаана. Бүтэхгүй бол 400 (одоогийн шатыг заасан) эсвэл main-line edge-ээр урагш алхах | done | M | 1N-14 |
+| `1N-28` | `IntakeProgramOverride` хаана ч хэрэглэгддэггүй (`resolveIntakeDates` production call site 0) — `resolveForCase(intakeId, programId)` нэмж кейс, самбар, портал, сургуулийн хуудас, `assertSelectable`-д хэрэглэх; override-ийн тооцоолсон `internalDeadline` snapshot-ыг `null` үлдээж `recompute`-д оруулах | done | M | — |
+| `1N-29` | Огнооны хадгалалтын нэг конвенц: seed 23:59:59Z, админ форм 00:00Z — `toDate` date-only оролтыг өдрийн төгсгөл UTC болгох; ингэснээр `stillOpenWhere`/`computeIntakePhase` deadline өдрийнхөө 08:00-д хаахгүй | done | S | — |
+| `1N-30` | Сургалтын төлбөрийн шүүлт, эрэмбэ, facet дундаж, төлөвлөгөөний budget/priceRange, GKS ranking `minTuition` бүгд `tuitionPerYearKrw`-г уншдаг (ихэнх мөрөнд хоосон) → `COALESCE(perYear, perTerm×2)`; column руу хэзээ ч бичихгүй | done | M | — |
+| `1N-31` | `tuitionYear`-ийг нийтийн payload (`PROGRAM_CARD_FIELDS`, сургуулийн хуудас) ба нийтийн карт (`programs/index.vue`, `universities/[slug].vue`) -аас хасах (CLAUDE.md дүрэм) | done | S | — |
+| `1N-32` | Огноогүй элсэлт мөнхөд "нээлттэй" (`stillOpenWhere`, `computeIntakePhase`) — `classStartDate`/`(year, month)` шал нэмэх; `earliestOpenMonth` 1-р шатанд `now` шал | done | S | — |
+| `1N-33` | GKS шалгуур: `gpa` хуваарийн max-аар валидаци (`gpa=85&gpaScale=4.0` → 100%); `checkAge` элсэх сар хүртэлх сарыг тооцох | done | S | — |
+| `1N-34` | Cache invalidation: админ сургууль/faculty/ranking өөрчлөлт `admissions:*`, `programs:facets`, `university:<slug>`-ийг цэвэрлэх; nested programme route `:id` шалгах; board query `@IsUUID` | done | S | — |
+| `1N-35` | `recomputeInternalDeadlines` нэг `UPDATE` (одоо ~1000 мөр × 115мс PATCH дотор); `create`/`createMany` P2002 → 409, batch давхардлын шалгалт; `programSearchWhere`-д сургуулийн `nameKo` | done | S | — |
+| `1N-36` | `PATCH /clients/:id` `source`-ийг `OFFICE` болгож дарж бичдэг — default-ыг зөвхөн create-д | done | S | — |
+| `1N-37` | Санхүүгийн `byMonth` SQL: naive timestamp `AT TIME ZONE 'Asia/Ulaanbaatar'` буруу талд — сар бүрийн эхний 16 цагийн төлбөр өмнөх сард ордог. `(col AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Ulaanbaatar'` | done | S | — |
+| `1N-38` | CRM `createdTo` шүүлт тухайн өдрийн 00:00Z-д тасардаг — оффисын цагаар өдрийн төгсгөл хүртэл (`reports/report-period` дахин ашиглах) | done | S | — |
+| `1N-39` | Давтан илгээсэн нийтийн форм Meta `Lead` event-ийг дахин явуулдаг — dedupe салбарт `eventId=recent.id` эсвэл илгээхгүй | done | S | — |
+| `1N-40` | Lead `merge`/`createFromLead` хамгаалалт: client/userId-тэй lead-ийг нэгтгэхгүй, merge хийгдсэн lead-ийг хөрвүүлэхгүй | done | S | — |
+| `1N-41` | Имэйл бүх зам дээр trim+lowercase (`RegisterDto`, `LoginDto`, `UpdateUserDto`, client/lead DTO) + `users.email` lowercase migration — одоо `Bat@Gmail.com` давхар бүртгэл үүсгэдэг | done | S | — |
+| `1N-42` | Messenger `resolve` → `staffUnread=0` (phantom badge); `messages()` conversation-ийг хоёр удаа уншдаг | done | S | — |
+| `1N-43` | Refresh token: reuse detection (`updateMany where revokedAt null`, 0 бол logoutAll), `isActive` шалгах; нууц үггүй бүртгэлд `changePassword` баталгаажуулалт | done | S | 0-19 |
+| `1N-44` | Үхмэл код: `CaseAccessGuard`/`@CaseParam`, `TransformInterceptor` устгах; `ARCHITECTURE.md` §11-ийг оффис даяар нээлттэй шийдвэрт нийцүүлэх (0-22-той хамт) | done | S | 0-22 |
+| `1N-45` | **Web:** deadline-уудыг локал цагаар харуулдаг (UB-д нэг өдөр хойш): `app/cases/[id]`, `app/start`, `ActiveAdmissions`, `admin/admissions`, `board`, `admin/universities/[id]` → `formatNumericDateUtc` | done | S | — |
+| `1N-46` | **Web:** `/app/start?universityId&intakeId` deep link watcher `intakeId`-г цэвэрлэдэг — `/admissions`, сургуулийн хуудаснаас ирсэн бүртгэл элсэлтгүй үүсдэг | done | S | — |
+| `1N-47` | **Web:** `datetime-local` round trip UTC offset-оор шилждэг (departure, visa appointment) — `toDatetimeLocal` helper; гар төлбөрийн default/max огноо UTC | done | S | — |
+| `1N-48` | **Web:** `mn-MN` locale (Chrome-д байхгүй) → `utils/date.ts`-д өөрийн сар/гарагийн хүснэгт; messenger, documents appointment, portal огноонууд | done | S | — |
+| `1N-49` | **Web:** label/tone map давхардал → `utils/labels.ts` (countdown ×6, `stageTone` ×2, `intakeTone`, `ACTOR_*` ×2, `APPLICATION_DECISION_LABELS`, `selectOptions`); `COMPANY.phoneLabel` | done | S | — |
+| `1N-50` | **Web:** messenger stream listener unsubscribe (санах ой + N дахин reload); payment poll `setTimeout`+in-flight+catch; `try/finally` без `catch` (~15 газар) → алдаа харуулах | done | M | — |
+| `1N-51` | **Web:** сургуулийн хуудас зөвхөн 404-ийг 404 болгох; `admin` middleware login руу redirect; `redirect` query `/`-ээр эхлэх шалгалт; `useCaseDocuments` stage option; admin programs `universityId` шүүлт харагдах | done | S | — |
+| `1N-52` | **Refactor:** давхардсан helper-үүд нэг газар — `sha256`/`BCRYPT_ROUNDS`, `toBoolean`, `daysUntil`, `INTAKE_MONTHS`, `MONTHS_PER_TOPIK_LEVEL`, `activePricingWhere`, `assertOwnerOrCrm`, parser helper, `PHONE_PATTERN`, `DAY_MS`, select constants | done | M | — |
+
+---
+
 ## Үе шат 2 — AI чат туслах  `→ M2-α 09.24 · M2-β 10.15 · M2-γ 11.10`
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |

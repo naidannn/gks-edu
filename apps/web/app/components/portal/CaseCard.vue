@@ -1,16 +1,9 @@
 <script setup lang="ts">
-import type { CaseStage, PortalCase } from '@gks/shared';
+import type { PortalCase } from '@gks/shared';
 
 /** One service cycle as a row on the dashboard and the case list. */
 defineProps<{ item: PortalCase }>();
 
-function stageTone(stage: CaseStage): 'neutral' | 'info' | 'success' | 'danger' | 'warning' {
-  if (stage === 'COMPLETED' || stage === 'DEPARTED') return 'success';
-  if (stage === 'CANCELLED' || stage === 'REJECTED') return 'danger';
-  if (stage === 'ON_HOLD') return 'warning';
-  if (stage === 'CONTRACT_DRAFT') return 'neutral';
-  return 'info';
-}
 </script>
 
 <template>
@@ -24,7 +17,7 @@ function stageTone(stage: CaseStage): 'neutral' | 'info' | 'success' | 'danger' 
             <span v-if="item.university"> · {{ universityName(item.university) }}</span>
           </p>
         </div>
-        <DsBadge :tone="stageTone(item.stage)">{{ CASE_STAGE_LABELS[item.stage] }}</DsBadge>
+        <DsBadge :tone="CASE_STAGE_TONE[item.stage]">{{ CASE_STAGE_LABELS[item.stage] }}</DsBadge>
       </div>
 
       <div v-if="item.documents.admission.requiredTotal > 0" class="gks-case-card__progress">

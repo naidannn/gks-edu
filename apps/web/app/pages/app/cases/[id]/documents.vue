@@ -94,10 +94,7 @@ async function book() {
 const openAppointment = computed(() => appointmentView.value?.appointments.find((a) => a.status === 'SCHEDULED') ?? null);
 const originals = computed(() => appointmentView.value?.physicalOriginals ?? []);
 
-/** An appointment slot, spelled out — this one screen wants the long month. */
-function formatAppointmentAt(value: string): string {
-  return new Date(value).toLocaleString('mn-MN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
+
 </script>
 
 <template>
@@ -145,7 +142,7 @@ function formatAppointmentAt(value: string): string {
 
       <div v-if="openAppointment" class="gks-docs__booked">
         <DsIcon name="calendar-check" :size="16" />
-        <span>{{ formatAppointmentAt(openAppointment.scheduledAt) }}-д товлогдсон</span>
+        <span>{{ formatLongDayMonthTime(openAppointment.scheduledAt) }}-д товлогдсон</span>
       </div>
       <div v-else class="gks-docs__booking">
         <DsInput v-model="bookingAt" type="datetime-local" label="Ирэх цагаа сонгох" />

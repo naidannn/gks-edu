@@ -7,6 +7,7 @@ import {
   checkEducation,
   degreeForEducation,
   factorLevel,
+  monthsToEntry,
   nextRound,
   readinessBand,
   scoreGpa,
@@ -50,6 +51,40 @@ describe('checkAge', () => {
   it('returns unknown for the year immediately below the cap', () => {
     expect(checkAge(24, 'BACHELOR')).toBeNull();
     expect(checkAge(39, 'PHD')).toBeNull();
+  });
+
+  /**
+   * 1N-33. Somebody checking in November is 13 to 16 months from the entry
+   * date the cap is read on. Measured today, a 24-year-old was told they
+   * qualify for a season they would sit at 25 or 26 — the expensive direction.
+   */
+  it('reads the cap on the entry date, not on today', () => {
+    expect(checkAge(24, 'BACHELOR', 16)).toBe(false);
+    expect(checkAge(23, 'BACHELOR', 16)).toBeNull();
+    expect(checkAge(20, 'BACHELOR', 16)).toBe(true);
+  });
+
+  // Only the birthdays that are certain are counted: 11 months is not a year.
+  it('counts whole years only, so it never ages somebody up on a guess', () => {
+    expect(checkAge(24, 'BACHELOR', 11)).toBeNull();
+    expect(checkAge(39, 'MASTER', 0)).toBeNull();
+  });
+});
+
+describe('monthsToEntry (1N-33)', () => {
+  it('counts the months between today and the round it feeds', () => {
+    // A November check for the undergraduate award: applications next
+    // September, classes the March after that.
+    const now = new Date('2026-11-15T00:00:00.000Z');
+    const round = nextRound('BACHELOR', now);
+
+    expect(round.entryYear).toBe(2028);
+    expect(round.entryMonth).toBe(3);
+    expect(monthsToEntry(round, now)).toBe(16);
+  });
+
+  it('never goes negative', () => {
+    expect(monthsToEntry({ entryYear: 2020, entryMonth: 3 }, new Date('2026-11-15T00:00:00.000Z'))).toBe(0);
   });
 });
 

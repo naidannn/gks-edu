@@ -105,7 +105,6 @@ await Promise.all([
   dump('case-documents', await prisma.caseDocument.findMany()),
   dump('document-files', await prisma.documentFile.findMany()),
   dump('document-review-notes', await prisma.documentReviewNote.findMany()),
-  dump('document-reminders', await prisma.documentReminder.findMany()),
   dump('work-tasks', await prisma.workTask.findMany()),
   dump('office-appointments', await prisma.officeAppointment.findMany()),
   dump('applications', await prisma.application.findMany()),

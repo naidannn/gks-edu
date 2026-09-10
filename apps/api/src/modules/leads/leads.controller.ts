@@ -16,6 +16,7 @@ import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
+import { Audit } from '../../common/decorators/audit.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -98,6 +99,7 @@ export class LeadsController {
 
   @Post(':id/transitions')
   @Roles(...STAFF_ROLES)
+  @Audit({ action: 'lead.transition', entity: 'Lead' })
   @ApiOperation({ summary: 'Move a lead to another sales-funnel stage (1B-02)' })
   transition(
     @Param('id', ParseUUIDPipe) id: string,
@@ -127,6 +129,7 @@ export class LeadsController {
 
   @Patch(':id/assign')
   @Roles(...STAFF_ROLES)
+  @Audit({ action: 'lead.assign', entity: 'Lead' })
   @ApiOperation({ summary: 'Assign (or unassign) a lead to a staff member (1B-04)' })
   assign(
     @Param('id', ParseUUIDPipe) id: string,
@@ -145,6 +148,7 @@ export class LeadsController {
 
   @Post(':id/merge')
   @Roles(...STAFF_ROLES)
+  @Audit({ action: 'lead.merge', entity: 'Lead' })
   @ApiOperation({ summary: 'Давхардсан сэжмийг энэ бичлэг рүү нэгтгэх (1B-09)' })
   merge(
     @Param('id', ParseUUIDPipe) id: string,
@@ -156,6 +160,7 @@ export class LeadsController {
 
   @Post(':id/assign/auto')
   @Roles(...STAFF_ROLES)
+  @Audit({ action: 'lead.assign_auto', entity: 'Lead' })
   @ApiOperation({ summary: 'Round-robin auto-assign to the least-loaded active staff member (1B-04)' })
   autoAssign(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.leads.autoAssign(id, user.id);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CaseStage, PortalCaseDetail } from '@gks/shared';
+import type { PortalCaseDetail } from '@gks/shared';
 
 /**
  * Shell for one case: stage header, the next step, and the tabs that walk the
@@ -41,13 +41,6 @@ const TABS = [
   { to: (i: string) => `/app/cases/${i}/departure`, label: 'Бэлтгэл' },
 ];
 
-function stageTone(stage: CaseStage): 'neutral' | 'info' | 'success' | 'danger' | 'warning' {
-  if (stage === 'COMPLETED' || stage === 'DEPARTED') return 'success';
-  if (stage === 'CANCELLED' || stage === 'REJECTED') return 'danger';
-  if (stage === 'ON_HOLD') return 'warning';
-  if (stage === 'CONTRACT_DRAFT') return 'neutral';
-  return 'info';
-}
 
 useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйлчилгээ') });
 </script>
@@ -70,7 +63,7 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйл�
             <span v-if="gksCase.university"> · {{ universityName(gksCase.university) }}</span>
           </p>
         </div>
-        <DsBadge :tone="stageTone(gksCase.stage)">{{ CASE_STAGE_LABELS[gksCase.stage] }}</DsBadge>
+        <DsBadge :tone="CASE_STAGE_TONE[gksCase.stage]">{{ CASE_STAGE_LABELS[gksCase.stage] }}</DsBadge>
       </header>
 
       <PortalJourneyStepper :journey="gksCase.journey" :stage="gksCase.stage" />

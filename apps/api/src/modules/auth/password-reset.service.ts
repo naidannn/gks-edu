@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { hash } from 'bcryptjs';
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
+import { hashPassword, sha256 } from '../../common/utils/hashing.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { EmailService } from '../notifications/email.service.js';
 import {
@@ -11,7 +11,6 @@ import {
 
 /** Short by design: the link is a password in an inbox. */
 const RESET_TTL_MS = 60 * 60 * 1000;
-const BCRYPT_ROUNDS = 12;
 
 /**
  * "Нууц үгээ мартсан" (§4a).
@@ -94,7 +93,7 @@ export class PasswordResetService {
       this.prisma.user.update({
         where: { id: user.id },
         data: {
-          password: await hash(password, BCRYPT_ROUNDS),
+          password: await hashPassword(password),
           passwordResetTokenHash: null,
           passwordResetExpiresAt: null,
           // A reset settles an outstanding invitation too (1B-17).
@@ -119,8 +118,4 @@ export class PasswordResetService {
         .catch((error: unknown) => this.logger.error(`Баталгааны имэйл илгээгдсэнгүй: ${String(error)}`));
     }
   }
-}
-
-function sha256(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
 }

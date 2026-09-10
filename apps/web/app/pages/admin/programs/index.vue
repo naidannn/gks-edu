@@ -18,11 +18,19 @@ type Paginated = PaginatedResult<AdminProgram>;
 
 const api = useApi();
 const route = useRoute();
+const router = useRouter();
 
 const PAGE_SIZE = 25;
 
 const q = ref(typeof route.query.q === 'string' ? route.query.q : '');
-/** Set when arriving from one school's page; there is no control for it. */
+/**
+ * Set when arriving from one school's page.
+ *
+ * It used to have no control and no place on screen, so every later search
+ * from this page stayed scoped to that school with nothing saying so — the
+ * office searched the whole catalogue and got one school's answer. It is a
+ * chip now, and clearing it takes the school out of the URL too.
+ */
 const universityId = ref(typeof route.query.universityId === 'string' ? route.query.universityId : '');
 const level = ref<ProgramLevel | ''>('');
 const region = ref('');
@@ -43,14 +51,8 @@ const regions = ref<{ value: string; label: string; count: number }[]>([]);
 const pending = ref(true);
 const errorMsg = ref<string | null>(null);
 
-const LEVEL_OPTIONS = [
-  { value: '', label: 'Бүх түвшин' },
-  ...Object.entries(PROGRAM_LEVEL_LABELS).map(([value, label]) => ({ value, label })),
-];
-const LANGUAGE_OPTIONS = [
-  { value: '', label: 'Бүх хэл' },
-  ...Object.entries(INSTRUCTION_LANGUAGE_LABELS).map(([value, label]) => ({ value, label })),
-];
+const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS, 'Бүх түвшин');
+const LANGUAGE_OPTIONS = selectOptions(INSTRUCTION_LANGUAGE_LABELS, 'Бүх хэл');
 const SORT_OPTIONS = [
   { value: 'university:asc', label: 'Сургуулиар' },
   { value: 'tuition:asc', label: 'Төлбөр — хямдаас' },
@@ -142,6 +144,20 @@ onMounted(() => {
 
 const totalPages = computed(() => meta.value?.totalPages ?? 1);
 
+/** Named from the rows themselves rather than a second request for one name. */
+const universityFilterLabel = computed(() => {
+  const first = rows.value[0]?.university;
+  return first ? universityName(first) : 'Сонгосон сургууль';
+});
+
+async function clearUniversityFilter() {
+  universityId.value = '';
+  page.value = 1;
+  const { universityId: _dropped, ...rest } = route.query;
+  await router.replace({ query: rest });
+  await load();
+}
+
 /** The annual figure, derived from a semester price when that is all we have. */
 function annual(program: AdminProgram): string {
   const value = annualTuitionKrw(program);
@@ -205,6 +221,9 @@ function annual(program: AdminProgram): string {
         <DsSelect v-model="sort" :options="SORT_OPTIONS" aria-label="Эрэмбэ" />
       </div>
       <div class="gks-toggles">
+        <DsTag v-if="universityId" clickable selected @click="clearUniversityFilter">
+          {{ universityFilterLabel }} ✕
+        </DsTag>
         <DsTag clickable :selected="noFaculty" @click="noFaculty = !noFaculty">Танхимгүй</DsTag>
         <DsTag clickable :selected="missingTuition" @click="missingTuition = !missingTuition">Төлбөргүй</DsTag>
         <DsTag clickable :selected="unverified" @click="unverified = !unverified">Хянагдаагүй</DsTag>

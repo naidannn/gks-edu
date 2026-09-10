@@ -190,21 +190,29 @@ export class AdminUniversitiesController {
     return this.programs.create({ ...dto, universityId: id }, user.id);
   }
 
+  // The school id in the path is passed on, exactly as the intake routes below
+  // do it: without it a path could address one school and edit another's
+  // programme, and the response would look like it worked.
+
   @Patch(':id/programs/:programId')
   @ApiOperation({ summary: 'Edit a programme (1A-27)' })
   updateProgram(
+    @Param('id', ParseUUIDPipe) id: string,
     @Param('programId', ParseUUIDPipe) programId: string,
     @Body() dto: UpdateProgramDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.programs.update(programId, dto, user.id);
+    return this.programs.update(programId, dto, user.id, id);
   }
 
   @Delete(':id/programs/:programId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a programme no case or application uses' })
-  async removeProgram(@Param('programId', ParseUUIDPipe) programId: string): Promise<void> {
-    await this.programs.remove(programId);
+  async removeProgram(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('programId', ParseUUIDPipe) programId: string,
+  ): Promise<void> {
+    await this.programs.remove(programId, id);
   }
 
   // --- Intake terms ---

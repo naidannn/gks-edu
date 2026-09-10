@@ -11,20 +11,6 @@ import type { WorkspaceCase } from '@gks/shared';
 const props = defineProps<{ workspaceCase: WorkspaceCase }>();
 const emit = defineEmits<{ open: [tab: 'overview' | 'process' | 'documents' | 'payments' | 'activity'] }>();
 
-const ACTOR_LABEL = {
-  CLIENT: 'Үйлчлүүлэгчийн талд',
-  STAFF: 'Бидний талд',
-  SCHOOL: 'Сургуулийн талд',
-  NONE: 'Мэдээлэл',
-} as const;
-
-const ACTOR_ICON = {
-  CLIENT: 'user',
-  STAFF: 'circle-arrow-right',
-  SCHOOL: 'graduation-cap',
-  NONE: 'circle-check',
-} as const;
-
 /** The portal's tab names map onto the workspace's five. */
 const TAB_FOR = {
   overview: 'overview',
@@ -46,10 +32,10 @@ const isOurs = computed(() => action.value.actor === 'STAFF');
   <DsCard :accent="isOurs">
     <div class="gks-nextact">
       <div class="gks-nextact__icon" :class="`gks-nextact__icon--${action.actor.toLowerCase()}`">
-        <DsIcon :name="ACTOR_ICON[action.actor]" :size="20" />
+        <DsIcon :name="NEXT_ACTION_ACTOR_ICONS_STAFF[action.actor]" :size="20" />
       </div>
       <div class="gks-nextact__text">
-        <span class="gks-eyebrow">Дараагийн алхам · {{ ACTOR_LABEL[action.actor] }}</span>
+        <span class="gks-eyebrow">Дараагийн алхам · {{ NEXT_ACTION_ACTOR_LABELS_STAFF[action.actor] }}</span>
         <p class="gks-nextact__label">{{ action.label }}</p>
         <p class="gks-nextact__desc">{{ action.description }}</p>
       </div>

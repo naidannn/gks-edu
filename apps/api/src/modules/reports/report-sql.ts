@@ -20,9 +20,23 @@ export function localInstant(day: string): Prisma.Sql {
   return Prisma.sql`(CAST(${day} AS date)::timestamp AT TIME ZONE ${OFFICE_TIME_ZONE})`;
 }
 
-/** `YYYY-MM` of a timestamp, in office-local months. */
+/**
+ * `YYYY-MM` of a timestamp, in office-local months.
+ *
+ * **Two** `AT TIME ZONE`s, and the first one is the fix (1N-37). Every
+ * `DateTime` column here is `timestamp without time zone` holding a UTC value,
+ * and `naive AT TIME ZONE 'Asia/Ulaanbaatar'` reads that value as *already
+ * being* Ulaanbaatar time and converts the wrong way — pushing every payment
+ * taken in the office's first sixteen hours of a month into the month before.
+ * `AT TIME ZONE 'UTC'` first says what the naive value actually is; the second
+ * then puts it on the office clock.
+ *
+ * The period totals never had this bug: `within` compares against
+ * {@link localInstant}, so both sides are instants and Postgres does the
+ * conversion itself.
+ */
 export function localMonth(column: Prisma.Sql): Prisma.Sql {
-  return Prisma.sql`to_char(date_trunc('month', ${column} AT TIME ZONE ${OFFICE_TIME_ZONE}), 'YYYY-MM')`;
+  return Prisma.sql`to_char(date_trunc('month', (${column} AT TIME ZONE 'UTC') AT TIME ZONE ${OFFICE_TIME_ZONE}), 'YYYY-MM')`;
 }
 
 /** `column` falls inside the period (half-open, so no boundary double-count). */

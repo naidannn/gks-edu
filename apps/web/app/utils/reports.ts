@@ -98,13 +98,6 @@ export function formatRate(rate: number | null | undefined): string {
   return rate === null || rate === undefined ? '—' : `${rate}%`;
 }
 
-/** Days a report counts in, phrased the way a countdown is read. */
-export function formatDaysLeft(days: number | null): string {
-  if (days === null) return 'Хугацаа тодорхойгүй';
-  if (days < 0) return `${Math.abs(days)} хоногоор хэтэрсэн`;
-  if (days === 0) return 'Өнөөдөр';
-  return `${days} хоног үлдсэн`;
-}
 
 /**
  * Query string for `/reports/*` and the CSV export, built from one period so

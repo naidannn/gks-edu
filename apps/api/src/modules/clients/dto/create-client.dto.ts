@@ -20,6 +20,7 @@ import {
 } from 'class-validator';
 import { ClientStatus, EducationLevel, Gender, LeadSource, ServiceType } from '../../../prisma/client.js';
 import { UniversityChoiceDto } from '../../cases/dto/university-choice.dto.js';
+import { TransformEmail } from '../../../common/validation/transforms.js';
 import {
   PHONE_PATTERN,
   REGISTER_PATTERN,
@@ -63,17 +64,18 @@ export class CreateClientDto {
   @ApiProperty({ example: '99112233' })
   @TransformPhone()
   @IsString()
-  @Matches(PHONE_PATTERN, { message: 'Утасны дугаар буруу байна' })
+  @Matches(PHONE_PATTERN)
   phone!: string;
 
   @ApiPropertyOptional()
   @TransformPhone()
   @IsString()
-  @Matches(PHONE_PATTERN, { message: 'Нэмэлт утасны дугаар буруу байна' })
+  @Matches(PHONE_PATTERN)
   @IsOptional()
   phoneAlt?: string;
 
   @ApiPropertyOptional()
+  @TransformEmail()
   @IsEmail()
   @MaxLength(200)
   @IsOptional()
@@ -111,7 +113,7 @@ export class CreateClientDto {
   @ApiPropertyOptional()
   @TransformPhone()
   @IsString()
-  @Matches(PHONE_PATTERN, { message: 'Асран хамгаалагчийн утасны дугаар буруу байна' })
+  @Matches(PHONE_PATTERN)
   @IsOptional()
   guardianPhone?: string;
 

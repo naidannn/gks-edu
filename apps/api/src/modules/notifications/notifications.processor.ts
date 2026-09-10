@@ -1,12 +1,17 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
-import type { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger, type OnModuleInit } from '@nestjs/common';
+import type { Job, Queue } from 'bullmq';
 import { NotificationChannel, NotificationStatus } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { SmsService } from '../../sms/sms.service.js';
-import { NOTIFICATION_QUEUE } from '../../queue/queue.constants.js';
+import {
+  NOTIFICATION_QUEUE,
+  NOTIFICATION_REQUEUE_INTERVAL_MS,
+  NOTIFICATION_REQUEUE_JOB,
+} from '../../queue/queue.constants.js';
 import { EmailService } from './email.service.js';
 import { presentationFor } from './email/email-presentation.js';
+import { NotificationsService } from './notifications.service.js';
 import { SmsBudgetService } from './sms-budget.service.js';
 
 /**
@@ -15,7 +20,7 @@ import { SmsBudgetService } from './sms-budget.service.js';
  * shows.
  */
 @Processor(NOTIFICATION_QUEUE)
-export class NotificationsProcessor extends WorkerHost {
+export class NotificationsProcessor extends WorkerHost implements OnModuleInit {
   private readonly logger = new Logger(NotificationsProcessor.name);
 
   constructor(
@@ -23,11 +28,30 @@ export class NotificationsProcessor extends WorkerHost {
     private readonly email: EmailService,
     private readonly sms: SmsService,
     private readonly budget: SmsBudgetService,
+    private readonly notifications: NotificationsService,
+    @InjectQueue(NOTIFICATION_QUEUE) private readonly queue: Queue,
   ) {
     super();
   }
 
+  /**
+   * The sweeper shares this queue rather than opening one of its own. Upserted
+   * under a fixed key, so every API instance converges on one repeatable job.
+   */
+  async onModuleInit(): Promise<void> {
+    await this.queue.upsertJobScheduler(
+      NOTIFICATION_REQUEUE_JOB,
+      { every: NOTIFICATION_REQUEUE_INTERVAL_MS },
+      { data: {} },
+    );
+  }
+
   async process(job: Job<{ notificationId: string }>): Promise<void> {
+    if (job.name === NOTIFICATION_REQUEUE_JOB) {
+      await this.notifications.requeueStale();
+      return;
+    }
+
     const { notificationId } = job.data;
 
     const notification = await this.prisma.notification.findUnique({

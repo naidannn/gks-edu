@@ -1,7 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsDateString, IsEnum, IsIn, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
+import { UUID_OR_UNASSIGNED } from '../../../common/validation/transforms.js';
 import { LeadSource, LeadStage } from '../../../prisma/client.js';
 
 export const LEAD_SORTS = ['createdAt', 'nextContactAt', 'updatedAt'] as const;
@@ -26,7 +27,7 @@ export class QueryLeadsDto extends PaginationQueryDto {
   source?: LeadSource;
 
   @ApiPropertyOptional({ description: 'UUID of the assigned staff member, or "unassigned"' })
-  @IsString()
+  @Matches(UUID_OR_UNASSIGNED)
   @IsOptional()
   assignedToId?: string;
 

@@ -27,7 +27,6 @@ import type {
  */
 type Paginated = PaginatedResult<ProgramListItem>;
 
-const route = useRoute();
 const router = useRouter();
 
 const PAGE_SIZE = 20;
@@ -61,56 +60,24 @@ const SCHOLARSHIP_OPTIONS = [
   { value: 'true', label: 'Тэтгэлэгтэй нь' },
 ];
 
-const str = (value: unknown): string => (typeof value === 'string' ? value : '');
-const num = (value: unknown, fallback: number): number => {
-  const parsed = Number.parseInt(str(value), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-
 // The URL is the state: a search survives a reload and a shared link, which is
 // how a consultant sends "these are your options" to a client.
+const { str, num, apply, search } = useQueryState();
+
 const filters = computed(() => ({
-  q: str(route.query.q),
-  level: str(route.query.level) as ProgramLevel | '',
-  university: str(route.query.university),
-  region: str(route.query.region),
-  language: str(route.query.language) as InstructionLanguage | '',
-  tuitionMax: str(route.query.tuitionMax),
-  topikMax: str(route.query.topikMax),
-  scholarship: str(route.query.scholarship),
-  sort: str(route.query.sort) || DEFAULT_SORT,
-  page: num(route.query.page, 1),
+  q: str('q'),
+  level: str('level') as ProgramLevel | '',
+  university: str('university'),
+  region: str('region'),
+  language: str('language') as InstructionLanguage | '',
+  tuitionMax: str('tuitionMax'),
+  topikMax: str('topikMax'),
+  scholarship: str('scholarship'),
+  sort: str('sort', DEFAULT_SORT),
+  page: num('page'),
 }));
 
-const searchInput = ref(filters.value.q);
-watch(
-  () => filters.value.q,
-  (value) => {
-    searchInput.value = value;
-  },
-);
-
-function apply(patch: Record<string, string | number | undefined>, resetPage = true) {
-  const merged = { ...(route.query as Record<string, string>), ...patch };
-  const query = Object.fromEntries(
-    Object.entries(merged)
-      .filter(([key, value]) => {
-        if (resetPage && key === 'page') return false;
-        return value !== '' && value !== undefined && value !== null;
-      })
-      .map(([key, value]) => [key, String(value)]),
-  );
-  router.push({ query });
-}
-
-let searchTimer: ReturnType<typeof setTimeout> | undefined;
-watch(searchInput, (value) => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    if (value !== filters.value.q) apply({ q: value.trim() });
-  }, 350);
-});
-onBeforeUnmount(() => clearTimeout(searchTimer));
+const searchInput = search();
 
 /**
  * `Search` (1A-38) — what a visitor types is the clearest statement of intent
@@ -366,7 +333,7 @@ useListingSeo('/programs');
               Мэдээлэл шинэчлэгдэж байна
             </strong>
             <span v-if="program.tuitionPerTermKrw" class="gks-prog-card__price-term">
-              Нэг улирал {{ formatKrw(program.tuitionPerTermKrw) }}
+              Нэг улирал {{ formatKrw(program.tuitionPerTermKrw) }} · {{ tuitionTermsNote(program.level) }}
             </span>
           </div>
 
@@ -397,8 +364,10 @@ useListingSeo('/programs');
             <span v-if="program.scholarshipNote">— {{ program.scholarshipNote }}</span>
           </p>
 
+          <!-- No `tuitionYear`: which year's fee table a figure came from is a
+               staff signal (the admin list sorts and flags on it), and to a
+               visitor a missing one printed "Он тодорхойгүй". -->
           <footer class="gks-prog-card__foot">
-            <span class="gks-prog-card__year">{{ tuitionYearLabel(program.tuitionYear) }}</span>
             <NuxtLink :to="`/universities/${program.university.slug}`">
               Сургуулийн мэдээлэл <DsIcon name="arrow-right" :size="14" />
             </NuxtLink>
@@ -551,13 +520,12 @@ useListingSeo('/programs');
 .gks-prog-card__foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--sp-3);
   margin-top: auto;
   padding-top: var(--sp-3);
   border-top: var(--border-hair) solid var(--line-hairline);
 }
-.gks-prog-card__year { color: var(--text-disabled); font-size: var(--fs-caption); font-variant-numeric: var(--num-tabular); }
 .gks-prog-card__foot a {
   display: inline-flex;
   align-items: center;

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { paginate } from '../../common/dto/pagination.dto.js';
 import { Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreateDocumentDto } from './dto/create-document.dto.js';
@@ -112,10 +113,7 @@ export class VectorService {
       this.prisma.document.count(),
     ]);
 
-    return {
-      items,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
-    };
+    return paginate(items, total, page, limit);
   }
 
   async removeDocument(id: string): Promise<void> {

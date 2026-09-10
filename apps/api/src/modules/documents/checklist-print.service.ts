@@ -2,14 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import type { DocStage } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { SERVICE_TYPE_LABELS } from '../notifications/notification-labels.js';
+import { SERVICE_TYPE_LABELS, formatDateMn } from '../notifications/notification-labels.js';
 import { CaseDocumentsService } from './case-documents.service.js';
-import {
-  ChecklistPdfService,
-  checklistFilename,
-  formatDeadlineMn,
-  type ChecklistPdfParams,
-} from './checklist-pdf.service.js';
+import { ChecklistPdfService, checklistFilename, type ChecklistPdfParams } from './checklist-pdf.service.js';
 
 /**
  * 1D-21 — gathers everything the printed checklist names and hands it to the
@@ -67,7 +62,7 @@ export class ChecklistPrintService {
       intakeLabel: gksCase.intake ? `${gksCase.intake.year} оны ${gksCase.intake.month}-р сарын элсэлт` : null,
       // The school's own deadline is never printed: given two dates people work
       // to the later one, so the sheet carries ours alone (CLAUDE.md).
-      deadlineLabel: gksCase.intake?.internalDeadline ? formatDeadlineMn(gksCase.intake.internalDeadline) : null,
+      deadlineLabel: gksCase.intake?.internalDeadline ? formatDateMn(gksCase.intake.internalDeadline) : null,
       officerName: gksCase.assignedDocOfficer?.name ?? null,
       officerPhone: gksCase.assignedDocOfficer?.phone ?? null,
       printedAt: new Date(),

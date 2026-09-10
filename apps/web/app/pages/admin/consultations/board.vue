@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LeadListItem, LeadStage } from '@gks/shared';
+import type { LeadListItem, LeadStage, PaginatedResult } from '@gks/shared';
 import { ApiError } from '~/utils/api-error';
 import { useAuthStore } from '~/stores/auth';
 
@@ -39,7 +39,7 @@ const truncated = ref(false);
 const PAGE_SIZE = 100;
 const MAX_PAGES = 5;
 
-type LeadPage = { items: LeadListItem[]; meta: { totalPages: number } };
+type LeadPage = PaginatedResult<LeadListItem>;
 
 async function load() {
   pending.value = true;

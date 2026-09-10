@@ -1,11 +1,15 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CaseStage, ContractType, type Prisma, ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { computeIntakePhase, daysUntil } from '../admissions/intake-deadline.js';
+import { computeIntakePhase, daysUntil, resolveIntakeDates } from '../admissions/intake-deadline.js';
+import { CASE_FLOWS } from '../cases/case-flow.js';
 import { CasesService } from '../cases/cases.service.js';
 import { ClientsService } from '../clients/clients.service.js';
+import { CLIENT_CONTRACT_SELECT, toClientContract } from '../contracts/client-contract.select.js';
 import { ContractsService } from '../contracts/contracts.service.js';
 import { CaseDocumentsService, type StageProgress } from '../documents/case-documents.service.js';
+import { CLIENT_PAYMENT_SELECT } from '../payments/client-payment.select.js';
+import { activePricingWhere } from '../pricing/active-pricing.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { StartMyCaseDto } from './dto/start-case.dto.js';
 import type { UpsertMyProfileDto } from './dto/upsert-my-profile.dto.js';
@@ -29,38 +33,34 @@ const CASE_INCLUDE = {
       openAt: true,
       applicationDeadline: true,
       internalDeadline: true,
+      internalDeadlineIsManual: true,
       classStartDate: true,
       resultAnnouncedAt: true,
       requirementNote: true,
       status: true,
+      // A programme on its own calendar closes on its own date (§3.2). Joined
+      // here rather than queried per case, and dropped from the payload below:
+      // only the resolved date reaches the client.
+      programOverrides: {
+        select: {
+          programId: true,
+          openAt: true,
+          applicationDeadline: true,
+          internalDeadline: true,
+          internalDeadlineIsManual: true,
+          classStartDate: true,
+        },
+      },
     },
   },
-  contract: true,
   /**
-   * Explicitly selected, not `true`: `note` is an internal remark staff write
-   * when they register a payment by hand, and `receiptPath` is a storage path.
-   * Neither belongs in a payload the client receives (1C-27).
+   * Both explicitly selected, not `true`. The payment row carries staff
+   * remarks and storage paths, and the contract carries the office's audit
+   * trail — one projection each, shared with the staff modules so a column
+   * added later cannot leak from here alone (1C-27, 1N-04).
    */
-  payments: {
-    select: {
-      id: true,
-      caseId: true,
-      kind: true,
-      amountMnt: true,
-      status: true,
-      method: true,
-      reference: true,
-      qpayInvoiceId: true,
-      qrText: true,
-      qrImage: true,
-      paidAt: true,
-      // The client is chased on this date, so they get to see it.
-      dueAt: true,
-      refundOfId: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: 'desc' as const },
-  },
+  contract: { select: CLIENT_CONTRACT_SELECT },
+  payments: { select: CLIENT_PAYMENT_SELECT, orderBy: { createdAt: 'desc' as const } },
 } satisfies Prisma.CaseInclude;
 
 /**
@@ -111,7 +111,7 @@ export class MeService {
   async services() {
     const [prices, templates] = await Promise.all([
       this.prisma.servicePricing.findMany({
-        where: { effectiveFrom: { lte: new Date() }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: new Date() } }] },
+        where: activePricingWhere(new Date()),
         orderBy: { effectiveFrom: 'desc' },
       }),
       this.prisma.contractTemplate.findMany({ where: { isActive: true }, select: { serviceType: true } }),
@@ -141,8 +141,8 @@ export class MeService {
    * and the electronic brokerage contract that goes with it, rendered from the
    * active template against the price in effect right now (§6.1).
    *
-   * They still sign it through the same accept → SMS OTP flow staff-issued
-   * contracts use (1C-08); nothing here shortcuts the signature.
+   * They still sign it through the same accept → emailed OTP flow staff-issued
+   * contracts use (1C-08, 1C-33); nothing here shortcuts the signature.
    */
   async startCase(userId: string, dto: StartMyCaseDto) {
     const client = await this.prisma.client.findUnique({ where: { userId } });
@@ -166,14 +166,17 @@ export class MeService {
     // Both throw a readable message before anything is written, so a missing
     // price or template never leaves a case behind without its contract.
     await this.pricing.getActive(dto.serviceType);
-    const template = await this.prisma.contractTemplate.findFirst({
-      where: { serviceType: dto.serviceType, isActive: true },
-      select: { id: true },
-    });
+    const template = await this.contracts.activeTemplate(dto.serviceType);
     if (!template) {
       throw new BadRequestException('Энэ үйлчилгээний гэрээний загвар бэлэн болоогүй байна — зөвлөхтэйгээ холбогдоно уу');
     }
 
+    // An intake belongs to one school, and `CasesService` only checks that it
+    // does when there is a school to check it against — so a round sent without
+    // one produced a case pointing at some other school's calendar (1N-13).
+    if (dto.intakeId && !dto.universityId) {
+      throw new BadRequestException('Элсэлтийн улирал сонгохын өмнө сургуулиа сонгоно уу');
+    }
     if (dto.universityId) await this.assertPublishedUniversity(dto.universityId);
 
     const created = await this.cases.create({
@@ -183,7 +186,16 @@ export class MeService {
       intakeId: dto.intakeId,
     });
 
-    await this.contracts.createForCase({ caseId: created.id, type: ContractType.ELECTRONIC });
+    try {
+      await this.contracts.createForCase({ caseId: created.id, type: ContractType.ELECTRONIC });
+    } catch (error) {
+      // A case with no contract is a dead end: the client cannot sign it, and
+      // every retry hits the "you already have one open" conflict above.
+      // Nothing else points at it yet, so it goes rather than being left for
+      // staff to find (1N-15).
+      await this.prisma.case.delete({ where: { id: created.id } }).catch(() => undefined);
+      throw error;
+    }
 
     // The client record keeps the choice they just made, so the CRM list and
     // the contract's placeholders agree with the case that was opened.
@@ -240,27 +252,41 @@ export class MeService {
   // ─── Internals ─────────────────────────────────────────────────────────────
 
   private async decorate<T extends Prisma.CaseGetPayload<{ include: typeof CASE_INCLUDE }>>(row: T) {
-    const [journey, admissionDocs, visaDocs] = await Promise.all([
-      this.cases.journey(row.serviceType),
+    // The journey is `CASE_FLOWS[serviceType]` and nothing else, so the portal
+    // overview no longer pays a query per case for it (1N-52). The staff side
+    // still reads `CaseFlowDefinition`, which is where an office edit to the
+    // graph would show up.
+    const journey = CASE_FLOWS[row.serviceType];
+    const [admissionDocs, visaDocs] = await Promise.all([
       this.documents.progress(row.id, 'ADMISSION'),
       this.documents.progress(row.id, 'VISA'),
     ]);
 
     // The client works to one date, ours. `applicationDeadline` decides the
     // phase and is then dropped — quoting the school's later date next to it is
-    // how somebody talks themselves into another week.
+    // how somebody talks themselves into another week. `programOverrides` goes
+    // the same way: it is an input to the date, never part of the answer.
     const now = new Date();
     const intake = row.intake
-      ? (({ applicationDeadline, ...rest }) => ({
-          ...rest,
-          phase: computeIntakePhase({ applicationDeadline, internalDeadline: rest.internalDeadline }, rest.status, now),
-          daysUntilInternalDeadline: daysUntil(rest.internalDeadline, now),
-        }))(row.intake)
+      ? (({ applicationDeadline, programOverrides, ...rest }) => {
+          const dates = resolveIntakeDates(
+            { ...rest, applicationDeadline },
+            programOverrides.find((override) => override.programId === row.programId),
+          );
+          return {
+            ...rest,
+            internalDeadline: dates.internalDeadline,
+            classStartDate: dates.classStartDate,
+            phase: computeIntakePhase(dates, rest.status, now),
+            daysUntilInternalDeadline: daysUntil(dates.internalDeadline, now),
+          };
+        })(row.intake)
       : null;
 
     return {
       ...row,
       intake,
+      contract: row.contract ? toClientContract(row.contract) : null,
       journey,
       documents: { admission: admissionDocs, visa: visaDocs } satisfies Record<string, StageProgress>,
       nextAction: nextAction({

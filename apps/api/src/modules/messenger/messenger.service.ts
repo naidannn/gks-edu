@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { DOC_STAFF_ROLES, isStaff } from '../../common/constants/roles.js';
+import { activeStaffWhere, isStaff } from '../../common/constants/roles.js';
+import { paginate } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { nextYearlyCode } from '../../common/utils/yearly-code.js';
 import {
@@ -34,6 +35,19 @@ import {
 
 /** How much of a message the list row shows. Matches the column width. */
 const PREVIEW_LENGTH = 200;
+
+/**
+ * A thread the desk still owes an answer on (1N-42).
+ *
+ * The status matters: a resolved thread has left the open inbox, so counting it
+ * in the navigation badge asks staff to find something that is no longer on the
+ * screen they would look at. `setStatus` clears the counter when resolving, and
+ * this filter catches anything resolved before that fix, or by another route.
+ */
+const STAFF_UNREAD_WHERE: Prisma.ConversationWhereInput = {
+  staffUnread: { gt: 0 },
+  status: { not: ConversationStatus.RESOLVED },
+};
 
 /** Fallback subject when the client just started typing without naming it. */
 const SUBJECT_FALLBACK_LENGTH = 60;
@@ -88,13 +102,7 @@ export class MessengerService {
     ]);
 
     return {
-      items: rows.map((row) => this.toListItem(row, false)),
-      meta: {
-        page: query.page,
-        limit: query.limit,
-        total,
-        totalPages: Math.ceil(total / query.limit) || 1,
-      },
+      ...paginate(rows.map((row) => this.toListItem(row, false)), total, query.page, query.limit),
       unreadThreads,
     };
   }
@@ -196,7 +204,8 @@ export class MessengerService {
     const page = rows.slice(0, query.limit).reverse();
     const nextBefore = rows.length > query.limit ? (page[0]?.id ?? null) : null;
 
-    const read = await this.markRead(user, conversationId);
+    // The thread is already loaded; `markRead` would fetch it a second time.
+    const read = await this.markReadOn(conversation, user);
     this.events.markWatching(conversationId, user.id);
 
     return {
@@ -284,7 +293,15 @@ export class MessengerService {
    * writing for: a thread being read on a poll should not touch the table.
    */
   async markRead(user: AuthenticatedUser, conversationId: string): Promise<ConversationDetailRow | null> {
-    const conversation = await this.load(conversationId, user);
+    return this.markReadOn(await this.load(conversationId, user), user);
+  }
+
+  /** The same, for a caller that has already loaded (and so access-checked) the row. */
+  private async markReadOn(
+    conversation: ConversationDetailRow,
+    user: AuthenticatedUser,
+  ): Promise<ConversationDetailRow | null> {
+    const conversationId = conversation.id;
     const staffView = isStaff(user.role);
     const unread = staffView ? conversation.staffUnread : conversation.clientUnread;
     if (!unread) return null;
@@ -315,7 +332,10 @@ export class MessengerService {
     const staffView = isStaff(user.role);
 
     const where: Prisma.ConversationWhereInput = staffView
-      ? { staffUnread: { gt: 0 } }
+      ? STAFF_UNREAD_WHERE
+      // No status filter on the client's side: a resolved thread still carries
+      // the staff answer that resolved it, and that is exactly what they should
+      // be nudged to read.
       : { clientUserId: user.id, clientUnread: { gt: 0 } };
 
     const [threads, sum] = await Promise.all([
@@ -374,17 +394,11 @@ export class MessengerService {
         select: CONVERSATION_DETAIL_SELECT,
       }),
       this.prisma.conversation.count({ where }),
-      this.prisma.conversation.count({ where: { staffUnread: { gt: 0 } } }),
+      this.prisma.conversation.count({ where: STAFF_UNREAD_WHERE }),
     ]);
 
     return {
-      items: rows.map((row) => this.toDetail(row, true)),
-      meta: {
-        page: query.page,
-        limit: query.limit,
-        total,
-        totalPages: Math.ceil(total / query.limit) || 1,
-      },
+      ...paginate(rows.map((row) => this.toDetail(row, true)), total, query.page, query.limit),
       unreadThreads,
     };
   }
@@ -410,7 +424,7 @@ export class MessengerService {
 
     if (assigneeId) {
       const assignee = await this.prisma.user.findFirst({
-        where: { id: assigneeId, isActive: true, role: { in: [...DOC_STAFF_ROLES] } },
+        where: { id: assigneeId, ...activeStaffWhere() },
         select: { id: true, name: true },
       });
       if (!assignee) throw new NotFoundException('Ажилтан олдсонгүй');
@@ -450,6 +464,10 @@ export class MessengerService {
       status,
       resolvedAt: resolving ? new Date() : null,
       resolvedById: resolving ? user.id : null,
+      // Marking a thread resolved is the strongest possible statement that
+      // somebody read it. Without this the badge kept counting a thread that
+      // had left the open inbox, and nobody could find what to click (1N-42).
+      ...(resolving ? { staffUnread: 0, staffReadAt: new Date() } : {}),
     });
 
     this.fanOut(updated.conversation, updated.message, {
@@ -462,7 +480,7 @@ export class MessengerService {
   /** Who a thread can be handed to — the staff picker in the inbox header. */
   async assignableStaff() {
     return this.prisma.user.findMany({
-      where: { isActive: true, role: { in: [...DOC_STAFF_ROLES] } },
+      where: activeStaffWhere(),
       orderBy: [{ name: 'asc' }],
       select: { id: true, name: true, email: true, role: true },
     });

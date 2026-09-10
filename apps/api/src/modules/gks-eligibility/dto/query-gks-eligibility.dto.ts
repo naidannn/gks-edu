@@ -11,8 +11,13 @@ import {
   IsOptional,
   Max,
   Min,
+  Validate,
+  ValidatorConstraint,
+  type ValidationArguments,
+  type ValidatorConstraintInterface,
 } from 'class-validator';
 import { EducationLevel } from '../../../prisma/client.js';
+import { GPA_MAX_BY_SCALE } from '../gks-eligibility.rules.js';
 import type {
   EnglishLevel,
   GksBlocker,
@@ -34,6 +39,29 @@ const STRENGTHS: GksStrength[] = [
   'DOCS_STARTED',
 ];
 const BLOCKERS: GksBlocker[] = ['KOREAN_CITIZEN', 'PREVIOUS_GKS', 'DEGREE_IN_KOREA', 'HEALTH'];
+
+/**
+ * The grade has to fit the scale it was given on.
+ *
+ * Validating against 100 whatever the chip says is how `gpa=85` on a 4.0 scale
+ * reaches `toGpaPercent`, which clamps it to the scale's own maximum and reads
+ * a failing average as a perfect 100 — the criterion flips from failed to top
+ * mark on one wrong tap, which is the one direction §3.5 says not to guess in.
+ */
+@ValidatorConstraint({ name: 'gpaWithinScale' })
+class GpaWithinScale implements ValidatorConstraintInterface {
+  validate(value: unknown, args: ValidationArguments): boolean {
+    const max = GPA_MAX_BY_SCALE[(args.object as QueryGksEligibilityDto).gpaScale];
+    // An unknown scale is `@IsIn`'s error to report, not a second one here.
+    if (max === undefined) return true;
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max;
+  }
+
+  defaultMessage(args: ValidationArguments): string {
+    const scale = (args.object as QueryGksEligibilityDto).gpaScale;
+    return `Голч дүн: ${scale} системд 0-ээс ${GPA_MAX_BY_SCALE[scale]} хооронд байх ёстой`;
+  }
+}
 
 /** `?strengths=AWARD,RESEARCH` — a URL people read, rather than repeated keys. */
 const csv = ({ value }: { value: unknown }): unknown => {
@@ -72,11 +100,11 @@ export class QueryGksEligibilityDto {
   @IsOptional()
   graduating = false;
 
-  @ApiProperty({ description: 'Grade average, on the scale named below' })
+  @ApiProperty({ description: 'Grade average, on the scale named below — checked against that scale' })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  @Max(100)
+  @Validate(GpaWithinScale)
   gpa!: number;
 
   @ApiProperty({ enum: SCALES, description: 'Which scale that average is on (gksedu.md §24 Q1)' })

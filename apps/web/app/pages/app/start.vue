@@ -4,8 +4,9 @@ import type { IntakeTerm, PortalCaseDetail, ServiceOption, ServiceType } from '@
 /**
  * Self-service: the client picks a service, confirms what it costs, and the
  * platform opens the case and issues the electronic brokerage contract for
- * them to sign (1C-23). The signature itself still goes through accept →
- * SMS OTP, exactly as a staff-issued contract does (1C-08).
+ * them to sign (1C-23). The signature itself still goes through accept → a
+ * six-digit code emailed to the account address, exactly as a staff-issued
+ * contract does (1C-08).
  */
 definePageMeta({ middleware: 'auth', layout: 'portal' });
 useHead({ title: 'Үйлчилгээ эхлүүлэх' });
@@ -32,6 +33,8 @@ onMounted(async () => {
   await load();
   try {
     services.value = await api.get<ServiceOption[]>('/me/services');
+  } catch (err) {
+    errorMsg.value = apiErrorMessage(err, 'Үйлчилгээний жагсаалтыг ачаалж чадсангүй');
   } finally {
     loading.value = false;
   }
@@ -71,8 +74,12 @@ async function loadIntakes(schoolId: string) {
 }
 
 watch(universityId, async (value, previous) => {
-  // Changing school invalidates a round chosen at the old one.
-  if (previous !== undefined && value !== previous) intakeId.value = '';
+  // Changing school invalidates a round chosen at the old one — but only if
+  // there *was* an old one. Deep links from `/admissions` and the school page
+  // set the school and the round together, and this watcher's first flush sees
+  // the school change from `''`; clearing there dropped the round out of every
+  // such link and opened the case with no intake for the board to track.
+  if (previous) intakeId.value = '';
   await loadIntakes(value);
 });
 watch(
@@ -108,17 +115,11 @@ const intakeOptions = computed(() => [
     label:
       `${intake.year} · ${INTAKE_MONTH_LABELS[intake.month] ?? `${intake.month}-р сар`}` +
       ` — ${PROGRAM_LEVEL_LABELS[intake.level]}` +
-      (intake.internalDeadline ? ` (бүртгэл ${formatIntakeDate(intake.internalDeadline)} хүртэл)` : ''),
+      (intake.internalDeadline ? ` (бүртгэл ${formatNumericDateUtc(intake.internalDeadline)} хүртэл)` : ''),
   })),
 ]);
 
 const selectedIntake = computed(() => intakes.value.find((intake) => intake.id === intakeId.value) ?? null);
-
-function formatIntakeDate(value: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
 
 function isTaken(serviceType: ServiceType): boolean {
   return openServices.value.includes(serviceType);
@@ -160,7 +161,7 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
       <h1 class="gks-start__title">Зуучлалын гэрээгээ байгуулах</h1>
       <p class="gks-start__lede">
         Гурван алхам: үйлчилгээгээ сонгож, зорилтот сургуулиа зааж, гэрээгээ үүсгэнэ.
-        Гэрээг цахимаар уншиж, утсандаа ирэх кодоор баталгаажуулна.
+        Гэрээг цахимаар уншиж, имэйлээр ирэх кодоор баталгаажуулна.
       </p>
     </header>
 
@@ -185,6 +186,8 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
         Мэдээллээ бөглөх
       </DsButton>
     </DsCard>
+
+    <DsCard v-if="errorMsg && step === 1" accent><p class="gks-start__error">{{ errorMsg }}</p></DsCard>
 
     <!-- 1. Service -->
     <section v-if="step === 1" class="gks-start__services">
@@ -241,12 +244,12 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
       <div v-else-if="selectedIntake" class="gks-start__intake">
         <p>
           <strong>Бүртгэлийн эцсийн хугацаа:</strong>
-          <span class="gks-tnum">{{ formatIntakeDate(selectedIntake.internalDeadline) }}</span>
+          <span class="gks-tnum">{{ formatNumericDateUtc(selectedIntake.internalDeadline) }}</span>
           <span v-if="selectedIntake.daysUntilInternalDeadline !== null">
-            ({{ selectedIntake.daysUntilInternalDeadline }} хоног үлдлээ)
+            ({{ deadlineCountdownLabel(selectedIntake.daysUntilInternalDeadline) }})
           </span>
         </p>
-        <p>Хичээл эхлэх: <span class="gks-tnum">{{ formatIntakeDate(selectedIntake.classStartDate) }}</span></p>
+        <p>Хичээл эхлэх: <span class="gks-tnum">{{ formatNumericDateUtc(selectedIntake.classStartDate) }}</span></p>
         <p class="gks-start__intake-hint">
           Энэ огноо хүртэл материалаа бүрэн бүрдүүлсэн байх шаардлагатай.
         </p>
@@ -268,7 +271,7 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
           <dd>
             <template v-if="selectedIntake">
               {{ selectedIntake.year }} · {{ INTAKE_MONTH_LABELS[selectedIntake.month] ?? `${selectedIntake.month}-р сар` }}
-              <span class="gks-tnum">(бүртгэл {{ formatIntakeDate(selectedIntake.internalDeadline) }} хүртэл)</span>
+              <span class="gks-tnum">(бүртгэл {{ formatNumericDateUtc(selectedIntake.internalDeadline) }} хүртэл)</span>
             </template>
             <template v-else>Сонгоогүй</template>
           </dd>
@@ -293,7 +296,8 @@ const STEPS = ['Үйлчилгээ', 'Сургууль', 'Баталгаажуу
 
       <p class="gks-start__note">
         "Гэрээ үүсгэх" товч дарснаар гэрээ үүсэж, та түүнийг бүрэн эхээр нь уншина. Уншсаны дараа
-        зөвшөөрч, утсандаа ирэх 6 оронтой кодоор баталгаажуулснаар гэрээ хүчин төгөлдөр болно.
+        зөвшөөрч, бүртгэлийн имэйл хаяг руу тань ирэх 6 оронтой кодоор баталгаажуулснаар гэрээ
+        хүчин төгөлдөр болно.
       </p>
 
       <p v-if="errorMsg" class="gks-start__error">{{ errorMsg }}</p>

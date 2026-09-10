@@ -140,15 +140,14 @@ function isLate(value: string | null): boolean {
 
 /**
  * Filled on the client: the server's clock is UTC and the office's is not.
- * Written out by hand rather than through `toLocaleDateString('mn-MN')` —
- * Chrome has no long-form Mongolian date data and silently answers in English.
+ * The names come from `utils/date.ts` rather than `toLocaleDateString('mn-MN')`
+ * — Chrome here has no Mongolian date data and silently answers in English.
  */
-const WEEKDAYS_MN = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
 const today = ref('');
 onMounted(() => {
   const now = new Date();
   today.value = `${now.getFullYear()} оны ${now.getMonth() + 1} сарын ${now.getDate()}`
-    + `, ${WEEKDAYS_MN[now.getDay()]} гараг`;
+    + `, ${weekdayNameMn(now.getDay())} гараг`;
 });
 
 useHead({ title: 'Хяналтын самбар · CRM' });

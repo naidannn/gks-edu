@@ -85,8 +85,15 @@ export function buildCaseFlowDefinitions(): Prisma.CaseFlowDefinitionCreateManyI
       }
     });
 
-    // A staff member decides where a paused case resumes.
+    // A staff member decides where a paused case resumes — but only among the
+    // stages a case can stand in without something having happened first
+    // (1N-06). A resume edge into a system-only target would let a consultant
+    // park a `CONTRACT_DRAFT` case and bring it back at `BALANCE_PAID`, with no
+    // contract and no money behind it; one into `COMPLETED` would finish a case
+    // that never ran. `CasesService.transition` narrows it further still, to the
+    // stages this particular case has actually been at.
     for (const stage of stages) {
+      if (SYSTEM_ONLY_TARGETS.has(stage) || stage === CaseStage.COMPLETED) continue;
       rows.push({
         serviceType,
         fromStage: CaseStage.ON_HOLD,
@@ -99,4 +106,21 @@ export function buildCaseFlowDefinitions(): Prisma.CaseFlowDefinitionCreateManyI
   }
 
   return rows;
+}
+
+/**
+ * The hops between two stages on a service's main line, or null when the
+ * target is not ahead of the current stage there (1N-27).
+ *
+ * `CASE_FLOWS` *is* the `sortOrder < 900` part of `CaseFlowDefinition` — the
+ * seed builds those rows from it — so asking the list is the same question as
+ * walking the edges, without a query per hop. Escapes sit off the line, so
+ * `REJECTED`/`ON_HOLD`/`CANCELLED` come back null and keep their own handling.
+ */
+export function mainLineForward(serviceType: ServiceType, fromStage: CaseStage, toStage: CaseStage): CaseStage[] | null {
+  const stages = CASE_FLOWS[serviceType];
+  const from = stages.indexOf(fromStage);
+  const to = stages.indexOf(toStage);
+  if (from < 0 || to <= from) return null;
+  return stages.slice(from + 1, to + 1);
 }

@@ -5,7 +5,6 @@ import {
   BalanceTrigger,
   CaseStage,
   DocStage,
-  Necessity,
   NotificationEvent,
   type Prisma,
   ServiceType,
@@ -15,7 +14,6 @@ import {
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { CaseDocumentsService } from '../documents/case-documents.service.js';
-import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { RequirementsService } from '../documents/requirements.service.js';
 import { DepartureService } from '../departure/departure.service.js';
 import { VISA_STATUS_LABELS } from '../notifications/notification-labels.js';
@@ -31,6 +29,16 @@ const VISA_TYPE_BY_SERVICE: Record<ServiceType, VisaType> = {
   [ServiceType.PHD]: VisaType.D2,
   [ServiceType.GKS_SCHOLARSHIP]: VisaType.D2,
 };
+
+/**
+ * Reached through `recordDecision` and nowhere else: only that path records the
+ * decision date, the visa number or the refusal reason, moves the case, opens
+ * the departure plan and tells the client (1N-20).
+ */
+const DECISION_STATUSES: readonly VisaStatus[] = [VisaStatus.APPROVED, VisaStatus.REJECTED];
+
+/** A decided visa is history — its type is what was actually applied for. */
+const DECIDED_STATUSES: readonly VisaStatus[] = [VisaStatus.APPROVED, VisaStatus.REJECTED];
 
 const VISA_INCLUDE = {
   case: {
@@ -121,7 +129,11 @@ export class VisaService {
 
   async update(caseId: string, dto: UpdateVisaCaseDto, actor: AuthenticatedUser) {
     await this.documents.assertCaseAccess(caseId, actor);
-    await this.getOrThrow(caseId);
+    const visaCase = await this.getOrThrow(caseId);
+
+    if (dto.visaType && dto.visaType !== visaCase.visaType && DECIDED_STATUSES.includes(visaCase.status)) {
+      throw new BadRequestException('Хариу гарсан визний төрлийг өөрчлөх боломжгүй');
+    }
 
     return this.prisma.visaCase.update({
       where: { caseId },
@@ -136,10 +148,13 @@ export class VisaService {
 
   async transition(caseId: string, dto: TransitionVisaDto, actor: AuthenticatedUser) {
     const visaCase = await this.getOrThrow(caseId);
+    if (DECISION_STATUSES.includes(dto.toStatus)) {
+      throw new BadRequestException('Визний хариуг шийдвэр бүртгэх үйлдлээр (decision) оруулна уу');
+    }
     assertVisaTransition(visaCase.status, dto.toStatus);
 
     if (dto.toStatus === VisaStatus.READY) {
-      const missing = await this.missingDocuments(caseId);
+      const { missing } = await this.documents.missingRequired(caseId, DocStage.VISA);
       if (missing.length > 0) {
         throw new BadRequestException(`Визний ${missing.length} материал бүрдээгүй байна`);
       }
@@ -151,6 +166,12 @@ export class VisaService {
         status: dto.toStatus,
         submittedAt: dto.toStatus === VisaStatus.SUBMITTED ? new Date() : undefined,
         note: dto.note ?? undefined,
+        // A fresh attempt starts clean: keeping the old `decidedAt`,
+        // `rejectionReason` and `visaNumber` meant a later approval carried the
+        // previous refusal's text into the client's notification (1N-26).
+        ...(dto.toStatus === VisaStatus.REAPPLY
+          ? { decidedAt: null, rejectionReason: null, visaNumber: null, submittedAt: null }
+          : {}),
       },
       include: VISA_INCLUDE,
     });
@@ -217,7 +238,12 @@ export class VisaService {
       return { visaCase: updated, balance: await this.balanceOutlook(caseId), refundPolicy: null };
     }
 
-    await this.cases.applyDomainTransition(caseId, CaseStage.REJECTED, actor.id, `Виз татгалзсан: ${dto.rejectionReason}`);
+    // `REJECTED` is terminal — the stage graph builds no edge out of it — so a
+    // refusal parks the case instead. The REAPPLY path the visa machine and the
+    // admin screen both offer has to be able to recover it, and a re-submitted,
+    // approved visa has to be able to unlock the balance invoice (1N-19).
+    // Declaring the case finally lost stays a staff decision.
+    await this.cases.applyDomainTransition(caseId, CaseStage.ON_HOLD, actor.id, `Виз татгалзсан: ${dto.rejectionReason}`);
     const contract = await this.prisma.contract.findUnique({ where: { caseId }, select: { refundPolicy: true } });
     return { visaCase: updated, balance: null, refundPolicy: contract?.refundPolicy ?? null };
   }
@@ -241,14 +267,6 @@ export class VisaService {
       isDueNow: contract.balanceTriggerSnapshot === BalanceTrigger.AFTER_VISA_APPROVED,
       trigger: contract.balanceTriggerSnapshot,
     };
-  }
-
-  private async missingDocuments(caseId: string) {
-    const documents = await this.prisma.caseDocument.findMany({
-      where: { caseId, stage: DocStage.VISA, deletedAt: null, necessity: Necessity.REQUIRED },
-      select: { id: true, status: true, template: { select: { code: true, nameMn: true } } },
-    });
-    return documents.filter((doc) => !SETTLED_STATUSES.includes(doc.status));
   }
 
   private async getOrThrow(caseId: string) {

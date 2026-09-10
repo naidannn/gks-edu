@@ -33,15 +33,12 @@ const saveError = ref<string | null>(null);
 const loading = ref(false);
 const existing = ref<AdminIntakeTermWithUniversity | null>(null);
 
-const LEVEL_OPTIONS = [
-  { value: '', label: 'Сонгоно уу' },
-  ...Object.entries(PROGRAM_LEVEL_LABELS).map(([value, label]) => ({ value, label })),
-];
+const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS, 'Сонгоно уу');
 const MONTH_OPTIONS = [3, 6, 9, 12].map((m) => ({
   value: String(m),
   label: INTAKE_MONTH_LABELS[m] ?? `${m}-р сар`,
 }));
-const STATUS_OPTIONS = Object.entries(INTAKE_STATUS_LABELS).map(([value, label]) => ({ value, label }));
+const STATUS_OPTIONS = selectOptions(INTAKE_STATUS_LABELS);
 
 const universityOptions = computed(() =>
   toUniversityOptions(catalogue.universities.value, 'Сургууль сонгоно уу'));
@@ -209,8 +206,14 @@ function applyCandidate(candidate: IntakeCandidate) {
 
 const candidates = computed(() => run.value?.candidates ?? []);
 
-function formatDate(value: string | null): string {
-  return value ?? '—';
+/**
+ * A research candidate's date is a plain `YYYY-MM-DD` the model read off the
+ * school's page, not an instant — it is shown as it was found, and it is
+ * deliberately not run through `formatDate`, which would parse it as UTC
+ * midnight and shadow the shared formatter for the reader of this file.
+ */
+function candidateDate(value: string | null): string {
+  return value ?? NO_DATE;
 }
 </script>
 
@@ -313,12 +316,12 @@ function formatDate(value: string | null): string {
               </DsBadge>
             </div>
             <dl class="gks-intake-form__candidate-dates">
-              <div><dt>Бүртгэл эхлэх</dt><dd class="gks-tnum">{{ formatDate(candidate.openAt) }}</dd></div>
+              <div><dt>Бүртгэл эхлэх</dt><dd class="gks-tnum">{{ candidateDate(candidate.openAt) }}</dd></div>
               <div>
                 <dt>Сургуулийн эцсийн хугацаа</dt>
-                <dd class="gks-tnum">{{ formatDate(candidate.applicationDeadline) }}</dd>
+                <dd class="gks-tnum">{{ candidateDate(candidate.applicationDeadline) }}</dd>
               </div>
-              <div><dt>Хичээл эхлэх</dt><dd class="gks-tnum">{{ formatDate(candidate.classStartDate) }}</dd></div>
+              <div><dt>Хичээл эхлэх</dt><dd class="gks-tnum">{{ candidateDate(candidate.classStartDate) }}</dd></div>
               <div v-if="candidate.quota !== null"><dt>Авах хүн</dt><dd class="gks-tnum">{{ candidate.quota }}</dd></div>
             </dl>
             <p v-if="candidate.requirementNote" class="gks-intake-form__candidate-note">

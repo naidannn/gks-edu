@@ -13,7 +13,6 @@ import { emptyLeadForm, leadPayload, normalizedPhone, stripPhone, validateLeadFo
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
-type StaffMember = { id: string; name: string | null; email: string | null; role: string };
 
 const auth = useAuthStore();
 const api = useApi();

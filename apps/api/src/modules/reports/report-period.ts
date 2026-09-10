@@ -104,6 +104,76 @@ function daysBetween(from: CalendarDate, to: CalendarDate): number {
 
 const MONTH_LABEL = (date: CalendarDate) => `${date.year} оны ${date.month} сар`;
 
+/** How far the office clock is ahead of UTC at a given instant. */
+function officeOffsetMs(instant: Date): number {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: OFFICE_TIME_ZONE,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant);
+
+  const read = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  // `hour12: false` renders midnight as 24 in some ICU versions.
+  const hour = read('hour') % 24;
+  const local = Date.UTC(read('year'), read('month') - 1, read('day'), hour, read('minute'), read('second'));
+  return local - instant.getTime();
+}
+
+/**
+ * The instant an office-local calendar date begins, as a real `Date`.
+ *
+ * The SQL side does this with `AT TIME ZONE` (`report-sql.localInstant`); this
+ * is the same boundary for the queries that go through the typed Prisma client
+ * instead. Computed rather than assumed: Mongolia is +08 all year today, but a
+ * hard-coded eight is a number nobody would think to check if that changed.
+ */
+export function officeDayStart(day: string): Date {
+  const { year, month, day: date } = parse(day);
+  const naive = Date.UTC(year, month - 1, date);
+  // Guess with the offset at the naive instant, then re-read it at the guess:
+  // the second reading is the offset that actually applies on that date.
+  const guess = new Date(naive - officeOffsetMs(new Date(naive)));
+  return new Date(naive - officeOffsetMs(guess));
+}
+
+/**
+ * A `createdFrom`/`createdTo` filter pair as the half-open instant range every
+ * report already uses (1N-38).
+ *
+ * `to` is the last day the caller means — inclusive, because that is what a
+ * human types into a date field — so it becomes `lt` the start of the day
+ * after. Feeding the bare string to `lte` instead cut "up to today" off at
+ * 08:00 in the office and dropped the rest of the day, which is how the CRM
+ * list and the report came to disagree about "this week".
+ *
+ * A full ISO timestamp is passed through as an instant: it already says exactly
+ * which moment it means.
+ */
+export function officeDateRange(
+  from?: string,
+  to?: string,
+): { gte?: Date; lt?: Date } | undefined {
+  if (!from && !to) return undefined;
+
+  const start = (value: string) => (isCalendarDate(value) ? officeDayStart(value) : new Date(value));
+  const endExclusive = (value: string) =>
+    isCalendarDate(value) ? officeDayStart(iso(addDays(parse(value), 1))) : new Date(value);
+
+  return {
+    ...(from ? { gte: start(from) } : {}),
+    ...(to ? { lt: endExclusive(to) } : {}),
+  };
+}
+
+function isCalendarDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 /**
  * Resolve a preset (or an explicit range) into a period plus its comparison
  * window. `from`/`to` are only read for `custom`, and `to` there is the last

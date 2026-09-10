@@ -2,7 +2,9 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { universityDetailCacheKey } from '../universities/universities.service.js';
 import type { CreateFacultyDto, UpdateFacultyDto } from './dto/faculty.dto.js';
+import { PROGRAMS_FACETS_CACHE_KEY } from './programs.service.js';
 
 export const FACULTY_SELECT = {
   id: true,
@@ -41,13 +43,15 @@ export class FacultiesService {
   }
 
   async create(dto: CreateFacultyDto) {
-    await this.requireUniversity(dto.universityId);
+    const university = await this.requireUniversity(dto.universityId);
     await this.assertNameFree(dto.universityId, dto.nameMn);
 
-    return this.prisma.faculty.create({
+    const faculty = await this.prisma.faculty.create({
       data: { ...dto, nameMn: dto.nameMn.trim() },
       select: FACULTY_SELECT,
     });
+    await this.invalidate(university.slug);
+    return faculty;
   }
 
   async update(id: string, dto: UpdateFacultyDto) {
@@ -61,7 +65,7 @@ export class FacultiesService {
       data: { ...dto, ...(dto.nameMn ? { nameMn: dto.nameMn.trim() } : {}) },
       select: FACULTY_SELECT,
     });
-    await this.invalidate();
+    await this.invalidate(await this.slugOf(current.universityId));
     return faculty;
   }
 
@@ -72,9 +76,9 @@ export class FacultiesService {
    * be the worse outcome.
    */
   async remove(id: string): Promise<void> {
-    await this.require(id);
+    const current = await this.require(id);
     await this.prisma.faculty.delete({ where: { id } });
-    await this.invalidate();
+    await this.invalidate(await this.slugOf(current.universityId));
   }
 
   /**
@@ -170,9 +174,17 @@ export class FacultiesService {
   }
 
   private async requireUniversity(id: string) {
-    const university = await this.prisma.university.findUnique({ where: { id }, select: { id: true } });
+    const university = await this.prisma.university.findUnique({ where: { id }, select: { id: true, slug: true } });
     if (!university) throw new NotFoundException('Сургууль олдсонгүй.');
     return university;
+  }
+
+  private async slugOf(universityId: string): Promise<string | null> {
+    const university = await this.prisma.university.findUnique({
+      where: { id: universityId },
+      select: { slug: true },
+    });
+    return university?.slug ?? null;
   }
 
   private async assertNameFree(universityId: string, nameMn: string, exceptId?: string) {
@@ -183,7 +195,15 @@ export class FacultiesService {
     if (duplicate) throw new ConflictException('Энэ сургуульд ижил нэртэй танхим бүртгэгдсэн байна.');
   }
 
-  private async invalidate(): Promise<void> {
-    await this.cache.del('programs:facets');
+  /**
+   * A college is a line on every programme card of its school, so a rename or a
+   * deletion goes stale on the school page as well as in the facet lists — and
+   * creating one used to invalidate nothing at all.
+   */
+  private async invalidate(slug: string | null): Promise<void> {
+    await Promise.all([
+      this.cache.del(PROGRAMS_FACETS_CACHE_KEY),
+      ...(slug ? [this.cache.del(universityDetailCacheKey(slug))] : []),
+    ]);
   }
 }

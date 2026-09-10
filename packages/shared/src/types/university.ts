@@ -117,8 +117,12 @@ export interface UniversityProgram {
   tuitionPerYearKrw: number | null;
   /** 입학금 — the one-off entrance fee. */
   admissionFeeKrw: number | null;
-  /** Which academic year the figures are from. Null = unknown, never "current". */
-  tuitionYear: number | null;
+  /**
+   * Which academic year the figures are from. A staff signal — the admin list
+   * flags stale prices on it, and the public school page does not carry it
+   * (ARCHITECTURE.md §3.3).
+   */
+  tuitionYear?: number | null;
   scholarshipMaxPercent: number | null;
   scholarshipNote: string | null;
   topikLevel: number | null;

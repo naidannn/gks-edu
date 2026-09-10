@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -135,8 +136,11 @@ export class ContractsController {
   registerPhysical(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: RegisterPhysicalContractDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
+    // Multer simply leaves the field undefined when nothing was attached, so
+    // the scan has to be asked for here rather than dereferenced (1N-12).
+    if (!file) throw new BadRequestException('Гарын үсэг зурсан гэрээний сканыг хавсаргана уу');
     return this.contracts.registerPhysical(id, dto, file.buffer);
   }
 

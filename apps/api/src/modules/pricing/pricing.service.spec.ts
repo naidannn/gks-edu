@@ -20,13 +20,58 @@ function buildHarness(row: Record<string, unknown> | null = activeRow) {
   const prisma = {
     servicePricing: {
       findUnique: vi.fn().mockResolvedValue(row),
+      findFirst: vi.fn().mockResolvedValue(row),
       update: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => ({ id: 'pricing-1', ...data })),
+      create: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => ({ id: 'pricing-2', ...data })),
     },
+    $transaction: vi.fn().mockImplementation((arg: unknown) =>
+      typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(prisma) : Promise.all(arg as Promise<unknown>[]),
+    ),
   };
   const cache = { del: vi.fn().mockResolvedValue(undefined) } as unknown as CacheService;
   const service = new PricingService(prisma as unknown as PrismaService, cache);
   return { service, prisma, cache };
 }
+
+const newPricing = {
+  serviceType: ServiceType.LANGUAGE_PREP,
+  totalAmount: 1_400_000,
+  prepaymentMode: PrepaymentMode.FIXED,
+  prepaymentValue: 200_000,
+  balanceTrigger: BalanceTrigger.AFTER_VISA_APPROVED,
+};
+
+describe('PricingService.create — versioning only works forwards (1N-15)', () => {
+  it('closes the open row at the moment the new one opens', async () => {
+    const { service, prisma } = buildHarness();
+
+    await service.create({ ...newPricing, effectiveFrom: '2026-07-01T00:00:00.000Z' });
+
+    expect(prisma.servicePricing.update).toHaveBeenCalledWith({
+      where: { id: 'pricing-1' },
+      data: { effectiveTo: new Date('2026-07-01T00:00:00.000Z') },
+    });
+  });
+
+  it('refuses a date before the row it would close', async () => {
+    // Backdated, the old row gets `effectiveTo` < `effectiveFrom` and both rows
+    // read as active — with `getActive` picking whichever sorted first.
+    const { service, prisma } = buildHarness();
+
+    await expect(service.create({ ...newPricing, effectiveFrom: '2025-01-01T00:00:00.000Z' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(prisma.servicePricing.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses a date Prisma would have received as `Invalid Date`', async () => {
+    const { service } = buildHarness();
+
+    await expect(service.create({ ...newPricing, effectiveFrom: 'сүүлийн сарын 1' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+});
 
 describe('PricingService.update', () => {
   it('corrects the active row in place and drops the public cache', async () => {

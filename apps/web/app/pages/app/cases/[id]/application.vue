@@ -14,14 +14,24 @@ const invoices = ref<SchoolInvoice[]>([]);
 const invitation = ref<Invitation | null>(null);
 const pending = ref(true);
 
+/**
+ * A failed request is not an empty stage. Without this the card below told the
+ * client "материал бүрдсэний дараа нээгдэнэ" for a 500 — the page's own answer
+ * to a question nobody asked, in place of the failure that actually happened.
+ */
+const loadError = ref<string | null>(null);
+
 async function load() {
   pending.value = true;
+  loadError.value = null;
   try {
     [view.value, invoices.value, invitation.value] = await Promise.all([
       api.get<ApplicationView>(`/cases/${caseId.value}/application`),
       api.get<SchoolInvoice[]>(`/cases/${caseId.value}/school-invoices`),
       api.get<Invitation | null>(`/cases/${caseId.value}/invitation`),
     ]);
+  } catch (e) {
+    loadError.value = apiErrorMessage(e, 'Мэдүүлгийн мэдээллийг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -83,6 +93,11 @@ async function openInvitation() {
           <span class="gks-tnum">{{ formatLongDate(result.decidedAt) }}</span>
         </li>
       </ul>
+    </DsCard>
+
+    <DsCard v-else-if="loadError" accent title="Мэдүүлэг">
+      <p class="gks-app-stage__error">{{ loadError }}</p>
+      <DsButton size="sm" variant="secondary" icon-left="refresh-cw" @click="load">Дахин оролдох</DsButton>
     </DsCard>
 
     <DsCard v-else-if="!pending" title="Мэдүүлэг">
@@ -184,4 +199,5 @@ async function openInvitation() {
 .gks-app-stage__invitation { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); }
 .gks-app-stage__note { margin: var(--sp-2) 0 var(--sp-3); font-size: var(--fs-body-sm); color: var(--text-muted); }
 .gks-app-stage__empty { color: var(--text-subtle); font-style: italic; }
+.gks-app-stage__error { color: var(--danger-fg); font-size: var(--fs-body-sm); margin-bottom: var(--sp-3); }
 </style>

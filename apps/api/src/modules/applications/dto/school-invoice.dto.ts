@@ -1,6 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min, ValidateNested } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { InvoiceItemKind, SchoolInvoiceStatus } from '../../../prisma/client.js';
 
 export class SchoolInvoiceItemDto {
@@ -29,7 +41,9 @@ export class CreateSchoolInvoiceDto {
 
   @ApiPropertyOptional({ description: 'Хоосон бол тухайн өдрийн Монголбанкны ханшийг авна (1E-07)' })
   @IsNumber()
-  @Min(0)
+  // A rate of 0 snapshots the whole invoice at 0₮ — the client is then told to
+  // pay nothing for a bill the school will still chase (1N-26).
+  @IsPositive()
   @IsOptional()
   fxRate?: number;
 

@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { fileTypeFromBuffer } from 'file-type';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { isStaff } from '../../common/constants/roles.js';
 import { DocumentStatus } from '../../prisma/client.js';
@@ -14,6 +15,9 @@ const SUBMIT_FROM: readonly DocumentStatus[] = [
   DocumentStatus.NEEDS_FIX,
   DocumentStatus.RESUBMIT_REQUIRED,
 ];
+
+/** How many times a version collision is worth re-reading the high-water mark. */
+const VERSION_ATTEMPTS = 3;
 
 /**
  * 1D-08 — versioned uploads. Every submission is a new `DocumentFile` row, so a
@@ -38,7 +42,10 @@ export class DocumentFilesService {
 
     const doc = await this.prisma.caseDocument.findUnique({
       where: { id: caseDocumentId },
-      include: { template: { select: { code: true } }, case: { select: { id: true, userId: true } } },
+      include: {
+        template: { select: { code: true, acceptedFileTypes: true } },
+        case: { select: { id: true, userId: true } },
+      },
     });
     if (!doc || doc.deletedAt) throw new NotFoundException(`Материал ${caseDocumentId} олдсонгүй`);
     await this.documents.assertCaseAccess(doc.case.id, actor);
@@ -46,32 +53,20 @@ export class DocumentFilesService {
     // `isFinal` marks the certified copy staff produced — never a client upload.
     const isFinal = Boolean(options.isFinal) && isStaff(actor.role);
 
-    const last = await this.prisma.documentFile.findFirst({
-      where: { caseDocumentId },
-      orderBy: { version: 'desc' },
-      select: { version: true },
-    });
-    let version = (last?.version ?? 0) + 1;
+    // Every buffer is judged before a single byte is stored. Validating inside
+    // the write loop meant a rejected second file left the first one in the
+    // bucket with the document's status never advanced (1N-24).
+    for (const file of files) {
+      await this.assertAcceptable(file, doc.template.acceptedFileTypes);
+    }
 
-    const created = [];
+    const paths: string[] = [];
     for (const file of files) {
       const { path } = await this.storage.upload({ caseId: doc.case.id, docCode: doc.template.code, buffer: file.buffer });
-      created.push(
-        await this.prisma.documentFile.create({
-          data: {
-            caseDocumentId,
-            version,
-            path,
-            originalName: sanitiseName(file.originalname),
-            sizeBytes: file.size,
-            mimeType: file.mimetype,
-            isFinal,
-            uploadedById: actor.id,
-          },
-        }),
-      );
-      version += 1;
+      paths.push(path);
     }
+
+    const created = await this.createVersions(caseDocumentId, files, paths, actor.id, isFinal);
 
     // A client's upload advances the document; staff attaching a certified copy
     // must not silently reset a document they are mid-review on.
@@ -80,6 +75,70 @@ export class DocumentFilesService {
     }
 
     return created;
+  }
+
+  /**
+   * `DocumentTemplate.acceptedFileTypes` is the template's own answer to "what
+   * may I send for this?" — a passport scan as a Word file is not one. Judged
+   * on the real bytes, never on the client-supplied name or header.
+   */
+  private async assertAcceptable(file: Express.Multer.File, accepted: string[]): Promise<void> {
+    const sniffed = await fileTypeFromBuffer(file.buffer);
+    if (!sniffed) throw new BadRequestException(`"${file.originalname}" файлын төрлийг таньж чадсангүй`);
+    if (!accepted.length) return;
+
+    const allowed = accepted.map((type) => type.toLowerCase().replace(/^\./, ''));
+    // `file-type` reports a JPEG as `jpg`; templates are written either way.
+    const ext = sniffed.ext === 'jpg' ? ['jpg', 'jpeg'] : [sniffed.ext];
+    if (!ext.some((candidate) => allowed.includes(candidate))) {
+      throw new BadRequestException(`Энэ материалыг зөвхөн ${allowed.join(', ')} хэлбэрээр хүлээн авна`);
+    }
+  }
+
+  /**
+   * Two uploads racing read the same high-water mark and one of them violates
+   * `@@unique([caseDocumentId, version])` — a 500 *after* the bytes are already
+   * stored. Re-read and retry instead; the rows go in as one batch, so a
+   * multi-file upload is never half-recorded.
+   */
+  private async createVersions(
+    caseDocumentId: string,
+    files: Express.Multer.File[],
+    paths: string[],
+    uploadedById: string,
+    isFinal: boolean,
+  ) {
+    for (let attempt = 0; attempt < VERSION_ATTEMPTS; attempt += 1) {
+      const last = await this.prisma.documentFile.findFirst({
+        where: { caseDocumentId },
+        orderBy: { version: 'desc' },
+        select: { version: true },
+      });
+      const base = (last?.version ?? 0) + 1;
+
+      try {
+        return await this.prisma.$transaction(
+          files.map((file, index) =>
+            this.prisma.documentFile.create({
+              data: {
+                caseDocumentId,
+                version: base + index,
+                path: paths[index]!,
+                originalName: sanitiseName(file.originalname),
+                sizeBytes: file.size,
+                mimeType: file.mimetype,
+                isFinal,
+                uploadedById,
+              },
+            }),
+          ),
+        );
+      } catch (error) {
+        if (!isUniqueViolation(error)) throw error;
+      }
+    }
+
+    throw new ConflictException('Файл хадгалахад зөрчил гарлаа — дахин оролдоно уу');
   }
 
   /** Short-lived signed token (§9) — the only way file bytes are ever reached. */
@@ -109,6 +168,11 @@ export class DocumentFilesService {
     }
     return this.prisma.documentFile.update({ where: { id: fileId }, data: softDeletePatch() });
   }
+}
+
+/** Someone else claimed this version number between our read and our write. */
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
 }
 
 /** Keeps the client's filename readable without letting it steer a path. */

@@ -1,5 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
+import { Role } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { EmailService } from '../notifications/email.service.js';
 import { AccountClaimService, CLAIM_TTL_MS } from './account-claim.service.js';
@@ -27,7 +28,17 @@ function makeService(user: UserRow) {
   return { service, prisma, email };
 }
 
-const FRESH = { id: 'u1', email: 'bat@example.mn', name: 'Бат', password: null, googleId: null };
+const FRESH = {
+  id: 'u1',
+  email: 'bat@example.mn',
+  name: 'Бат',
+  role: Role.USER,
+  password: null,
+  googleId: null,
+};
+
+const CONSULTANT = { role: Role.CONSULTANT };
+const ADMIN = { role: Role.ADMIN };
 
 describe('AccountClaimService.invite (1B-17, 1B-19)', () => {
   it('sends the welcome copy for a freshly registered client, valid for seven days', async () => {
@@ -85,6 +96,57 @@ describe('AccountClaimService.invite (1B-17, 1B-19)', () => {
     email.send.mockRejectedValue(new Error('Resend 500'));
 
     await expect(service.inviteQuietly('u1', { kind: 'welcome' })).resolves.toBeUndefined();
+  });
+});
+
+/**
+ * 1N-01 — an unclaimed account is a login with no password, and this call both
+ * re-points the address on it and mails a link that sets one. Together that is
+ * a way in, so who may aim one at whom is the security boundary.
+ */
+describe('AccountClaimService.invite — who may invite whom (1N-01)', () => {
+  it('refuses a consultant inviting an unclaimed admin account', async () => {
+    const { service, prisma, email } = makeService({ ...FRESH, role: Role.ADMIN });
+
+    await expect(service.invite('u1', { actor: CONSULTANT })).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(email.send).not.toHaveBeenCalled();
+  });
+
+  it('refuses a consultant re-pointing a client invitation at another address', async () => {
+    const { service, prisma, email } = makeService(FRESH);
+
+    await expect(
+      service.invite('u1', { actor: CONSULTANT, email: 'attacker@example.mn' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(email.send).not.toHaveBeenCalled();
+  });
+
+  it('lets a consultant re-send to the address already on the client record', async () => {
+    const { service, email } = makeService(FRESH);
+
+    await service.invite('u1', { actor: CONSULTANT });
+
+    expect(email.send.mock.calls[0]?.[0]).toBe('bat@example.mn');
+  });
+
+  it('lets an admin correct the address, and invite a staff account', async () => {
+    const { service, prisma, email } = makeService({ ...FRESH, role: Role.DOC_OFFICER });
+
+    await service.invite('u1', { actor: ADMIN, email: ' New@Example.MN ' });
+
+    const written = prisma.user.update.mock.calls[0]?.[0] as { data: { email: string } };
+    expect(written.data.email).toBe('new@example.mn');
+    expect(email.send.mock.calls[0]?.[0]).toBe('new@example.mn');
+  });
+
+  it('leaves the system-sent registration invitation alone — it has no actor', async () => {
+    const { service, email } = makeService(FRESH);
+
+    await service.invite('u1', { kind: 'welcome' });
+
+    expect(email.send.mock.calls[0]?.[2]).toBe('account_welcome');
   });
 });
 

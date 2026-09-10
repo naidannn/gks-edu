@@ -5,6 +5,9 @@ import { Prisma, type GksRankingMode } from '../../../prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import { CacheService } from '../../../redis/cache.service.js';
 import { GKS_RANKING_JOB, GKS_RANKING_QUEUE } from '../../../queue/queue.constants.js';
+import { ADMISSIONS_CACHE_PATTERN } from '../../admissions/admissions.service.js';
+import { ANNUAL_TUITION_SQL } from '../../programs/tuition.js';
+import { livingCostMonthlyMax } from '../living-cost.js';
 import { LIST_CACHE_PATTERN } from '../universities.service.js';
 import type { UpdateRankingConfigDto } from '../dto/ranking-config.dto.js';
 import type { ReorderManualRankingDto } from '../dto/manual-ranking.dto.js';
@@ -329,11 +332,18 @@ export class GksRankingService {
           _count: { select: { savedBy: true, cases: true, programs: true, intakes: true } },
         },
       }),
-      this.prisma.universityProgram.groupBy({
-        by: ['universityId'],
-        where: { isPublished: true, tuitionPerYearKrw: { gt: 0 } },
-        _min: { tuitionPerYearKrw: true },
-      }),
+      // The affordability component reads the annual figure a visitor is
+      // shown, which is derived from the level's terms-per-year — most
+      // programmes publish only a per-term price, and grouping on the annual
+      // column alone scored those schools neutral instead of cheap.
+      this.prisma.$queryRaw<{ universityId: string; minAnnual: number | null }[]>`
+        SELECT p."universityId" AS "universityId",
+               MIN(${ANNUAL_TUITION_SQL})::int AS "minAnnual"
+          FROM "university_programs" p
+         WHERE p."isPublished" = true
+           AND ${ANNUAL_TUITION_SQL} > 0
+         GROUP BY p."universityId"
+      `,
       this.prisma.application.groupBy({
         by: ['universityId', 'status'],
         where: { universityId: { not: null }, status: { in: [...DECIDED_STATUSES] } },
@@ -341,9 +351,7 @@ export class GksRankingService {
       }),
     ]);
 
-    const minTuition = new Map(
-      tuitionByUniversity.map((row) => [row.universityId, row._min.tuitionPerYearKrw ?? null]),
-    );
+    const minTuition = new Map(tuitionByUniversity.map((row) => [row.universityId, row.minAnnual ?? null]));
 
     const decided = new Map<string, { decided: number; accepted: number }>();
     for (const row of decisions) {
@@ -372,7 +380,7 @@ export class GksRankingService {
         decidedApplications: outcomes.decided,
         acceptedApplications: outcomes.accepted,
         minTuitionKrw: minTuition.get(university.id) ?? null,
-        livingCostMonthlyMax: readMonthlyCostMax(university.livingCost),
+        livingCostMonthlyMax: livingCostMonthlyMax(university.livingCost),
         distanceFromSeoulKm: university.distanceFromSeoulKm,
         hasShortIntro: Boolean(university.shortIntroMn?.trim()),
         hasDetailedIntro: Boolean(university.detailedIntroMn?.trim()),
@@ -407,7 +415,12 @@ export class GksRankingService {
 
   /** The catalogue's default order just changed, so every cached page is wrong. */
   private async invalidate(): Promise<void> {
-    await this.cache.delByPattern(LIST_CACHE_PATTERN);
+    await Promise.all([
+      this.cache.delByPattern(LIST_CACHE_PATTERN),
+      // `sort=gks` on the admissions list orders by this very column, so its
+      // cached pages are just as wrong as the catalogue's.
+      this.cache.delByPattern(ADMISSIONS_CACHE_PATTERN),
+    ]);
   }
 }
 
@@ -418,13 +431,3 @@ function stripUndefined<T extends object>(value: T): Partial<T> {
   ) as Partial<T>;
 }
 
-/**
- * Upper end of the monthly living-cost estimate, from the untyped `livingCost`
- * JSON. Returns null for anything unexpected — the score treats that as
- * "unknown", which is neutral, not expensive.
- */
-function readMonthlyCostMax(livingCost: Prisma.JsonValue | null): number | null {
-  if (!livingCost || typeof livingCost !== 'object' || Array.isArray(livingCost)) return null;
-  const value = (livingCost as Record<string, unknown>).monthlyTotalMax;
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
-}

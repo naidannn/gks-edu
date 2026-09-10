@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { DocumentStatus, Necessity } from '../../prisma/client.js';
+import { formatDateMn } from '../notifications/notification-labels.js';
 import {
   ChecklistPdfService,
   checklistFilename,
-  formatDeadlineMn,
   groupDocuments,
   hintLines,
   isCollected,
@@ -105,7 +105,7 @@ describe('the summary panel', () => {
 
 describe('dates and file names', () => {
   it('reads a deadline in UTC — stored end-of-day, it is a day late read locally', () => {
-    expect(formatDeadlineMn(new Date('2027-01-17T23:59:59.000Z'))).toBe('2027 оны 01 сарын 17');
+    expect(formatDateMn(new Date('2027-01-17T23:59:59.000Z'))).toBe('2027 оны 01 сарын 17');
   });
 
   it('names the file after the case and the stage', () => {

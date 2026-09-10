@@ -31,9 +31,16 @@ const draft = reactive({
 });
 const shared = reactive({ necessity: 'REQUIRED' as Necessity, conditionNote: '', dueAt: '' });
 
+const loadError = ref<string | null>(null);
+
 onMounted(async () => {
+  loadError.value = null;
   try {
     templates.value = await api.get<DocumentTemplate[]>('/document-templates');
+  } catch (e) {
+    // An empty picker and a failed request look the same; only one of them
+    // means "there is no template for this".
+    loadError.value = apiErrorMessage(e, 'Загваруудыг ачаалж чадсангүй');
   } finally {
     loading.value = false;
   }
@@ -108,7 +115,8 @@ function submit() {
         placeholder="Нэрээр хайх…"
         hint="Өмнө нь бүртгэсэн бүх материалын загвар"
       />
-      <p v-if="selected?.descriptionMn" class="gks-adddoc__desc">{{ selected.descriptionMn }}</p>
+      <p v-if="loadError" class="gks-adddoc__error">{{ loadError }}</p>
+      <p v-else-if="selected?.descriptionMn" class="gks-adddoc__desc">{{ selected.descriptionMn }}</p>
     </template>
 
     <template v-else>
@@ -157,6 +165,7 @@ function submit() {
 <style scoped>
 .gks-adddoc__modes { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .gks-adddoc__desc { margin-top: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-muted); }
+.gks-adddoc__error { color: var(--danger-fg); font-size: var(--fs-body-sm); margin-top: var(--sp-2); }
 .gks-adddoc__flags { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-3); }
 .gks-adddoc__note { margin-top: var(--sp-3); font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-adddoc__common { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: var(--border-hair) solid var(--line-hairline); }

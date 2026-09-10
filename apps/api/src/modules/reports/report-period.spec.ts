@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changePercent, officeToday, resolvePeriod } from './report-period.js';
+import { changePercent, officeDateRange, officeDayStart, officeToday, resolvePeriod } from './report-period.js';
 
 /** 2026-09-09, 13:58 UTC — 21:58 the same day in Ulaanbaatar. */
 const MIDDAY = new Date('2026-09-09T13:58:00.000Z');
@@ -89,5 +89,43 @@ describe('changePercent', () => {
 
   it('refuses to divide by a standing start', () => {
     expect(changePercent(4_000_000, 0)).toBeNull();
+  });
+});
+
+/**
+ * 1N-38 — the CRM list filters used to hand a date-only string straight to
+ * `lte`, which is midnight UTC: "up to today" stopped at 08:00 in the office and
+ * dropped the rest of the working day. Reports already answered the same
+ * question with an office-local half-open range, so the two disagreed about
+ * "this week".
+ */
+describe('officeDayStart', () => {
+  it('starts the day when the office clock says midnight, not UTC', () => {
+    expect(officeDayStart('2026-09-11').toISOString()).toBe('2026-09-10T16:00:00.000Z');
+  });
+});
+
+describe('officeDateRange', () => {
+  it('is undefined when neither bound was given', () => {
+    expect(officeDateRange()).toBeUndefined();
+  });
+
+  it('makes `to` the last day the caller means, exclusive at the next midnight', () => {
+    const range = officeDateRange('2026-09-01', '2026-09-11');
+
+    expect(range?.gte?.toISOString()).toBe('2026-08-31T16:00:00.000Z');
+    // The whole of the 11th is inside the window — 23:59 local is 15:59 UTC.
+    expect(range?.lt?.toISOString()).toBe('2026-09-11T16:00:00.000Z');
+    expect(new Date('2026-09-11T15:59:00.000Z') < range!.lt!).toBe(true);
+  });
+
+  it('takes one bound on its own', () => {
+    expect(officeDateRange('2026-09-01')).toEqual({ gte: new Date('2026-08-31T16:00:00.000Z') });
+    expect(officeDateRange(undefined, '2026-09-01')).toEqual({ lt: new Date('2026-09-01T16:00:00.000Z') });
+  });
+
+  it('passes a full timestamp through — it already says which moment it means', () => {
+    const range = officeDateRange('2026-09-01T09:30:00.000Z');
+    expect(range?.gte?.toISOString()).toBe('2026-09-01T09:30:00.000Z');
   });
 });

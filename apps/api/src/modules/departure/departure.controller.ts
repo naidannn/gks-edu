@@ -30,7 +30,8 @@ export class DepartureController {
   }
 
   @Patch('cases/:caseId/departure')
-  @ApiOperation({ summary: 'Flight details; setting the date re-dates the checklist' })
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Flight details; setting the date re-dates the checklist — office data, so staff only' })
   update(
     @Param('caseId', ParseUUIDPipe) caseId: string,
     @Body() dto: UpdateDeparturePlanDto,

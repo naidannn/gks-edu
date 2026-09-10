@@ -134,7 +134,9 @@ async function downloadPdf() {
           <DsIcon name="circle-check" :size="18" /> Таны зуучлалын гэрээ хүчин төгөлдөр болсон.
         </p>
         <div class="gks-contract__row">
-          <DsButton v-if="contract.pdfPath" size="sm" variant="secondary" icon-left="download" :loading="downloading" @click="downloadPdf">
+          <!-- `pdfPath` is a storage path and is staff-only; the client payload
+               says only whether there is a file to ask for. -->
+          <DsButton v-if="contract.hasPdf" size="sm" variant="secondary" icon-left="download" :loading="downloading" @click="downloadPdf">
             PDF татах
           </DsButton>
           <DsButton size="sm" variant="accent" icon-right="arrow-right" @click="navigateTo(`/app/cases/${gksCase?.id}/payment`)">

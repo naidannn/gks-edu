@@ -1,4 +1,5 @@
 import type { ConversationStatus, ConversationTopic } from '@gks/shared';
+import { formatLongDate, formatTime, monthNameMn, weekdayNameMn } from './date';
 import type { BadgeTone } from './labels';
 
 /**
@@ -67,7 +68,7 @@ export const CONVERSATION_STATUS_TONE: Record<ConversationStatus, BadgeTone> = {
 export function messageTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return formatTime(date);
 }
 
 /** The heading that separates one day of a thread from the next. */
@@ -81,13 +82,12 @@ export function messageDay(iso: string): string {
 
   if (daysAgo === 0) return 'Өнөөдөр';
   if (daysAgo === 1) return 'Өчигдөр';
-  if (daysAgo < 7) return date.toLocaleDateString('mn-MN', { weekday: 'long' });
+  if (daysAgo < 7) return weekdayNameMn(date.getDay());
 
-  return date.toLocaleDateString('mn-MN', {
-    year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const sameYear = date.getFullYear() === today.getFullYear();
+  return sameYear
+    ? `${monthNameMn(date.getMonth() + 1, 'long')}ын ${date.getDate()}`
+    : formatLongDate(date);
 }
 
 /** "14:32" today, "Мягмар" this week, "9 сарын 2" before that. */
@@ -98,8 +98,8 @@ export function threadTime(iso: string): string {
   const daysAgo = Math.round((startOfDay(new Date()).getTime() - startOfDay(date).getTime()) / 86_400_000);
   if (daysAgo === 0) return messageTime(iso);
   if (daysAgo === 1) return 'Өчигдөр';
-  if (daysAgo < 7) return date.toLocaleDateString('mn-MN', { weekday: 'short' });
-  return date.toLocaleDateString('mn-MN', { month: 'numeric', day: 'numeric' });
+  if (daysAgo < 7) return weekdayNameMn(date.getDay(), 'short');
+  return `${date.getMonth() + 1} сарын ${date.getDate()}`;
 }
 
 /** One or two letters for an avatar, from whatever name we actually have. */

@@ -18,12 +18,18 @@ export const DOCUMENT_TRANSITIONS: Record<DocumentStatus, readonly DocumentStatu
   [DocumentStatus.NEEDS_FIX]: [DocumentStatus.RESUBMIT_REQUIRED, DocumentStatus.SUBMITTED],
   [DocumentStatus.RESUBMIT_REQUIRED]: [DocumentStatus.SUBMITTED],
   // Straight to READY when the template needs no translation.
-  [DocumentStatus.ACCEPTED]: [DocumentStatus.IN_TRANSLATION, DocumentStatus.READY],
-  [DocumentStatus.IN_TRANSLATION]: [DocumentStatus.TRANSLATED],
-  [DocumentStatus.TRANSLATED]: [DocumentStatus.CERTIFIED, DocumentStatus.READY],
-  [DocumentStatus.CERTIFIED]: [DocumentStatus.READY],
-  [DocumentStatus.READY]: [DocumentStatus.SENT_TO_UNIVERSITY],
-  [DocumentStatus.SENT_TO_UNIVERSITY]: [],
+  //
+  // Every settled state also leads back to `RESUBMIT_REQUIRED`: a school can
+  // ask again for a paper we have already accepted, translated or posted, and
+  // the row has to go back on the client's list rather than stay "Сургуульд
+  // илгээсэн" while the email asks for it (1N-21). Staff-only — it is not in
+  // `CLIENT_TRANSITIONS`.
+  [DocumentStatus.ACCEPTED]: [DocumentStatus.IN_TRANSLATION, DocumentStatus.READY, DocumentStatus.RESUBMIT_REQUIRED],
+  [DocumentStatus.IN_TRANSLATION]: [DocumentStatus.TRANSLATED, DocumentStatus.RESUBMIT_REQUIRED],
+  [DocumentStatus.TRANSLATED]: [DocumentStatus.CERTIFIED, DocumentStatus.READY, DocumentStatus.RESUBMIT_REQUIRED],
+  [DocumentStatus.CERTIFIED]: [DocumentStatus.READY, DocumentStatus.RESUBMIT_REQUIRED],
+  [DocumentStatus.READY]: [DocumentStatus.SENT_TO_UNIVERSITY, DocumentStatus.RESUBMIT_REQUIRED],
+  [DocumentStatus.SENT_TO_UNIVERSITY]: [DocumentStatus.RESUBMIT_REQUIRED],
 };
 
 /** Moves a client may make on their own document; everything else is staff work. */

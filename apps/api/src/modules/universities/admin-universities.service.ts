@@ -3,8 +3,14 @@ import { Prisma } from '../../prisma/client.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { ADMISSIONS_CACHE_PATTERN, INTAKE_FIELDS } from '../admissions/admissions.service.js';
+import { PROGRAMS_FACETS_CACHE_KEY } from '../programs/programs.service.js';
 import { GksRankingService } from './ranking/gks-ranking.service.js';
-import { LIST_CACHE_PATTERN } from './universities.service.js';
+import {
+  LIST_CACHE_PATTERN,
+  UNIVERSITIES_FACETS_CACHE_KEY,
+  universityDetailCacheKey,
+} from './universities.service.js';
 import type { CreateUniversityDto } from './dto/create-university.dto.js';
 import type { AdminUniversitySort, QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
 import type { UpdateUniversityDto } from './dto/update-university.dto.js';
@@ -111,33 +117,6 @@ const PROGRAM_FIELDS = {
   internalNote: true,
   isPublished: true,
 } satisfies Prisma.UniversityProgramSelect;
-
-/**
- * The catalogue detail page still lists a school's rounds. The dates and the
- * provenance now live in the admissions module, so keep the two selects in
- * step — a missing column here shows up as a blank date on that page.
- */
-const INTAKE_FIELDS = {
-  id: true,
-  universityId: true,
-  level: true,
-  year: true,
-  month: true,
-  openAt: true,
-  applicationDeadline: true,
-  internalDeadline: true,
-  internalDeadlineIsManual: true,
-  classStartDate: true,
-  resultAnnouncedAt: true,
-  quota: true,
-  admissionFeeKrw: true,
-  requirementNote: true,
-  status: true,
-  note: true,
-  sourceUrl: true,
-  sourceType: true,
-  verifiedAt: true,
-} satisfies Prisma.IntakeTermSelect;
 
 const ORDER_BY: Record<AdminUniversitySort, (order: Prisma.SortOrder) => Prisma.UniversityOrderByWithRelationInput[]> = {
   gks: (order) => [{ gksRank: { sort: order, nulls: 'last' } }, { nameMn: 'asc' }],
@@ -396,9 +375,14 @@ export class AdminUniversitiesService {
    */
   private async invalidate(...slugs: string[]): Promise<void> {
     await Promise.all([
-      ...[...new Set(slugs)].map((slug) => this.cache.del(`university:${slug}`)),
-      this.cache.del('universities:facets'),
+      ...[...new Set(slugs)].map((slug) => this.cache.del(universityDetailCacheKey(slug))),
+      this.cache.del(UNIVERSITIES_FACETS_CACHE_KEY),
       this.cache.delByPattern(LIST_CACHE_PATTERN),
+      // The school card travels with every admissions row and every programme
+      // facet, so an unpublish or a rename that only dropped this module's keys
+      // stayed visible on those pages until their TTL ran out.
+      this.cache.delByPattern(ADMISSIONS_CACHE_PATTERN),
+      this.cache.del(PROGRAMS_FACETS_CACHE_KEY),
       this.ranking.scheduleRecompute(),
     ]);
   }

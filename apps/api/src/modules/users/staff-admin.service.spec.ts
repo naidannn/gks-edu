@@ -126,6 +126,53 @@ describe('UsersService.deleteStaff (1G-12)', () => {
   });
 });
 
+/**
+ * 1N-05 — `DELETE /users/:id` used to be a bare `user.delete`: no self-delete
+ * guard, no last-admin guard, no audit, and a client with a service in flight
+ * came back as Prisma's restrict violation worded "Холбогдох бичлэг олдсонгүй".
+ * It goes through the staff register's rules now.
+ */
+describe('UsersService.remove (1N-05)', () => {
+  it('refuses to delete the caller', async () => {
+    const { service, prisma } = serviceWith({ role: Role.ADMIN, isActive: true, _count: NO_TRACE });
+    await expect(service.remove('admin-1', 'admin-1')).rejects.toThrow(ConflictException);
+    expect(prisma.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('refuses to delete the last active admin', async () => {
+    const { service, prisma } = serviceWith({ role: Role.ADMIN, isActive: true, _count: NO_TRACE }, 1);
+    await expect(service.remove('admin-2', 'admin-1')).rejects.toThrow(ConflictException);
+    expect(prisma.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('names the reason when the account has a history, instead of a restrict violation', async () => {
+    const { service, prisma } = serviceWith({
+      role: Role.USER,
+      isActive: true,
+      _count: { ...NO_TRACE, cases: 2 },
+    });
+    await expect(service.remove('client-1', 'admin-1')).rejects.toThrow(/идэвхгүй болгоно уу/);
+    expect(prisma.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('refuses to cascade away a client record', async () => {
+    const { service, prisma } = serviceWith({
+      role: Role.USER,
+      isActive: true,
+      client: { code: 'KH-2026-0007' },
+      _count: NO_TRACE,
+    });
+    await expect(service.remove('client-1', 'admin-1')).rejects.toThrow(/KH-2026-0007/);
+    expect(prisma.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('erases an account that never did anything', async () => {
+    const { service, prisma } = serviceWith({ role: Role.USER, isActive: true, _count: NO_TRACE });
+    await service.remove('client-1', 'admin-1');
+    expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'client-1' } });
+  });
+});
+
 describe('UsersService.createStaff (1G-12)', () => {
   it('hashes a password the admin typed and counts the account as claimed', async () => {
     const { service, prisma } = serviceWith(null);

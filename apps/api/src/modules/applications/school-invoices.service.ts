@@ -134,6 +134,11 @@ export class SchoolInvoicesService {
       ? (await this.storage.upload({ caseId, docCode: 'invitation', buffer })).path
       : undefined;
 
+    // Whether this is the first record decides whether the client hears about
+    // it: re-recording an invitation to fix a typo used to re-send both the
+    // invitation and the "visa stage started" email *and* SMS (1N-26).
+    const known = await this.prisma.invitation.findUnique({ where: { caseId }, select: { id: true } });
+
     const invitation = await this.prisma.invitation.upsert({
       where: { caseId },
       create: {
@@ -158,28 +163,13 @@ export class SchoolInvoicesService {
 
     // §16 "Урилга ирсэн" + "Визний үе шат эхэлсэн" — one action, two events,
     // because the visa checklist has just appeared in the client's cabinet.
-    const gksCase = await this.prisma.case.findUnique({
-      where: { id: caseId },
-      select: { id: true, code: true, userId: true, university: { select: { nameMn: true } } },
-    });
-    if (gksCase) {
-      const context = {
-        caseId: gksCase.id,
-        caseCode: gksCase.code,
-        universityName: gksCase.university?.nameMn ?? 'Сургууль',
+    if (!known) {
+      await this.notifications.dispatchForCase(caseId, NotificationEvent.INVITATION_RECEIVED, {
         invitationNumber: invitation.number,
-      };
-      await this.notifications.dispatch({
-        event: NotificationEvent.INVITATION_RECEIVED,
-        userIds: [gksCase.userId],
-        caseId: gksCase.id,
-        context,
       });
-      await this.notifications.dispatch({
-        event: NotificationEvent.VISA_STAGE_STARTED,
-        userIds: [gksCase.userId],
-        caseId: gksCase.id,
-        context: { ...context, visaTypeName: VISA_TYPE_LABELS[visa.visaCase.visaType] },
+      await this.notifications.dispatchForCase(caseId, NotificationEvent.VISA_STAGE_STARTED, {
+        invitationNumber: invitation.number,
+        visaTypeName: VISA_TYPE_LABELS[visa.visaCase.visaType],
       });
     }
 

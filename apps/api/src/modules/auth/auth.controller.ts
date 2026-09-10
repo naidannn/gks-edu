@@ -75,6 +75,20 @@ export class AuthController {
     await this.passwordReset.reset(dto.token, dto.password);
   }
 
+  @Post('google/link')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @ApiOperation({
+    summary: 'Нэвтэрсэн бүртгэлдээ Google хаяг холбох',
+    description:
+      'Нууц үгтэй бүртгэлд Google-ийг зөвхөн эндээс холбоно — нэвтэрсэн байх нь бүртгэл өөрийнх '
+      + 'гэдгийн баталгаа (1N-03).',
+  })
+  linkGoogle(@CurrentUser() user: AuthenticatedUser, @Body() dto: GoogleLoginDto) {
+    return this.auth.linkGoogle(user.id, dto.idToken);
+  }
+
   @Post('password/change')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

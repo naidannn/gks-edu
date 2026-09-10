@@ -10,7 +10,11 @@ import {
   type Prisma,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { NOTIFICATION_DELIVER_JOB, NOTIFICATION_QUEUE } from '../../queue/queue.constants.js';
+import {
+  NOTIFICATION_DELIVER_JOB,
+  NOTIFICATION_QUEUE,
+  NOTIFICATION_STALE_AFTER_MS,
+} from '../../queue/queue.constants.js';
 
 /** Values a template may interpolate. Everything is stringified before render. */
 export type NotificationContext = Record<string, string | number | null | undefined>;
@@ -137,16 +141,103 @@ export class NotificationsService {
         created.push(row.id);
 
         if (status === NotificationStatus.PENDING && template.channel !== NotificationChannel.IN_APP) {
-          await this.queue.add(
-            NOTIFICATION_DELIVER_JOB,
-            { notificationId: row.id },
-            { jobId: row.id, attempts: 3, backoff: { type: 'exponential', delay: 30_000 }, removeOnComplete: true },
-          );
+          // The row is the durable record; the queue is only how it moves. A
+          // Redis outage must not abort the remaining recipients — the row
+          // stays PENDING and `requeueStale` picks it up (1N-22).
+          try {
+            await this.enqueue(row.id);
+          } catch (error) {
+            this.logger.error(
+              `Мэдэгдэл ${row.id}-г дараалалд оруулж чадсангүй`,
+              error instanceof Error ? error.stack : String(error),
+            );
+          }
         }
       }
     }
 
     return created;
+  }
+
+  /**
+   * Re-queues rows that were written `PENDING` and never reached BullMQ.
+   *
+   * Without this the row sits `PENDING` forever, and for a swept reminder its
+   * `dedupeKey` blocks every later attempt — the client is simply never told.
+   * The row id is the job id, so a job that is still queued or still in the
+   * failed set is not duplicated (1N-22).
+   */
+  async requeueStale(now: Date = new Date(), olderThanMs: number = NOTIFICATION_STALE_AFTER_MS): Promise<number> {
+    const stale = await this.prisma.notification.findMany({
+      where: {
+        status: NotificationStatus.PENDING,
+        channel: { not: NotificationChannel.IN_APP },
+        createdAt: { lt: new Date(now.getTime() - olderThanMs) },
+      },
+      select: { id: true },
+      orderBy: { createdAt: 'asc' },
+      take: 500,
+    });
+
+    let requeued = 0;
+    for (const row of stale) {
+      try {
+        await this.enqueue(row.id);
+        requeued += 1;
+      } catch (error) {
+        // Redis is still down — stop rather than log the same failure 500 times.
+        this.logger.error(
+          'Хүлээгдэж буй мэдэгдлүүдийг дараалалд буцаах боломжгүй',
+          error instanceof Error ? error.stack : String(error),
+        );
+        break;
+      }
+    }
+
+    if (requeued) this.logger.log(`${requeued} хүлээгдэж буй мэдэгдлийг дараалалд буцаалаа`);
+    return requeued;
+  }
+
+  /** One place decides the job's id and retry policy, so a re-queue matches it. */
+  private async enqueue(notificationId: string): Promise<void> {
+    await this.queue.add(
+      NOTIFICATION_DELIVER_JOB,
+      { notificationId },
+      { jobId: notificationId, attempts: 3, backoff: { type: 'exponential', delay: 30_000 }, removeOnComplete: true },
+    );
+  }
+
+  /**
+   * Dispatch to a case's client with the `{ caseId, caseCode, universityName }`
+   * every case-scoped template interpolates — one query in one place instead of
+   * a re-read of the case plus a repeated `?? 'Сургууль'` at each caller
+   * (1N-52). A caller that already holds the case passes its own context.
+   */
+  async dispatchForCase(
+    caseId: string,
+    event: NotificationEvent,
+    context: NotificationContext = {},
+  ): Promise<number> {
+    const gksCase = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      select: { id: true, code: true, userId: true, university: { select: { nameMn: true } } },
+    });
+    if (!gksCase) {
+      this.logger.warn(`Мэдэгдэл илгээх үйлчилгээ ${caseId} олдсонгүй (${event})`);
+      return 0;
+    }
+
+    return this.dispatch({
+      event,
+      userIds: [gksCase.userId],
+      caseId,
+      context: {
+        caseId: gksCase.id,
+        caseCode: gksCase.code,
+        universityName: gksCase.university?.nameMn ?? 'Сургууль',
+        ...context,
+      },
+    });
   }
 
   /**

@@ -14,7 +14,6 @@ import {
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { CaseDocumentsService } from '../documents/case-documents.service.js';
-import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { APPLICATION_DECISION_LABELS, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { assertApplicationTransition } from './application-status.js';
@@ -27,6 +26,26 @@ import type {
   TransitionApplicationDto,
   UpdateApplicationDto,
 } from './dto/application.dto.js';
+
+/**
+ * The states in which a school decision can actually arrive (1N-20). Recording
+ * a result on a `PREPARING` application used to jump it straight to `ACCEPTED`
+ * and email the client "тэнцлээ", while the case-stage move silently failed —
+ * leaving the application and the case telling different stories.
+ */
+const DECIDABLE_STATUSES: readonly ApplicationStatus[] = [
+  ApplicationStatus.SUBMITTED,
+  ApplicationStatus.UNDER_REVIEW,
+  ApplicationStatus.ADDITIONAL_DOCS_REQUESTED,
+  ApplicationStatus.INTERVIEW_SCHEDULED,
+  ApplicationStatus.DEFERRED,
+];
+
+/**
+ * Reached through `recordResult` and nowhere else: only that path writes an
+ * `ApplicationResult`, stamps `decidedAt`, moves the case and tells the client.
+ */
+const DECISION_STATUSES: readonly ApplicationStatus[] = [ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED];
 
 const APPLICATION_INCLUDE = {
   university: { select: { id: true, nameMn: true, nameEn: true, nameKo: true, logoPath: true } },
@@ -95,15 +114,13 @@ export class ApplicationsService {
    * before the application may leave `PREPARING`.
    */
   async readiness(caseId: string) {
-    const documents = await this.prisma.caseDocument.findMany({
-      where: { caseId, stage: DocStage.ADMISSION, deletedAt: null, necessity: Necessity.REQUIRED },
-      select: { id: true, status: true, template: { select: { code: true, nameMn: true } } },
-    });
-    const missing = documents.filter((doc) => !SETTLED_STATUSES.includes(doc.status));
+    // "Required and not settled" is asked in four places; it is defined once,
+    // on the service that owns the paperwork (1N-52).
+    const { requiredTotal, missing } = await this.documents.missingRequired(caseId, DocStage.ADMISSION);
 
     return {
-      isReady: documents.length > 0 && missing.length === 0,
-      requiredTotal: documents.length,
+      isReady: requiredTotal > 0 && missing.length === 0,
+      requiredTotal,
       missing: missing.map((doc) => ({ id: doc.id, code: doc.template.code, nameMn: doc.template.nameMn, status: doc.status })),
     };
   }
@@ -167,6 +184,9 @@ export class ApplicationsService {
 
   async transition(id: string, dto: TransitionApplicationDto, actor: AuthenticatedUser) {
     const application = await this.getOrThrow(id);
+    if (DECISION_STATUSES.includes(dto.toStatus)) {
+      throw new BadRequestException('Сургуулийн шийдвэрийг мэдүүлгийн хариу бүртгэх үйлдлээр (results) оруулна уу');
+    }
     assertApplicationTransition(application.status, dto.toStatus);
 
     if (dto.toStatus === ApplicationStatus.READY) {
@@ -280,13 +300,29 @@ export class ApplicationsService {
     if (!isGks && round !== 1) {
       throw new BadRequestException('Зөвхөн GKS тэтгэлгийн мэдүүлэг 2-р шатны хариутай байна');
     }
-    if (round === 2) {
-      const first = await this.prisma.applicationResult.findUnique({
-        where: { applicationId_round: { applicationId: id, round: 1 } },
-      });
-      if (first?.decision !== ApplicationDecision.PASSED) {
-        throw new BadRequestException('1-р шатанд тэнцээгүй тул 2-р шатны хариу бүртгэх боломжгүй');
-      }
+
+    // Both rounds in one trip: a read-only pair belongs in `Promise.all`, never
+    // in a `$transaction` (CLAUDE.md — the database is ~115 ms away).
+    const [first, second] = await Promise.all([
+      this.prisma.applicationResult.findUnique({ where: { applicationId_round: { applicationId: id, round: 1 } } }),
+      this.prisma.applicationResult.findUnique({ where: { applicationId_round: { applicationId: id, round: 2 } } }),
+    ]);
+    const existingForRound = round === 1 ? first : second;
+
+    // A decision cannot arrive before the school has the application. The one
+    // way past a concluded application is correcting the round it concluded on:
+    // `ACCEPTED`/`REJECTED` have no outgoing edge, so a typo would otherwise be
+    // permanent.
+    if (!DECIDABLE_STATUSES.includes(application.status) && !existingForRound) {
+      throw new BadRequestException(`Мэдүүлэг "${application.status}" төлөвтэй байхад сургуулийн хариу бүртгэх боломжгүй`);
+    }
+    if (round === 2 && first?.decision !== ApplicationDecision.PASSED) {
+      throw new BadRequestException('1-р шатанд тэнцээгүй тул 2-р шатны хариу бүртгэх боломжгүй');
+    }
+    // Round 2 was decided on top of round 1; rewriting round 1 underneath it
+    // would leave the pair contradicting each other.
+    if (round === 1 && second) {
+      throw new BadRequestException('2-р шатны хариу бүртгэгдсэн тул 1-р шатны хариуг өөрчлөх боломжгүй');
     }
 
     const decidedAt = dto.decidedAt ? new Date(dto.decidedAt) : new Date();
@@ -333,8 +369,14 @@ export class ApplicationsService {
     return isGks && round === 1 ? ApplicationStatus.UNDER_REVIEW : ApplicationStatus.ACCEPTED;
   }
 
+  /**
+   * A refusal pauses the case; it does not end it (1N-19). `REJECTED` has no
+   * edge out of it in the stage graph, and a GKS contract promises a fallback
+   * school free of charge (§3.11) — so the office decides whether this case is
+   * over, by moving it to `REJECTED` deliberately from `ON_HOLD`.
+   */
   private caseStageFor(decision: ApplicationDecision, round: number, isGks: boolean): CaseStage | null {
-    if (decision === ApplicationDecision.FAILED) return CaseStage.REJECTED;
+    if (decision === ApplicationDecision.FAILED) return CaseStage.ON_HOLD;
     if (decision !== ApplicationDecision.PASSED) return null;
     if (!isGks) return CaseStage.ADMITTED;
     return round === 1 ? CaseStage.GKS_ROUND1_PASSED : CaseStage.GKS_ROUND2_PASSED;

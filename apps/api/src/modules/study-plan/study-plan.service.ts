@@ -6,6 +6,8 @@ import { FxService } from '../fx/fx.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { PROGRAM_CARD_FIELDS } from '../programs/programs.service.js';
 import { programSearchWhere } from '../programs/programs.service.js';
+import { TERMS_PER_YEAR, annualTuitionWhere } from '../programs/tuition.js';
+import { livingCostMonthlyMax, livingCostMonthlyMin, readLivingCost } from '../universities/living-cost.js';
 import type { QueryStudyPlanDto } from './dto/query-study-plan.dto.js';
 import {
   FALLBACK_TOPIK_REQUIREMENT,
@@ -34,13 +36,6 @@ const LEVEL_LABELS: Record<ProgramLevel, string> = {
 };
 
 const MONTHS_PER_YEAR = 12;
-
-/** The shape `University.livingCost` is stored in — a regional estimate. */
-interface LivingCostJson {
-  tierLabelMn?: string;
-  monthlyTotalMin?: number | null;
-  monthlyTotalMax?: number | null;
-}
 
 /**
  * Суралцах төлөвлөгөө — the study planner (ARCHITECTURE.md §3.4).
@@ -132,8 +127,8 @@ export class StudyPlanService {
         }),
         this.prisma.universityProgram.count({ where: schoolsWhere }),
         this.regionCounts(regionWhere),
-        this.priceRange(costWhere),
-        needsPrep ? this.priceRange(schoolsWhere) : Promise.resolve(null),
+        this.priceRange(costWhere, firstLevel),
+        needsPrep ? this.priceRange(schoolsWhere, goal) : Promise.resolve(null),
         this.livingCostRange(schoolsWhere, region),
         topik < 6 && !needsPrep
           ? this.prisma.universityProgram.count({ where: this.withTopikGate(goalWhere, topik + 1) })
@@ -206,18 +201,25 @@ export class StudyPlanService {
     budgetKrw?: number | null;
   }): Prisma.UniversityProgramWhereInput {
     const { level, field, region, budgetKrw } = options;
+
+    // Both conditions are themselves `OR`s, so they go in one `AND` — two of
+    // them sharing `where.OR` would quietly become one.
+    const and: Prisma.UniversityProgramWhereInput[] = [];
+    // The keyword the visitor typed, matched exactly the way `/programs`
+    // matches it — a plan that counts programmes the catalogue would not list
+    // is a plan that falls apart on the next click.
+    if (field) and.push(programSearchWhere(field));
+    // Same rule as `/programs`, and against the same derived annual figure: a
+    // budget filter is about published prices, so a programme with no price at
+    // all is out of a budgeted list rather than silently counted as affordable
+    // — but one priced per term is priced, and belongs in it.
+    if (budgetKrw !== null && budgetKrw !== undefined) and.push(annualTuitionWhere(undefined, budgetKrw));
+
     return {
       isPublished: true,
       acceptsInternational: true,
       level,
-      // The keyword the visitor typed, matched exactly the way `/programs`
-      // matches it — a plan that counts programmes the catalogue would not
-      // list is a plan that falls apart on the next click.
-      ...(field ? { AND: [programSearchWhere(field)] } : {}),
-      // Same rule as `/programs`: a budget filter is about published prices, so
-      // a programme with no figure is out of a budgeted list rather than
-      // silently counted as affordable.
-      ...(budgetKrw !== null && budgetKrw !== undefined ? { tuitionPerYearKrw: { lte: budgetKrw } } : {}),
+      ...(and.length ? { AND: and } : {}),
       university: {
         isPublished: true,
         acceptsFromMongolia: true,
@@ -302,19 +304,30 @@ export class StudyPlanService {
   }
 
   /**
-   * Published tuition and 입학금 across a match set. Nulls stay null.
+   * Published annual tuition and 입학금 across a match set. Nulls stay null.
    *
    * The extra condition is `AND`-ed rather than spread in: a budget filter is
    * itself a `tuitionPerYearKrw` condition, and spreading a second one over it
    * silently drops the ceiling — which is how a list showing no schools ends up
    * quoting a price from the ones it excluded.
    */
-  private async priceRange(where: Prisma.UniversityProgramWhereInput) {
-    const [tuition, fee] = await Promise.all([
+  private async priceRange(where: Prisma.UniversityProgramWhereInput, level: ProgramLevel) {
+    // Every match set here is pinned to one level, so the terms-per-year is a
+    // constant: the schools priced per term are read on their own and scaled,
+    // and the two ranges are merged. Reading the annual column alone would
+    // quote the plan off the handful of schools that publish an annual figure.
+    const terms = TERMS_PER_YEAR[level];
+
+    const [annual, perTerm, fee] = await Promise.all([
       this.prisma.universityProgram.aggregate({
         where: { AND: [where, { tuitionPerYearKrw: { not: null } }] },
         _min: { tuitionPerYearKrw: true },
         _max: { tuitionPerYearKrw: true },
+      }),
+      this.prisma.universityProgram.aggregate({
+        where: { AND: [where, { tuitionPerYearKrw: null, tuitionPerTermKrw: { not: null } }] },
+        _min: { tuitionPerTermKrw: true },
+        _max: { tuitionPerTermKrw: true },
       }),
       this.prisma.universityProgram.aggregate({
         where: { AND: [where, { admissionFeeKrw: { not: null } }] },
@@ -323,9 +336,13 @@ export class StudyPlanService {
       }),
     ]);
 
+    const scaled = (value: number | null) => (value === null ? null : value * terms);
+    const merge = (left: number | null, right: number | null, pick: (a: number, b: number) => number) =>
+      left === null ? right : right === null ? left : pick(left, right);
+
     return {
-      tuitionMin: tuition._min.tuitionPerYearKrw,
-      tuitionMax: tuition._max.tuitionPerYearKrw,
+      tuitionMin: merge(annual._min.tuitionPerYearKrw, scaled(perTerm._min.tuitionPerTermKrw), Math.min),
+      tuitionMax: merge(annual._max.tuitionPerYearKrw, scaled(perTerm._max.tuitionPerTermKrw), Math.max),
       feeMin: fee._min.admissionFeeKrw,
       feeMax: fee._max.admissionFeeKrw,
     };
@@ -360,11 +377,14 @@ export class StudyPlanService {
     const tiers = new Set<string>();
 
     for (const row of universities) {
-      const cost = row.livingCost as LivingCostJson | null;
+      const cost = readLivingCost(row.livingCost);
       if (!cost) continue;
       if (cost.tierLabelMn) tiers.add(cost.tierLabelMn);
-      if (typeof cost.monthlyTotalMin === 'number') min = min === null ? cost.monthlyTotalMin : Math.min(min, cost.monthlyTotalMin);
-      if (typeof cost.monthlyTotalMax === 'number') max = max === null ? cost.monthlyTotalMax : Math.max(max, cost.monthlyTotalMax);
+
+      const monthlyMin = livingCostMonthlyMin(row.livingCost);
+      const monthlyMax = livingCostMonthlyMax(row.livingCost);
+      if (monthlyMin !== null) min = min === null ? monthlyMin : Math.min(min, monthlyMin);
+      if (monthlyMax !== null) max = max === null ? monthlyMax : Math.max(max, monthlyMax);
     }
 
     return { monthlyMin: min, monthlyMax: max, tiers: [...tiers] };

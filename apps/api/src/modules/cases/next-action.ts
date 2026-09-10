@@ -250,7 +250,7 @@ function contractAction(snapshot: CaseSnapshot): NextAction {
       key: 'CONTRACT_ACCEPT',
       actor: 'CLIENT',
       label: 'Гэрээтэй танилцаж, зөвшөөрөх',
-      description: 'Зуучлалын гэрээний нөхцөлийг уншаад зөвшөөрснөөр утсанд тань баталгаажуулах код очно.',
+      description: 'Зуучлалын гэрээний нөхцөлийг уншаад зөвшөөрснөөр имэйл хаяг руу тань баталгаажуулах код очно.',
       tab: 'contract',
     };
   }
@@ -258,7 +258,7 @@ function contractAction(snapshot: CaseSnapshot): NextAction {
     key: 'CONTRACT_OTP',
     actor: 'CLIENT',
     label: 'Баталгаажуулах кодоо оруулах',
-    description: 'Утсанд тань илгээсэн 6 оронтой кодыг оруулснаар гэрээ хүчин төгөлдөр болно.',
+    description: 'Имэйлээр илгээсэн 6 оронтой кодыг оруулснаар гэрээ хүчин төгөлдөр болно.',
     tab: 'contract',
   };
 }

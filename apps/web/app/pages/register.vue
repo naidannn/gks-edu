@@ -51,7 +51,7 @@ async function submit() {
     await auth.register(parsed.data.email, parsed.data.password, parsed.data.name, trackingPayload(eventId));
     meta.trackPaired('CompleteRegistration', eventId, { content_name: 'Бүртгэл' });
     // Into the cabinet, not a form: a new account has nothing to declare yet.
-    await navigateTo((route.query.redirect as string) || '/app/cases');
+    await navigateTo(safeRedirectPath(route.query.redirect, '/app/cases'));
   } catch (err) {
     error.value = apiErrorMessage(err, 'Бүртгэл үүсгэхэд алдаа гарлаа');
   } finally {
@@ -74,7 +74,7 @@ async function submitGoogle(idToken: string) {
   pending.value = true;
   try {
     await auth.loginWithGoogle(idToken, trackingPayload(meta.newEventId()));
-    await navigateTo((route.query.redirect as string) || '/app/cases');
+    await navigateTo(safeRedirectPath(route.query.redirect, '/app/cases'));
   } catch (err) {
     error.value = apiErrorMessage(err, 'Google-ээр бүртгүүлж чадсангүй');
   } finally {

@@ -325,6 +325,94 @@ describe('ClientsService.createFromLead (1B-10)', () => {
       service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
     ).rejects.toThrow(BadRequestException);
   });
+
+  /**
+   * 1N-40 — a lead folded into another (1B-09) is hidden from every list and
+   * already LOST. Converting it built the client on the copy staff discarded
+   * and left the surviving lead un-won, undercounting the source report and
+   * the consultant's scoreboard.
+   */
+  it('refuses to convert a lead that was merged away', async () => {
+    const { prisma, tx } = prismaStub({ lead: { ...lead, mergedIntoId: 'lead-2' } });
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+
+    await expect(
+      service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
+    ).rejects.toThrow(ConflictException);
+    expect(tx.client.create).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * 1N-36 — `toClientData` defaulted `source` to the office, and the update path
+ * spreads that mapping straight into the write. Editing a passport number
+ * therefore rewrote a website lead's client as an office walk-in, and every
+ * "where do our clients come from" figure drifted toward the office.
+ */
+describe('ClientsService.update — where a client came from (1N-36)', () => {
+  const existing = {
+    id: 'client-1',
+    userId: 'user-1',
+    code: 'KH-2026-0001',
+    lastName: 'Дорж',
+    firstName: 'Сараа',
+    birthDate: new Date(ADULT_BIRTH_DATE),
+    registerNumber: 'УБ12345678',
+    email: 'saraa@example.mn',
+    source: LeadSource.WEBSITE,
+    primaryServiceType: ServiceType.MASTER,
+    assignedConsultantId: null,
+  };
+
+  function updateStub() {
+    const tx = { client: { update: vi.fn() }, user: { update: vi.fn() } };
+    const prisma = {
+      client: { findUnique: vi.fn().mockResolvedValue(existing) },
+      user: { findUnique: vi.fn().mockResolvedValue(null) },
+      $transaction: vi.fn().mockImplementation((fn: (client: typeof tx) => unknown) => fn(tx)),
+    };
+    const service = new ClientsService(
+      prisma as unknown as PrismaService,
+      casesStub,
+      claimsStub,
+      contractsStub,
+    );
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+    return { service, tx };
+  }
+
+  it('leaves the source alone when the edit does not mention it', async () => {
+    const { service, tx } = updateStub();
+
+    await service.update('client-1', { passportNumber: 'E1234567' });
+
+    const written = tx.client.update.mock.calls[0]![0] as { data: Record<string, unknown> };
+    expect(written.data.passportNumber).toBe('E1234567');
+    // `undefined` is skipped by Prisma; `LeadSource.OFFICE` would not be.
+    expect(written.data.source).toBeUndefined();
+  });
+
+  it('still writes a source the office deliberately corrected', async () => {
+    const { service, tx } = updateStub();
+
+    await service.update('client-1', { source: LeadSource.REFERRAL });
+
+    expect((tx.client.update.mock.calls[0]![0] as { data: Record<string, unknown> }).data.source).toBe(
+      LeadSource.REFERRAL,
+    );
+  });
+
+  it('stamps the office only when a client is registered with no lead behind them', async () => {
+    const { prisma, tx } = prismaStub();
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+
+    await service.create(adultDto(), 'staff-1');
+
+    expect(tx.client.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ source: LeadSource.OFFICE }) }),
+    );
+  });
 });
 
 describe('ClientsService status defaults', () => {

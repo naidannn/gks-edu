@@ -29,15 +29,23 @@ const id = computed(() => String(route.params.id));
 
 const lead = ref<LeadDetail | null>(null);
 const leadPending = ref(true);
-const leadError = ref(false);
+const leadError = ref<string | null>(null);
+
+/**
+ * The failures of the small actions on this page — logging a call, assigning,
+ * saving the two quick facts, paging the timeline. Each used to be a
+ * `try/finally` with no `catch`, so a rejected request left the button
+ * un-spinning and the screen unchanged, which reads as "saved".
+ */
+const actionError = ref<string | null>(null);
 
 async function loadLead() {
   leadPending.value = true;
-  leadError.value = false;
+  leadError.value = null;
   try {
     lead.value = await api.get<LeadDetail>(`/leads/${id.value}`);
-  } catch {
-    leadError.value = true;
+  } catch (e) {
+    leadError.value = apiErrorMessage(e, 'Хүсэлтийг ачаалж чадсангүй.');
   } finally {
     leadPending.value = false;
   }
@@ -120,6 +128,8 @@ async function loadActivities(page = 1) {
     activities.value = page === 1 ? result.items : [...activities.value, ...result.items];
     activitiesPage.value = result.meta.page;
     activitiesTotalPages.value = result.meta.totalPages;
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Түүхийг ачаалж чадсангүй');
   } finally {
     activitiesPending.value = false;
   }
@@ -134,6 +144,7 @@ const activitySubmitting = ref(false);
 
 async function submitActivity() {
   if (!newActivityBody.value.trim()) return;
+  actionError.value = null;
   activitySubmitting.value = true;
   try {
     await api.post(`/leads/${id.value}/activities`, {
@@ -142,6 +153,8 @@ async function submitActivity() {
     });
     newActivityBody.value = '';
     await loadActivities(1);
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Тэмдэглэлийг хадгалж чадсангүй');
   } finally {
     activitySubmitting.value = false;
   }
@@ -181,6 +194,8 @@ async function assignToSelf() {
   try {
     await api.patch(`/leads/${id.value}/assign`, { assignedToId: auth.user.id });
     await Promise.all([loadLead(), loadActivities(1)]);
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Хариуцагч солиход алдаа гарлаа');
   } finally {
     assignPending.value = false;
   }
@@ -190,6 +205,8 @@ async function unassign() {
   try {
     await api.patch(`/leads/${id.value}/assign`, {});
     await Promise.all([loadLead(), loadActivities(1)]);
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Хариуцагч солиход алдаа гарлаа');
   } finally {
     assignPending.value = false;
   }
@@ -199,6 +216,8 @@ async function autoAssign() {
   try {
     await api.post(`/leads/${id.value}/assign/auto`, {});
     await Promise.all([loadLead(), loadActivities(1)]);
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Хариуцагч солиход алдаа гарлаа');
   } finally {
     assignPending.value = false;
   }
@@ -214,6 +233,7 @@ watch(lead, (value) => {
 
 const savingFacts = ref(false);
 async function saveFacts() {
+  actionError.value = null;
   savingFacts.value = true;
   try {
     const winProbability = winProbabilityDraft.value.trim() ? Number(winProbabilityDraft.value) : undefined;
@@ -222,6 +242,8 @@ async function saveFacts() {
       ...(winProbability !== undefined && Number.isFinite(winProbability) ? { winProbability } : {}),
     });
     await loadLead();
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Хадгалж чадсангүй');
   } finally {
     savingFacts.value = false;
   }
@@ -280,10 +302,12 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
   <div class="gks-page">
     <NuxtLink to="/admin/consultations" class="gks-page__back"><DsIcon name="arrow-left" :size="16" /> Зөвлөгөө хүсэлт</NuxtLink>
 
-    <DsCard v-if="leadError" accent><p>Хүсэлтийг ачаалж чадсангүй.</p></DsCard>
+    <DsCard v-if="leadError" accent><p>{{ leadError }}</p></DsCard>
     <div v-else-if="leadPending && !lead" class="gks-skeleton__row gks-skeleton--page" />
 
     <template v-else-if="lead">
+      <DsCard v-if="actionError" accent><p>{{ actionError }}</p></DsCard>
+
       <header class="gks-page__head">
         <div>
           <h1 class="gks-page__title">{{ lead.lastName }} {{ lead.firstName }}</h1>

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { DocStage, DocumentStatus, Necessity } from '../../../prisma/client.js';
 
@@ -159,4 +159,18 @@ export class QueryCaseDocumentsDto extends PaginationQueryDto {
   @IsString()
   @IsOptional()
   q?: string;
+}
+
+/**
+ * The staff "chase list" window (1D-16). `?withinDays=abc` used to reach
+ * `new Date(NaN)` and come back a 500 (1N-25).
+ */
+export class QueryDueDocumentsDto {
+  @ApiPropertyOptional({ default: 7, description: 'Хэдэн хоногийн дотор дуусах хугацаатай материалыг харуулах' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  @IsOptional()
+  withinDays?: number;
 }

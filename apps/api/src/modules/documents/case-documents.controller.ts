@@ -27,12 +27,12 @@ import { DocStage } from '../../prisma/client.js';
 import { CaseDocumentsService } from './case-documents.service.js';
 import { ChecklistPrintService } from './checklist-print.service.js';
 import { DocumentFilesService } from './document-files.service.js';
-import { DocumentRemindersService } from './document-reminders.service.js';
 import { UpsertCaseConditionsDto } from './dto/case-conditions.dto.js';
 import {
   AddDocumentNoteDto,
   CreateCaseDocumentDto,
   QueryCaseDocumentsDto,
+  QueryDueDocumentsDto,
   ReviewDocumentDto,
   TransitionDocumentDto,
   UpdateCaseDocumentDto,
@@ -165,7 +165,6 @@ export class DocumentActionsController {
   constructor(
     private readonly documents: CaseDocumentsService,
     private readonly files: DocumentFilesService,
-    private readonly reminders: DocumentRemindersService,
     private readonly appointments: OfficeAppointmentsService,
   ) {}
 
@@ -178,9 +177,9 @@ export class DocumentActionsController {
 
   @Get('case-documents/reminders')
   @Roles(...DOC_STAFF_ROLES)
-  @ApiOperation({ summary: 'Required documents whose deadline is close (1D-12)' })
-  upcoming(@Query('withinDays') withinDays?: string) {
-    return this.reminders.upcoming(withinDays ? Number(withinDays) : 7);
+  @ApiOperation({ summary: 'Required documents whose deadline is close — the staff chase list (1D-16)' })
+  upcoming(@Query() query: QueryDueDocumentsDto) {
+    return this.documents.dueSoon(query.withinDays ?? 7);
   }
 
   @Get('case-documents/:id')

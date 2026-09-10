@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {
-  AdmissionListItem,
   AdminIntakeTermWithUniversity,
   IntakeStatus,
   PaginatedResult,
@@ -41,14 +40,8 @@ const stats = ref<Stats | null>(null);
 const pending = ref(true);
 const errorMsg = ref<string | null>(null);
 
-const LEVEL_OPTIONS = [
-  { value: '', label: 'Бүх түвшин' },
-  ...Object.entries(PROGRAM_LEVEL_LABELS).map(([value, label]) => ({ value, label })),
-];
-const STATUS_OPTIONS = [
-  { value: '', label: 'Бүх төлөв' },
-  ...Object.entries(INTAKE_STATUS_LABELS).map(([value, label]) => ({ value, label })),
-];
+const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS, 'Бүх түвшин');
+const STATUS_OPTIONS = selectOptions(INTAKE_STATUS_LABELS, 'Бүх төлөв');
 const SORT_OPTIONS = [
   { value: 'deadline', label: 'Хугацаагаар' },
   { value: 'classStart', label: 'Хичээл эхлэхээр' },
@@ -118,18 +111,6 @@ onMounted(() => {
 
 const totalPages = computed(() => meta.value?.totalPages ?? 1);
 
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function countdown(row: AdmissionListItem | Row): string {
-  const days = row.daysUntilInternalDeadline;
-  if (days === null) return '—';
-  if (days < 0) return `${Math.abs(days)} хоног хэтэрсэн`;
-  return `${days} хоног`;
-}
 </script>
 
 <template>
@@ -234,12 +215,12 @@ function countdown(row: AdmissionListItem | Row): string {
               <small>{{ PROGRAM_LEVEL_LABELS[row.level] }}</small>
             </td>
             <td class="gks-tnum gks-adm-admin__ours" data-label="Манай хугацаа">
-              {{ formatDate(row.internalDeadline) }}
+              {{ formatNumericDateUtc(row.internalDeadline) }}
               <small v-if="row.internalDeadlineIsManual">гараар</small>
             </td>
-            <td class="gks-tnum" data-label="Сургуулийн хугацаа">{{ formatDate(row.applicationDeadline) }}</td>
-            <td class="gks-tnum" data-label="Хичээл эхлэх">{{ formatDate(row.classStartDate) }}</td>
-            <td class="gks-tnum" data-label="Үлдсэн">{{ countdown(row) }}</td>
+            <td class="gks-tnum" data-label="Сургуулийн хугацаа">{{ formatNumericDateUtc(row.applicationDeadline) }}</td>
+            <td class="gks-tnum" data-label="Хичээл эхлэх">{{ formatNumericDateUtc(row.classStartDate) }}</td>
+            <td class="gks-tnum" data-label="Үлдсэн">{{ deadlineCountdownShort(row.daysUntilInternalDeadline) }}</td>
             <td class="gks-tnum" data-label="Үйлчилгээ">{{ row._count.cases }}</td>
             <td data-label="Төлөв">
               <DsBadge :tone="INTAKE_PHASE_TONE[row.phase]">{{ INTAKE_PHASE_LABELS[row.phase] }}</DsBadge>

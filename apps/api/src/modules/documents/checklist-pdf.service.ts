@@ -2,6 +2,9 @@ import { join } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { DocumentStatus, Necessity, type DocStage } from '../../prisma/client.js';
+// One date implementation for the whole system: deadlines are stored end of day
+// UTC, so local getters read them a day late (1N-22).
+import { formatDateMn } from '../notifications/notification-labels.js';
 import { SETTLED_STATUSES } from './document-status.js';
 import { DOCUMENT_STATUS_LABELS, DOC_STAGE_LABELS } from './document-labels.js';
 
@@ -559,20 +562,6 @@ export function summaryCells(params: ChecklistPdfParams): SummaryCell[] {
     },
     { label: 'Утас', value: params.clientPhone ?? '—' },
   ];
-}
-
-/** `2026 оны 09 сарын 14`, the way a Mongolian office writes a date on paper. */
-export function formatDateMn(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()} оны ${month} сарын ${day}`;
-}
-
-/** Intake deadlines are stored end-of-day UTC; local getters read them a day late. */
-export function formatDeadlineMn(date: Date): string {
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${date.getUTCFullYear()} оны ${month} сарын ${day}`;
 }
 
 /** `Бүрдүүлэх материал-GKS-2026-0417-элсэлт.pdf` — Cyrillic, so the header escapes it. */

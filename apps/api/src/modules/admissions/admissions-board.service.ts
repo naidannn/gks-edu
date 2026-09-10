@@ -3,7 +3,7 @@ import { CaseStage, IntakeStatus, Necessity, Prisma } from '../../prisma/client.
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { AdmissionConfigService } from './admission-config.service.js';
-import { computeIntakePhase, daysUntil } from './intake-deadline.js';
+import { computeIntakePhase, daysUntil, resolveIntakeDates } from './intake-deadline.js';
 
 /** Stages where an intake deadline no longer bites — the case is past it or gone. */
 const SETTLED_STAGES: CaseStage[] = [
@@ -20,6 +20,9 @@ const BOARD_CASE_SELECT = {
   stage: true,
   serviceType: true,
   intakeId: true,
+  // The programme decides which calendar this case is actually racing: one on
+  // its own override closes on its own date (§3.2).
+  programId: true,
   user: { select: { name: true, client: { select: { lastName: true, firstName: true } } } },
   assignedConsultant: { select: { id: true, name: true } },
   assignedDocOfficer: { select: { id: true, name: true } },
@@ -67,32 +70,57 @@ export class AdmissionsBoardService {
 
     if (!cases.length) return [];
 
-    const intakes = await this.prisma.intakeTerm.findMany({
-      where: { id: { in: [...new Set(cases.map((row) => row.intakeId as string))] } },
-      select: {
-        id: true,
-        universityId: true,
-        level: true,
-        year: true,
-        month: true,
-        openAt: true,
-        applicationDeadline: true,
-        internalDeadline: true,
-        classStartDate: true,
-        quota: true,
-        admissionFeeKrw: true,
-        requirementNote: true,
-        note: true,
-        status: true,
-        university: { select: { id: true, slug: true, nameMn: true, nameEn: true, logoPath: true, cityMn: true } },
-      },
-    });
+    const intakeIds = [...new Set(cases.map((row) => row.intakeId as string))];
+    const [intakes, overrides] = await Promise.all([
+      this.prisma.intakeTerm.findMany({
+        where: { id: { in: intakeIds } },
+        select: {
+          id: true,
+          universityId: true,
+          level: true,
+          year: true,
+          month: true,
+          openAt: true,
+          applicationDeadline: true,
+          internalDeadline: true,
+          internalDeadlineIsManual: true,
+          classStartDate: true,
+          quota: true,
+          admissionFeeKrw: true,
+          requirementNote: true,
+          note: true,
+          status: true,
+          university: { select: { id: true, slug: true, nameMn: true, nameEn: true, logoPath: true, cityMn: true } },
+        },
+      }),
+      this.prisma.intakeProgramOverride.findMany({
+        where: { intakeId: { in: intakeIds } },
+        select: {
+          intakeId: true,
+          programId: true,
+          openAt: true,
+          applicationDeadline: true,
+          internalDeadline: true,
+          internalDeadlineIsManual: true,
+          classStartDate: true,
+        },
+      }),
+    ]);
+
+    const overrideOf = new Map(overrides.map((row) => [`${row.intakeId}:${row.programId}`, row]));
 
     const groups = intakes.map((intake) => {
       const daysLeft = daysUntil(intake.internalDeadline, now);
       const rows = cases
         .filter((row) => row.intakeId === intake.id)
-        .map((row) => this.toBoardCase(row, daysLeft, threshold))
+        .map((row) => {
+          // Per case, not per round: the header is the round's own deadline,
+          // but a case on a programme with its own calendar is counting down
+          // to that one, and the intake-risk report already flags it on it.
+          const override = row.programId ? overrideOf.get(`${intake.id}:${row.programId}`) : undefined;
+          const dates = resolveIntakeDates(intake, override ?? null);
+          return this.toBoardCase(row, daysUntil(dates.internalDeadline, now), threshold);
+        })
         .filter((row) => !options.onlyAtRisk || row.atRisk)
         // Least prepared first — the board exists to surface those.
         .sort((a, b) => a.readiness - b.readiness);

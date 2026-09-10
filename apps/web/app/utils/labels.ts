@@ -35,6 +35,7 @@ import type {
   LeadSource,
   LeadStage,
   Necessity,
+  NextActionActor,
   PaymentKind,
   PaymentMethod,
   PaymentStatus,
@@ -52,6 +53,7 @@ import type {
   WorkTaskStatus,
   WorkTaskType,
 } from '@gks/shared';
+import { TERMS_PER_YEAR, annualTuitionKrw as sharedAnnualTuitionKrw } from '@gks/shared';
 
 /**
  * What we show instead of a missing value. Never render an unknown number as 0 —
@@ -474,6 +476,48 @@ export const BALANCE_TRIGGER_LABELS: Record<BalanceTrigger, string> = {
   AFTER_SCHOLARSHIP_RESULT: 'Тэтгэлэгт тэнцсэний дараа',
 };
 
+/* -------------------------------------------------------------------------- *
+ * The deadline countdown
+ *
+ * Six screens each wrote their own — the public school page, the public
+ * admissions list, the portal case overview, the admin board, the admin
+ * admissions list and the intake-risk report — with six wordings and three
+ * different sets of thresholds. The same number of days therefore read as
+ * "хугацаа дууссан" to a visitor, "12 хоног хэтэрсэн" to the office and an
+ * amber badge on one screen against a red one on the next. A countdown is a
+ * label like any other, so it lives here, once.
+ *
+ * Days are `daysUntilInternalDeadline` — *our* deadline, never the school's
+ * (CLAUDE.md). Negative is past it.
+ * -------------------------------------------------------------------------- */
+
+/** Inside this many days the badge is red: the office has to act now. */
+export const DEADLINE_URGENT_DAYS = 7;
+
+/** Inside this many days it is amber: still time, but it is being spent. */
+export const DEADLINE_SOON_DAYS = 21;
+
+export function deadlineCountdownLabel(days: number | null | undefined): string {
+  if (days === null || days === undefined) return 'Хугацаа тодорхойгүй';
+  if (days < 0) return `${Math.abs(days)} хоногоор хэтэрсэн`;
+  if (days === 0) return 'Өнөөдөр хаагдана';
+  return `${days} хоног үлдлээ`;
+}
+
+/** The same countdown without the sentence, for a narrow table column. */
+export function deadlineCountdownShort(days: number | null | undefined): string {
+  if (days === null || days === undefined) return '—';
+  return days < 0 ? `${Math.abs(days)} хоног хэтэрсэн` : `${days} хоног`;
+}
+
+export function deadlineCountdownTone(days: number | null | undefined): BadgeTone {
+  if (days === null || days === undefined) return 'neutral';
+  if (days < 0) return 'danger';
+  if (days <= DEADLINE_URGENT_DAYS) return 'danger';
+  if (days <= DEADLINE_SOON_DAYS) return 'warning';
+  return 'success';
+}
+
 /** Korean academic intakes: March, June, September, December. */
 export const INTAKE_MONTH_LABELS: Record<number, string> = {
   3: '3-р сар (хавар)',
@@ -519,18 +563,26 @@ export function formatKrw(value: number | null | undefined): string | null {
 }
 
 /**
- * A semester price as a year's, when the school only published the former.
+ * A term price as a year's, when the school only published the former.
  *
- * Two semesters is the Korean academic year, and it is stated here rather than
- * in the database on purpose: the columns store what the school published, and
- * a derived figure that got written down is a figure nobody can later question.
+ * The arithmetic lives in `@gks/shared` because the API annualises the same
+ * figures for the budget filter, and the two must agree. It is stated there
+ * rather than in the database on purpose: the columns store what the school
+ * published, and a derived figure that got written down is a figure nobody can
+ * later question. The level is not optional — a language institute's year is
+ * four 10-week terms, so the degree programmes' ×2 understates it by half.
  */
-export function annualTuitionKrw(program: {
-  tuitionPerYearKrw: number | null;
-  tuitionPerTermKrw: number | null;
-}): number | null {
-  if (program.tuitionPerYearKrw !== null) return program.tuitionPerYearKrw;
-  return program.tuitionPerTermKrw === null ? null : program.tuitionPerTermKrw * 2;
+export const annualTuitionKrw = sharedAnnualTuitionKrw;
+
+/**
+ * "жилд 4 улирал" — why the annual figure is what it is.
+ *
+ * Shown beside a per-term price, because ×2 is the reader's default and it is
+ * wrong for a language institute: its year is four 10-week terms, so the same
+ * ₩1.5m a semester is ₩6m a year rather than ₩3m.
+ */
+export function tuitionTermsNote(level: ProgramLevel): string {
+  return `жилд ${TERMS_PER_YEAR[level]} улирал`;
 }
 
 /**
@@ -788,3 +840,40 @@ export function formatMntAmount(value: string | number | null | undefined): stri
 export function formatMntOrDash(value: string | number | null | undefined): string {
   return formatMntAmount(value) ?? '—';
 }
+
+/**
+ * Who the ball is with, on the two "next step" cards.
+ *
+ * The wordings differ on purpose and are not interchangeable: the client's card
+ * addresses the client ("Таны хийх алхам"), the office's card describes the
+ * same actor in the third person ("Үйлчлүүлэгчийн талд"). Keeping both here is
+ * what makes that a deliberate pair rather than two copies that drifted.
+ */
+export const NEXT_ACTION_ACTOR_LABELS_CLIENT: Record<NextActionActor, string> = {
+  CLIENT: 'Таны хийх алхам',
+  STAFF: 'Ажилтны талд',
+  SCHOOL: 'Сургуулийн талд',
+  NONE: 'Мэдээлэл',
+};
+
+export const NEXT_ACTION_ACTOR_ICONS_CLIENT: Record<NextActionActor, string> = {
+  CLIENT: 'circle-arrow-right',
+  STAFF: 'clock',
+  SCHOOL: 'graduation-cap',
+  NONE: 'circle-check',
+};
+
+export const NEXT_ACTION_ACTOR_LABELS_STAFF: Record<NextActionActor, string> = {
+  CLIENT: 'Үйлчлүүлэгчийн талд',
+  STAFF: 'Бидний талд',
+  SCHOOL: 'Сургуулийн талд',
+  NONE: 'Мэдээлэл',
+};
+
+/** The arrow points at whoever has to move, so it is not the client's icon. */
+export const NEXT_ACTION_ACTOR_ICONS_STAFF: Record<NextActionActor, string> = {
+  CLIENT: 'user',
+  STAFF: 'circle-arrow-right',
+  SCHOOL: 'graduation-cap',
+  NONE: 'circle-check',
+};

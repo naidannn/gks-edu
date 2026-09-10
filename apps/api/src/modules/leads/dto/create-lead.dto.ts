@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -19,10 +19,12 @@ import {
   MinLength,
 } from 'class-validator';
 import { EducationLevel, LeadSource, LeadStage, ServiceType } from '../../../prisma/client.js';
+import {
+  PHONE_PATTERN,
+  TransformEmail,
+  TransformPhone,
+} from '../../../common/validation/transforms.js';
 
-const PHONE_PATTERN = /^(976)?\d{8}$/;
-const stripPhoneFormatting = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.replace(/[\s()+-]/g, '') : value;
 
 /**
  * The stages a record may *start* in. Someone walking into the office has
@@ -54,12 +56,13 @@ export class CreateLeadDto {
   firstName!: string;
 
   @ApiProperty({ example: '99112233' })
-  @Transform(stripPhoneFormatting)
+  @TransformPhone()
   @IsString()
-  @Matches(PHONE_PATTERN, { message: 'Утасны дугаар буруу байна' })
+  @Matches(PHONE_PATTERN)
   phone!: string;
 
   @ApiPropertyOptional()
+  @TransformEmail()
   @IsEmail()
   @MaxLength(200)
   @IsOptional()

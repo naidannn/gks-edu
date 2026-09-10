@@ -1,11 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { TransformEmail } from '../../../common/validation/transforms.js';
 import { MetaTrackingDto } from '../../meta/dto/meta-tracking.dto.js';
 
 export class RegisterDto {
   @ApiProperty({ example: 'student@gks.edu' })
+  @TransformEmail()
   @IsEmail()
+  @MaxLength(200)
   email!: string;
 
   @ApiProperty({ minLength: 8, maxLength: 72 })

@@ -16,14 +16,18 @@ const pending = ref(true);
 const busy = ref(false);
 const error = ref<string | null>(null);
 
-const docs = useCaseDocuments(caseId);
-docs.stage.value = 'VISA';
+const docs = useCaseDocuments(caseId, { stage: 'VISA' });
 
 async function load() {
   pending.value = true;
+  error.value = null;
   try {
     view.value = await api.get<VisaView>(`/cases/${caseId.value}/visa`);
     if (view.value?.visaCase) await docs.load();
+  } catch (e) {
+    // Without this the card below said "урилга ирснээр нээгдэнэ" for a 500 —
+    // the client waits for something that may already have happened.
+    error.value = apiErrorMessage(e, 'Визний мэдээллийг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -93,6 +97,11 @@ function onTransition(documentId: string, status: DocumentStatus) {
       </p>
     </DsCard>
 
+    <DsCard v-else-if="error" accent title="Виз">
+      <p class="gks-visa__error">{{ error }}</p>
+      <DsButton size="sm" variant="secondary" icon-left="refresh-cw" @click="load">Дахин оролдох</DsButton>
+    </DsCard>
+
     <DsCard v-else-if="!pending" title="Виз">
       <p class="gks-visa__empty">Сургуулийн урилга ирснээр визний үе шат нээгдэнэ.</p>
     </DsCard>
@@ -103,6 +112,7 @@ function onTransition(documentId: string, status: DocumentStatus) {
       </DsCard>
 
       <p v-if="error" class="gks-visa__error">{{ error }}</p>
+      <p v-if="docs.error.value" class="gks-visa__error">{{ docs.error.value }}</p>
 
       <section v-if="docs.checklist.value?.documents.length" class="gks-visa__list">
         <DocumentsDocumentCard

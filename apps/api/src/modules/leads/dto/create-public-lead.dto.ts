@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -17,14 +17,12 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { EducationLevel, ServiceType } from '../../../prisma/client.js';
+import {
+  PHONE_PATTERN,
+  TransformEmail,
+  TransformPhone,
+} from '../../../common/validation/transforms.js';
 import { MetaTrackingDto } from '../../meta/dto/meta-tracking.dto.js';
-
-/** Mongolian mobile numbers: 8 digits, optionally +976-prefixed. */
-const PHONE_PATTERN = /^(976)?\d{8}$/;
-
-/** People type "9911-2233", "+976 9911 2233" … — compare digits, not formatting. */
-const stripPhoneFormatting = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.replace(/[\s()+-]/g, '') : value;
 
 export class LeadUtmDto {
   @ApiPropertyOptional()
@@ -72,12 +70,13 @@ export class CreatePublicLeadDto {
   firstName!: string;
 
   @ApiProperty({ example: '99112233' })
-  @Transform(stripPhoneFormatting)
+  @TransformPhone()
   @IsString()
-  @Matches(PHONE_PATTERN, { message: 'Утасны дугаар буруу байна' })
+  @Matches(PHONE_PATTERN)
   phone!: string;
 
   @ApiPropertyOptional()
+  @TransformEmail()
   @IsEmail()
   @MaxLength(200)
   @IsOptional()

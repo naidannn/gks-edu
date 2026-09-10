@@ -1,6 +1,8 @@
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
+import { VALIDATION_PIPE_OPTIONS } from '../../common/validation/validation-pipe.options.js';
 import { EducationLevel, ServiceType } from '../../prisma/client.js';
-import type { QueryGksEligibilityDto } from './dto/query-gks-eligibility.dto.js';
+import { QueryGksEligibilityDto } from './dto/query-gks-eligibility.dto.js';
 import { GksEligibilityService } from './gks-eligibility.service.js';
 
 /** The office's current figures, as `ServicePricing` would hand them over. */
@@ -127,5 +129,72 @@ describe('GksEligibilityService', () => {
     const result = await ask();
     expect(result.improvements.length).toBeLessThanOrEqual(4);
     expect(result.improvements[0]!.impact).toBe('HIGH');
+  });
+});
+
+
+/**
+ * 1N-33. The grade and the scale are two separate taps, and the second one is
+ * easy to leave wrong. Asserted against the real pipe from `main.ts`, because
+ * that is what decides whether a mismatched pair ever reaches the service.
+ */
+describe('QueryGksEligibilityDto — gpa against its scale (1N-33)', () => {
+  const pipe = new ValidationPipe(VALIDATION_PIPE_OPTIONS);
+  const metadata = { type: 'query' as const, metatype: QueryGksEligibilityDto };
+
+  const validate = (gpa: string, gpaScale: string) =>
+    pipe.transform(
+      { degree: 'BACHELOR', age: '18', education: EducationLevel.SECONDARY_SCHOOL, gpa, gpaScale },
+      metadata,
+    );
+
+  /** The pipe answers with a Mongolian message array, not with `error.message`. */
+  const errors = async (gpa: string, gpaScale: string): Promise<string[]> => {
+    try {
+      await validate(gpa, gpaScale);
+      return [];
+    } catch (error) {
+      const response = (error as BadRequestException).getResponse() as { message?: string[] };
+      return response.message ?? [];
+    }
+  };
+
+  it('rejects a 100-point average left on a 4.0 scale', async () => {
+    // Before this, `gpa=85` with scale 4.0 was clamped to 4 and read as a
+    // perfect 100 — a failing criterion turned into a top mark.
+    expect(await errors('85', '4.0')).toContainEqual(expect.stringContaining('4.0 системд'));
+  });
+
+  it('accepts a grade that fits the scale it was given on', async () => {
+    await expect(validate('3.4', '4.0')).resolves.toMatchObject({ gpa: 3.4, gpaScale: '4.0' });
+    await expect(validate('85', '100')).resolves.toMatchObject({ gpa: 85, gpaScale: '100' });
+  });
+
+  it('accepts each scale right up to its own maximum', async () => {
+    await expect(validate('4.5', '4.5')).resolves.toMatchObject({ gpa: 4.5 });
+    await expect(validate('5', '5.0')).resolves.toMatchObject({ gpa: 5 });
+    expect(await errors('4.6', '4.5')).toContainEqual(expect.stringContaining('4.5 системд'));
+  });
+
+  it('leaves an unknown scale to its own error rather than adding a second', async () => {
+    const messages = await errors('3.4', '4.2');
+    expect(messages).toContainEqual(expect.stringContaining('Голч дүнгийн систем'));
+    expect(messages.some((message) => message.includes('системд'))).toBe(false);
+  });
+});
+
+describe('GksEligibilityService — the age cap is read on the entry date (1N-33)', () => {
+  it('turns down a 24-year-old whose undergraduate entry is 16 months out', async () => {
+    const result = await ask({ age: 24 });
+    const age = result.eligibility.criteria.find((row) => row.key === 'AGE');
+
+    // The entry month is always at least a year out for the undergraduate
+    // award, so 24 today is 25 or more by then, whatever month this runs in.
+    expect(age?.met).not.toBe(true);
+  });
+
+  it('still passes somebody clearly under it', async () => {
+    const result = await ask({ age: 18 });
+    expect(result.eligibility.criteria.find((row) => row.key === 'AGE')?.met).toBe(true);
   });
 });

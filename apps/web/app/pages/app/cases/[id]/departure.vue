@@ -15,15 +15,24 @@ const error = ref<string | null>(null);
 
 const flight = reactive({ departureAt: '', flightNo: '', pickupRequested: false });
 
+const loadError = ref<string | null>(null);
+
 async function load() {
   pending.value = true;
+  loadError.value = null;
   try {
     plan.value = await api.get<DeparturePlan | null>(`/cases/${caseId.value}/departure`);
     if (plan.value) {
-      flight.departureAt = plan.value.departureAt ? plan.value.departureAt.slice(0, 16) : '';
+      // Not `slice(0, 16)`: the payload is UTC and the input is local, so
+      // slicing and re-serialising moved the flight eight hours every save —
+      // including a save that changed nothing, which then re-dated the whole
+      // checklist from the wrong moment.
+      flight.departureAt = toDatetimeLocal(plan.value.departureAt);
       flight.flightNo = plan.value.flightNo ?? '';
       flight.pickupRequested = plan.value.pickupRequested;
     }
+  } catch (e) {
+    loadError.value = apiErrorMessage(e, 'Явахын өмнөх бэлтгэлийг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -46,7 +55,7 @@ async function saveFlight() {
   error.value = null;
   try {
     await api.patch(`/cases/${caseId.value}/departure`, {
-      departureAt: flight.departureAt ? new Date(flight.departureAt).toISOString() : undefined,
+      departureAt: fromDatetimeLocal(flight.departureAt) ?? undefined,
       flightNo: flight.flightNo || undefined,
       pickupRequested: flight.pickupRequested,
     });
@@ -64,7 +73,15 @@ const doneItems = computed(() => plan.value?.items.filter((item) => item.isDone)
 
 <template>
   <div class="gks-dep">
-    <DsCard v-if="!plan && !pending" title="Явахын өмнөх бэлтгэл">
+    <!-- A failed request is not an empty checklist: saying "виз гарсны дараа
+         нээгдэнэ" for a 500 tells the client to wait for something that has
+         already happened. -->
+    <DsCard v-if="loadError" accent title="Явахын өмнөх бэлтгэл">
+      <p class="gks-dep__error">{{ loadError }}</p>
+      <DsButton size="sm" variant="secondary" icon-left="refresh-cw" @click="load">Дахин оролдох</DsButton>
+    </DsCard>
+
+    <DsCard v-else-if="!plan && !pending" title="Явахын өмнөх бэлтгэл">
       <p class="gks-dep__empty">Виз гарсны дараа явахын өмнөх бэлтгэлийн чеклист нээгдэнэ.</p>
     </DsCard>
 

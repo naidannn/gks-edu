@@ -1,7 +1,11 @@
 import { Transform } from 'class-transformer';
 
-/** Mongolian mobile numbers, with or without the 976 country code. */
-export const PHONE_PATTERN = /^(976)?\d{8}$/;
+/**
+ * The phone pattern and its transform live in `common/validation/transforms`
+ * now — they are the same rule for a lead, a client and a portal profile — and
+ * are re-exported here so the client and `me` DTOs keep one import.
+ */
+export { PHONE_PATTERN, TransformPhone, stripPhoneFormatting } from '../../../common/validation/transforms.js';
 
 /**
  * Регистрийн дугаар — two Cyrillic letters then eight digits (УБ12345678).
@@ -9,13 +13,9 @@ export const PHONE_PATTERN = /^(976)?\d{8}$/;
  */
 export const REGISTER_PATTERN = /^[А-ЯӨҮЁ]{2}\d{8}$/;
 
-export const stripPhoneFormatting = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.replace(/[\s()+-]/g, '') : value;
-
 export const normalizeRegister = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.replace(/\s/g, '').toUpperCase() : value;
 
-export const TransformPhone = () => Transform(stripPhoneFormatting);
 export const TransformRegister = () => Transform(normalizeRegister);
 
 /** Age in whole years on `on` — the contract date, not today. */

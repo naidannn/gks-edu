@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ConversationDetail, ConversationListResponse, InboxCounts, UserRole } from '@gks/shared';
+import type { ConversationDetail, ConversationListResponse, InboxCounts } from '@gks/shared';
 
 /**
  * `/admin/messages` — the shared chat inbox (1K).
@@ -27,7 +27,7 @@ const thread = useMessengerThread();
 
 const conversations = ref<ConversationDetail[]>([]);
 const counts = ref<InboxCounts>({ unassigned: 0, mine: 0, waiting: 0, open: 0 });
-const staff = ref<{ id: string; name: string | null; email: string | null; role: UserRole }[]>([]);
+const staff = ref<StaffMember[]>([]);
 
 const scope = ref<Scope>('UNASSIGNED');
 const search = ref('');
@@ -46,8 +46,11 @@ const TABS: { value: Scope; label: string; count: (c: InboxCounts) => number | n
   { value: 'RESOLVED', label: 'Шийдвэрлэсэн', count: () => null },
 ];
 
+const listError = ref<string | null>(null);
+
 async function loadList(): Promise<void> {
   listPending.value = true;
+  listError.value = null;
   try {
     const params = new URLSearchParams({ scope: scope.value, limit: '50' });
     if (search.value.trim()) params.set('search', search.value.trim());
@@ -58,6 +61,10 @@ async function loadList(): Promise<void> {
     ]);
     conversations.value = list.items;
     counts.value = next;
+  } catch (e) {
+    // An empty queue and a failed request look identical to the office, and
+    // "бүгд хуваарилагдсан" is the more expensive of the two to believe.
+    listError.value = apiErrorMessage(e, 'Чатын жагсаалтыг ачаалж чадсангүй');
   } finally {
     listPending.value = false;
   }
@@ -74,9 +81,12 @@ async function select(id: string): Promise<void> {
 /** After an action the row's assignee/status changed, so the list is restated. */
 async function act(request: Promise<unknown>): Promise<void> {
   acting.value = true;
+  listError.value = null;
   try {
     await request;
     await loadList();
+  } catch (e) {
+    listError.value = apiErrorMessage(e, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     acting.value = false;
   }
@@ -108,11 +118,20 @@ watch(search, () => {
 });
 watch(scope, () => void loadList());
 
+/**
+ * The listener set lives on the connection, which outlives this page, so the
+ * unsubscribe has to be kept and called — `useMessengerThread` already does.
+ * Dropping it left one dead closure per visit, and every conversation event
+ * then fired one more inbox reload than the visit before.
+ */
+let unsubscribe: (() => void) | null = null;
+onBeforeUnmount(() => unsubscribe?.());
+
 onMounted(async () => {
   stream.connect();
   thread.listen();
 
-  stream.on((event) => {
+  unsubscribe = stream.on((event) => {
     // A staff-visible change can move a thread in or out of the current
     // filter, so the counts and the list are both restated rather than
     // patched — the list is one small query and being wrong here is costly.
@@ -184,7 +203,8 @@ const responseNote = computed(() => {
           @select="select"
         >
           <template #empty>
-            <p class="gks-inbox__empty">
+            <p v-if="listError" class="gks-inbox__empty">{{ listError }}</p>
+            <p v-else class="gks-inbox__empty">
               {{ scope === 'UNASSIGNED' ? 'Хариуцагчгүй чат алга — бүгд хуваарилагдсан байна.' : 'Энэ шүүлтүүрт чат алга.' }}
             </p>
           </template>

@@ -12,18 +12,20 @@ import {
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AdmissionConfigService } from '../admissions/admission-config.service.js';
+import { resolveIntakeDates } from '../admissions/intake-deadline.js';
+import { ESCAPE_STAGES } from '../cases/case-flow.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import {
+  DAY_MS,
   LEAD_STAGE_LABELS,
   PAYMENT_KIND_LABELS,
   VISA_TYPE_LABELS,
   formatAmountMn,
   formatDateMn,
+  startOfDay,
 } from './notification-labels.js';
 import { NotificationsService } from './notifications.service.js';
 import { reminderOffsetFor } from './reminder-ladder.js';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Days before each deadline that the sweep raises a notification — a ladder,
@@ -36,6 +38,80 @@ const PAYMENT_OFFSETS = [3, 0] as const;
 const VISA_APPOINTMENT_OFFSETS = [3, 1] as const;
 const DEPARTURE_OFFSETS = [14, 7, 1] as const;
 const VISA_RENEWAL_OFFSETS = [30, 14] as const;
+
+/**
+ * A case nobody is working is a case nobody chases (1N-17). Reminders cost real
+ * money — a billed SMS and an email each — and a client whose case was
+ * cancelled, put on hold, refused or finished reads one as the office still
+ * waiting on them. Deliberately not applied to the renewal sweep below: that
+ * one exists precisely to reach a student whose case is `COMPLETED`.
+ */
+const DORMANT_CASE_STAGES = [...ESCAPE_STAGES, CaseStage.COMPLETED];
+
+/**
+ * The dates a sweep needs off an intake, plus the overrides laid over them.
+ *
+ * The overrides are joined rather than queried per case: a round carries a
+ * handful at most, and the alternative is one round trip per reminder.
+ */
+const INTAKE_DATE_SELECT = {
+  openAt: true,
+  applicationDeadline: true,
+  internalDeadline: true,
+  internalDeadlineIsManual: true,
+  classStartDate: true,
+  programOverrides: {
+    select: {
+      programId: true,
+      openAt: true,
+      applicationDeadline: true,
+      internalDeadline: true,
+      internalDeadlineIsManual: true,
+      classStartDate: true,
+    },
+  },
+} as const;
+
+type IntakeWithOverrides = {
+  internalDeadline: Date | null;
+  openAt: Date | null;
+  applicationDeadline: Date | null;
+  internalDeadlineIsManual: boolean;
+  classStartDate: Date | null;
+  programOverrides: {
+    programId: string;
+    openAt: Date | null;
+    applicationDeadline: Date | null;
+    internalDeadline: Date | null;
+    internalDeadlineIsManual: boolean;
+    classStartDate: Date | null;
+  }[];
+};
+
+/**
+ * Our deadline for one case: the round's, with the case's programme override
+ * laid over it. A programme on its own calendar is chased on its own date.
+ */
+function caseInternalDeadline(intake: IntakeWithOverrides, programId: string | null): Date | null {
+  return resolveIntakeDates(
+    intake,
+    intake.programOverrides.find((override) => override.programId === programId),
+  ).internalDeadline;
+}
+
+/**
+ * Rounds whose own deadline falls in the window, plus rounds where some
+ * programme's override does. The second arm over-fetches — the override may
+ * belong to a programme this case is not on — and `caseInternalDeadline`
+ * drops those when no ladder rung matches.
+ */
+function intakeDeadlineWindow(from: Date, to: Date) {
+  const window = { not: null, gte: from, lte: to };
+  return {
+    status: IntakeStatus.OPEN,
+    OR: [{ internalDeadline: window }, { programOverrides: { some: { internalDeadline: window } } }],
+  };
+}
 
 /** Cases past their intake, or gone — the calendar no longer applies to them. */
 const INTAKE_SETTLED_STAGES = [
@@ -109,7 +185,7 @@ export class ReminderSweepsService {
     return result;
   }
 
-  /** §16 "Материалын хугацаа дөхсөн" — pairs with the `DocumentReminder` rows of 1D-12. */
+  /** §16 "Материалын хугацаа дөхсөн" — the only engine that reminds; it reads `CaseDocument.dueAt` directly. */
   private async sweepDocuments(now: Date): Promise<number> {
     const horizon = new Date(now.getTime() + Math.max(...DOCUMENT_OFFSETS) * DAY_MS);
 
@@ -119,6 +195,7 @@ export class ReminderSweepsService {
         necessity: Necessity.REQUIRED,
         dueAt: { not: null, lte: horizon },
         status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
+        case: { stage: { notIn: DORMANT_CASE_STAGES } },
       },
       select: {
         id: true,
@@ -157,7 +234,13 @@ export class ReminderSweepsService {
     const horizon = new Date(now.getTime() + Math.max(...PAYMENT_OFFSETS) * DAY_MS);
 
     const due = await this.prisma.payment.findMany({
-      where: { status: PaymentStatus.PENDING, dueAt: { not: null, lte: horizon } },
+      where: {
+        // `PENDING` is what "still open" means for a payment: a paid, failed,
+        // expired or refunded row is settled and is never chased again.
+        status: PaymentStatus.PENDING,
+        dueAt: { not: null, lte: horizon },
+        case: { stage: { notIn: DORMANT_CASE_STAGES } },
+      },
       select: {
         id: true,
         kind: true,
@@ -200,6 +283,7 @@ export class ReminderSweepsService {
       where: {
         appointmentAt: { not: null, gte: startOfDay(now), lte: horizon },
         status: { notIn: [VisaStatus.APPROVED, VisaStatus.REJECTED] },
+        case: { stage: { notIn: DORMANT_CASE_STAGES } },
       },
       select: {
         id: true,
@@ -270,7 +354,10 @@ export class ReminderSweepsService {
     const horizon = new Date(now.getTime() + Math.max(...DEPARTURE_OFFSETS) * DAY_MS);
 
     const upcoming = await this.prisma.departurePlan.findMany({
-      where: { departureAt: { not: null, gte: startOfDay(now), lte: horizon } },
+      where: {
+        departureAt: { not: null, gte: startOfDay(now), lte: horizon },
+        case: { stage: { notIn: DORMANT_CASE_STAGES } },
+      },
       select: {
         id: true,
         departureAt: true,
@@ -361,7 +448,9 @@ export class ReminderSweepsService {
    *
    * The two sweeps that answer the office's own complaint: a client who lets
    * the round close on them, and a consultant who forgets the client. Both
-   * read `internalDeadline` — our date, not the school's.
+   * read `internalDeadline` — our date, not the school's — and both resolve a
+   * programme override over it, because a programme on its own calendar closes
+   * on its own date (§3.2).
    * ----------------------------------------------------------------------- */
 
   /** To the client: the round they chose is closing and documents are short. */
@@ -374,21 +463,19 @@ export class ReminderSweepsService {
     const cases = await this.prisma.case.findMany({
       where: {
         stage: { notIn: INTAKE_SETTLED_STAGES },
-        intake: {
-          status: IntakeStatus.OPEN,
-          internalDeadline: { not: null, gte: startOfDay(now), lte: horizon },
-        },
+        intake: intakeDeadlineWindow(startOfDay(now), horizon),
       },
       select: {
         id: true,
         code: true,
         userId: true,
+        programId: true,
         intake: {
           select: {
             id: true,
             year: true,
             month: true,
-            internalDeadline: true,
+            ...INTAKE_DATE_SELECT,
             university: { select: { nameMn: true } },
           },
         },
@@ -402,9 +489,11 @@ export class ReminderSweepsService {
     let sent = 0;
     for (const row of cases) {
       const intake = row.intake;
-      if (!intake?.internalDeadline) continue;
+      if (!intake) continue;
+      const deadline = caseInternalDeadline(intake, row.programId);
+      if (!deadline) continue;
 
-      const daysLeft = Math.ceil((intake.internalDeadline.getTime() - now.getTime()) / DAY_MS);
+      const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / DAY_MS);
       const offset = reminderOffsetFor(offsets, daysLeft);
       if (offset === undefined) continue;
 
@@ -418,7 +507,7 @@ export class ReminderSweepsService {
         context: {
           universityName: intake.university.nameMn,
           intakeName: intakeName(intake.year, intake.month),
-          deadlineDate: formatDateMn(intake.internalDeadline),
+          deadlineDate: formatDateMn(deadline),
           daysLeft: Math.max(daysLeft, 0),
           missingDocuments: missing,
           caseCode: row.code,
@@ -445,14 +534,12 @@ export class ReminderSweepsService {
     const cases = await this.prisma.case.findMany({
       where: {
         stage: { notIn: INTAKE_SETTLED_STAGES },
-        intake: {
-          status: IntakeStatus.OPEN,
-          internalDeadline: { not: null, gte: startOfDay(now), lte: horizon },
-        },
+        intake: intakeDeadlineWindow(startOfDay(now), horizon),
       },
       select: {
         id: true,
         code: true,
+        programId: true,
         assignedConsultantId: true,
         assignedDocOfficerId: true,
         user: { select: { name: true, client: { select: { lastName: true, firstName: true } } } },
@@ -461,7 +548,7 @@ export class ReminderSweepsService {
             id: true,
             year: true,
             month: true,
-            internalDeadline: true,
+            ...INTAKE_DATE_SELECT,
             university: { select: { nameMn: true } },
           },
         },
@@ -486,9 +573,11 @@ export class ReminderSweepsService {
     let sent = 0;
     for (const row of cases) {
       const intake = row.intake;
-      if (!intake?.internalDeadline) continue;
+      if (!intake) continue;
+      const deadline = caseInternalDeadline(intake, row.programId);
+      if (!deadline) continue;
 
-      const daysLeft = Math.ceil((intake.internalDeadline.getTime() - now.getTime()) / DAY_MS);
+      const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / DAY_MS);
       const offset = reminderOffsetFor(config.staffReminderOffsets, daysLeft);
       if (offset === undefined) continue;
 
@@ -517,7 +606,7 @@ export class ReminderSweepsService {
           clientName: client ? `${client.lastName} ${client.firstName}` : (row.user.name ?? '—'),
           universityName: intake.university.nameMn,
           intakeName: intakeName(intake.year, intake.month),
-          deadlineDate: formatDateMn(intake.internalDeadline),
+          deadlineDate: formatDateMn(deadline),
           daysLeft: Math.max(daysLeft, 0),
           readiness,
           missingDocuments: required - done,
@@ -526,10 +615,4 @@ export class ReminderSweepsService {
     }
     return sent;
   }
-}
-
-function startOfDay(now: Date): Date {
-  const day = new Date(now);
-  day.setHours(0, 0, 0, 0);
-  return day;
 }

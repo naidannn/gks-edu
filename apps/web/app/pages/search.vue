@@ -1,6 +1,11 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' });
-useHead({ title: 'Векторын хайлт' });
+/**
+ * Vector search over the RAG corpus — admin-only for the same reason as
+ * `/documents`: it is a probe into the store, not a feature of the product,
+ * and it was reachable by any signed-in client.
+ */
+definePageMeta({ middleware: 'admin', layout: 'admin' });
+useHead({ title: 'Векторын хайлт · Админ' });
 useNoIndex();
 
 interface SearchHit {
@@ -32,7 +37,7 @@ async function search() {
     });
     searched.value = true;
   } catch (err) {
-    error.value = (err as Error).message;
+    error.value = apiErrorMessage(err, 'Хайлт амжилтгүй боллоо');
   } finally {
     pending.value = false;
   }

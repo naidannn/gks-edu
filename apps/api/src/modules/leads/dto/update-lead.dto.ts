@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -18,10 +18,12 @@ import {
   MinLength,
 } from 'class-validator';
 import { EducationLevel, ServiceType } from '../../../prisma/client.js';
+import {
+  PHONE_PATTERN,
+  TransformEmail,
+  TransformPhone,
+} from '../../../common/validation/transforms.js';
 
-const PHONE_PATTERN = /^(976)?\d{8}$/;
-const stripPhoneFormatting = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.replace(/[\s()+-]/g, '') : value;
 
 /** Staff edit of a lead's own fields. Stage moves through `POST /leads/:id/transitions` instead (1B-02). */
 export class UpdateLeadDto {
@@ -40,13 +42,14 @@ export class UpdateLeadDto {
   firstName?: string;
 
   @ApiPropertyOptional()
-  @Transform(stripPhoneFormatting)
+  @TransformPhone()
   @IsString()
-  @Matches(PHONE_PATTERN, { message: 'Утасны дугаар буруу байна' })
+  @Matches(PHONE_PATTERN)
   @IsOptional()
   phone?: string;
 
   @ApiPropertyOptional()
+  @TransformEmail()
   @IsEmail()
   @MaxLength(200)
   @IsOptional()

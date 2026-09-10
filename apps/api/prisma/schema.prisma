@@ -1424,10 +1424,11 @@ model Payment {
   receiptPath String?
   dueAt       DateTime?
 
-  /// Set on a REFUND row — the payment it refunds.
-  refundOfId String?   @db.Uuid
-  refundOf   Payment?  @relation("PaymentRefund", fields: [refundOfId], references: [id], onDelete: SetNull)
-  refunds    Payment[] @relation("PaymentRefund")
+  /// Set on a REFUND row — the payment it refunds. Unique, so a payment can be
+  /// refunded once: a second click races against the index, not against a read.
+  refundOfId String?  @unique @db.Uuid
+  refundOf   Payment? @relation("PaymentRefund", fields: [refundOfId], references: [id], onDelete: SetNull)
+  refund     Payment? @relation("PaymentRefund")
 
   createdById String? @db.Uuid
   createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
@@ -1624,7 +1625,6 @@ model CaseDocument {
   files     DocumentFile[]
   notes     DocumentReviewNote[]
   workTasks WorkTask[]
-  reminders DocumentReminder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1773,24 +1773,6 @@ model OfficeAppointment {
   @@index([caseId])
   @@index([scheduledAt])
   @@map("office_appointments")
-}
-
-/// One fired deadline reminder (1D-12). The row *is* the idempotency key —
-/// the daily job may run many times a day and still send D-7 once. Actual
-/// delivery (email/SMS/in-app) is wired in 1G-02; this records what is due.
-model DocumentReminder {
-  id             String       @id @default(uuid()) @db.Uuid
-  caseDocumentId String       @db.Uuid
-  caseDocument   CaseDocument @relation(fields: [caseDocumentId], references: [id], onDelete: Cascade)
-
-  /// 7, 3 or 1 — days before `CaseDocument.dueAt`.
-  offsetDays Int
-  dueAt      DateTime
-  createdAt  DateTime @default(now())
-
-  @@unique([caseDocumentId, offsetDays])
-  @@index([createdAt])
-  @@map("document_reminders")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

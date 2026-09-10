@@ -17,6 +17,7 @@ import {
   checkAge,
   checkEducation,
   degreeForEducation,
+  monthsToEntry,
   nextRound,
   readinessBand,
   toGpaPercent,
@@ -128,9 +129,14 @@ export class GksEligibilityService {
     const graduating = query.graduating ?? false;
     const gpaPercent = toGpaPercent(query.gpa, query.gpaScale);
 
+    // The round this person would be applying to is also what the age cap is
+    // read on, so it is computed once and both answers come off it.
+    const round = nextRound(degree, now);
+
     const criteria = this.buildCriteria({
       degree,
       age: query.age,
+      monthsToEntry: monthsToEntry(round, now),
       education: query.education,
       graduating,
       gpa: query.gpa,
@@ -181,7 +187,7 @@ export class GksEligibilityService {
         factors,
       },
       improvements: buildImprovements({ gpaPercent, topik, english, strengths, graduating }).slice(0, 4),
-      round: nextRound(degree, now),
+      round,
       track: this.trackAdvice(degree, strengths),
       dualTrack: this.dualTrack(degree, pricing),
       consultationNote: this.buildNote({ degree, verdict, gpaPercent, topik, band, factors }),
@@ -196,6 +202,8 @@ export class GksEligibilityService {
   private buildCriteria(input: {
     degree: GksDegree;
     age: number;
+    /** Whole months between today and the entry date the cap is read on. */
+    monthsToEntry: number;
     education: EducationLevel;
     graduating: boolean;
     gpa: number;
@@ -206,7 +214,7 @@ export class GksEligibilityService {
   }): GksCriterion[] {
     const { degree, age, education, graduating, gpa, gpaScale, gpaPercent, strengths, blockers } = input;
 
-    const ageMet = checkAge(age, degree);
+    const ageMet = checkAge(age, degree, input.monthsToEntry);
     const educationCheck = checkEducation(education, degree);
     const topTwenty = strengths.includes('TOP_20_PERCENT');
     const gpaMet = gpaPercent >= 80 || topTwenty
@@ -219,18 +227,18 @@ export class GksEligibilityService {
       {
         key: 'AGE',
         labelMn: 'Нас',
-        requirementMn: `${AGE_CAP[degree]} нас хүрээгүй байх`,
+        requirementMn: `Элсэх үедээ ${AGE_CAP[degree]} нас хүрээгүй байх`,
         valueMn: `${age} нас`,
         met: ageMet,
         adviceMn:
           ageMet === false
-            ? `${DEGREE_LABELS[degree]}-ын тэтгэлгийн насны хязгаараас хэтэрсэн байна. ${
+            ? `Элсэх үед ${DEGREE_LABELS[degree]}-ын тэтгэлгийн насны хязгаараас хэтэрнэ. ${
                 degree === 'BACHELOR'
                   ? 'Бакалаврын дараах түвшинд 40 нас хүртэл өгөх боломжтой, мөн энгийн зуучлалаар үндсэн ангид элсэх зам нээлттэй.'
                   : 'Энгийн зуучлалаар үндсэн ангид элсэх зам танд нээлттэй хэвээр байна.'
               }`
             : ageMet === null
-              ? 'Насыг элсэх жилийн эхэнд тооцдог тул таны төрсөн өдрөөс шалтгаална — зөвлөхөөр нэг удаа шалгуулаарай.'
+              ? 'Насыг элсэх өдрөөр тооцдог тул таны төрсөн өдрөөс шалтгаална — зөвлөхөөр нэг удаа шалгуулаарай.'
               : null,
       },
       {

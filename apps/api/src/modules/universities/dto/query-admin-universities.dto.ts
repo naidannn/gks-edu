@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { AccreditationGrade, AgentContractStatus, ProgramLevel, UniversityType } from '../../../prisma/client.js';
+import { toBoolean } from '../../programs/dto/university-program.dto.js';
 
 export const ADMIN_UNIVERSITY_SORTS = [
   'gks',
@@ -15,10 +16,6 @@ export const ADMIN_UNIVERSITY_SORTS = [
   'created',
 ] as const;
 export type AdminUniversitySort = (typeof ADMIN_UNIVERSITY_SORTS)[number];
-
-/** Query strings arrive as "true"/"false"; class-transformer needs the nudge. */
-const toBoolean = ({ value }: { value: unknown }) =>
-  value === true || value === 'true' ? true : value === false || value === 'false' ? false : undefined;
 
 /**
  * The staff catalogue query. Unlike {@link QueryUniversitiesDto} it is not

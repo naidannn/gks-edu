@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { OutcomesReport } from '@gks/shared';
+import type { ApplicationDecision, OutcomesReport } from '@gks/shared';
 
 /**
  * Did it work?
@@ -10,13 +10,6 @@ import type { OutcomesReport } from '@gks/shared';
  * are counted here, and a rate nobody has evidence for reads as "—", never 0%.
  */
 defineProps<{ report: OutcomesReport; download: (report: string) => void }>();
-
-const APPLICATION_DECISION_LABELS: Record<string, string> = {
-  PASSED: 'Тэнцсэн',
-  FAILED: 'Тэнцээгүй',
-  WAITLISTED: 'Хүлээлгийн жагсаалтад',
-  DEFERRED: 'Хойшлуулсан',
-};
 </script>
 
 <template>
@@ -115,7 +108,7 @@ const APPLICATION_DECISION_LABELS: Record<string, string> = {
           <ReportsBarList
             :rows="round.counts.map((entry) => ({
               key: `${round.round}-${entry.decision}`,
-              label: APPLICATION_DECISION_LABELS[entry.decision] ?? entry.decision,
+              label: APPLICATION_DECISION_LABELS[entry.decision as ApplicationDecision] ?? entry.decision,
               value: entry.count,
               tone: entry.decision === 'FAILED' ? 'danger' : 'brand',
             }))"

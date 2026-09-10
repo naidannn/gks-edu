@@ -1,9 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { TransformEmail } from '../../../common/validation/transforms.js';
 
 export class ForgotPasswordDto {
   @ApiProperty({ example: 'student@gks.edu' })
+  @TransformEmail()
   @IsEmail()
+  @MaxLength(200)
   email!: string;
 }
 

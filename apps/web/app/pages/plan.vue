@@ -27,18 +27,17 @@ import type {
  * The URL is the state throughout, so a plan survives a reload and a consultant
  * can send one to a client as a link. Nothing is stored server-side.
  */
-const route = useRoute();
+// The answers live in the URL and nowhere else — see `utils/query-state.ts`.
 const router = useRouter();
-
-const str = (value: unknown): string => (typeof value === 'string' ? value : '');
+const { str, apply: applyQuery } = useQueryState();
 
 const answers = computed(() => ({
-  education: str(route.query.education) as EducationLevel | '',
-  goal: str(route.query.goal) as ProgramLevel | '',
-  topik: str(route.query.topik),
-  field: str(route.query.field),
-  region: str(route.query.region),
-  budget: str(route.query.budget),
+  education: str('education') as EducationLevel | '',
+  goal: str('goal') as ProgramLevel | '',
+  topik: str('topik'),
+  field: str('field'),
+  region: str('region'),
+  budget: str('budget'),
 }));
 
 /**
@@ -57,14 +56,9 @@ const isAnswered = computed(
     answers.value.field !== '',
 );
 
+/** This wizard has no paging, so nothing is reset when an answer changes. */
 function apply(patch: Record<string, string | number | undefined>) {
-  const merged = { ...(route.query as Record<string, string>), ...patch };
-  const query = Object.fromEntries(
-    Object.entries(merged)
-      .filter(([, value]) => value !== '' && value !== undefined && value !== null)
-      .map(([key, value]) => [key, String(value)]),
-  );
-  router.push({ query });
+  applyQuery(patch, false);
 }
 
 /* ---------------------------------------------------------------------- *

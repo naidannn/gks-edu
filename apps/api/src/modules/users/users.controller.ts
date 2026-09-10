@@ -16,7 +16,6 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../prisma/client.js';
 import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
-import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import { Audit } from '../../common/decorators/audit.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
@@ -24,8 +23,14 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { AccountClaimService } from './account-claim.service.js';
-import { ClaimAccountDto, CreateStaffDto, SetStaffPasswordDto, UpdateStaffDto } from './dto/staff.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
+import {
+  ClaimAccountDto,
+  ClaimInviteDto,
+  CreateStaffDto,
+  SetStaffPasswordDto,
+  UpdateStaffDto,
+} from './dto/staff.dto.js';
+import { QueryUsersDto, UpdateUserDto } from './dto/update-user.dto.js';
 import { UsersService } from './users.service.js';
 
 @ApiTags('users')
@@ -115,10 +120,16 @@ export class UsersController {
   @Audit({ action: 'user.claim_invite', entity: 'User' })
   @ApiOperation({
     summary: 'Бүртгэл эзэмших урилга (дахин) илгээх (1B-17, 1B-19)',
-    description: 'Хугацаа нь дууссан урилгыг сэргээх зам — шинэ токен 7 хоног хүчинтэй.',
+    description:
+      'Хугацаа нь дууссан урилгыг сэргээх зам — шинэ токен 7 хоног хүчинтэй. '
+      + 'Зөвлөх зөвхөн үйлчлүүлэгчийн бүртгэлд, бүртгэл дээрх хаягаар илгээнэ; хаяг солих нь админы эрх.',
   })
-  invite(@Param('id', ParseUUIDPipe) id: string, @Body('email') email?: string) {
-    return this.claims.invite(id, { email, kind: 'invite' });
+  invite(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ClaimInviteDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ) {
+    return this.claims.invite(id, { email: dto.email, kind: 'invite', actor });
   }
 
   @Public()
@@ -131,8 +142,8 @@ export class UsersController {
   @Get()
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List users (admin only)' })
-  findAll(@Query() query: PaginationQueryDto, @Query('search') search?: string) {
-    return this.users.findAll(query.page, query.limit, search);
+  findAll(@Query() query: QueryUsersDto) {
+    return this.users.findAll(query.page, query.limit, query.search);
   }
 
   @Get(':id')
@@ -143,7 +154,11 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a user — own profile, or any as admin' })
+  @Audit({ action: 'user.update', entity: 'User' })
+  @ApiOperation({
+    summary: 'Update a user — own profile, or any as admin',
+    description: 'И-мэйл хаягийг зөвхөн админ солино (1N-03).',
+  })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
@@ -152,14 +167,24 @@ export class UsersController {
     if (user.id !== id && user.role !== Role.ADMIN) {
       throw new ForbiddenException('Зөвхөн өөрийн мэдээллээ засах эрхтэй');
     }
+    // Nothing verifies that the caller can read the inbox they are typing in,
+    // and the address is what `login`, the password reset and the Google link
+    // all match on — so changing it is an office action, not a profile field.
+    if (dto.email !== undefined && user.role !== Role.ADMIN) {
+      throw new ForbiddenException('И-мэйл хаягаа солихыг зөвлөхөөсөө хүснэ үү');
+    }
     return this.users.update(id, dto);
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN)
+  @Audit({ action: 'user.delete', entity: 'User' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a user (admin only)' })
-  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    await this.users.remove(id);
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<void> {
+    await this.users.remove(id, actor.id);
   }
 }

@@ -47,9 +47,14 @@ const query = computed(() => ({
 
 async function load() {
   pending.value = true;
+  error.value = null;
   try {
     data.value = await api.get<Paginated>('/visa-cases', { query: query.value });
     if (!selectedCaseId.value && data.value.items[0]) await select(data.value.items[0].caseId);
+  } catch (e) {
+    // Uncaught, a failure rendered "визний бүртгэл алга байна" — an empty
+    // queue, which is the one answer staff act on by doing nothing.
+    error.value = apiErrorMessage(e, 'Визний жагсаалтыг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }
@@ -58,7 +63,10 @@ async function load() {
 async function select(caseId: string) {
   selectedCaseId.value = caseId;
   detail.value = await api.get<VisaView>(`/cases/${caseId}/visa`);
-  appointmentAt.value = detail.value.visaCase?.appointmentAt?.slice(0, 16) ?? '';
+  // The payload is UTC and the input is local wall clock, so a plain slice
+  // and a `toISOString()` back moved the appointment by the offset on every
+  // save, edited or not.
+  appointmentAt.value = toDatetimeLocal(detail.value.visaCase?.appointmentAt);
 }
 
 async function act(action: () => Promise<unknown>) {
@@ -82,7 +90,9 @@ function transition(toStatus: VisaStatus) {
   return act(() => api.post(`/cases/${selectedCaseId.value}/visa/transitions`, { toStatus }));
 }
 function saveAppointment() {
-  return act(() => api.patch(`/cases/${selectedCaseId.value}/visa`, { appointmentAt: new Date(appointmentAt.value).toISOString() }));
+  const appointment = fromDatetimeLocal(appointmentAt.value);
+  if (!appointment) return;
+  return act(() => api.patch(`/cases/${selectedCaseId.value}/visa`, { appointmentAt: appointment }));
 }
 function approve() {
   return act(() =>

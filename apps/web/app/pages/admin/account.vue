@@ -25,5 +25,6 @@ const auth = useAuthStore();
     </header>
 
     <AuthChangePassword />
+    <AuthLinkGoogle />
   </div>
 </template>

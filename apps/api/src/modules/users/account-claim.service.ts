@@ -1,13 +1,13 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { hash } from 'bcryptjs';
-import { createHash, randomBytes } from 'node:crypto';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
+import { hashPassword, sha256 } from '../../common/utils/hashing.js';
+import { Role } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { EmailService } from '../notifications/email.service.js';
 import { accountClaimEmail, clientWelcomeEmail } from '../notifications/email/transactional.js';
 
 /** How long an invitation link stays valid. */
 export const CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const BCRYPT_ROUNDS = 12;
 
 /**
  * Which mail carries the link. `welcome` is the one a staff-registered client
@@ -18,11 +18,17 @@ const BCRYPT_ROUNDS = 12;
 export type ClaimInviteKind = 'welcome' | 'invite';
 
 export interface InviteOptions {
-  /** Sets (or corrects) the address the invitation goes to. */
+  /** Sets (or corrects) the address the invitation goes to. Admin-only. */
   email?: string;
   kind?: ClaimInviteKind;
   /** Named in the mail as the human to ring once the link has expired. */
   consultantName?: string | null;
+  /**
+   * The staff member who asked for it. Absent for the invitations the system
+   * sends itself — registering a client (1B-19) — which are bounded by the
+   * flow that triggers them rather than by a role.
+   */
+  actor?: { role: Role };
 }
 
 /**
@@ -45,9 +51,10 @@ export class AccountClaimService {
   async invite(userId: string, options: InviteOptions = {}): Promise<{ expiresAt: Date; emailed: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, password: true, googleId: true },
+      select: { id: true, email: true, name: true, role: true, password: true, googleId: true },
     });
     if (!user) throw new NotFoundException('Хэрэглэгч олдсонгүй');
+    this.assertMayInvite(user.role, options);
     if (user.password) throw new BadRequestException('Энэ бүртгэл аль хэдийн нууц үгтэй байна');
     // A Google sign-in already owns the row; a "set your password" link would
     // invite them to solve a problem they do not have.
@@ -75,6 +82,29 @@ export class AccountClaimService {
 
     this.logger.log(`Бүртгэл эзэмших урилга илгээлээ: ${target}`);
     return { expiresAt, emailed: true };
+  }
+
+  /**
+   * 1N-01 — who may aim an invitation at whom.
+   *
+   * An unclaimed account has no password by design (1B-17), and this call both
+   * re-points the address on the row and mails a link that sets one. Together
+   * that is a way in: a consultant could point an unclaimed ADMIN row at their
+   * own inbox, or re-point a client's login the moment before they claim it.
+   *
+   * So a consultant may only invite an ordinary client, and only an admin may
+   * name an address at all — a consultant's invitation goes to the address the
+   * record already carries or nowhere.
+   */
+  private assertMayInvite(targetRole: Role, options: InviteOptions): void {
+    if (!options.actor || options.actor.role === Role.ADMIN) return;
+
+    if (targetRole !== Role.USER) {
+      throw new ForbiddenException('Ажилтны бүртгэлд урилга илгээх эрхгүй байна');
+    }
+    if (options.email !== undefined) {
+      throw new ForbiddenException('Урилгын имэйл хаягийг зөвхөн админ өөрчилнө');
+    }
   }
 
   /**
@@ -111,7 +141,7 @@ export class AccountClaimService {
     const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        password: await hash(password, BCRYPT_ROUNDS),
+        password: await hashPassword(password),
         claimTokenHash: null,
         claimTokenExpiresAt: null,
         claimedAt: new Date(),
@@ -121,8 +151,4 @@ export class AccountClaimService {
 
     return updated;
   }
-}
-
-function sha256(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
 }

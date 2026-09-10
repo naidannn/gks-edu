@@ -94,7 +94,7 @@ const atRisk = computed(() => props.report.terms.reduce((sum, term) => sum + ter
             <td class="gks-tnum">{{ term.year }}/{{ term.month }}</td>
             <td>
               <DsBadge :tone="urgency(term.daysLeft) === 'neutral' ? 'neutral' : urgency(term.daysLeft)">
-                {{ formatDaysLeft(term.daysLeft) }}
+                {{ deadlineCountdownLabel(term.daysLeft) }}
               </DsBadge>
               <span class="gks-reports__sub gks-tnum">
                 {{ term.internalDeadline ? formatNumericDateUtc(term.internalDeadline) : '—' }}
@@ -139,7 +139,7 @@ const atRisk = computed(() => props.report.terms.reduce((sum, term) => sum + ter
             <td>{{ row.universityNameMn ?? '—' }}</td>
             <td>
               <DsBadge :tone="urgency(row.daysLeft) === 'neutral' ? 'neutral' : urgency(row.daysLeft)">
-                {{ formatDaysLeft(row.daysLeft) }}
+                {{ deadlineCountdownLabel(row.daysLeft) }}
               </DsBadge>
             </td>
             <td class="gks-table__num gks-tnum" :class="{ 'gks-table__num--warn': row.overdueDocs > 0 }">

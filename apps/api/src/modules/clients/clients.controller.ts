@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
+import { Audit } from '../../common/decorators/audit.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
@@ -24,12 +25,14 @@ export class ClientsController {
   ) {}
 
   @Post()
+  @Audit({ action: 'client.create', entity: 'Client', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Register a client directly, without a lead (1B-14)' })
   create(@Body() dto: CreateClientDto, @CurrentUser() user: AuthenticatedUser) {
     return this.clients.create(dto, user.id);
   }
 
   @Post('from-lead/:leadId')
+  @Audit({ action: 'client.create_from_lead', entity: 'Client', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Convert a consulted lead into a client (1B-10)' })
   createFromLead(
     @Param('leadId', ParseUUIDPipe) leadId: string,
@@ -57,7 +60,8 @@ export class ClientsController {
   checkDuplicates(
     @Query('phone') phone?: string,
     @Query('registerNumber') registerNumber?: string,
-    @Query('excludeClientId') excludeClientId?: string,
+    // A `uuid` column: without the pipe a typo reached Prisma and came back a 500.
+    @Query('excludeClientId', new ParseUUIDPipe({ optional: true })) excludeClientId?: string,
   ) {
     return this.clients.checkDuplicates({ phone, registerNumber, excludeClientId });
   }
@@ -81,6 +85,7 @@ export class ClientsController {
   }
 
   @Patch(':id')
+  @Audit({ action: 'client.update', entity: 'Client' })
   @ApiOperation({ summary: "Edit a client's own fields" })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateClientDto) {
     return this.clients.update(id, dto);

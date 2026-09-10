@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ConfigService } from '@nestjs/config';
-import { NotificationChannel, NotificationEvent } from '../../prisma/client.js';
+import { NotificationChannel, NotificationEvent, NotificationStatus } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
+import type { ConfigService as NestConfigService } from '@nestjs/config';
+import type { Queue } from 'bullmq';
 import { NOTIFICATION_TEMPLATES } from './notification-templates.data.js';
 import { formatAmountMn, formatDateMn } from './notification-labels.js';
-import { render } from './notifications.service.js';
+import { NotificationsService, render } from './notifications.service.js';
 import { SmsBudgetService } from './sms-budget.service.js';
 
 describe('render (1G-02 placeholder interpolation)', () => {
@@ -67,7 +69,22 @@ describe('NOTIFICATION_TEMPLATES (1G-06)', () => {
 
 describe('formatting helpers', () => {
   it('writes a date the Mongolian way', () => {
-    expect(formatDateMn(new Date('2026-09-05T10:00:00Z'))).toMatch(/^2026 оны 09 сарын 0[45]$/);
+    expect(formatDateMn(new Date('2026-09-05T10:00:00Z'))).toBe('2026 оны 09 сарын 05');
+  });
+
+  /**
+   * 1N-22 — deadlines are stored at end of day UTC. Read with local getters
+   * under any `TZ` east of UTC they roll into the next day, and every reminder
+   * printed the deadline one day late: the expensive direction.
+   */
+  it('reads an end-of-day UTC deadline as that day, not the next one', () => {
+    const original = process.env.TZ;
+    process.env.TZ = 'Asia/Ulaanbaatar';
+    try {
+      expect(formatDateMn(new Date('2027-01-17T23:59:59.000Z'))).toBe('2027 оны 01 сарын 17');
+    } finally {
+      process.env.TZ = original;
+    }
   });
 
   it('renders null as an em dash instead of "Invalid Date"', () => {
@@ -103,5 +120,59 @@ describe('SmsBudgetService (1G-04)', () => {
 
   it('blocks everyone once the platform cap is reached — the bill, not the person', async () => {
     await expect(harness(0, 500).blockReason('user-1')).resolves.toContain('нийт SMS');
+  });
+});
+
+/**
+ * 1N-22 — the row is written `PENDING` and only then enqueued. If Redis was
+ * down the enqueue error was swallowed and the row sat `PENDING` forever — and
+ * for a swept reminder its `dedupeKey` blocked every later attempt, so the
+ * client was simply never told.
+ */
+describe('NotificationsService.requeueStale (1N-22)', () => {
+  function harness(rows: { id: string }[], queueThrows = false) {
+    const prisma = {
+      notification: { findMany: vi.fn().mockResolvedValue(rows) },
+    } as unknown as PrismaService;
+    const config = { get: vi.fn().mockReturnValue('https://gksedu.mn') } as unknown as NestConfigService;
+    const add = queueThrows
+      ? vi.fn().mockRejectedValue(new Error('ECONNREFUSED'))
+      : vi.fn().mockResolvedValue({});
+    const queue = { add } as unknown as Queue;
+    return { service: new NotificationsService(prisma, config, queue), prisma, add };
+  }
+
+  it('re-queues each stale row under its own id, so a job still queued is not duplicated', async () => {
+    const { service, add } = harness([{ id: 'n1' }, { id: 'n2' }]);
+
+    await expect(service.requeueStale()).resolves.toBe(2);
+    expect(add).toHaveBeenCalledWith(
+      expect.any(String),
+      { notificationId: 'n1' },
+      expect.objectContaining({ jobId: 'n1' }),
+    );
+  });
+
+  it('asks only for PENDING rows on a channel the queue actually delivers', async () => {
+    const { service, prisma } = harness([]);
+
+    await service.requeueStale(new Date('2026-09-11T09:00:00.000Z'), 10 * 60 * 1000);
+
+    expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: NotificationStatus.PENDING,
+          channel: { not: NotificationChannel.IN_APP },
+          createdAt: { lt: new Date('2026-09-11T08:50:00.000Z') },
+        }),
+      }),
+    );
+  });
+
+  it('stops at the first failure rather than logging the same outage 500 times', async () => {
+    const { service, add } = harness([{ id: 'n1' }, { id: 'n2' }, { id: 'n3' }], true);
+
+    await expect(service.requeueStale()).resolves.toBe(0);
+    expect(add).toHaveBeenCalledTimes(1);
   });
 });

@@ -34,6 +34,28 @@ describe('document status machine', () => {
     expect(canTransition(DocumentStatus.RESUBMIT_REQUIRED, DocumentStatus.SUBMITTED)).toBe(true);
   });
 
+  /**
+   * 1N-21 — a school can ask again for a paper we already accepted, translated
+   * or posted. The row has to go back on the client's list rather than stay
+   * "Сургуульд илгээсэн" while the email asks for it.
+   */
+  it('lets a settled document be re-requested', () => {
+    for (const settled of [
+      DocumentStatus.ACCEPTED,
+      DocumentStatus.IN_TRANSLATION,
+      DocumentStatus.TRANSLATED,
+      DocumentStatus.CERTIFIED,
+      DocumentStatus.READY,
+      DocumentStatus.SENT_TO_UNIVERSITY,
+    ]) {
+      expect(canTransition(settled, DocumentStatus.RESUBMIT_REQUIRED), settled).toBe(true);
+    }
+  });
+
+  it('keeps re-requesting a staff move — a client cannot reopen their own sent document', () => {
+    expect(isClientTransition(DocumentStatus.SENT_TO_UNIVERSITY, DocumentStatus.RESUBMIT_REQUIRED)).toBe(false);
+  });
+
   it('refuses to skip review', () => {
     expect(() => assertTransition(DocumentStatus.SUBMITTED, DocumentStatus.ACCEPTED)).toThrow(BadRequestException);
     expect(canTransition(DocumentStatus.SENT_TO_UNIVERSITY, DocumentStatus.READY)).toBe(false);

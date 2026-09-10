@@ -11,6 +11,12 @@ export interface QpayInvoice {
 export interface QpayCheckResult {
   paid: boolean;
   qpayPaymentId?: string;
+  /**
+   * What QPay says actually arrived. Not every response carries it, so the
+   * caller enforces "at least the invoiced amount" only when it is present —
+   * a partial payment must not credit a debt in full (1N-10).
+   */
+  paidAmount?: number;
 }
 
 /**
@@ -74,9 +80,42 @@ export class QpayClientService {
     if (!response.ok) {
       throw new Error(`QPay payment check failed: ${response.status} ${await response.text()}`);
     }
-    const body = (await response.json()) as { rows?: { payment_id: string; payment_status: string }[] };
+    const body = (await response.json()) as {
+      paid_amount?: number;
+      rows?: { payment_id: string; payment_status: string }[];
+    };
     const paidRow = body.rows?.find((row) => row.payment_status === 'PAID');
-    return paidRow ? { paid: true, qpayPaymentId: paidRow.payment_id } : { paid: false };
+    if (!paidRow) return { paid: false };
+    return { paid: true, qpayPaymentId: paidRow.payment_id, paidAmount: body.paid_amount };
+  }
+
+  /**
+   * Takes an invoice down at QPay (`DELETE /v2/invoice/{id}`) so the QR stops
+   * working — used when the money arrives another way and when a QR times out
+   * (1N-10). A client holding a live QR for a debt they have already settled at
+   * the desk is exactly how §6.4's double payment happens.
+   *
+   * It never throws: it runs after the fact that made it necessary is already
+   * recorded, and QPay being unreachable must not undo that.
+   */
+  async cancelInvoice(invoiceId: string): Promise<void> {
+    if (this.mock) {
+      this.logger.log(`[QPAY_MOCK] invoice ${invoiceId} cancelled`);
+      return;
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const response = await fetch(`${this.baseUrl}/invoice/${invoiceId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        this.logger.warn(`QPay нэхэмжлэх цуцлагдсангүй (${invoiceId}): ${response.status} ${await response.text()}`);
+      }
+    } catch (error) {
+      this.logger.warn(`QPay нэхэмжлэх цуцлах үед алдаа (${invoiceId}): ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   private get mock(): boolean {

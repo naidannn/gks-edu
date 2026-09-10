@@ -42,3 +42,23 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
   if (Array.isArray(body?.message)) return body.message.join(', ');
   return body?.message || fallback;
 }
+
+/**
+ * The HTTP status behind a failure, when there is one.
+ *
+ * Two failure shapes reach this, as above: `useApi()`'s {@link ApiError}, and
+ * `useFetch`/`$fetch`'s `FetchError`, which carries `statusCode`. `null` means
+ * the request never got an answer — a timeout, a DNS failure, the API down —
+ * and that is emphatically not a 404. A page that treats every failure as
+ * "not found" tells a visitor the school does not exist because the network
+ * blinked, and tells a crawler the URL is gone.
+ */
+export function apiErrorStatus(error: unknown): number | null {
+  if (error instanceof ApiError) return error.status;
+  const raw = error as
+    | { statusCode?: unknown; status?: unknown; response?: { status?: unknown } }
+    | null
+    | undefined;
+  const candidate = raw?.statusCode ?? raw?.status ?? raw?.response?.status;
+  return typeof candidate === 'number' ? candidate : null;
+}

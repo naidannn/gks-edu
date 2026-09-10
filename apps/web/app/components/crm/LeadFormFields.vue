@@ -18,7 +18,7 @@ const props = withDefaults(
     errors: Record<string, string>;
     universities: UniversityCard[];
     loadingUniversities?: boolean;
-    staff?: { id: string; name: string | null; email: string | null }[];
+    staff?: StaffMember[];
     /**
      * `edit` drops the fields that have their own endpoint — stage moves through
      * the funnel (1B-02), assignment through its own log (1B-04) — so the edit

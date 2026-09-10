@@ -25,44 +25,45 @@ import type {
   QueryAdmissionsDto,
 } from './dto/query-admissions.dto.js';
 import {
+  LIST_CACHE_PATTERN as UNIVERSITY_LIST_CACHE_PATTERN,
+  UNIVERSITY_CARD_FIELDS,
+  universityDetailCacheKey,
+} from '../universities/universities.service.js';
+import {
   SERVICE_LEVELS,
+  type IntakeDateFields,
   type IntakePhase,
   computeIntakePhase,
   computeInternalDeadline,
   daysUntil,
   isIntakeSelectable,
+  resolveIntakeDates,
+  resolveOverrideInternalDeadline,
   serviceAcceptsLevel,
+  toIntakeDate,
 } from './intake-deadline.js';
 
 export const ADMISSIONS_CACHE_PATTERN = 'admissions:*';
+/** One school's detail page lists its rounds, so a write here drops it too. */
+const UNIVERSITY_DETAIL_CACHE_PATTERN = 'university:*';
+
+const DUPLICATE_INTAKE_MESSAGE = 'Тухайн түвшний энэ элсэлтийн улирал аль хэдийн бүртгэгдсэн байна.';
 
 const LIST_CACHE_TTL_MS = 60_000;
 const FACETS_CACHE_TTL_MS = 300_000;
 
-/** The school columns an admissions row carries — the public catalogue card. */
-const UNIVERSITY_CARD = {
-  id: true,
-  slug: true,
-  nameMn: true,
-  nameEn: true,
-  nameKo: true,
-  type: true,
-  cityMn: true,
-  regionMn: true,
-  regionEn: true,
-  foundedYear: true,
-  studentsTotal: true,
-  logoPath: true,
-  shortIntroMn: true,
-  acceptsLanguagePrep: true,
-  isGksEligible: true,
-  livingCost: true,
-  theKoreaRank: true,
-  theWorldRank: true,
-  theRankYear: true,
-} satisfies Prisma.UniversitySelect;
+/**
+ * The school columns an admissions row carries — the public catalogue card,
+ * shared with `UniversitiesService` so the two payloads cannot drift.
+ */
+const UNIVERSITY_CARD = UNIVERSITY_CARD_FIELDS;
 
-const INTAKE_FIELDS = {
+/**
+ * The intake columns every screen reads. Exported because the catalogue detail
+ * page lists a school's rounds too, and a second copy of this list is how a
+ * column added here turns into a blank date over there.
+ */
+export const INTAKE_FIELDS = {
   id: true,
   universityId: true,
   level: true,
@@ -84,30 +85,57 @@ const INTAKE_FIELDS = {
   verifiedAt: true,
 } satisfies Prisma.IntakeTermSelect;
 
+/** The dates an override may carry — `null` on any of them means "use the term's". */
+const OVERRIDE_DATE_FIELDS = {
+  openAt: true,
+  applicationDeadline: true,
+  internalDeadline: true,
+  internalDeadlineIsManual: true,
+  classStartDate: true,
+} satisfies Prisma.IntakeProgramOverrideSelect;
+
+const OVERRIDE_FIELDS = {
+  id: true,
+  programId: true,
+  ...OVERRIDE_DATE_FIELDS,
+  quota: true,
+  note: true,
+  program: { select: { nameMn: true } },
+} satisfies Prisma.IntakeProgramOverrideSelect;
+
 const ADMIN_INTAKE_FIELDS = {
   ...INTAKE_FIELDS,
   verifiedBy: { select: { id: true, name: true } },
-  programOverrides: {
-    orderBy: { createdAt: 'asc' },
-    select: {
-      id: true,
-      programId: true,
-      openAt: true,
-      applicationDeadline: true,
-      internalDeadline: true,
-      internalDeadlineIsManual: true,
-      classStartDate: true,
-      quota: true,
-      note: true,
-      program: { select: { nameMn: true } },
-    },
-  },
+  programOverrides: { orderBy: { createdAt: 'asc' }, select: OVERRIDE_FIELDS },
   _count: { select: { cases: true, applications: true } },
 } satisfies Prisma.IntakeTermSelect;
 
 type IntakeRow = Prisma.IntakeTermGetPayload<{ select: typeof INTAKE_FIELDS }>;
 type UniversityCardRow = Prisma.UniversityGetPayload<{ select: typeof UNIVERSITY_CARD }>;
 type AdminIntakeRow = Prisma.IntakeTermGetPayload<{ select: typeof ADMIN_INTAKE_FIELDS }>;
+type OverrideRow = Prisma.IntakeProgramOverrideGetPayload<{ select: typeof OVERRIDE_FIELDS }>;
+
+/**
+ * "This round has not already happened", for a round with no deadline recorded.
+ *
+ * Its class start if it has one, otherwise the year and month it is named for —
+ * a round is entered against a month, so the month is always something to floor
+ * on even when every date is still blank.
+ */
+function notPastWhere(now: Date): Prisma.IntakeTermWhereInput {
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth() + 1;
+
+  return {
+    OR: [
+      { classStartDate: { gte: now } },
+      {
+        classStartDate: null,
+        OR: [{ year: { gt: year } }, { year, month: { gte: month } }],
+      },
+    ],
+  };
+}
 
 const ORDER_BY: Record<AdmissionSort, (order: Prisma.SortOrder) => Prisma.IntakeTermOrderByWithRelationInput[]> = {
   // The default. A null deadline is not "soonest" — an unknown date sorts last
@@ -180,10 +208,7 @@ export class AdmissionsService {
           this.prisma.intakeTerm.groupBy({ by: ['level'], where, _count: { _all: true } }),
           this.prisma.intakeTerm.groupBy({ by: ['month'], where, _count: { _all: true } }),
           this.prisma.intakeTerm.groupBy({ by: ['year'], where, _count: { _all: true } }),
-          this.prisma.intakeTerm.findMany({
-            where,
-            select: { university: { select: { regionEn: true, regionMn: true } } },
-          }),
+          this.prisma.intakeTerm.groupBy({ by: ['universityId'], where, _count: { _all: true } }),
           this.prisma.intakeTerm.count({
             where: {
               ...where,
@@ -192,12 +217,22 @@ export class AdmissionsService {
           }),
         ]);
 
+        // Regions cannot be grouped through the relation, so the per-school
+        // counts are rolled up here — the same pattern as `ProgramsService`,
+        // and a grouped count rather than a row per published intake.
+        const schools = await this.prisma.university.findMany({
+          where: { id: { in: regions.map((row) => row.universityId) } },
+          select: { id: true, regionEn: true, regionMn: true },
+        });
+        const regionOf = new Map(schools.map((row) => [row.id, row]));
+
         const regionCounts = new Map<string, { label: string; count: number }>();
         for (const row of regions) {
-          const key = row.university.regionEn;
-          const entry = regionCounts.get(key) ?? { label: row.university.regionMn, count: 0 };
-          entry.count += 1;
-          regionCounts.set(key, entry);
+          const school = regionOf.get(row.universityId);
+          if (!school) continue;
+          const entry = regionCounts.get(school.regionEn) ?? { label: school.regionMn, count: 0 };
+          entry.count += row._count._all;
+          regionCounts.set(school.regionEn, entry);
         }
 
         return {
@@ -306,7 +341,12 @@ export class AdmissionsService {
     });
 
     const floor = options.notBefore ?? null;
+    // Never answer with a month that has already begun. The planner asks for
+    // the first stage with no floor of its own, and "your earliest start is
+    // March 2026" read in September is worse than no answer at all.
+    const currentMonth = now.getUTCFullYear() * 12 + now.getUTCMonth();
     for (const group of groups) {
+      if (group.year * 12 + (group.month - 1) < currentMonth) continue;
       // Compare on the first of the month at noon UTC, the same instant the
       // planner's calendar fallback uses, so the two agree on "after".
       const monthStart = new Date(Date.UTC(group.year, group.month - 1, 1, 12));
@@ -371,17 +411,30 @@ export class AdmissionsService {
       where: { universityId: dto.universityId, level: dto.level, year: dto.year, month: dto.month },
       select: { id: true },
     });
-    if (duplicate) {
-      throw new ConflictException('Тухайн түвшний энэ элсэлтийн улирал аль хэдийн бүртгэгдсэн байна.');
-    }
+    if (duplicate) throw new ConflictException(DUPLICATE_INTAKE_MESSAGE);
 
-    const row = await this.prisma.intakeTerm.create({
-      data: await this.buildWriteData(dto, actorId, { isCreate: true }),
-      select: ADMIN_INTAKE_FIELDS,
-    });
+    const data = await this.buildWriteData(dto, actorId, { isCreate: true });
+    // The check above is a courtesy; the unique constraint is the guarantee.
+    // Two tabs a second apart both pass it, and the loser should see the same
+    // Mongolian 409 as everyone else rather than a raw Prisma error.
+    const row = await this.runOrConflict(() =>
+      this.prisma.intakeTerm.create({ data, select: ADMIN_INTAKE_FIELDS }),
+    );
 
     await this.invalidate(university.slug);
     return this.serializeAdmin(row, new Date());
+  }
+
+  /** Turns the unique-constraint violation on `(university, level, year, month)` into a 409. */
+  private async runOrConflict<T>(write: () => Promise<T>): Promise<T> {
+    try {
+      return await write();
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException(DUPLICATE_INTAKE_MESSAGE);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -393,10 +446,17 @@ export class AdmissionsService {
   async createMany(dto: BulkCreateIntakeTermsDto, actorId: string | null) {
     if (!dto.intakes.length) throw new BadRequestException('Нэмэх элсэлт сонгогдоогүй байна.');
 
+    // The check the comment above promised and the method never made: without
+    // it a batch repeating a round already in the table came back as a raw
+    // Prisma error, and one repeated twice inside the batch did too.
+    await this.assertNoDuplicates(dto.intakes);
+
     const data = await Promise.all(dto.intakes.map((intake) => this.buildWriteData(intake, actorId, { isCreate: true })));
 
-    const created = await this.prisma.$transaction(
-      data.map((row) => this.prisma.intakeTerm.create({ data: row, select: ADMIN_INTAKE_FIELDS })),
+    const created = await this.runOrConflict(() =>
+      this.prisma.$transaction(
+        data.map((row) => this.prisma.intakeTerm.create({ data: row, select: ADMIN_INTAKE_FIELDS })),
+      ),
     );
 
     const slugs = await this.prisma.university.findMany({
@@ -475,7 +535,7 @@ export class AdmissionsService {
   async upsertOverride(intakeId: string, dto: UpsertIntakeProgramOverrideDto) {
     const intake = await this.prisma.intakeTerm.findUnique({
       where: { id: intakeId },
-      select: { universityId: true, applicationDeadline: true, university: { select: { slug: true } } },
+      select: { universityId: true, university: { select: { slug: true } } },
     });
     if (!intake) throw new NotFoundException('Элсэлтийн улирал олдсонгүй.');
 
@@ -487,12 +547,18 @@ export class AdmissionsService {
 
     const leadDays = await this.config.getInternalLeadDays();
     const applicationDeadline = this.toDate(dto.applicationDeadline);
-    // A deadline the reviewer typed freezes; otherwise derive it from whichever
-    // school deadline applies — the override's, or the term's.
+    // A deadline the reviewer typed freezes. Otherwise it is derived only from
+    // the override's *own* school deadline: deriving it from the term's and
+    // storing the result leaves a snapshot nothing recomputes, so the next
+    // change to the term's date or to the lead time loses to a stale copy.
+    // `null` here means "fall through to the term", which is what §3.2 says.
     const manual = dto.internalDeadline !== undefined && dto.internalDeadline !== null;
-    const internalDeadline = manual
-      ? this.toDate(dto.internalDeadline)
-      : computeInternalDeadline(applicationDeadline ?? intake.applicationDeadline, leadDays);
+    const internalDeadline = resolveOverrideInternalDeadline({
+      applicationDeadline,
+      internalDeadline: this.toDate(dto.internalDeadline),
+      internalDeadlineIsManual: manual,
+      leadDays,
+    });
 
     const data = {
       openAt: this.toDate(dto.openAt),
@@ -508,20 +574,11 @@ export class AdmissionsService {
       where: { intakeId_programId: { intakeId, programId: dto.programId } },
       update: data,
       create: { intakeId, programId: dto.programId, ...data },
-      select: {
-        id: true,
-        programId: true,
-        openAt: true,
-        applicationDeadline: true,
-        internalDeadline: true,
-        internalDeadlineIsManual: true,
-        classStartDate: true,
-        quota: true,
-        note: true,
-        program: { select: { nameMn: true } },
-      },
+      select: OVERRIDE_FIELDS,
     });
 
+    // The override moved this programme's deadline, so the cases on it move too.
+    await this.applyDeadlineToCases(intakeId, dto.programId);
     await this.invalidate(intake.university.slug);
     return this.serializeOverride(override);
   }
@@ -529,11 +586,13 @@ export class AdmissionsService {
   async removeOverride(intakeId: string, overrideId: string): Promise<void> {
     const override = await this.prisma.intakeProgramOverride.findFirst({
       where: { id: overrideId, intakeId },
-      select: { id: true, intake: { select: { university: { select: { slug: true } } } } },
+      select: { id: true, programId: true, intake: { select: { university: { select: { slug: true } } } } },
     });
     if (!override) throw new NotFoundException('Хөтөлбөрийн онцгой хугацаа олдсонгүй.');
 
     await this.prisma.intakeProgramOverride.delete({ where: { id: overrideId } });
+    // The programme is back on the term's calendar, so its cases are too.
+    await this.applyDeadlineToCases(intakeId, override.programId);
     await this.invalidate(override.intake.university.slug);
   }
 
@@ -553,6 +612,7 @@ export class AdmissionsService {
     universityId: string | null | undefined,
     serviceType: ServiceType,
     now: Date = new Date(),
+    programId?: string | null,
   ) {
     const intake = await this.prisma.intakeTerm.findUnique({ where: { id: intakeId }, select: INTAKE_FIELDS });
     if (!intake) throw new NotFoundException('Сонгосон элсэлтийн улирал олдсонгүй.');
@@ -565,11 +625,44 @@ export class AdmissionsService {
       throw new BadRequestException('Сонгосон элсэлтийн түвшин үйлчилгээний төрөлтэй тохирохгүй байна.');
     }
 
-    if (!isIntakeSelectable(intake, intake.status, now)) {
+    // A programme on its own calendar closes on its own date, and refusing or
+    // accepting on the term's would be the wrong answer either way (§3.2).
+    const dates = resolveIntakeDates(intake, await this.overrideDates(intakeId, programId));
+    if (!isIntakeSelectable(dates, intake.status, now)) {
       throw new BadRequestException('Энэ элсэлтийн бүртгэл хаагдсан байна. Өөр элсэлтийн улирал сонгоно уу.');
     }
 
-    return intake;
+    return { ...intake, ...dates };
+  }
+
+  /**
+   * The dates an override supplies for one programme, or `null` when the
+   * programme runs to the term's own calendar (which is the normal case).
+   */
+  private async overrideDates(
+    intakeId: string,
+    programId: string | null | undefined,
+  ): Promise<Partial<IntakeDateFields> | null> {
+    if (!programId) return null;
+    return this.prisma.intakeProgramOverride.findUnique({
+      where: { intakeId_programId: { intakeId, programId } },
+      select: OVERRIDE_DATE_FIELDS,
+    });
+  }
+
+  /**
+   * Our deadline for one case: its round's, with its programme's override laid
+   * over. The one date documents, countdowns and reminders are driven to.
+   */
+  async resolveCaseDeadline(caseId: string): Promise<Date | null> {
+    const row = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      select: { intakeId: true, programId: true, intake: { select: INTAKE_FIELDS } },
+    });
+    if (!row?.intakeId || !row.intake) return null;
+
+    const override = await this.overrideDates(row.intakeId, row.programId);
+    return resolveIntakeDates(row.intake, override).internalDeadline;
   }
 
   /**
@@ -580,48 +673,79 @@ export class AdmissionsService {
    * the existing D-7/D-3/D-1 material reminders (1D-12): before this, a case
    * with an intake still had no dates on its documents at all.
    */
-  async applyDeadlineToCases(intakeId: string): Promise<number> {
-    const intake = await this.prisma.intakeTerm.findUnique({
-      where: { id: intakeId },
-      select: { internalDeadline: true },
-    });
-    if (!intake?.internalDeadline) return 0;
+  async applyDeadlineToCases(intakeId: string, onlyProgramId?: string | null): Promise<number> {
+    const [intake, overrides] = await Promise.all([
+      this.prisma.intakeTerm.findUnique({ where: { id: intakeId }, select: INTAKE_FIELDS }),
+      this.prisma.intakeProgramOverride.findMany({
+        where: { intakeId },
+        select: { programId: true, ...OVERRIDE_DATE_FIELDS },
+      }),
+    ]);
+    if (!intake) return 0;
 
-    const result = await this.prisma.caseDocument.updateMany({
-      where: {
-        deletedAt: null,
-        dueAt: null,
-        necessity: Necessity.REQUIRED,
-        status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
-        case: { intakeId },
-      },
-      data: { dueAt: intake.internalDeadline },
-    });
-
-    if (result.count) {
-      this.logger.log(`Элсэлтийн хугацаа ${result.count} материалын эцсийн огноог бөглөлөө (intake ${intakeId}).`);
+    // Narrowed to one programme after its override was written or dropped: the
+    // date that applies to it is the override's when there is one, and the
+    // term's the moment there is not.
+    if (onlyProgramId) {
+      const deadline = resolveIntakeDates(
+        intake,
+        overrides.find((override) => override.programId === onlyProgramId) ?? null,
+      ).internalDeadline;
+      return deadline ? this.fillDueDates({ intakeId, programId: onlyProgramId }, deadline) : 0;
     }
-    return result.count;
+
+    // One update per distinct deadline, not per case: every programme with its
+    // own calendar is one group, and everything else rides the term's date.
+    const overridden = overrides.map((override) => ({
+      programId: override.programId,
+      deadline: resolveIntakeDates(intake, override).internalDeadline,
+    }));
+    const groups: { where: Prisma.CaseWhereInput; deadline: Date | null }[] = [
+      {
+        where: {
+          intakeId,
+          ...(overridden.length
+            ? { OR: [{ programId: null }, { programId: { notIn: overridden.map((entry) => entry.programId) } }] }
+            : {}),
+        },
+        deadline: intake.internalDeadline,
+      },
+      ...overridden.map((entry) => ({
+        where: { intakeId, programId: entry.programId } satisfies Prisma.CaseWhereInput,
+        deadline: entry.deadline,
+      })),
+    ];
+
+    let count = 0;
+    for (const group of groups) {
+      if (!group.deadline) continue;
+      count += await this.fillDueDates(group.where, group.deadline);
+    }
+
+    if (count) {
+      this.logger.log(`Элсэлтийн хугацаа ${count} материалын эцсийн огноог бөглөлөө (intake ${intakeId}).`);
+    }
+    return count;
   }
 
   /** Same, for one case — called right after a case is pointed at an intake. */
   async applyDeadlineToCase(caseId: string): Promise<number> {
-    const row = await this.prisma.case.findUnique({
-      where: { id: caseId },
-      select: { intake: { select: { internalDeadline: true } } },
-    });
-    const deadline = row?.intake?.internalDeadline;
+    const deadline = await this.resolveCaseDeadline(caseId);
     if (!deadline) return 0;
+    return this.fillDueDates({ id: caseId }, deadline);
+  }
 
+  /** Only fills blanks — see `applyDeadlineToCases`. */
+  private async fillDueDates(caseWhere: Prisma.CaseWhereInput, dueAt: Date): Promise<number> {
     const result = await this.prisma.caseDocument.updateMany({
       where: {
-        caseId,
         deletedAt: null,
         dueAt: null,
         necessity: Necessity.REQUIRED,
         status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
+        case: caseWhere,
       },
-      data: { dueAt: deadline },
+      data: { dueAt },
     });
     return result.count;
   }
@@ -633,28 +757,39 @@ export class AdmissionsService {
    * `internalDeadlineIsManual` is for.
    */
   async recomputeInternalDeadlines(): Promise<number> {
-    const leadDays = await this.config.getInternalLeadDays();
+    const leadDays = Math.max(await this.config.getInternalLeadDays(), 0);
+    const lead = Prisma.sql`(${leadDays}::int * INTERVAL '1 day')`;
 
-    const rows = await this.prisma.intakeTerm.findMany({
-      where: { internalDeadlineIsManual: false, applicationDeadline: { not: null } },
-      select: { id: true, applicationDeadline: true, internalDeadline: true },
-    });
+    // One statement per table, not one per row: the catalogue is ~1,000 rounds
+    // and the pooler is ~115 ms away, so the loop this replaces took minutes
+    // and left half the catalogue on the old lead time when it timed out.
+    // Atomic for the same reason (CLAUDE.md, hard rule 8).
+    const [terms, overrides] = await this.prisma.$transaction([
+      this.prisma.$executeRaw`
+        UPDATE "intake_terms"
+           SET "internalDeadline" = "applicationDeadline" - ${lead}
+         WHERE "internalDeadlineIsManual" = false
+           AND "applicationDeadline" IS NOT NULL
+           AND "internalDeadline" IS DISTINCT FROM "applicationDeadline" - ${lead}
+      `,
+      // Overrides run to the same rule and were left out of it entirely, so a
+      // retuned lead time moved every round except the ones on their own
+      // calendar — which are the ones a deadline change matters most for.
+      this.prisma.$executeRaw`
+        UPDATE "intake_program_overrides"
+           SET "internalDeadline" = "applicationDeadline" - ${lead}
+         WHERE "internalDeadlineIsManual" = false
+           AND "applicationDeadline" IS NOT NULL
+           AND "internalDeadline" IS DISTINCT FROM "applicationDeadline" - ${lead}
+      `,
+    ]);
 
-    const changed = rows.flatMap((row) => {
-      const next = computeInternalDeadline(row.applicationDeadline, leadDays);
-      if (!next || next.getTime() === row.internalDeadline?.getTime()) return [];
-      return [{ id: row.id, internalDeadline: next }];
-    });
-
-    for (const row of changed) {
-      await this.prisma.intakeTerm.update({ where: { id: row.id }, data: { internalDeadline: row.internalDeadline } });
+    const changed = terms + overrides;
+    if (changed) {
+      await this.invalidateAll();
+      this.logger.log(`Дотоод эцсийн хугацаа ${changed} элсэлт дээр дахин бодогдлоо (${leadDays} хоног).`);
     }
-
-    if (changed.length) {
-      await this.cache.delByPattern(ADMISSIONS_CACHE_PATTERN);
-      this.logger.log(`Дотоод эцсийн хугацаа ${changed.length} элсэлт дээр дахин бодогдлоо (${leadDays} хоног).`);
-    }
-    return changed.length;
+    return changed;
   }
 
   /* --------------------------------------------------------------------- *
@@ -671,10 +806,15 @@ export class AdmissionsService {
    *
    * The cut-off is OUR deadline, not the school's: we take registrations for a
    * published round right up to it, and stop advertising the round once it has
-   * passed. A round whose deadline is unknown has no cut-off to apply.
+   * passed.
+   *
+   * A round whose deadline is unknown has no cut-off of its own, so it falls
+   * back to its class start and then to its own year and month: without that
+   * floor a round entered without dates stays "open" forever, and last March's
+   * is still listed, still selectable, and still answering the planner.
    */
   private stillOpenWhere(now: Date): Prisma.IntakeTermWhereInput['OR'] {
-    return [{ internalDeadline: null }, { internalDeadline: { gte: now } }];
+    return [{ internalDeadline: { gte: now } }, { internalDeadline: null, AND: [notPastWhere(now)] }];
   }
 
   private publishedWhere(now: Date): Prisma.IntakeTermWhereInput {
@@ -765,6 +905,30 @@ export class AdmissionsService {
    * minus the configured lead time. Sending `internalDeadline: null` explicitly
    * hands the row back to the automatic rule.
    */
+  /**
+   * Every round in a batch is new, and no two of them are the same round.
+   * Checked before anything is written so the reviewer sees one clear error
+   * rather than a half-imported year.
+   */
+  private async assertNoDuplicates(intakes: CreateIntakeTermDto[]): Promise<void> {
+    const key = (row: { universityId: string; level: ProgramLevel; year: number; month: number }) =>
+      `${row.universityId}:${row.level}:${row.year}:${row.month}`;
+
+    const seen = new Set<string>();
+    for (const intake of intakes) {
+      if (seen.has(key(intake))) throw new ConflictException(DUPLICATE_INTAKE_MESSAGE);
+      seen.add(key(intake));
+    }
+
+    const existing = await this.prisma.intakeTerm.findMany({
+      where: { OR: intakes.map(({ universityId, level, year, month }) => ({ universityId, level, year, month })) },
+      select: { universityId: true, level: true, year: true, month: true },
+    });
+    if (existing.some((row) => seen.has(key(row)))) {
+      throw new ConflictException(DUPLICATE_INTAKE_MESSAGE);
+    }
+  }
+
   private async buildWriteData(
     dto: CreateIntakeTermDto | UpdateIntakeTermDto,
     actorId: string | null,
@@ -839,8 +1003,12 @@ export class AdmissionsService {
     return data;
   }
 
+  /**
+   * Every date on this module's write path goes through here, so the admin form
+   * and the seed store the same instant for the same day (`toIntakeDate`).
+   */
   private toDate(value: string | null | undefined): Date | null {
-    return value ? new Date(value) : null;
+    return toIntakeDate(value);
   }
 
   /** A public list row: the round, its derived phase, and the school card. */
@@ -888,18 +1056,7 @@ export class AdmissionsService {
     };
   }
 
-  private serializeOverride(override: {
-    id: string;
-    programId: string;
-    openAt: Date | null;
-    applicationDeadline: Date | null;
-    internalDeadline: Date | null;
-    internalDeadlineIsManual: boolean;
-    classStartDate: Date | null;
-    quota: number | null;
-    note: string | null;
-    program: { nameMn: string };
-  }) {
+  private serializeOverride(override: OverrideRow) {
     const { program, ...rest } = override;
     return { ...rest, programNameMn: program.nameMn };
   }
@@ -908,10 +1065,22 @@ export class AdmissionsService {
    * Drops what a write invalidates: the admissions caches, plus the touched
    * school's catalogue detail — its page lists the intakes too.
    */
+  /**
+   * A catalogue-wide write: every school page lists its rounds, so there is no
+   * useful slug list to narrow to.
+   */
+  private async invalidateAll(): Promise<void> {
+    await Promise.all([
+      this.cache.delByPattern(ADMISSIONS_CACHE_PATTERN),
+      this.cache.delByPattern(UNIVERSITY_DETAIL_CACHE_PATTERN),
+      this.cache.delByPattern(UNIVERSITY_LIST_CACHE_PATTERN),
+    ]);
+  }
+
   private async invalidate(...slugs: string[]): Promise<void> {
     await Promise.all([
       this.cache.delByPattern(ADMISSIONS_CACHE_PATTERN),
-      ...[...new Set(slugs)].map((slug) => this.cache.del(`university:${slug}`)),
+      ...[...new Set(slugs)].map((slug) => this.cache.del(universityDetailCacheKey(slug))),
     ]);
   }
 }

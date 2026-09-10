@@ -179,7 +179,7 @@ async function submit() {
     formError.value =
       status === 429
         ? 'Хэт олон хүсэлт илгээгдлээ. Түр хүлээгээд дахин оролдоно уу.'
-        : 'Хүсэлт илгээхэд алдаа гарлаа. Утсаар холбогдоно уу: 7710-9000.';
+        : `Хүсэлт илгээхэд алдаа гарлаа. Утсаар холбогдоно уу: ${COMPANY.phoneLabel}.`;
   } finally {
     submitting.value = false;
   }
@@ -204,7 +204,7 @@ useSeoMeta({
         <h1 class="gks-lead__done-title">Хүсэлт хүлээн авлаа</h1>
         <p class="gks-lead__done-text">
           Манай зөвлөх ажлын 1 өдрийн дотор танай утсаар холбогдоно. Түргэн шаардлагатай бол
-          <strong class="gks-tnum">7710-9000</strong> дугаарт залгаарай.
+          <strong class="gks-tnum">{{ COMPANY.phoneLabel }}</strong> дугаарт залгаарай.
         </p>
         <div class="gks-lead__done-actions">
           <DsButton variant="secondary" @click="navigateTo('/universities')">Сургууль үзэх</DsButton>

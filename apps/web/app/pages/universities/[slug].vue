@@ -22,7 +22,23 @@ const { data: university, error } = await useApiFetch<UniversityDetail>(
   () => `/universities/${slug.value}`,
 );
 
-if (error.value || !university.value) {
+/**
+ * Only a real 404 is "no such school".
+ *
+ * Turning every failure into one told a visitor whose request timed out that
+ * the school does not exist, and told a crawler that an indexed URL is gone —
+ * for a page that was fine a second earlier. A failure with any other status,
+ * or none at all, is ours and is reported as ours, so the URL stays alive.
+ */
+if (error.value) {
+  const status = apiErrorStatus(error.value);
+  throw createError(
+    status === 404
+      ? { statusCode: 404, statusMessage: 'Сургууль олдсонгүй', fatal: true }
+      : { statusCode: 503, statusMessage: 'Сургуулийн мэдээллийг түр ачаалж чадсангүй', fatal: true },
+  );
+}
+if (!university.value) {
   throw createError({ statusCode: 404, statusMessage: 'Сургууль олдсонгүй', fatal: true });
 }
 
@@ -33,9 +49,12 @@ const quality = computed(() => uni.value.quality ?? {});
 const { ensureLoaded, isSaved, toggle: toggleSaved } = useSavedUniversities();
 onMounted(ensureLoaded);
 const savePending = ref(false);
+/** A star that failed to save has to say so; silence reads as "saved". */
+const saveError = ref<string | null>(null);
 const meta = useMetaTracking();
 async function onToggleSaved() {
   savePending.value = true;
+  saveError.value = null;
   const wasSaved = isSaved(uni.value.id);
   try {
     await toggleSaved(uni.value.id);
@@ -48,6 +67,8 @@ async function onToggleSaved() {
         content_name: uni.value.nameMn,
       });
     }
+  } catch (e) {
+    saveError.value = apiErrorMessage(e, 'Хадгалж чадсангүй');
   } finally {
     savePending.value = false;
   }
@@ -207,21 +228,6 @@ const nextIntake = computed<IntakeTerm | null>(() => {
 const intakeNotes = computed(() => [
   ...new Set(uni.value.intakes.map((intake) => intake.note).filter((note): note is string => !!note)),
 ]);
-
-function countdownLabel(days: number | null): string {
-  if (days === null) return 'Хугацаа тодорхойгүй';
-  if (days < 0) return 'Хугацаа дууссан';
-  if (days === 0) return 'Өнөөдөр хаагдана';
-  return `${days} хоног үлдлээ`;
-}
-
-/** Urgency, not status — the row already says whether registration is open. */
-function countdownTone(days: number | null): BadgeTone {
-  if (days === null || days < 0) return 'neutral';
-  if (days <= 7) return 'danger';
-  if (days <= 21) return 'warning';
-  return 'success';
-}
 
 /* -------------------------------------------------------------------------- *
  * Анги — the school's own structure: танхим (단과대학) → анги.
@@ -476,6 +482,8 @@ useSeoMeta({
         </div>
       </div>
 
+      <p v-if="saveError" class="gks-uni__save-error">{{ saveError }}</p>
+
       <p v-if="lede" class="gks-uni__lede">{{ lede }}</p>
 
       <div v-if="heroStats.length" class="gks-uni__stats">
@@ -510,8 +518,8 @@ useSeoMeta({
             {{ INTAKE_MONTH_LABELS[nextIntake.month] ?? `${nextIntake.month}-р сар` }}
           </span>
         </div>
-        <DsBadge :tone="countdownTone(nextIntake.daysUntilInternalDeadline)">
-          {{ countdownLabel(nextIntake.daysUntilInternalDeadline) }}
+        <DsBadge :tone="deadlineCountdownTone(nextIntake.daysUntilInternalDeadline)">
+          {{ deadlineCountdownLabel(nextIntake.daysUntilInternalDeadline) }}
         </DsBadge>
       </div>
 
@@ -547,7 +555,7 @@ useSeoMeta({
                     {{ formatNumericDateUtc(term.internalDeadline) }}
                   </span>
                   <small v-if="term.phase !== 'CLOSED'" class="gks-uni__cell-note">
-                    {{ countdownLabel(term.daysUntilInternalDeadline) }}
+                    {{ deadlineCountdownLabel(term.daysUntilInternalDeadline) }}
                   </small>
                 </td>
                 <td class="gks-tnum">{{ formatNumericDateUtc(term.classStartDate) }}</td>
@@ -605,11 +613,9 @@ useSeoMeta({
                 {{ formatKrw(annualTuitionKrw(program)) }}
               </strong>
               <strong v-else class="gks-uni__unknown">{{ UNKNOWN_LABEL }}</strong>
-              <small v-if="annualTuitionKrw(program) !== null">
-                жилд · {{ tuitionYearLabel(program.tuitionYear) }}
-              </small>
+              <small v-if="annualTuitionKrw(program) !== null">жилд</small>
               <small v-if="program.tuitionPerTermKrw" class="gks-tnum">
-                улирал {{ formatKrw(program.tuitionPerTermKrw) }}
+                улирал {{ formatKrw(program.tuitionPerTermKrw) }} · {{ tuitionTermsNote(program.level) }}
               </small>
               <small v-if="program.admissionFeeKrw" class="gks-tnum">
                 элсэлтийн хураамж {{ formatKrw(program.admissionFeeKrw) }}
@@ -773,6 +779,7 @@ useSeoMeta({
 .gks-uni__cta { display: flex; flex-direction: column; align-items: stretch; gap: var(--sp-2); }
 
 .gks-uni__lede {
+.gks-uni__save-error { color: var(--danger-fg); font-size: var(--fs-body-sm); }
   max-width: var(--container-prose);
   margin-top: var(--sp-5);
   line-height: var(--lh-body);

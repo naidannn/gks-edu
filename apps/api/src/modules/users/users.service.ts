@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { hash } from 'bcryptjs';
+import { DOC_STAFF_ROLES, activeStaffWhere } from '../../common/constants/roles.js';
+import { hashPassword } from '../../common/utils/hashing.js';
 import { Prisma, Role } from '../../prisma/client.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -18,7 +19,6 @@ const PUBLIC_FIELDS = {
 } satisfies Prisma.UserSelect;
 
 const USER_CACHE_TTL_MS = 60_000;
-const BCRYPT_ROUNDS = 12;
 
 @Injectable()
 export class UsersService {
@@ -58,27 +58,55 @@ export class UsersService {
    */
   async findStaff() {
     return this.prisma.user.findMany({
-      where: { isActive: true, role: { in: [Role.ADMIN, Role.CONSULTANT, Role.DOC_OFFICER] } },
+      where: activeStaffWhere(),
       select: { id: true, name: true, email: true, role: true },
       orderBy: { name: 'asc' },
     });
   }
 
+  /**
+   * The profile an account reads about itself, plus two flags saying *how* it
+   * signs in — never with what. Without them the portal cannot tell a
+   * Google-only account from one with a password, so it offers "change
+   * password" to somebody who has none and "link Google" to somebody already
+   * linked (1N-03, 1N-43).
+   */
   async findOne(id: string) {
     return this.cache.wrap(
       `user:${id}`,
       async () => {
-        const user = await this.prisma.user.findUnique({ where: { id }, select: PUBLIC_FIELDS });
+        const user = await this.prisma.user.findUnique({
+          where: { id },
+          select: { ...PUBLIC_FIELDS, password: true, googleId: true },
+        });
         if (!user) {
           throw new NotFoundException(`Хэрэглэгч ${id} олдсонгүй`);
         }
-        return user;
+        const { password, googleId, ...rest } = user;
+        return { ...rest, hasPassword: password !== null, hasGoogle: googleId !== null };
       },
       USER_CACHE_TTL_MS,
     );
   }
 
+  /**
+   * The profile form. The address is the account's identity — it is what
+   * `login`, the password reset and the Google link all match on — so a change
+   * to it is an admin action (the controller enforces that), and even then it
+   * has to be free. Without the check a P2002 would surface as "ийм утгатай
+   * бичлэг бүртгэгдсэн", which does not name the field.
+   */
   async update(id: string, dto: UpdateUserDto) {
+    if (dto.email) {
+      const clash = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+        select: { id: true },
+      });
+      if (clash && clash.id !== id) {
+        throw new ConflictException('Энэ имэйлээр бүртгэл аль хэдийн үүссэн байна');
+      }
+    }
+
     const user = await this.prisma.user.update({
       where: { id },
       data: dto,
@@ -89,9 +117,16 @@ export class UsersService {
     return user;
   }
 
-  async remove(id: string): Promise<void> {
-    await this.prisma.user.delete({ where: { id } });
-    await this.cache.del(`user:${id}`);
+  /**
+   * `DELETE /users/:id` (1N-05). It used to be a bare `user.delete`: no guard
+   * against the caller erasing themselves or the last admin, and no check that
+   * the row had left a trace — so a client with a service in flight came back
+   * as Prisma's restrict violation, which the error filter words as "Холбогдох
+   * бичлэг олдсонгүй", a 400 that reads like the account never existed. It goes
+   * through the same rules as the staff register now.
+   */
+  async remove(id: string, actorId: string): Promise<void> {
+    await this.deleteAccount(id, actorId);
   }
 
   // ─── Staff administration (1G-12) ─────────────────────────────────────────
@@ -100,7 +135,7 @@ export class UsersService {
   async listStaff(includeInactive = true) {
     const rows = await this.prisma.user.findMany({
       where: {
-        role: { in: STAFF_ROLE_VALUES },
+        role: { in: [...DOC_STAFF_ROLES] },
         ...(includeInactive ? {} : { isActive: true }),
       },
       select: {
@@ -159,7 +194,7 @@ export class UsersService {
         phone: dto.phone?.trim(),
         role: dto.role,
         ...(dto.password
-          ? { password: await hash(dto.password, BCRYPT_ROUNDS), claimedAt: new Date() }
+          ? { password: await hashPassword(dto.password), claimedAt: new Date() }
           : {}),
       },
       select: PUBLIC_FIELDS,
@@ -191,7 +226,7 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id },
       data: {
-        password: await hash(password, BCRYPT_ROUNDS),
+        password: await hashPassword(password),
         claimTokenHash: null,
         claimTokenExpiresAt: null,
         claimedAt: target.claimedAt ?? new Date(),
@@ -257,14 +292,35 @@ export class UsersService {
    * audit log, the account is history and can only be deactivated.
    */
   async deleteStaff(id: string, actorId: string): Promise<void> {
+    await this.deleteAccount(id, actorId, assertStaffTarget);
+  }
+
+  /**
+   * The one path that erases an account — the staff register and the generic
+   * `DELETE /users/:id` both come through here, so there is one answer to "may
+   * this row go?" rather than two that drift (1N-05).
+   *
+   * `assertTarget` is what still differs: the staff register refuses to touch a
+   * client, while the admin route may erase either.
+   */
+  private async deleteAccount(
+    id: string,
+    actorId: string,
+    assertTarget?: (role: Role) => void,
+  ): Promise<void> {
     if (id === actorId) throw new ConflictException('Өөрийн бүртгэлээ устгах боломжгүй');
 
     const target = await this.prisma.user.findUnique({
       where: { id },
-      select: { role: true, isActive: true, _count: { select: STAFF_TRACE_COUNTS } },
+      select: {
+        role: true,
+        isActive: true,
+        client: { select: { code: true } },
+        _count: { select: STAFF_TRACE_COUNTS },
+      },
     });
     if (!target) throw new NotFoundException(`Хэрэглэгч ${id} олдсонгүй`);
-    assertStaffTarget(target.role);
+    assertTarget?.(target.role);
 
     if (target.role === Role.ADMIN && target.isActive) {
       const admins = await this.prisma.user.count({ where: { role: Role.ADMIN, isActive: true } });
@@ -273,7 +329,16 @@ export class UsersService {
 
     if (traceTotal(target._count) > 0) {
       throw new ConflictException(
-        'Энэ ажилтан системд ажлын түүх үлдээсэн тул устгах боломжгүй — идэвхгүй болгоно уу',
+        'Энэ бүртгэл системд ажлын түүх үлдээсэн тул устгах боломжгүй — идэвхгүй болгоно уу',
+      );
+    }
+
+    // `Client.user` is `onDelete: Cascade`, so erasing the account would take
+    // the client record — name, register number, guardian — with it silently.
+    // A registered client is deactivated, never deleted.
+    if (target.client) {
+      throw new ConflictException(
+        `Энэ бүртгэлд ${target.client.code} үйлчлүүлэгч холбогдсон тул устгах боломжгүй — идэвхгүй болгоно уу`,
       );
     }
 
@@ -316,18 +381,15 @@ function traceTotal(counts: StaffTraceCounts): number {
   return Object.values(counts).reduce((total, count) => total + count, 0);
 }
 
-/** `USER` is what a client is; it can never be granted as a staff role. */
-const STAFF_ROLE_VALUES: Role[] = [Role.ADMIN, Role.CONSULTANT, Role.DOC_OFFICER];
-
 function assertStaffRole(role: Role): void {
-  if (!STAFF_ROLE_VALUES.includes(role)) {
+  if (!DOC_STAFF_ROLES.includes(role)) {
     throw new BadRequestException('Зөвхөн ADMIN, CONSULTANT, DOC_OFFICER эрх олгоно');
   }
 }
 
 /** This register manages staff only — a client is edited from the client screens. */
 function assertStaffTarget(role: Role): void {
-  if (!STAFF_ROLE_VALUES.includes(role)) {
+  if (!DOC_STAFF_ROLES.includes(role)) {
     throw new BadRequestException('Энэ бүртгэл системийн хэрэглэгчийн бүртгэл биш');
   }
 }

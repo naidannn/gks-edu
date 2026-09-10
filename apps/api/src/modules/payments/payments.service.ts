@@ -1,7 +1,8 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Queue } from 'bullmq';
+import { assertOwnerOrCrm } from '../../common/auth/assert-owner.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { isCrmStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
@@ -18,8 +19,14 @@ import {
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { StorageService } from '../../storage/storage.service.js';
-import { QPAY_POLL_INTERVAL_MS, QPAY_POLL_LIMIT, QPAY_POLL_QUEUE } from '../../queue/queue.constants.js';
+import {
+  QPAY_POLL_INTERVAL_MS,
+  QPAY_POLL_LIMIT,
+  QPAY_POLL_QUEUE,
+  QPAY_POLL_TIMEOUT_MS,
+} from '../../queue/queue.constants.js';
 import { CasesService } from '../cases/cases.service.js';
+import { CASE_STAGE_LABELS } from '../cases/case-stage-labels.js';
 import { PAYMENT_KIND_LABELS, PAYMENT_METHOD_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
@@ -31,6 +38,8 @@ import { PricingService } from '../pricing/pricing.service.js';
 import type { CreatePaymentDto } from './dto/create-payment.dto.js';
 import type { QueryPaymentsDto } from './dto/query-payments.dto.js';
 import type { RegisterManualPaymentDto } from './dto/register-manual-payment.dto.js';
+import { toClientPayment } from './client-payment.select.js';
+import type { QpayCheckResult } from './qpay-client.service.js';
 import { QpayClientService } from './qpay-client.service.js';
 
 
@@ -39,6 +48,13 @@ const PROGRESS_TARGET: Partial<Record<PaymentKind, CaseStage>> = {
   [PaymentKind.PREPAYMENT]: CaseStage.PREPAYMENT_PAID,
   [PaymentKind.BALANCE]: CaseStage.BALANCE_PAID,
 };
+
+/** A debt is settled or still owed; anything else is history and never blocks a new invoice. */
+const LIVE_STATUSES: PaymentStatus[] = [PaymentStatus.PENDING, PaymentStatus.PAID];
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
+}
 
 @Injectable()
 export class PaymentsService {
@@ -63,38 +79,64 @@ export class PaymentsService {
   async createForCase(caseId: string, dto: CreatePaymentDto, actor: AuthenticatedUser) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, include: { contract: true } });
     if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
-    if (!isCrmStaff(actor.role) && gksCase.userId !== actor.id) {
-      throw new ForbiddenException('Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
-    }
+    assertOwnerOrCrm(gksCase.userId, actor, 'Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
     const contract = await this.assertReadyFor(gksCase, dto.kind);
 
-    const existing = await this.prisma.payment.findFirst({ where: { caseId, kind: dto.kind } });
+    const existing = await this.openPayment(caseId, dto.kind);
     if (existing?.status === PaymentStatus.PAID) {
-      throw new BadRequestException(`${dto.kind} төлбөр аль хэдийн төлөгдсөн байна`);
+      throw new BadRequestException(`${PAYMENT_KIND_LABELS[dto.kind]} аль хэдийн төлөгдсөн байна`);
     }
-    if (existing?.status === PaymentStatus.PENDING) {
-      return existing; // idempotent — same invoice/QR handed back rather than creating a duplicate
+    // A PENDING row with an invoice behind it is the same debt, so the same QR
+    // is handed back. One without an invoice is the wreckage of a QPay outage:
+    // there is nothing for the client to scan, so the row is reused rather than
+    // returned forever (1N-09).
+    if (existing?.status === PaymentStatus.PENDING && existing.qpayInvoiceId) {
+      return this.forActor(existing, actor);
     }
 
     const amountMnt = this.resolveAmount(dto.kind, contract);
 
-    const payment = await this.prisma.payment.create({
-      data: {
-        caseId,
-        kind: dto.kind,
-        amountMnt,
-        status: PaymentStatus.PENDING,
-        dueAt: await this.dueAtFor(gksCase.serviceType),
-      },
-    });
+    let payment = existing;
+    if (!payment) {
+      try {
+        payment = await this.prisma.payment.create({
+          data: {
+            caseId,
+            kind: dto.kind,
+            amountMnt,
+            status: PaymentStatus.PENDING,
+            dueAt: await this.dueAtFor(gksCase.serviceType),
+          },
+        });
+      } catch (error) {
+        // The partial unique index on (caseId, kind) WHERE PENDING: a double
+        // click, or the client and their consultant pressing at once. Whoever
+        // lost reads the row the winner made instead of minting a second QR.
+        if (!isUniqueViolation(error)) throw error;
+        const raced = await this.openPayment(caseId, dto.kind);
+        if (raced?.status === PaymentStatus.PENDING) return this.forActor(raced, actor);
+        throw new ConflictException(`${PAYMENT_KIND_LABELS[dto.kind]} дээр нэхэмжлэх үүсгэх явцад зөрчил гарлаа — дахин оролдоно уу`);
+      }
+    }
 
     const callbackUrl = `${this.config.getOrThrow<string>('qpay.callbackUrl')}?paymentId=${payment.id}`;
-    const invoice = await this.qpay.createInvoice({
-      invoiceNo: payment.id,
-      amount: amountMnt,
-      description: `${gksCase.code} - ${dto.kind}`,
-      callbackUrl,
-    });
+    let invoice;
+    try {
+      invoice = await this.qpay.createInvoice({
+        invoiceNo: payment.id,
+        amount: amountMnt,
+        description: `${gksCase.code} - ${dto.kind}`,
+        callbackUrl,
+      });
+    } catch (error) {
+      // QPay refused, and a PENDING row with no invoice behind it holds the
+      // (caseId, kind) slot against every later attempt. Failing it frees the
+      // slot, so "try again" is a real answer.
+      await this.prisma.payment
+        .updateMany({ where: { id: payment.id, status: PaymentStatus.PENDING }, data: { status: PaymentStatus.FAILED } })
+        .catch(() => undefined);
+      throw error;
+    }
 
     const updated = await this.prisma.payment.update({
       where: { id: payment.id },
@@ -116,7 +158,12 @@ export class PaymentsService {
       actionSource: 'website',
     });
 
-    return updated;
+    return this.forActor(updated, actor);
+  }
+
+  /** The invoice as the caller may see it — the same narrowing `findOne` does (1N-04). */
+  private forActor<T extends Parameters<typeof toClientPayment>[0]>(payment: T, actor: AuthenticatedUser) {
+    return isCrmStaff(actor.role) ? payment : toClientPayment(payment);
   }
 
   // ─── Registering money that never went through QPay (1C-27) ────────────────
@@ -143,9 +190,9 @@ export class PaymentsService {
       throw new BadRequestException('Ирээдүйн огноогоор төлбөр бүртгэх боломжгүй');
     }
 
-    const existing = await this.prisma.payment.findFirst({ where: { caseId, kind: dto.kind } });
+    const existing = await this.openPayment(caseId, dto.kind);
     if (existing?.status === PaymentStatus.PAID) {
-      throw new BadRequestException(`${dto.kind} төлбөр аль хэдийн төлөгдсөн байна`);
+      throw new BadRequestException(`${PAYMENT_KIND_LABELS[dto.kind]} аль хэдийн төлөгдсөн байна`);
     }
 
     // Uploaded before the write so a rejected file (wrong type, too big) fails
@@ -176,7 +223,26 @@ export class PaymentsService {
           },
         });
 
+    // The client is holding a QR for money they have just handed over at the
+    // desk. Left alive, it is scannable tomorrow and they pay the same debt
+    // twice — which §6.4 forbids (1N-10).
+    if (existing?.status === PaymentStatus.PENDING && existing.qpayInvoiceId) {
+      await this.qpay.cancelInvoice(existing.qpayInvoiceId);
+    }
+
     return this.confirmPayment(payment.id, { paidAt });
+  }
+
+  /**
+   * The live row for a debt, newest first: `EXPIRED`, `FAILED` and `REFUNDED`
+   * rows are history, and a refunded prepayment must not read as "already paid"
+   * (1N-08, 1N-09).
+   */
+  private openPayment(caseId: string, kind: PaymentKind) {
+    return this.prisma.payment.findFirst({
+      where: { caseId, kind, status: { in: LIVE_STATUSES } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   /** Signed download token for a manually attached receipt (§9). */
@@ -216,10 +282,15 @@ export class PaymentsService {
     };
   }
 
+  /**
+   * One payment. Staff see the row; the client who owes it sees the invoice —
+   * the note a staff member wrote at the desk, the receipt's storage path, who
+   * registered it and QPay's own payment id are all ours (1N-04).
+   */
   async findOne(id: string, user: AuthenticatedUser) {
     const payment = await this.getOrThrow(id);
     this.assertAccess(payment, user);
-    return payment;
+    return isCrmStaff(user.role) ? payment : toClientPayment(payment);
   }
 
   // ─── Webhook + polling (1C-13, 1C-14) — both funnel into `confirmPayment` ───
@@ -247,7 +318,7 @@ export class PaymentsService {
     if (payment.status !== PaymentStatus.PENDING || !payment.qpayInvoiceId) return { ok: true };
 
     const result = await this.qpay.checkPayment(payment.qpayInvoiceId);
-    if (result.paid) await this.confirmPayment(paymentId, { qpayPaymentId: result.qpayPaymentId });
+    await this.creditIfFullyPaid(payment, result);
     return { ok: true };
   }
 
@@ -260,7 +331,74 @@ export class PaymentsService {
     }
 
     const result = await this.qpay.checkPayment(payment.qpayInvoiceId);
-    if (result.paid) await this.confirmPayment(paymentId, { qpayPaymentId: result.qpayPaymentId });
+    if (result.paid) {
+      await this.creditIfFullyPaid(payment, result);
+      return;
+    }
+
+    // The schedule has run out. A PENDING row holds the (caseId, kind) slot, so
+    // leaving it there means the client can never be given a fresh QR — expire
+    // it instead, and take QPay's copy of the invoice down with it (1N-09).
+    if (Date.now() - payment.createdAt.getTime() > QPAY_POLL_TIMEOUT_MS) {
+      await this.expireInvoice(payment);
+    }
+  }
+
+  /**
+   * QPay says the invoice is paid — but not always for the full amount (1N-10).
+   * A short payment is reported and left PENDING rather than clearing a debt it
+   * does not cover; `confirmPayment` handles the other direction, a second QPay
+   * reference against a row already credited.
+   */
+  private async creditIfFullyPaid(
+    payment: { id: string; amountMnt: Prisma.Decimal; caseId: string },
+    result: QpayCheckResult,
+  ): Promise<void> {
+    if (!result.paid) return;
+
+    if (result.paidAmount !== undefined && result.paidAmount < Number(payment.amountMnt)) {
+      this.logger.warn(`QPay дутуу төлбөр: ${payment.id} — ${result.paidAmount}₮ / ${payment.amountMnt}₮`);
+      await this.slack.notify({
+        emoji: '⚠️',
+        title: 'QPay дутуу төлбөр ирлээ',
+        fields: [
+          { label: 'Төлбөр', value: payment.id },
+          { label: 'Ирсэн дүн', value: formatAmountMn(result.paidAmount) },
+          { label: 'Нэхэмжилсэн дүн', value: formatAmountMn(payment.amountMnt) },
+        ],
+        link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${payment.caseId}` },
+      });
+      return;
+    }
+
+    await this.confirmPayment(payment.id, { qpayPaymentId: result.qpayPaymentId });
+  }
+
+  /** Two QPay payment ids against one invoice: the money is in, and somebody has to give one of them back. */
+  private async reportDoublePayment(payment: { id: string; caseId: string; qpayPaymentId: string | null }, incoming: string): Promise<void> {
+    this.logger.warn(`Давхар төлбөр: ${payment.id} — ${payment.qpayPaymentId} дээр ${incoming} нэмж ирлээ`);
+    await this.slack.notify({
+      emoji: '🚨',
+      title: 'Давхар төлбөр',
+      fields: [
+        { label: 'Төлбөр', value: payment.id },
+        { label: 'Бүртгэсэн QPay гүйлгээ', value: payment.qpayPaymentId },
+        { label: 'Шинээр ирсэн QPay гүйлгээ', value: incoming },
+      ],
+      link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${payment.caseId}` },
+    });
+  }
+
+  /** Retires an unpaid invoice: our row first, then QPay's copy of it, then the poller. */
+  private async expireInvoice(payment: { id: string; qpayInvoiceId: string | null }): Promise<void> {
+    const expired = await this.prisma.payment.updateMany({
+      where: { id: payment.id, status: PaymentStatus.PENDING },
+      data: { status: PaymentStatus.EXPIRED },
+    });
+    if (expired.count > 0 && payment.qpayInvoiceId) {
+      await this.qpay.cancelInvoice(payment.qpayInvoiceId);
+    }
+    await this.pollQueue.removeJobScheduler(payment.id).catch(() => undefined);
   }
 
   /** Dev/test only (1C-20) — flips a payment PAID without a real QPay account. */
@@ -275,56 +413,58 @@ export class PaymentsService {
    * Idempotent: PAID short-circuits, PENDING credits and advances the case
    * (§5.5) — the same path for the webhook, the polling fallback, a manual
    * registration (1C-27) and the dev shortcut.
+   *
+   * Money first, stage second, and deliberately not in one transaction (1N-07).
+   * They used to share one: a case that had been put on hold, or had already
+   * moved past the stage this payment unlocks, made `applySystemTransition`
+   * throw — which rolled back a payment QPay had taken. The webhook then 500'd
+   * and the poller retried the same failure until it gave up. What the stage
+   * graph thinks is never a reason to lose a receipt.
    */
   async confirmPayment(paymentId: string, opts: { qpayPaymentId?: string; paidAt?: Date } = {}) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { case: { include: { contract: true } } },
+    });
+    if (!payment) throw new NotFoundException(`Төлбөр ${paymentId} олдсонгүй`);
+
+    // Claiming the row is one statement, and only a PENDING row can be
+    // claimed. The webhook and the polling job fire on the same payment
+    // within milliseconds of each other, so "read the status, then write it"
+    // lets both through: two stage transitions, and the client thanked twice
+    // for the same money. `updateMany` re-checks the status as it writes, so
+    // exactly one caller comes back with a count of 1.
+    const claimed = await this.prisma.payment.updateMany({
+      where: { id: paymentId, status: PaymentStatus.PENDING },
+      // A manual registration carries the date the money actually arrived, which
+      // is rarely the date somebody got round to typing it in (1C-27).
+      data: { status: PaymentStatus.PAID, paidAt: opts.paidAt ?? new Date(), qpayPaymentId: opts.qpayPaymentId },
+    });
+
     let alreadyPaid = false;
+    let confirmed;
 
-    const confirmed = await this.prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.findUnique({ where: { id: paymentId }, include: { case: { include: { contract: true } } } });
-      if (!payment) throw new NotFoundException(`Төлбөр ${paymentId} олдсонгүй`);
-
-      // Claiming the row is one statement, and only a PENDING row can be
-      // claimed. The webhook and the polling job fire on the same payment
-      // within milliseconds of each other, so "read the status, then write it"
-      // lets both through: two stage transitions, and the client thanked twice
-      // for the same money. `updateMany` re-checks the status as it writes, so
-      // exactly one caller comes back with a count of 1.
-      const claimed = await tx.payment.updateMany({
-        where: { id: paymentId, status: PaymentStatus.PENDING },
-        // A manual registration carries the date the money actually arrived, which
-        // is rarely the date somebody got round to typing it in (1C-27).
-        data: { status: PaymentStatus.PAID, paidAt: opts.paidAt ?? new Date(), qpayPaymentId: opts.qpayPaymentId },
-      });
-
-      if (claimed.count === 0) {
-        // Either it was already PAID when we read it, or the other caller
-        // committed between our read and our write — re-read to tell those
-        // apart from a row that is genuinely in no state to be confirmed.
-        const settled = await tx.payment.findUnique({
-          where: { id: paymentId },
-          include: { case: { include: { contract: true } } },
-        });
-        if (settled?.status === PaymentStatus.PAID) {
-          alreadyPaid = true;
-          return settled;
-        }
+    if (claimed.count === 0) {
+      // Either it was already PAID when we read it, or the other caller
+      // committed between our read and our write — re-read to tell those
+      // apart from a row that is genuinely in no state to be confirmed.
+      const settled = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+      if (settled?.status !== PaymentStatus.PAID) {
         throw new BadRequestException(
           `${settled?.status ?? payment.status} төлөвт байгаа төлбөрийг баталгаажуулах боломжгүй`,
         );
       }
-
-      const updated = await tx.payment.findUniqueOrThrow({ where: { id: paymentId } });
-
-      const targetStage = PROGRESS_TARGET[payment.kind];
-      if (targetStage) {
-        if (payment.kind === PaymentKind.PREPAYMENT && payment.case.contract) {
-          await tx.contract.update({ where: { id: payment.case.contract.id }, data: { status: ContractStatus.ACTIVE } });
-        }
-        await this.cases.applySystemTransition(tx, payment.caseId, targetStage);
+      // A second QPay reference against a payment we have already credited is
+      // money that arrived twice, not a duplicate callback (1N-10).
+      if (opts.qpayPaymentId && settled.qpayPaymentId && settled.qpayPaymentId !== opts.qpayPaymentId) {
+        await this.reportDoublePayment(settled, opts.qpayPaymentId);
       }
-
-      return updated;
-    });
+      alreadyPaid = true;
+      confirmed = settled;
+    } else {
+      confirmed = await this.prisma.payment.findUniqueOrThrow({ where: { id: paymentId } });
+      await this.applyPaymentProgress(payment);
+    }
 
     await this.pollQueue.removeJobScheduler(paymentId).catch(() => undefined);
 
@@ -378,6 +518,47 @@ export class PaymentsService {
     }
 
     return confirmed;
+  }
+
+  /**
+   * What a credited payment does to the rest of the case: the contract goes
+   * ACTIVE, the stage moves on.
+   *
+   * Both are consequences of money that is already in the bank, so a missing
+   * edge is reported, not raised — the office is told the case needs a hand,
+   * and the webhook still answers 200 (1N-07).
+   */
+  private async applyPaymentProgress(payment: {
+    id: string;
+    kind: PaymentKind;
+    caseId: string;
+    case: { code: string; contract: { id: string } | null };
+  }): Promise<void> {
+    const targetStage = PROGRESS_TARGET[payment.kind];
+    if (!targetStage) return;
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        if (payment.kind === PaymentKind.PREPAYMENT && payment.case.contract) {
+          await tx.contract.update({ where: { id: payment.case.contract.id }, data: { status: ContractStatus.ACTIVE } });
+        }
+        await this.cases.applySystemTransition(tx, payment.caseId, targetStage);
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`${payment.case.code}: төлбөр орсон ч ${CASE_STAGE_LABELS[targetStage]} руу шилжсэнгүй — ${reason}`);
+      await this.slack.notify({
+        emoji: '⚠️',
+        title: 'Төлбөр орсон ч үе шат хөдөлсөнгүй',
+        fields: [
+          { label: 'Үйлчилгээ', value: payment.case.code },
+          { label: 'Төрөл', value: PAYMENT_KIND_LABELS[payment.kind] },
+          { label: 'Зорилтот шат', value: CASE_STAGE_LABELS[targetStage] },
+          { label: 'Шалтгаан', value: reason },
+        ],
+        link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${payment.caseId}` },
+      });
+    }
   }
 
   /**
@@ -461,28 +642,52 @@ export class PaymentsService {
 
   // ─── Refund (1C-16) ─────────────────────────────────────────────────────────
 
+  /**
+   * Records money going back out (1C-16): a `REFUND` row facing the original,
+   * and the original marked `REFUNDED` so it stops counting as money we hold.
+   *
+   * The two writes are one fact, so they are one transaction. The guard against
+   * refunding twice is the unique index on `refundOfId`, not a read in front of
+   * it — a double click races the index and loses cleanly (1N-08).
+   *
+   * The case stage is deliberately left where it is: whether a refunded
+   * prepayment reopens `CONTRACT_SIGNED` is a business decision, not one to
+   * make here.
+   */
   async refund(paymentId: string, actorId: string) {
     const original = await this.getOrThrow(paymentId);
+    if (original.kind === PaymentKind.REFUND) {
+      throw new BadRequestException('Буцаалтын гүйлгээг дахин буцаах боломжгүй');
+    }
     if (original.status !== PaymentStatus.PAID) {
       throw new BadRequestException('Зөвхөн төлөгдсөн төлбөрийг буцаана');
     }
-    const alreadyRefunded = await this.prisma.payment.findFirst({ where: { refundOfId: paymentId } });
-    if (alreadyRefunded) throw new BadRequestException('Энэ төлбөр аль хэдийн буцаагдсан байна');
 
-    return this.prisma.payment.create({
-      data: {
-        caseId: original.caseId,
-        kind: PaymentKind.REFUND,
-        amountMnt: original.amountMnt,
-        status: PaymentStatus.PAID,
-        // Money goes back the way it came in unless someone says otherwise —
-        // a cash prepayment is refunded at the desk, not through QPay.
-        method: original.method,
-        paidAt: new Date(),
-        refundOfId: original.id,
-        createdById: actorId,
-      },
-    });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const refund = await tx.payment.create({
+          data: {
+            caseId: original.caseId,
+            kind: PaymentKind.REFUND,
+            amountMnt: original.amountMnt,
+            status: PaymentStatus.PAID,
+            // Money goes back the way it came in unless someone says otherwise —
+            // a cash prepayment is refunded at the desk, not through QPay.
+            method: original.method,
+            paidAt: new Date(),
+            refundOfId: original.id,
+            createdById: actorId,
+          },
+        });
+        await tx.payment.update({ where: { id: original.id }, data: { status: PaymentStatus.REFUNDED } });
+        return refund;
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException('Энэ төлбөр аль хэдийн буцаагдсан байна');
+      }
+      throw error;
+    }
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────────
@@ -503,7 +708,7 @@ export class PaymentsService {
     }
 
     const targetStage = PROGRESS_TARGET[kind];
-    if (!targetStage) throw new BadRequestException(`${kind} энэ endpoint-оор үүсгэгдэхгүй`);
+    if (!targetStage) throw new BadRequestException(`${PAYMENT_KIND_LABELS[kind]} энэ endpoint-оор үүсгэгдэхгүй`);
 
     const canAdvance = await this.prisma.caseFlowDefinition.findUnique({
       where: {
@@ -511,7 +716,9 @@ export class PaymentsService {
       },
     });
     if (!canAdvance?.isSystemOnly) {
-      throw new BadRequestException(`Үйлчилгээ одоогийн (${gksCase.stage}) шатандаа ${kind} төлбөр хүлээж авахад бэлэн биш байна`);
+      throw new BadRequestException(
+        `Үйлчилгээ одоогийн "${CASE_STAGE_LABELS[gksCase.stage]}" шатандаа ${PAYMENT_KIND_LABELS[kind]} хүлээж авахад бэлэн биш байна`,
+      );
     }
 
     return gksCase.contract;
@@ -572,9 +779,7 @@ export class PaymentsService {
   }
 
   private assertAccess(payment: { case: { userId: string } }, user: AuthenticatedUser): void {
-    if (!isCrmStaff(user.role) && payment.case.userId !== user.id) {
-      throw new ForbiddenException('Энэ төлбөрт хандах эрхгүй байна');
-    }
+    assertOwnerOrCrm(payment.case.userId, user, 'Энэ төлбөрт хандах эрхгүй байна');
   }
 
   private async getOrThrow(id: string) {

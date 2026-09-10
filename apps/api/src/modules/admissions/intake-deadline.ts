@@ -37,6 +37,21 @@ export type IntakePhase = 'OPEN' | 'FINAL_CALL' | 'CLOSED';
 export const INTAKE_MONTHS = [3, 6, 9, 12] as const;
 export type IntakeMonth = (typeof INTAKE_MONTHS)[number];
 
+/**
+ * The same months, split by level: language institutes run all four quarters,
+ * degrees take the March and September semesters.
+ *
+ * Here rather than in the planner because it is the academic calendar, and the
+ * planner, the research mock and the month validator all have to read the same
+ * one — three copies is how a level quietly gains an intake nobody offers.
+ */
+export const INTAKE_MONTHS_BY_LEVEL: Record<ProgramLevel, readonly IntakeMonth[]> = {
+  [ProgramLevel.LANGUAGE_PREP]: [3, 6, 9, 12],
+  [ProgramLevel.BACHELOR]: [3, 9],
+  [ProgramLevel.MASTER]: [3, 9],
+  [ProgramLevel.PHD]: [3, 9],
+};
+
 /** The office's fallback while no `AdmissionConfig` row exists yet. */
 export const DEFAULT_INTERNAL_LEAD_DAYS = 7;
 
@@ -47,6 +62,27 @@ export interface IntakeDateFields {
   internalDeadline: Date | null;
   internalDeadlineIsManual: boolean;
   classStartDate: Date | null;
+}
+
+/** `YYYY-MM-DD` with nothing after it — what a date input posts. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * One reading of the dates that arrive as strings.
+ *
+ * A bare `YYYY-MM-DD` means the whole day, so it is stored at the last
+ * millisecond of it — the convention the seed already writes. Read as midnight
+ * instead, a deadline expires at 08:00 Ulaanbaatar on the morning of the day
+ * the office is still working to, and re-saving a seeded round through the form
+ * silently moves it back a day. Anything carrying a time is taken as sent.
+ */
+export function toIntakeDate(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return new Date(DATE_ONLY.test(trimmed) ? `${trimmed}T23:59:59.999Z` : trimmed);
 }
 
 /**
@@ -79,6 +115,26 @@ export function resolveInternalDeadline(fields: {
   leadDays: number;
 }): Date | null {
   if (fields.internalDeadlineIsManual) return fields.internalDeadline;
+  return computeInternalDeadline(fields.applicationDeadline, fields.leadDays);
+}
+
+/**
+ * What an override row should store in its own `internalDeadline` column.
+ *
+ * Only two cases put a date there: a human typed one, or the override carries
+ * a school deadline of its own to derive one from. Anything else stores `null`
+ * and falls through to the term at read time — a copy of the term's date
+ * derived once and never recomputed is a snapshot that silently wins over the
+ * term the next time the deadline or the lead time moves.
+ */
+export function resolveOverrideInternalDeadline(fields: {
+  applicationDeadline: Date | null;
+  internalDeadline: Date | null;
+  internalDeadlineIsManual: boolean;
+  leadDays: number;
+}): Date | null {
+  if (fields.internalDeadlineIsManual) return fields.internalDeadline;
+  if (!fields.applicationDeadline) return null;
   return computeInternalDeadline(fields.applicationDeadline, fields.leadDays);
 }
 

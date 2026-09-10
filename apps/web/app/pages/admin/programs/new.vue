@@ -41,11 +41,8 @@ const saveError = ref<string | null>(null);
 const loading = ref(false);
 const existing = ref<AdminProgram | null>(null);
 
-const LEVEL_OPTIONS = [
-  { value: '', label: 'Сонгоно уу' },
-  ...Object.entries(PROGRAM_LEVEL_LABELS).map(([value, label]) => ({ value, label })),
-];
-const LANGUAGE_OPTIONS = Object.entries(INSTRUCTION_LANGUAGE_LABELS).map(([value, label]) => ({ value, label }));
+const LEVEL_OPTIONS = selectOptions(PROGRAM_LEVEL_LABELS, 'Сонгоно уу');
+const LANGUAGE_OPTIONS = selectOptions(INSTRUCTION_LANGUAGE_LABELS);
 const TOPIK_OPTIONS = [
   { value: '', label: 'Шаардлагагүй / мэдэгдэхгүй' },
   ...[1, 2, 3, 4, 5, 6].map((value) => ({ value: String(value), label: `TOPIK ${value}` })),

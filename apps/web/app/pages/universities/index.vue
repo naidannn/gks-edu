@@ -10,7 +10,6 @@ import type {
 /** Catalogue of the 135 Korean partner universities (1A-06). */
 type Paginated = PaginatedResult<UniversityCard>;
 
-const route = useRoute();
 const router = useRouter();
 
 const PAGE_SIZE = 12;
@@ -30,49 +29,21 @@ const SORTS: { value: string; label: string }[] = [
 
 const DEFAULT_SORT = 'gks';
 
-const str = (value: unknown): string => (typeof value === 'string' ? value : '');
-const num = (value: unknown, fallback: number): number => {
-  const parsed = Number.parseInt(str(value), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-
 // The URL is the state: filters survive a reload and a shared link.
+const { str, num, flag, apply, search } = useQueryState();
+
 const filters = computed(() => ({
-  q: str(route.query.q),
-  region: str(route.query.region),
-  type: str(route.query.type) as UniversityType | '',
-  accreditation: str(route.query.accreditation) as AccreditationGrade | '',
-  languagePrep: route.query.languagePrep === '1',
-  gks: route.query.gks === '1',
-  sort: str(route.query.sort) || DEFAULT_SORT,
-  page: num(route.query.page, 1),
+  q: str('q'),
+  region: str('region'),
+  type: str('type') as UniversityType | '',
+  accreditation: str('accreditation') as AccreditationGrade | '',
+  languagePrep: flag('languagePrep'),
+  gks: flag('gks'),
+  sort: str('sort', DEFAULT_SORT),
+  page: num('page'),
 }));
 
-const searchInput = ref(filters.value.q);
-watch(() => filters.value.q, (value) => { searchInput.value = value; });
-
-/** Merges a patch into the URL query; empty/false values drop the parameter. */
-function apply(patch: Record<string, string | number | boolean | undefined>, resetPage = true) {
-  const merged = { ...(route.query as Record<string, string>), ...patch };
-  const query = Object.fromEntries(
-    Object.entries(merged)
-      .filter(([key, value]) => {
-        if (resetPage && key === 'page') return false;
-        return value !== '' && value !== false && value !== undefined && value !== null;
-      })
-      .map(([key, value]) => [key, value === true ? '1' : String(value)]),
-  );
-  router.push({ query });
-}
-
-let searchTimer: ReturnType<typeof setTimeout> | undefined;
-watch(searchInput, (value) => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    if (value !== filters.value.q) apply({ q: value.trim() });
-  }, 350);
-});
-onBeforeUnmount(() => clearTimeout(searchTimer));
+const searchInput = search();
 
 /**
  * `Search` (1A-38) — what a visitor types is the clearest statement of intent

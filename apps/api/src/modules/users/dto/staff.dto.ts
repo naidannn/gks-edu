@@ -1,18 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { DOC_STAFF_ROLES } from '../../../common/constants/roles.js';
+import { TransformEmail } from '../../../common/validation/transforms.js';
 import { Role } from '../../../prisma/client.js';
 
 /** Staff roles an admin may hand out — never `USER`, which is what clients are. */
-const ASSIGNABLE_ROLES = [Role.ADMIN, Role.CONSULTANT, Role.DOC_OFFICER] as const;
-
-/** An address pasted out of a chat arrives padded and capitalised; `@IsEmail` rejects both. */
-const TrimEmail = () =>
-  Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toLowerCase() : value));
+const ASSIGNABLE_ROLES = [...DOC_STAFF_ROLES];
 
 export class CreateStaffDto {
   @ApiProperty()
-  @TrimEmail()
+  @TransformEmail()
   @IsEmail()
   email!: string;
 
@@ -48,7 +45,7 @@ export class CreateStaffDto {
 export class UpdateStaffDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @TrimEmail()
+  @TransformEmail()
   @IsEmail()
   email?: string;
 
@@ -82,6 +79,22 @@ export class SetStaffPasswordDto {
   @MinLength(8)
   @MaxLength(72)
   password!: string;
+}
+
+/**
+ * Re-sending a claim invitation (1B-17, 1N-01). The address is an override and
+ * an admin-only one: it decides where a link that grants the account goes, so a
+ * consultant sends the invitation to the address already on the row or not at
+ * all. A body was read straight off `@Body('email')` before this class existed,
+ * which made a non-string a 500.
+ */
+export class ClaimInviteDto {
+  @ApiPropertyOptional({ description: 'Урилга илгээх хаягийг солих — зөвхөн админ' })
+  @IsOptional()
+  @TransformEmail()
+  @IsEmail()
+  @MaxLength(200)
+  email?: string;
 }
 
 export class ClaimAccountDto {

@@ -1,4 +1,4 @@
-import { ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -95,9 +95,11 @@ describe('AuthService.loginWithGoogle', () => {
     expect(session.accessToken).toBe('signed.jwt.token');
   });
 
-  it('links the Google account to an existing row instead of forking a second one', async () => {
+  it('links the Google account to a staff-created row instead of forking a second one', async () => {
     respondWith(googlePayload());
-    const existing = { id: 'user-9', email: 'Bat@Gmail.com', name: 'Бат', password: 'hash', isActive: true };
+    // No password: nobody has ever claimed this row, so Google's verified
+    // address is the first proof of ownership anyone has offered (1B-14).
+    const existing = { id: 'user-9', email: 'Bat@Gmail.com', name: 'Бат', password: null, isActive: true };
     const { service, prisma } = serviceStub({ byEmail: existing });
 
     await service.loginWithGoogle(ID_TOKEN);
@@ -110,6 +112,56 @@ describe('AuthService.loginWithGoogle', () => {
     expect(prisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'user-9' }, data: expect.objectContaining({ googleId: 'google-sub-1' }) }),
     );
+  });
+
+  /**
+   * 1N-03 — the account-takeover the address match used to allow. Registration
+   * verifies no address, so an attacker could register the victim's, wait for
+   * them to press "Google-ээр нэвтрэх", and have them land inside the
+   * attacker's account with the attacker's password still on it.
+   */
+  it('refuses to link to a row that already has a password', async () => {
+    respondWith(googlePayload());
+    const attacker = { id: 'user-9', email: 'bat@gmail.com', name: 'Бат', password: 'hash', isActive: true };
+    const { service, prisma } = serviceStub({ byEmail: attacker });
+
+    await expect(service.loginWithGoogle(ID_TOKEN)).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses to re-point a row at a second Google account', async () => {
+    respondWith(googlePayload());
+    const owned = {
+      id: 'user-9',
+      email: 'bat@gmail.com',
+      name: 'Бат',
+      password: null,
+      googleId: 'google-sub-other',
+      isActive: true,
+    };
+    const { service, prisma } = serviceStub({ byEmail: owned });
+
+    await expect(service.loginWithGoogle(ID_TOKEN)).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('still signs in a row that is already linked, password or not', async () => {
+    respondWith(googlePayload());
+    const linked = {
+      id: 'user-9',
+      email: 'bat@gmail.com',
+      name: 'Бат',
+      password: 'hash',
+      googleId: 'google-sub-1',
+      isActive: true,
+    };
+    const { service, prisma } = serviceStub({ byGoogleId: linked });
+
+    const session = await service.loginWithGoogle(ID_TOKEN);
+
+    expect(session.accessToken).toBe('signed.jwt.token');
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('settles an outstanding claim invitation (1B-17)', async () => {
@@ -160,5 +212,34 @@ describe('AuthService.loginWithGoogle', () => {
 
     await expect(service.loginWithGoogle(ID_TOKEN)).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(verifyIdToken).not.toHaveBeenCalled();
+  });
+});
+
+/** The other half of 1N-03: the "sign in with your password once" route back. */
+describe('AuthService.linkGoogle', () => {
+  beforeEach(() => {
+    verifyIdToken.mockReset();
+  });
+
+  it('attaches Google to the account the caller is signed in to', async () => {
+    respondWith(googlePayload());
+    const me = { id: 'user-9', email: 'bat@gmail.com', name: 'Бат', password: 'hash', isActive: true };
+    const { service, prisma } = serviceStub();
+    prisma.user.findUnique.mockResolvedValueOnce(me).mockResolvedValueOnce(null);
+
+    await expect(service.linkGoogle('user-9', ID_TOKEN)).resolves.toEqual({ linked: true });
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'user-9' }, data: expect.objectContaining({ googleId: 'google-sub-1' }) }),
+    );
+  });
+
+  it('refuses a Google account that belongs to somebody else', async () => {
+    respondWith(googlePayload());
+    const me = { id: 'user-9', email: 'bat@gmail.com', password: 'hash', isActive: true };
+    const { service, prisma } = serviceStub();
+    prisma.user.findUnique.mockResolvedValueOnce(me).mockResolvedValueOnce({ id: 'user-2' });
+
+    await expect(service.linkGoogle('user-9', ID_TOKEN)).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 });

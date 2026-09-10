@@ -1,5 +1,6 @@
 import { ProgramLevel } from '../../../prisma/client.js';
 import { INTAKE_MONTHS } from '../intake-deadline.js';
+import { fold, isHttpUrl, isRecord, toText } from './candidate-parse.js';
 
 /**
  * The contract a Gemini research reply must satisfy (1H-10), and the guard
@@ -101,33 +102,6 @@ export function parseResearchResult(
   return { candidates, sources };
 }
 
-/**
- * Folds a list into one envelope.
- *
- * The list is either the bare candidate list the model wrote instead of the
- * envelope, or — when a reply came back as more than one JSON document — those
- * documents. Both shapes can be mixed in the same list, so each entry is
- * unwrapped on its own: an envelope contributes its candidates and sources, a
- * nested list its entries, and anything else is a candidate.
- */
-function fold(entries: unknown[]): { candidates: unknown[]; sources: unknown[] } {
-  const candidates: unknown[] = [];
-  const sources: unknown[] = [];
-
-  for (const entry of entries) {
-    if (Array.isArray(entry)) {
-      candidates.push(...entry);
-    } else if (isRecord(entry) && Array.isArray(entry.candidates)) {
-      candidates.push(...entry.candidates);
-      if (Array.isArray(entry.sources)) sources.push(...entry.sources);
-    } else {
-      candidates.push(entry);
-    }
-  }
-
-  return { candidates, sources };
-}
-
 function parseCandidate(entry: unknown, expectedYear: number, grounded: boolean): IntakeCandidate | null {
   if (!isRecord(entry)) return null;
 
@@ -170,10 +144,6 @@ function parseCandidate(entry: unknown, expectedYear: number, grounded: boolean)
   };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 /** `YYYY-MM-DD` that is also a real day — "2027-02-31" does not survive this. */
 function toIsoDate(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -192,24 +162,10 @@ function toInt(value: unknown): number | null {
   return Number.isInteger(parsed) ? parsed : null;
 }
 
+/** Strict: an intake's numbers are counts, so "12 seats" is not a 12. */
 function toBoundedInt(value: unknown, min: number, max: number): number | null {
   const parsed = toInt(value);
   if (parsed === null || parsed < min || parsed > max) return null;
   return parsed;
 }
 
-function toText(value: unknown, maxLength: number): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed ? trimmed.slice(0, maxLength) : null;
-}
-
-function isHttpUrl(value: unknown): value is string {
-  if (typeof value !== 'string' || value.length > 500) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}

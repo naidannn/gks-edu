@@ -86,14 +86,32 @@ export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   [LeadStage.LOST]: 'Алдсан',
 };
 
-/** `2026-09-05` in the form the templates read: `2026 оны 09 сарын 05`. */
+/** One day in milliseconds — the unit every reminder ladder counts in. */
+export const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Local midnight — the lower bound of a "from today onwards" window. */
+export function startOfDay(now: Date): Date {
+  const day = new Date(now);
+  day.setHours(0, 0, 0, 0);
+  return day;
+}
+
+/**
+ * `2026-09-05` in the form the templates read: `2026 оны 09 сарын 05`.
+ *
+ * Read in UTC on purpose. Intake internal deadlines and payment due dates are
+ * stored at end of day UTC, so local getters roll them into the next day under
+ * any `TZ` east of UTC — a dev machine, or a pm2 `TZ` — and a deadline printed
+ * a day late is the expensive direction of that mistake. This is the single
+ * implementation: the checklist PDF renders the same dates through it.
+ */
 export function formatDateMn(value: Date | string | null | undefined): string {
   if (!value) return '—';
   const date = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return '—';
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
+  const yyyy = date.getUTCFullYear();
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(date.getUTCDate()).padStart(2, '0');
   return `${yyyy} оны ${mm} сарын ${dd}`;
 }
 

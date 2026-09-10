@@ -111,6 +111,7 @@ const completeness = computed(() => profile.value?.completeness ?? null);
       </form>
 
       <AuthChangePassword />
+      <AuthLinkGoogle />
     </template>
   </div>
 </template>

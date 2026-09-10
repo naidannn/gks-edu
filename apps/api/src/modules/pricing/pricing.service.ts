@@ -3,6 +3,7 @@ import { type DecimalLike, toNumber } from '../../common/utils/decimal.js';
 import { PrepaymentMode, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
+import { activePricingWhere } from './active-pricing.js';
 import { DEFAULT_PAYMENT_DUE_DAYS } from './payment-terms.js';
 import type { CreateServicePricingDto } from './dto/create-service-pricing.dto.js';
 import type { UpdateServicePricingDto } from './dto/update-service-pricing.dto.js';
@@ -29,11 +30,7 @@ export class PricingService {
   /** The pricing in effect right now for a service (§6.1) — never null once seeded. */
   async getActive(serviceType: ServiceType, at: Date = new Date()) {
     const pricing = await this.prisma.servicePricing.findFirst({
-      where: {
-        serviceType,
-        effectiveFrom: { lte: at },
-        OR: [{ effectiveTo: null }, { effectiveTo: { gt: at } }],
-      },
+      where: { serviceType, ...activePricingWhere(at) },
       orderBy: { effectiveFrom: 'desc' },
     });
     if (!pricing) {
@@ -55,7 +52,7 @@ export class PricingService {
   private async readPublicPricing() {
     const now = new Date();
     const rows = await this.prisma.servicePricing.findMany({
-      where: { effectiveFrom: { lte: now }, OR: [{ effectiveTo: null }, { effectiveTo: { gt: now } }] },
+      where: activePricingWhere(now),
       orderBy: { effectiveFrom: 'desc' },
     });
 
@@ -84,6 +81,9 @@ export class PricingService {
   async create(dto: CreateServicePricingDto) {
     PricingService.assertCoherent(dto);
     const effectiveFrom = dto.effectiveFrom ? new Date(dto.effectiveFrom) : new Date();
+    if (Number.isNaN(effectiveFrom.getTime())) {
+      throw new BadRequestException('Хүчинтэй болох огноо буруу байна');
+    }
 
     const created = await this.prisma.$transaction(async (tx) => {
       const current = await tx.servicePricing.findFirst({
@@ -91,6 +91,12 @@ export class PricingService {
         orderBy: { effectiveFrom: 'desc' },
       });
       if (current) {
+        // Closing the open row *before* it opened would leave two rows that
+        // both read as active — `effectiveTo < effectiveFrom` on the old one,
+        // and the half-open interval no longer covering anything (1N-15).
+        if (effectiveFrom < current.effectiveFrom) {
+          throw new BadRequestException('Шинэ үнэ өмнөх хувилбарын эхлэх огнооноос өмнө хүчин төгөлдөр болж чадахгүй');
+        }
         await tx.servicePricing.update({ where: { id: current.id }, data: { effectiveTo: effectiveFrom } });
       }
 

@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CaseStage, DocStage, DocumentStatus, PaymentStatus, type Prisma, WorkTaskStatus } from '../../prisma/client.js';
+import { DocStage, DocumentStatus, PaymentStatus, type Prisma, WorkTaskStatus } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CasesService } from '../cases/cases.service.js';
 import { nextAction } from '../cases/next-action.js';
 import { CaseDocumentsService } from '../documents/case-documents.service.js';
+import { DEADLINE_WARNING_MS, liveCase } from './client-cases.js';
 import { ClientsService } from './clients.service.js';
 
 /**
@@ -19,9 +20,6 @@ import { ClientsService } from './clients.service.js';
  * sides of the platform phrase the answer the same way (1G-15).
  */
 
-/** A case in one of these is over; the newest one outside them is the live one. */
-const TERMINAL_STAGES: CaseStage[] = [CaseStage.COMPLETED, CaseStage.CANCELLED, CaseStage.REJECTED];
-
 /** Documents in these states still need someone to act. */
 const OPEN_DOC_STATUSES: DocumentStatus[] = [
   DocumentStatus.NOT_STARTED,
@@ -29,9 +27,6 @@ const OPEN_DOC_STATUSES: DocumentStatus[] = [
   DocumentStatus.NEEDS_FIX,
   DocumentStatus.RESUBMIT_REQUIRED,
 ];
-
-/** How close a deadline has to be before the workspace calls it out. */
-const DEADLINE_WARNING_DAYS = 7;
 
 const WORKSPACE_CASE_INCLUDE = {
   university: { select: { id: true, nameMn: true, nameEn: true } },
@@ -113,7 +108,7 @@ export class ClientWorkspaceService {
     });
 
     const cases = await Promise.all(rows.map((row) => this.decorate(row)));
-    const active = cases.find((row) => !TERMINAL_STAGES.includes(row.stage)) ?? cases[0] ?? null;
+    const active = liveCase(cases);
 
     return {
       client,
@@ -279,7 +274,7 @@ export class ClientWorkspaceService {
     if (caseIds.length === 0) return [];
 
     const now = new Date();
-    const soon = new Date(now.getTime() + DEADLINE_WARNING_DAYS * 86_400_000);
+    const soon = new Date(now.getTime() + DEADLINE_WARNING_MS);
 
     const [overdueDocs, dueSoonDocs, pendingPayments, overdueTasks] = await Promise.all([
       this.prisma.caseDocument.findMany({

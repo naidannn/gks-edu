@@ -61,12 +61,6 @@ watch(q, () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { pag
 onBeforeUnmount(() => clearTimeout(searchTimer));
 onMounted(load);
 
-/** Manually registered rows carry a date, not a moment — read it back in UTC (1C-27). */
-function formatPaymentDate(payment: PaymentListItem): string {
-  if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
-  return formatDateUtc(payment.paidAt);
-}
-
 /* The receivables tiles above count money that is late; this column is how a
    collector finds *which* rows they mean. `dueAt` is stored at end of day UTC,
    so it is read back in UTC like every other deadline. */

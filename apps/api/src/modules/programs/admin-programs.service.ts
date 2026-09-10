@@ -6,12 +6,19 @@ import { paginate } from '../../common/dto/pagination.dto.js';
 import { Prisma, ProgramSource } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
-import { LIST_CACHE_PATTERN } from '../universities/universities.service.js';
+import {
+  ADMISSIONS_CACHE_PATTERN,
+} from '../admissions/admissions.service.js';
+import {
+  LIST_CACHE_PATTERN,
+  UNIVERSITIES_FACETS_CACHE_KEY,
+  universityDetailCacheKey,
+} from '../universities/universities.service.js';
 import type { BulkCreateProgramsDto } from './dto/bulk-programs.dto.js';
 import type { QueryAdminProgramsDto } from './dto/query-programs.dto.js';
 import type { CreateProgramDto, UpdateProgramDto } from './dto/university-program.dto.js';
 import { FacultiesService } from './faculties.service.js';
-import { PROGRAM_CARD_FIELDS, ProgramsService } from './programs.service.js';
+import { PROGRAM_CARD_FIELDS, PROGRAMS_FACETS_CACHE_KEY, ProgramsService } from './programs.service.js';
 
 /**
  * The columns a DTO can set. The three that identify a programme are passed
@@ -22,6 +29,9 @@ type ProgramWriteData = Omit<Prisma.UniversityProgramUncheckedCreateInput, 'univ
 /** Everything the public row carries, plus the columns only staff may see. */
 const ADMIN_PROGRAM_FIELDS = {
   ...PROGRAM_CARD_FIELDS,
+  // Staff-only, and the reason the public card does not carry it: the list
+  // sorts on it and flags a price older than last year's (`stats.staleTuition`).
+  tuitionYear: true,
   facultyId: true,
   sourceType: true,
   verifiedAt: true,
@@ -56,6 +66,13 @@ export class AdminProgramsService extends ProgramsService {
 
   async findAllAdmin(query: QueryAdminProgramsDto) {
     const where = this.buildAdminWhere(query);
+
+    // Same reason as the public list: the annual figure is derived from the
+    // level's terms-per-year, so it cannot be an `ORDER BY` on a column.
+    if (query.sort === 'tuition') {
+      const { ids, total } = await this.tuitionOrderedIds(where, query.order, query.skip, query.limit);
+      return paginate(await this.programsByIds(ids, ADMIN_PROGRAM_FIELDS), total, query.page, query.limit);
+    }
 
     const [items, total] = await Promise.all([
       this.prisma.universityProgram.findMany({
@@ -118,12 +135,21 @@ export class AdminProgramsService extends ProgramsService {
     return program;
   }
 
-  async update(id: string, dto: UpdateProgramDto, userId: string | null) {
+  /**
+   * `expectedUniversityId` is passed by the per-university route
+   * (`/admin/universities/:id/programs/:programId`) so a path cannot address one
+   * school and edit another school's programme — the same guard the intake
+   * routes on that controller have always had.
+   */
+  async update(id: string, dto: UpdateProgramDto, userId: string | null, expectedUniversityId?: string) {
     const current = await this.prisma.universityProgram.findUnique({
       where: { id },
       select: { id: true, universityId: true, level: true, nameMn: true, university: { select: { slug: true } } },
     });
     if (!current) throw new NotFoundException('Хөтөлбөр олдсонгүй.');
+    if (expectedUniversityId && current.universityId !== expectedUniversityId) {
+      throw new NotFoundException('Хөтөлбөр энэ сургуульд харьяалагдахгүй байна.');
+    }
 
     const level = dto.level ?? current.level;
     const nameMn = dto.nameMn ?? current.nameMn;
@@ -146,16 +172,20 @@ export class AdminProgramsService extends ProgramsService {
    * relation is `SetNull`, so deleting would quietly blank the programme on a
    * live record. Unpublishing is the answer, and the message says so.
    */
-  async remove(id: string): Promise<void> {
+  async remove(id: string, expectedUniversityId?: string): Promise<void> {
     const program = await this.prisma.universityProgram.findUnique({
       where: { id },
       select: {
         nameMn: true,
+        universityId: true,
         university: { select: { slug: true } },
         _count: { select: { cases: true, applications: true } },
       },
     });
     if (!program) throw new NotFoundException('Хөтөлбөр олдсонгүй.');
+    if (expectedUniversityId && program.universityId !== expectedUniversityId) {
+      throw new NotFoundException('Хөтөлбөр энэ сургуульд харьяалагдахгүй байна.');
+    }
 
     const { cases, applications } = program._count;
     if (cases + applications > 0) {
@@ -252,9 +282,6 @@ export class AdminProgramsService extends ProgramsService {
   }
 
   private adminOrderBy(query: QueryAdminProgramsDto): Prisma.UniversityProgramOrderByWithRelationInput[] {
-    if (query.sort === 'tuition') {
-      return [{ tuitionPerYearKrw: { sort: query.order, nulls: 'last' } }, { nameMn: 'asc' }];
-    }
     if (query.sort === 'name') return [{ nameMn: query.order }];
     return [{ university: { nameMn: 'asc' } }, { level: 'asc' }, { nameMn: 'asc' }];
   }
@@ -342,10 +369,13 @@ export class AdminProgramsService extends ProgramsService {
    */
   private async invalidate(slug: string): Promise<void> {
     await Promise.all([
-      this.cache.del(`university:${slug}`),
-      this.cache.del('universities:facets'),
-      this.cache.del('programs:facets'),
+      this.cache.del(universityDetailCacheKey(slug)),
+      this.cache.del(UNIVERSITIES_FACETS_CACHE_KEY),
+      this.cache.del(PROGRAMS_FACETS_CACHE_KEY),
       this.cache.delByPattern(LIST_CACHE_PATTERN),
+      // A programme's own calendar hangs off it, and the admissions rows carry
+      // the school card, so a rename or an unpublish shows there too.
+      this.cache.delByPattern(ADMISSIONS_CACHE_PATTERN),
       this.rankingQueue
         .add(GKS_RANKING_JOB, {}, { jobId: 'recompute', removeOnComplete: true, delay: 5_000 })
         // Redis being down must not fail a catalogue edit; the nightly run catches up.

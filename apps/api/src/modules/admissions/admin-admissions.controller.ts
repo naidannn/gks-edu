@@ -30,7 +30,11 @@ import {
   UpdateIntakeTermDto,
   UpsertIntakeProgramOverrideDto,
 } from './dto/intake-term.dto.js';
-import { QueryAdminAdmissionsDto } from './dto/query-admissions.dto.js';
+import {
+  QueryAdminAdmissionsDto,
+  QueryAdmissionsBoardDto,
+  QueryAtRiskDto,
+} from './dto/query-admissions.dto.js';
 import { StartIntakeResearchDto } from './dto/start-research.dto.js';
 import { IntakeResearchService } from './research/intake-research.service.js';
 
@@ -68,18 +72,14 @@ export class AdminAdmissionsController {
 
   @Get('board')
   @ApiOperation({ summary: 'Cases grouped under the intake they are racing (1H-08)' })
-  boardView(
-    @Query('universityId') universityId?: string,
-    @Query('assigneeId') assigneeId?: string,
-    @Query('onlyAtRisk') onlyAtRisk?: string,
-  ) {
-    return this.board.board({ universityId, assigneeId, onlyAtRisk: onlyAtRisk === 'true' });
+  boardView(@Query() query: QueryAdmissionsBoardDto) {
+    return this.board.board(query);
   }
 
   @Get('at-risk')
   @ApiOperation({ summary: 'Cases short on documents with their deadline in sight' })
-  atRisk(@Query('assigneeId') assigneeId?: string) {
-    return this.board.atRisk(assigneeId);
+  atRisk(@Query() query: QueryAtRiskDto) {
+    return this.board.atRisk(query.assigneeId);
   }
 
   // --- Configuration (1H-02) ---
@@ -174,6 +174,7 @@ export class AdminAdmissionsController {
   // --- Programme overrides ---
 
   @Post(':id/overrides')
+  @Audit({ action: 'admission.intake.override', entity: 'IntakeProgramOverride', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Give one programme its own calendar inside this round' })
   upsertOverride(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpsertIntakeProgramOverrideDto) {
     return this.admissions.upsertOverride(id, dto);
@@ -181,6 +182,7 @@ export class AdminAdmissionsController {
 
   @Delete(':id/overrides/:overrideId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Audit({ action: 'admission.intake.override.delete', entity: 'IntakeProgramOverride', idFrom: 'params.overrideId' })
   @ApiOperation({ summary: 'Drop a programme override — it falls back to the round' })
   async removeOverride(
     @Param('id', ParseUUIDPipe) id: string,

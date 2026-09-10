@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { NotificationEvent, PaymentKind, PaymentStatus } from '../../prisma/client.js';
+import { CaseStage, DocumentStatus, Necessity, NotificationEvent, PaymentKind, PaymentStatus } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { AdmissionConfigService } from '../admissions/admission-config.service.js';
 import type { NotificationsService } from './notifications.service.js';
@@ -15,11 +15,11 @@ import { ReminderSweepsService } from './reminder-sweeps.service.js';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NOW = new Date('2026-09-08T09:00:00.000Z');
 
-function buildHarness(payments: Record<string, unknown>[]) {
+function buildHarness(payments: Record<string, unknown>[], documents: Record<string, unknown>[] = []) {
   const empty = { findMany: vi.fn().mockResolvedValue([]) };
 
   const prisma = {
-    caseDocument: empty,
+    caseDocument: { findMany: vi.fn().mockResolvedValue(documents) },
     payment: { findMany: vi.fn().mockResolvedValue(payments) },
     visaCase: empty,
     departurePlan: empty,
@@ -120,5 +120,64 @@ describe('ReminderSweepsService — payments (§16 "Төлбөрийн хуга�
     await service.sweepAll(NOW);
 
     expect(notifications.dispatch).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * 1N-17 — every sweep used to ask only "is this due?". A cancelled, refused,
+ * paused or finished case therefore kept chasing its client, and each chase is
+ * a billed SMS plus an email for work nobody is doing.
+ */
+describe('ReminderSweepsService — dormant cases are not chased (1N-17)', () => {
+  const DORMANT = [CaseStage.ON_HOLD, CaseStage.CANCELLED, CaseStage.REJECTED, CaseStage.COMPLETED];
+
+  it('excludes them from the document sweep in the query, not after the fact', async () => {
+    const { service, prisma } = buildHarness([]);
+
+    await service.sweepAll(NOW);
+
+    expect(prisma.caseDocument.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          necessity: Necessity.REQUIRED,
+          case: { stage: { notIn: DORMANT } },
+        }),
+      }),
+    );
+  });
+
+  it('excludes them from the payment sweep too — a cancelled case is not invoiced again', async () => {
+    const { service, prisma } = buildHarness([]);
+
+    await service.sweepAll(NOW);
+
+    expect(prisma.payment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          // "Still open" for a payment: PAID, FAILED, EXPIRED and REFUNDED are
+          // all settled and were already excluded.
+          status: PaymentStatus.PENDING,
+          case: { stage: { notIn: DORMANT } },
+        }),
+      }),
+    );
+  });
+
+  it('still reminds a live case — the filter narrows the query, it does not silence the sweep', async () => {
+    const dueDocument = {
+      id: 'doc-1',
+      dueAt: new Date(NOW.getTime() + 3 * DAY_MS),
+      status: DocumentStatus.NOT_STARTED,
+      template: { nameMn: 'Гадаад паспорт' },
+      case: { id: 'case-1', code: 'GKS-2026-0001', userId: 'student-1' },
+    };
+    const { service, notifications } = buildHarness([], [dueDocument]);
+
+    const result = await service.sweepAll(NOW);
+
+    expect(result.documents).toBe(1);
+    expect(notifications.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ event: NotificationEvent.DOCUMENT_DEADLINE_NEAR, dedupeSubject: 'doc-1:3' }),
+    );
   });
 });

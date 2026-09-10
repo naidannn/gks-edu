@@ -1,4 +1,5 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { assertOwnerOrCrm } from '../../common/auth/assert-owner.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { OTP_TTL_MINUTES, OtpService } from '../../otp/otp.service.js';
 import { StorageService } from '../../storage/storage.service.js';
@@ -24,7 +25,9 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { SlackService } from '../notifications/slack.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { amountInWordsMnCapitalized } from './amount-words.util.js';
+import { CLIENT_CONTRACT_SELECT, toClientContract } from './client-contract.select.js';
 import { ContractPdfService } from './contract-pdf.service.js';
+import { formatOfficeDateIso, formatOfficeDateSlash, officeDateParts, officeYearBounds } from './office-date.js';
 import { ADULT_AGE, ageOn } from '../clients/dto/client-fields.js';
 import {
   type ContractUniversityChoice,
@@ -69,6 +72,23 @@ export const BALANCE_CONDITION: Record<BalanceTrigger, string> = {
  * From `SIGNED` on, the text is what two people agreed to.
  */
 const REWRITABLE_STATUSES: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT];
+
+/**
+ * The states a signature can still be added from (1N-12).
+ *
+ * The guards used to reject only `SIGNED`, which let `ACTIVE`, `COMPLETED` and
+ * `TERMINATED` through: re-posting a paper contract overwrote the scan and
+ * uploaded a fresh PDF before the stage move failed, and pressing "I agree" on
+ * a live contract mailed a new OTP for something already signed.
+ */
+const PRE_SIGNATURE_STATUSES: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT];
+
+/** How many times a contract number collision is worth retrying before giving up. */
+const NUMBER_ATTEMPTS = 5;
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
+}
 
 /** What a client edit did to that client's contracts (1C-30). */
 export interface ContractSyncResult {
@@ -138,10 +158,7 @@ export class ContractsService {
 
     const [pricing, template] = await Promise.all([
       this.pricing.getActive(gksCase.serviceType),
-      this.prisma.contractTemplate.findFirst({
-        where: { serviceType: gksCase.serviceType, isActive: true },
-        orderBy: { version: 'desc' },
-      }),
+      this.activeTemplate(gksCase.serviceType),
     ]);
     if (!template) throw new NotFoundException(`${gksCase.serviceType} үйлчилгээнд идэвхтэй гэрээний загвар алга байна`);
 
@@ -164,22 +181,45 @@ export class ContractsService {
       }),
     );
 
-    return this.prisma.contract.create({
-      data: {
-        caseId: gksCase.id,
-        userId: gksCase.userId,
-        number: await this.nextContractNumber(contractDate),
-        type: dto.type,
-        status: dto.type === ContractType.ELECTRONIC ? ContractStatus.SENT : ContractStatus.DRAFT,
-        templateId: template.id,
-        totalAmountSnapshot: pricing.totalAmount,
-        prepaymentModeSnapshot: pricing.prepaymentMode,
-        prepaymentValueSnapshot: pricing.prepaymentValue,
-        balanceTriggerSnapshot: pricing.balanceTrigger,
-        refundPolicy: {},
-        bodyMn,
-      },
+    return this.createNumbered(contractDate, {
+      caseId: gksCase.id,
+      userId: gksCase.userId,
+      type: dto.type,
+      status: dto.type === ContractType.ELECTRONIC ? ContractStatus.SENT : ContractStatus.DRAFT,
+      templateId: template.id,
+      totalAmountSnapshot: pricing.totalAmount,
+      prepaymentModeSnapshot: pricing.prepaymentMode,
+      prepaymentValueSnapshot: pricing.prepaymentValue,
+      balanceTriggerSnapshot: pricing.balanceTrigger,
+      refundPolicy: {},
+      bodyMn,
     });
+  }
+
+  /** The template a new contract of this service is issued from — the one lookup `MeService` also asks before it opens a case. */
+  activeTemplate(serviceType: ServiceType) {
+    return this.prisma.contractTemplate.findFirst({
+      where: { serviceType, isActive: true },
+      orderBy: { version: 'desc' },
+    });
+  }
+
+  /**
+   * Issues the contract, retrying its number on a collision.
+   *
+   * Two consultants pressing "Гэрээ үүсгэх" in the same second both read the
+   * same count, so the number is settled by the unique index rather than by the
+   * read in front of it: the loser simply takes the next one (1N-11).
+   */
+  private async createNumbered(on: Date, data: Omit<Prisma.ContractUncheckedCreateInput, 'number'>) {
+    for (let attempt = 0; attempt < NUMBER_ATTEMPTS; attempt += 1) {
+      try {
+        return await this.prisma.contract.create({ data: { ...data, number: await this.nextContractNumber(on, attempt) } });
+      } catch (error) {
+        if (!isUniqueViolation(error)) throw error;
+      }
+    }
+    throw new ConflictException('Гэрээний дугаар олгох гэж байгаад зөрчилдлөө — дахин оролдоно уу');
   }
 
   /**
@@ -218,12 +258,7 @@ export class ContractsService {
     for (const contract of contracts) {
       // A contract issued before `templateId` was recorded falls back to the
       // service's active template — the same text it would be reissued from.
-      const template =
-        contract.template ??
-        (await this.prisma.contractTemplate.findFirst({
-          where: { serviceType: contract.case.serviceType, isActive: true },
-          orderBy: { version: 'desc' },
-        }));
+      const template = contract.template ?? (await this.activeTemplate(contract.case.serviceType));
       if (!template) continue;
 
       const client = contract.case.user.client;
@@ -301,7 +336,12 @@ export class ContractsService {
   async findOne(id: string, user: AuthenticatedUser) {
     const contract = await this.getOrThrow(id);
     this.assertAccess(contract, user);
-    return contract;
+    if (isCrmStaff(user.role)) return contract;
+
+    // The client's own copy: the text and the money, without the office's audit
+    // trail (`signedIp`) or its storage paths (1N-04).
+    const own = await this.prisma.contract.findUniqueOrThrow({ where: { id }, select: CLIENT_CONTRACT_SELECT });
+    return toClientContract(own);
   }
 
   async downloadUrl(id: string, user: AuthenticatedUser) {
@@ -415,14 +455,18 @@ export class ContractsService {
     if (contract.type !== ContractType.PHYSICAL) {
       throw new BadRequestException('Энэ endpoint зөвхөн PHYSICAL гэрээнд зориулагдсан');
     }
-    if (contract.status === ContractStatus.SIGNED) {
+    // A paper contract is registered exactly once, out of DRAFT. Rejecting only
+    // SIGNED let a second post overwrite the scan on a contract that was
+    // already active, cancelled or finished (1N-12).
+    if (contract.status !== ContractStatus.DRAFT) {
       throw new BadRequestException('Гэрээ аль хэдийн бүртгэгдсэн байна');
     }
 
     const { path } = await this.storage.upload({ caseId: contract.caseId, docCode: 'CONTRACT_SCAN', buffer: scanBuffer });
-    await this.prisma.contract.update({ where: { id }, data: { physicalScanPath: path } });
 
-    return this.finalizeSigning(contract, { signedAt: new Date(dto.signedAt), signedIp: null });
+    // The scan is written with the signature, not before it: a stage move that
+    // fails must not leave a scan on a contract nobody registered.
+    return this.finalizeSigning(contract, { signedAt: new Date(dto.signedAt), signedIp: null }, { physicalScanPath: path });
   }
 
   // ─── Collateral contract (1C-10) ───────────────────────────────────────────
@@ -460,6 +504,7 @@ export class ContractsService {
   private async finalizeSigning(
     contract: { id: string; caseId: string; bodyMn: string },
     signature: { signedAt: Date; signedIp: string | null },
+    extra: Prisma.ContractUpdateInput = {},
   ) {
     const full = await this.prisma.contract.findUniqueOrThrow({ where: { id: contract.id }, include: { case: true } });
 
@@ -483,6 +528,7 @@ export class ContractsService {
           signedIp: signature.signedIp,
           otpVerifiedAt: full.type === ContractType.ELECTRONIC ? signature.signedAt : null,
           pdfPath,
+          ...extra,
         },
       });
       await this.cases.applySystemTransition(tx, contract.caseId, CaseStage.CONTRACT_SIGNED);
@@ -524,7 +570,10 @@ export class ContractsService {
     if (contract.type !== ContractType.ELECTRONIC) {
       throw new BadRequestException('Энэ endpoint зөвхөн ELECTRONIC гэрээнд зориулагдсан');
     }
-    if (contract.status === ContractStatus.SIGNED) {
+    // Only a contract still waiting for its signature can take one. `ACTIVE`,
+    // `COMPLETED` and `TERMINATED` used to fall through the `SIGNED` check, so
+    // "I agree" on a live contract mailed a fresh OTP (1N-12).
+    if (!PRE_SIGNATURE_STATUSES.includes(contract.status)) {
       throw new BadRequestException('Гэрээ аль хэдийн гарын үсэг зурагдсан байна');
     }
   }
@@ -534,9 +583,7 @@ export class ContractsService {
   }
 
   private assertAccess(contract: { userId: string }, user: AuthenticatedUser): void {
-    if (!isCrmStaff(user.role) && contract.userId !== user.id) {
-      throw new ForbiddenException('Энэ гэрээнд хандах эрхгүй байна');
-    }
+    assertOwnerOrCrm(contract.userId, user, 'Энэ гэрээнд хандах эрхгүй байна');
   }
 
   /**
@@ -545,14 +592,14 @@ export class ContractsService {
    * second both read the same count, and the loser simply takes the next one.
    */
   private async nextContractNumber(on: Date, attempt = 0): Promise<string> {
-    const yearStart = new Date(on.getFullYear(), 0, 1);
-    const nextYearStart = new Date(on.getFullYear() + 1, 0, 1);
-    const issued = await this.prisma.contract.count({
-      where: { createdAt: { gte: yearStart, lt: nextYearStart } },
-    });
-    const year = String(on.getFullYear()).slice(-2);
+    // The office's year, not the server's: production runs UTC, so a contract
+    // issued on the evening of 31 December was numbered into the year that had
+    // just ended (1N-11).
+    const { year } = officeDateParts(on);
+    const { start, end } = officeYearBounds(year);
+    const issued = await this.prisma.contract.count({ where: { createdAt: { gte: start, lt: end } } });
     const sequence = String(issued + 1 + attempt).padStart(3, '0');
-    const candidate = `${CONTRACT_NUMBER_PREFIX}/${year}/${sequence}`;
+    const candidate = `${CONTRACT_NUMBER_PREFIX}/${String(year).slice(-2)}/${sequence}`;
 
     const taken = await this.prisma.contract.findUnique({ where: { number: candidate }, select: { id: true } });
     return taken ? this.nextContractNumber(on, attempt + 1) : candidate;
@@ -611,7 +658,7 @@ export function partyTokens(user: ContractUser, client: ContractClient | null, b
         : '',
 
     userName: client ? `${client.lastName} ${client.firstName}` : (user.name ?? user.email ?? '—'),
-    userBirthDate: client ? client.birthDate.toLocaleDateString('en-CA') : '—',
+    userBirthDate: client ? formatOfficeDateIso(client.birthDate) : '—',
     guardianName,
     guardianRegister: byGuardian ? (client?.guardianRegisterNumber ?? '—') : '—',
     guardianRelation: byGuardian ? (client?.guardianRelation ?? '—') : '—',
@@ -644,7 +691,7 @@ export function contractTokens(input: {
 
   return {
     ...partyTokens(input.user, input.client, input.signedForByGuardian),
-    contractDate: input.contractDate.toLocaleDateString('en-CA'),
+    contractDate: formatOfficeDateIso(input.contractDate),
     signatureDate: formatSignatureDate(input.contractDate),
     universityName: universityNames(input.universityChoices, input.universityFallback),
     totalAmount: formatAmountExact(total),
@@ -660,7 +707,7 @@ export function contractTokens(input: {
   };
 }
 
-/** `2026/09/02` — the date beside the client's signature in the Word file. */
+/** `2026/09/02` — the date beside the client's signature in the Word file, read off the office's clock (1N-11). */
 export function formatSignatureDate(date: Date): string {
-  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+  return formatOfficeDateSlash(date);
 }

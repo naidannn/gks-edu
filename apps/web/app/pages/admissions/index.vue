@@ -10,7 +10,6 @@ import type { AdmissionFacets, AdmissionListItem, PaginatedResult, ProgramLevel 
  */
 type Paginated = PaginatedResult<AdmissionListItem>;
 
-const route = useRoute();
 const router = useRouter();
 
 const PAGE_SIZE = 18;
@@ -22,52 +21,20 @@ const SORTS: { value: string; label: string }[] = [
 ];
 const DEFAULT_SORT = 'deadline';
 
-const str = (value: unknown): string => (typeof value === 'string' ? value : '');
-const num = (value: unknown, fallback: number): number => {
-  const parsed = Number.parseInt(str(value), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-
 // The URL is the state: a filtered calendar survives a reload and a shared link.
+const { str, num, apply, search } = useQueryState();
+
 const filters = computed(() => ({
-  q: str(route.query.q),
-  level: str(route.query.level) as ProgramLevel | '',
-  year: str(route.query.year),
-  month: str(route.query.month),
-  region: str(route.query.region),
-  sort: str(route.query.sort) || DEFAULT_SORT,
-  page: num(route.query.page, 1),
+  q: str('q'),
+  level: str('level') as ProgramLevel | '',
+  year: str('year'),
+  month: str('month'),
+  region: str('region'),
+  sort: str('sort', DEFAULT_SORT),
+  page: num('page'),
 }));
 
-const searchInput = ref(filters.value.q);
-watch(
-  () => filters.value.q,
-  (value) => {
-    searchInput.value = value;
-  },
-);
-
-function apply(patch: Record<string, string | number | undefined>, resetPage = true) {
-  const merged = { ...(route.query as Record<string, string>), ...patch };
-  const query = Object.fromEntries(
-    Object.entries(merged)
-      .filter(([key, value]) => {
-        if (resetPage && key === 'page') return false;
-        return value !== '' && value !== undefined && value !== null;
-      })
-      .map(([key, value]) => [key, String(value)]),
-  );
-  router.push({ query });
-}
-
-let searchTimer: ReturnType<typeof setTimeout> | undefined;
-watch(searchInput, (value) => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    if (value !== filters.value.q) apply({ q: value.trim() });
-  }, 350);
-});
-onBeforeUnmount(() => clearTimeout(searchTimer));
+const searchInput = search();
 
 const query = computed(() => ({
   page: filters.value.page,
@@ -115,22 +82,6 @@ const regionOptions = computed(() => [
   { value: '', label: 'Бүх бүс нутаг' },
   ...(facets.value?.regions ?? []).map((row) => ({ value: row.value, label: `${row.label} (${row.count})` })),
 ]);
-
-function countdownLabel(days: number | null): string {
-  if (days === null) return 'Хугацаа тодорхойгүй';
-  if (days < 0) return 'Хугацаа дууссан';
-  if (days === 0) return 'Өнөөдөр хаагдана';
-  return `${days} хоног үлдлээ`;
-}
-
-/** Urgency, not status: the phase badge already says whether it is open. */
-function countdownTone(days: number | null): BadgeTone {
-  if (days === null) return 'neutral';
-  if (days < 0) return 'neutral';
-  if (days <= 7) return 'danger';
-  if (days <= 21) return 'warning';
-  return 'success';
-}
 
 useHead({ title: 'Солонгосын сургуулиудын элсэлт' });
 useSeoMeta({
@@ -253,8 +204,8 @@ useListingSeo('/admissions');
           </dl>
 
           <footer class="gks-adm-card__foot">
-            <DsBadge :tone="countdownTone(intake.daysUntilInternalDeadline)">
-              {{ countdownLabel(intake.daysUntilInternalDeadline) }}
+            <DsBadge :tone="deadlineCountdownTone(intake.daysUntilInternalDeadline)">
+              {{ deadlineCountdownLabel(intake.daysUntilInternalDeadline) }}
             </DsBadge>
             <NuxtLink
               class="gks-adm-card__cta"

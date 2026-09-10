@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import type { PaginatedResult } from '@gks/shared';
 
-definePageMeta({ middleware: 'auth' });
-useHead({ title: 'Баримт' });
+/**
+ * The RAG corpus, for whoever maintains it.
+ *
+ * Admin-only, not merely signed-in. It is a developer surface over the vector
+ * store — it names chunks, embeddings and the file the stub embedder lives in —
+ * and it was reachable by any client with an account, who would find a screen
+ * about the machinery rather than about their own case. Kept rather than
+ * deleted because the phase-2 assistant (`docs/AI-ASSISTANT.md`) is built on
+ * this store and this is the only place to look at what is in it.
+ */
+definePageMeta({ middleware: 'admin', layout: 'admin' });
+useHead({ title: 'Баримт · Админ' });
 useNoIndex();
 
 interface DocumentListItem {
@@ -44,15 +54,20 @@ async function create() {
     rawChunks.value = '';
     await refresh();
   } catch (err) {
-    error.value = (err as Error).message;
+    error.value = apiErrorMessage(err, 'Баримт хадгалж чадсангүй');
   } finally {
     pending.value = false;
   }
 }
 
 async function remove(id: string) {
-  await api.delete(`/documents/${id}`);
-  await refresh();
+  error.value = null;
+  try {
+    await api.delete(`/documents/${id}`);
+    await refresh();
+  } catch (err) {
+    error.value = apiErrorMessage(err, 'Баримтыг устгаж чадсангүй');
+  }
 }
 </script>
 

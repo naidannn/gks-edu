@@ -41,11 +41,17 @@ const composingNew = ref(false);
 const activeId = computed(() => thread.conversation.value?.id ?? null);
 const hasThreads = computed(() => conversations.value.length > 0);
 
+const listError = ref<string | null>(null);
+
 async function loadList(): Promise<void> {
   listPending.value = true;
+  listError.value = null;
   try {
     const response = await api.get<ConversationListResponse>('/me/conversations?limit=50');
     conversations.value = response.items;
+  } catch (e) {
+    // "Танд одоогоор чат алга" for a failed request is a lie the client acts on.
+    listError.value = apiErrorMessage(e, 'Чатын жагсаалтыг ачаалж чадсангүй');
   } finally {
     listPending.value = false;
   }
@@ -97,11 +103,20 @@ function patchList(next: ConversationListItem): void {
   conversations.value = [next, ...rest];
 }
 
+/**
+ * The listener set lives on the connection, which outlives this page, so the
+ * unsubscribe has to be kept and called — `useMessengerThread` already does.
+ * Dropping it left one dead closure per visit, and every conversation event
+ * then fired one more inbox reload than the visit before.
+ */
+let unsubscribe: (() => void) | null = null;
+onBeforeUnmount(() => unsubscribe?.());
+
 onMounted(async () => {
   stream.connect();
   thread.listen();
 
-  stream.on((event) => {
+  unsubscribe = stream.on((event) => {
     if (event.type === 'conversation') patchList(event.conversation);
     else if (event.type === 'reconnect') void loadList();
   });
@@ -151,8 +166,14 @@ const assigneeLine = computed(() => {
         >
           <template #empty>
             <div class="gks-messages__list-empty">
-              <p>Танд одоогоор чат алга.</p>
-              <button type="button" class="gks-messages__link" @click="startNew">Эхний асуултаа бичих</button>
+              <template v-if="listError">
+                <p>{{ listError }}</p>
+                <button type="button" class="gks-messages__link" @click="loadList">Дахин оролдох</button>
+              </template>
+              <template v-else>
+                <p>Танд одоогоор чат алга.</p>
+                <button type="button" class="gks-messages__link" @click="startNew">Эхний асуултаа бичих</button>
+              </template>
             </div>
           </template>
         </MessengerThreadList>

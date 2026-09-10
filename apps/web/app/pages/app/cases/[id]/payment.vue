@@ -45,33 +45,72 @@ async function create(kind: PaymentKind) {
   }
 }
 
-// Poll while a payment is PENDING — the same webhook/BullMQ-backed status the backend maintains.
-let pollTimer: ReturnType<typeof setInterval> | undefined;
+/*
+ * Poll while a payment is PENDING — the same webhook/BullMQ-backed status the
+ * backend maintains.
+ *
+ * A self-scheduling timeout rather than `setInterval`, because the body is
+ * async and the interval did not wait for it: a response slower than the tick
+ * overlapped the next one, a network blip rejected unhandled every three
+ * seconds, and two ticks could both read PAID and report the purchase twice.
+ * The next tick is scheduled only after the previous one has finished, and the
+ * poll stops itself the moment it has an answer.
+ */
+const POLL_INTERVAL_MS = 3_000;
+let pollTimer: ReturnType<typeof setTimeout> | undefined;
+/** Bumped on every (re)start, so a tick from a superseded run does nothing. */
+let pollRun = 0;
+
+function stopPolling(): void {
+  pollRun += 1;
+  clearTimeout(pollTimer);
+  pollTimer = undefined;
+}
+
 watch(pendingPayment, (payment) => {
-  clearInterval(pollTimer);
+  stopPolling();
   if (!payment) return;
-  pollTimer = setInterval(async () => {
-    const fresh = await api.get<{ status: string }>(`/payments/${payment.id}`);
-    if (fresh.status !== 'PENDING') {
-      await reload();
-      // A confirmed payment moves the case on (1C-15), so the portal's own
-      // "what next" answer is stale until it is re-read.
-      await refresh();
-      if (fresh.status === 'PAID') {
-        // The API reports this one from the QPay webhook, under the same id.
-        // The browser copy exists because it is the half that carries the
-        // visitor's cookies — the webhook has no browser to read them from.
-        meta.trackPaired('Purchase', payment.id, {
-          value: Number(payment.amountMnt),
-          currency: 'MNT',
-          content_type: 'product',
-          content_ids: [payment.kind],
-        });
-      }
+
+  const run = pollRun;
+  const settled = async (status: string) => {
+    await reload();
+    // A confirmed payment moves the case on (1C-15), so the portal's own
+    // "what next" answer is stale until it is re-read.
+    await refresh();
+    if (status === 'PAID') {
+      // The API reports this one from the QPay webhook, under the same id.
+      // The browser copy exists because it is the half that carries the
+      // visitor's cookies — the webhook has no browser to read them from.
+      meta.trackPaired('Purchase', payment.id, {
+        value: Number(payment.amountMnt),
+        currency: 'MNT',
+        content_type: 'product',
+        content_ids: [payment.kind],
+      });
     }
-  }, 3000);
+  };
+
+  const tick = async () => {
+    if (run !== pollRun) return;
+    try {
+      const fresh = await api.get<{ status: string }>(`/payments/${payment.id}`);
+      if (run !== pollRun) return;
+      if (fresh.status !== 'PENDING') {
+        stopPolling();
+        await settled(fresh.status);
+        return;
+      }
+    } catch {
+      // A blip while waiting for QPay is not worth a message: the QR is still
+      // on screen and the next tick asks again.
+    }
+    if (run !== pollRun) return;
+    pollTimer = setTimeout(() => void tick(), POLL_INTERVAL_MS);
+  };
+
+  pollTimer = setTimeout(() => void tick(), POLL_INTERVAL_MS);
 }, { immediate: true });
-onBeforeUnmount(() => clearInterval(pollTimer));
+onBeforeUnmount(stopPolling);
 
 </script>
 

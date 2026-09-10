@@ -9,8 +9,11 @@ import type { QueryUniversitiesDto, UniversitySort } from './dto/query-universit
 /**
  * Columns safe to expose publicly. `commissionNote` and `internalNote` are
  * deliberately absent — they are staff-only (ARCHITECTURE.md §3).
+ *
+ * Exported as the one school card: the admissions list carries the same object,
+ * and two copies is how a column added here quietly goes missing there.
  */
-const CARD_FIELDS = {
+export const UNIVERSITY_CARD_FIELDS = {
   id: true,
   slug: true,
   nameMn: true,
@@ -38,7 +41,7 @@ const CARD_FIELDS = {
 } satisfies Prisma.UniversitySelect;
 
 const DETAIL_FIELDS = {
-  ...CARD_FIELDS,
+  ...UNIVERSITY_CARD_FIELDS,
   address: true,
   cityEn: true,
   lat: true,
@@ -86,6 +89,10 @@ const LIST_CACHE_TTL_MS = 60_000;
 /** Every key the list cache writes, so an admin edit can drop them in one sweep. */
 export const LIST_CACHE_PATTERN = 'universities:list:*';
 
+/** The filter-panel facets, and one school's detail page — dropped by every writer. */
+export const UNIVERSITIES_FACETS_CACHE_KEY = 'universities:facets';
+export const universityDetailCacheKey = (slug: string) => `university:${slug}`;
+
 /**
  * A stable key for one page of the catalogue. Free-text searches are left out
  * on purpose — their cardinality is unbounded and each one is typed once.
@@ -121,7 +128,7 @@ export class UniversitiesService {
       const [items, total] = await Promise.all([
         this.prisma.university.findMany({
           where,
-          select: CARD_FIELDS,
+          select: UNIVERSITY_CARD_FIELDS,
           orderBy: ORDER_BY[query.sort](query.order),
           skip: query.skip,
           take: query.limit,
@@ -141,7 +148,7 @@ export class UniversitiesService {
 
   async findBySlug(slug: string) {
     return this.cache.wrap(
-      `university:${slug}`,
+      universityDetailCacheKey(slug),
       async () => {
         const university = await this.prisma.university.findFirst({
           where: { slug, isPublished: true },
@@ -162,7 +169,8 @@ export class UniversitiesService {
                 tuitionPerTermKrw: true,
                 tuitionPerYearKrw: true,
                 admissionFeeKrw: true,
-                tuitionYear: true,
+                // `tuitionYear` stays behind the admin screen — a staff signal
+                // for a stale price, never a line on a public card (§3.3).
                 scholarshipMaxPercent: true,
                 scholarshipNote: true,
                 topikLevel: true,
@@ -225,7 +233,7 @@ export class UniversitiesService {
   /** Filter-panel facets: which regions and types actually have published schools. */
   async facets() {
     return this.cache.wrap(
-      'universities:facets',
+      UNIVERSITIES_FACETS_CACHE_KEY,
       async () => {
         const published = { isPublished: true } satisfies Prisma.UniversityWhereInput;
 

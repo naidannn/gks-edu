@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNumber, IsOptional, IsPositive, Max, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsPositive, Max, Min } from 'class-validator';
 import { BalanceTrigger, PrepaymentMode, ServiceType } from '../../../prisma/client.js';
 import { DEFAULT_PAYMENT_DUE_DAYS, MAX_PAYMENT_DUE_DAYS } from '../payment-terms.js';
 
@@ -37,6 +37,9 @@ export class CreateServicePricingDto {
   paymentDueDays?: number;
 
   @ApiProperty({ description: 'ISO date this pricing takes effect; defaults to now', required: false })
+  // Unvalidated, an unparseable string reached Prisma as `Invalid Date` and
+  // came back as a 500 (1N-15).
+  @IsDateString()
   @IsOptional()
   effectiveFrom?: string;
 }

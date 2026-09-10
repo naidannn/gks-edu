@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { STAFF_ROLES } from '../../common/constants/roles.js';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { STAFF_ROLES, activeStaffWhere } from '../../common/constants/roles.js';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { LeadActivityType, LeadSource, LeadStage, NotificationEvent, Prisma, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -9,6 +9,7 @@ import { LEAD_SOURCE_LABELS, SERVICE_TYPE_LABELS } from '../notifications/notifi
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
 import { MetaEventsService } from '../meta/meta-events.service.js';
+import { officeDateRange } from '../reports/report-period.js';
 import type { MetaRequestContext } from '../meta/request-context.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import type { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
@@ -116,7 +117,11 @@ export class LeadsService {
         link: { label: 'CRM дээр нээх', path: `/admin/leads/${recent.id}` },
       });
 
-      await this.reportLeadToMeta(dto, phone, recent.id, request);
+      // 1N-39 — the same person, so the same conversion. Passing the original
+      // lead's id as the event id makes Meta collapse the repeat into the event
+      // the first submission already reported, instead of counting a nervous
+      // visitor twice and teaching the campaign to look for more of them.
+      await this.reportLeadToMeta(dto, phone, recent.id, request, { deduped: true });
       return { id: recent.id, merged: true };
     }
 
@@ -173,16 +178,24 @@ export class LeadsService {
    * same submission — Meta collapses the pair into one conversion. When the
    * pixel was blocked and no id arrived, the lead's own id is used: still
    * stable, still deduplicated against a retry of the same request.
+   *
+   * `deduped` is the repeat-submission case (1N-39): the browser's id is new
+   * every time somebody presses the button again, so it is dropped in favour of
+   * the original lead's id — the same id the first submission reported under,
+   * which is what makes Meta count one person once.
    */
   private async reportLeadToMeta(
     dto: CreatePublicLeadDto,
     phone: string,
     leadId: string,
     request: MetaRequestContext,
+    options: { deduped?: boolean } = {},
   ): Promise<void> {
     await this.meta.track({
       eventName: 'Lead',
-      eventId: dto.tracking?.eventId || leadId,
+      // A repeat submission ignores the browser's fresh event id: that id is
+      // new on every submit, so it would deduplicate against nothing.
+      eventId: options.deduped ? leadId : dto.tracking?.eventId || leadId,
       actionSource: 'website',
       eventSourceUrl: dto.tracking?.eventSourceUrl ?? dto.utm?.landingPage,
       identity: {
@@ -235,7 +248,7 @@ export class LeadsService {
     });
 
     const staff = await this.prisma.user.findMany({
-      where: { isActive: true, role: { in: [...STAFF_ROLES] } },
+      where: activeStaffWhere(STAFF_ROLES),
       select: { id: true },
     });
     if (!staff.length) return;
@@ -312,7 +325,7 @@ export class LeadsService {
 
     if (dto.assignedToId) {
       const assignee = await this.prisma.user.findFirst({
-        where: { id: dto.assignedToId, role: { in: [...STAFF_ROLES] }, isActive: true },
+        where: { id: dto.assignedToId, ...activeStaffWhere(STAFF_ROLES) },
         select: { id: true },
       });
       if (!assignee) throw new BadRequestException('Идэвхтэй ажилтан олдсонгүй');
@@ -532,6 +545,14 @@ export class LeadsService {
     if (source.mergedIntoId) throw new BadRequestException('Энэ сэжим аль хэдийн нэгтгэгдсэн байна');
     if (target.mergedIntoId) throw new BadRequestException('Хүлээн авагч сэжим өөрөө нэгтгэгдсэн байна');
 
+    // 1N-40 — merge and conversion have to know about each other. A converted
+    // lead owns a client, a login and a signed history; folding it away marks
+    // it LOST and hides it from every list, leaving a paying customer hanging
+    // off a stub. The merge tool is for duplicates nobody has acted on yet, so
+    // a converted lead on either side is refused and staff merge the records
+    // the other way round — or not at all.
+    await this.assertNotConverted(target.id, source.id);
+
     const fill: Prisma.LeadUpdateInput = {
       ...(target.email ? {} : { email: source.email }),
       ...(target.age ? {} : { age: source.age }),
@@ -568,6 +589,22 @@ export class LeadsService {
 
       return merged;
     });
+  }
+
+  /** Refuses a merge that would hide, or rewrite, a lead already turned into a client. */
+  private async assertNotConverted(targetId: string, sourceId: string): Promise<void> {
+    const clients = await this.prisma.client.findMany({
+      where: { leadId: { in: [targetId, sourceId] } },
+      select: { code: true, leadId: true },
+    });
+    if (!clients.length) return;
+
+    const onSource = clients.find((client) => client.leadId === sourceId);
+    throw new ConflictException(
+      onSource
+        ? `Энэ сэжим ${onSource.code} үйлчлүүлэгч болсон тул нэгтгэх боломжгүй`
+        : `Хүлээн авагч сэжим ${clients[0]!.code} үйлчлүүлэгч болсон тул нэгтгэх боломжгүй`,
+    );
   }
 
   // ─── Stage transitions (1B-02) ────────────────────────────────────────────
@@ -657,7 +694,7 @@ export class LeadsService {
 
     if (dto.assignedToId) {
       const assignee = await this.prisma.user.findFirst({
-        where: { id: dto.assignedToId, role: { in: [...STAFF_ROLES] }, isActive: true },
+        where: { id: dto.assignedToId, ...activeStaffWhere(STAFF_ROLES) },
         select: { id: true, name: true, email: true },
       });
       if (!assignee) throw new BadRequestException('Идэвхтэй ажилтан олдсонгүй');
@@ -694,7 +731,7 @@ export class LeadsService {
 
     const [staff, loads] = await Promise.all([
       this.prisma.user.findMany({
-        where: { role: { in: [...STAFF_ROLES] }, isActive: true },
+        where: activeStaffWhere(STAFF_ROLES),
         select: { id: true },
       }),
       this.prisma.lead.groupBy({
@@ -733,12 +770,10 @@ export class LeadsService {
     if (query.source) where.source = query.source;
     if (query.assignedToId === 'unassigned') where.assignedToId = null;
     else if (query.assignedToId) where.assignedToId = query.assignedToId;
-    if (query.createdFrom || query.createdTo) {
-      where.createdAt = {
-        ...(query.createdFrom ? { gte: new Date(query.createdFrom) } : {}),
-        ...(query.createdTo ? { lte: new Date(query.createdTo) } : {}),
-      };
-    }
+    // The same office-local window the reports use, so "энэ долоо хоног" means
+    // one thing in the CRM list and in the report (1N-38).
+    const createdAt = officeDateRange(query.createdFrom, query.createdTo);
+    if (createdAt) where.createdAt = createdAt;
 
     return where;
   }

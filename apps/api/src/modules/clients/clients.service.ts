@@ -25,6 +25,9 @@ import {
 import { ContractsService } from '../contracts/contracts.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { AccountClaimService } from '../users/account-claim.service.js';
+import { activeStaffWhere, STAFF_ROLES } from '../../common/constants/roles.js';
+import { officeDateRange } from '../reports/report-period.js';
+import { DEADLINE_WARNING_MS, TERMINAL_STAGES, liveCase } from './client-cases.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
 import type { ConvertLeadDto } from './dto/convert-lead.dto.js';
 import type { CreateClientDto } from './dto/create-client.dto.js';
@@ -43,18 +46,8 @@ export type SelfServiceClientInput = Omit<
   'source' | 'status' | 'assignedConsultantId' | 'note' | 'openCase'
 >;
 
-/**
- * The client's live service cycle, as shown in the list. One client may run
- * several cases over time (§20 — a language-prep client coming back for a
- * bachelor's); the newest non-terminal one is the one staff are working on.
- */
-const TERMINAL_STAGES: CaseStage[] = [CaseStage.COMPLETED, CaseStage.CANCELLED, CaseStage.REJECTED];
-
 /** Back-office work that is still someone's problem. */
 const OPEN_TASK_STATUSES: WorkTaskStatus[] = [WorkTaskStatus.TODO, WorkTaskStatus.IN_PROGRESS];
-
-/** A deadline this close is worth a row-level warning on the list. */
-const DEADLINE_WARNING_DAYS = 7;
 
 /** Per-row operational state, so the list answers "who needs me today" (1G-17). */
 interface ClientAttention {
@@ -182,6 +175,7 @@ export class ClientsService {
         data: {
           ...this.toClientData(dto),
           ...this.toRequiredClientData(dto),
+          ...this.toSourceOnCreate(dto),
           targetUniversityId: choices[0]?.universityId,
           code: await this.generateCode(tx),
           userId: account.id,
@@ -220,6 +214,16 @@ export class ClientsService {
     if (!lead) throw new NotFoundException('Сэжим олдсонгүй');
     if (lead.client) {
       throw new ConflictException(`Энэ сэжим аль хэдийн ${lead.client.code} хэрэглэгч болсон байна`);
+    }
+    // 1N-40 — a lead folded into another (1B-09) is hidden from every list and
+    // already marked LOST. Converting it anyway builds the client on the copy
+    // staff decided to discard, and leaves the surviving lead sitting in the
+    // funnel un-won — which undercounts both the source report and the
+    // consultant's scoreboard. The conversion belongs to the survivor.
+    if (lead.mergedIntoId) {
+      throw new ConflictException(
+        'Энэ сэжим өөр сэжимд нэгтгэгдсэн байна — нэгтгэгдсэн сэжмээс нь бүртгэнэ үү',
+      );
     }
 
     const primaryServiceType = dto.primaryServiceType ?? lead.interestedServices[0];
@@ -260,6 +264,7 @@ export class ClientsService {
         data: {
           ...this.toClientData(merged),
           ...this.toRequiredClientData(merged),
+          ...this.toSourceOnCreate(merged),
           targetUniversityId: choices[0]?.universityId,
           code: await this.generateCode(tx),
           userId: account.id,
@@ -675,20 +680,20 @@ export class ClientsService {
     serviceType?: ServiceType,
   ): Promise<NormalisedChoice[]> {
     const choices = normaliseChoices(serviceType ?? existing.primaryServiceType, inputs);
-    const liveCase = await this.prisma.case.findFirst({
+    const current = await this.prisma.case.findFirst({
       where: { userId: existing.userId, stage: { notIn: TERMINAL_STAGES } },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
     });
 
-    if (!liveCase) {
+    if (!current) {
       if (choices.length > 1) {
         throw new BadRequestException('Идэвхтэй үйлчилгээгүй тул нэгээс олон сургууль хадгалах боломжгүй');
       }
       return choices;
     }
 
-    await this.cases.replaceUniversityChoices(liveCase.id, { universityChoices: choices });
+    await this.cases.replaceUniversityChoices(current.id, { universityChoices: choices });
     return choices;
   }
 
@@ -746,7 +751,11 @@ export class ClientsService {
       targetUniversityId: dto.targetUniversityId,
       targetMajor: dto.targetMajor,
       plannedIntakeId: dto.plannedIntakeId,
-      source: dto.source ?? LeadSource.OFFICE,
+      // No default here: this mapping is spread straight into the update path,
+      // and an `?? OFFICE` fallback rewrote a website lead's client as an
+      // office walk-in every time somebody fixed a passport number (1N-36).
+      // Where a client came from is stamped once, at creation, below.
+      source: dto.source,
       status: dto.status,
       assignedConsultantId: dto.assignedConsultantId,
       note: dto.note,
@@ -763,6 +772,15 @@ export class ClientsService {
       phone: dto.phone,
       primaryServiceType: dto.primaryServiceType,
     };
+  }
+
+  /**
+   * Where the client came from, decided once (1N-36). The office is the default
+   * for someone who walked in with nothing behind them; a conversion passes the
+   * lead's own source, and neither is ever recomputed by a later edit.
+   */
+  private toSourceOnCreate(dto: Pick<CreateClientDto, 'source'>) {
+    return { source: dto.source ?? LeadSource.OFFICE };
   }
 
   /**
@@ -918,7 +936,7 @@ export class ClientsService {
 
   private async assertStaff(userId: string): Promise<void> {
     const staff = await this.prisma.user.findFirst({
-      where: { id: userId, role: { in: [Role.ADMIN, Role.CONSULTANT] }, isActive: true },
+      where: { id: userId, ...activeStaffWhere(STAFF_ROLES) },
       select: { id: true },
     });
     if (!staff) throw new BadRequestException('Идэвхтэй, тохирох эрхтэй ажилтан олдсонгүй');
@@ -954,12 +972,11 @@ export class ClientsService {
     const attentionFilter = this.attentionCaseFilter(query);
     if (attentionFilter) caseFilter.some = { ...caseFilter.some, ...attentionFilter };
     if (Object.keys(caseFilter).length > 0) where.user = { cases: caseFilter };
-    if (query.createdFrom || query.createdTo) {
-      where.createdAt = {
-        ...(query.createdFrom ? { gte: new Date(query.createdFrom) } : {}),
-        ...(query.createdTo ? { lte: new Date(query.createdTo) } : {}),
-      };
-    }
+    // "Огноо хүртэл" is an office-local day, not a UTC midnight — see
+    // `officeDateRange`. A raw `lte: new Date('2026-09-11')` cut the day off at
+    // 08:00 Ulaanbaatar time and dropped everything after it (1N-38).
+    const createdAt = officeDateRange(query.createdFrom, query.createdTo);
+    if (createdAt) where.createdAt = createdAt;
 
     return where;
   }
@@ -984,7 +1001,7 @@ export class ClientsService {
             some: {
               deletedAt: null,
               status: { notIn: SETTLED_STATUSES as DocumentStatus[] },
-              dueAt: { lte: new Date(now.getTime() + DEADLINE_WARNING_DAYS * 86_400_000) },
+              dueAt: { lte: new Date(now.getTime() + DEADLINE_WARNING_MS) },
             },
           },
         };
@@ -1001,7 +1018,7 @@ export class ClientsService {
 
   /** Newest live case, falling back to the newest of any kind for a finished client. */
   private caseSummary(cases: CaseSummary[]) {
-    const active = cases.find((c) => !TERMINAL_STAGES.includes(c.stage)) ?? cases[0] ?? null;
+    const active = liveCase(cases);
     const contract = active?.contract ?? null;
     return {
       activeCase: active

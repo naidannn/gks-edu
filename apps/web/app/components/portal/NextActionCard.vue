@@ -12,20 +12,6 @@ const props = defineProps<{
   hideLink?: boolean;
 }>();
 
-const ACTOR_LABEL: Record<NextAction['actor'], string> = {
-  CLIENT: 'Таны хийх алхам',
-  STAFF: 'Ажилтны талд',
-  SCHOOL: 'Сургуулийн талд',
-  NONE: 'Мэдээлэл',
-};
-
-const ACTOR_ICON: Record<NextAction['actor'], string> = {
-  CLIENT: 'circle-arrow-right',
-  STAFF: 'clock',
-  SCHOOL: 'graduation-cap',
-  NONE: 'circle-check',
-};
-
 const to = computed(() =>
   props.action.tab === 'overview'
     ? `/app/cases/${props.caseId}`
@@ -38,10 +24,10 @@ const showLink = computed(() => !props.hideLink && props.action.actor === 'CLIEN
   <DsCard :accent="action.actor === 'CLIENT'">
     <div class="gks-next">
       <div class="gks-next__icon" :class="`gks-next__icon--${action.actor.toLowerCase()}`">
-        <DsIcon :name="ACTOR_ICON[action.actor]" :size="20" />
+        <DsIcon :name="NEXT_ACTION_ACTOR_ICONS_CLIENT[action.actor]" :size="20" />
       </div>
       <div class="gks-next__text">
-        <span class="gks-eyebrow">{{ ACTOR_LABEL[action.actor] }}</span>
+        <span class="gks-eyebrow">{{ NEXT_ACTION_ACTOR_LABELS_CLIENT[action.actor] }}</span>
         <p class="gks-next__label">{{ action.label }}</p>
         <p class="gks-next__desc">{{ action.description }}</p>
       </div>

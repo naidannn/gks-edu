@@ -9,6 +9,13 @@ export const userSchema = z.object({
   email: z.email().nullable(),
   name: z.string().nullable(),
   role: userRoleSchema,
+  /**
+   * How the account signs in — never with what. Sent on the profile an account
+   * reads about itself and absent from staff listings, so a screen offers
+   * "change password" and "link Google" only where they mean something.
+   */
+  hasPassword: z.boolean().optional(),
+  hasGoogle: z.boolean().optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

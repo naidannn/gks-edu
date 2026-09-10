@@ -314,6 +314,55 @@ describe('LeadsService.createByStaff', () => {
   });
 });
 
+/**
+ * 1N-40 — merge and conversion have to know about each other. Folding away a
+ * converted lead marks it LOST and hides it from every list, leaving a paying
+ * customer hanging off a stub nobody can find.
+ */
+describe('LeadsService.merge — against a converted lead (1N-40)', () => {
+  function mergeStub(clients: { code: string; leadId: string }[]) {
+    const rows: Record<string, Record<string, unknown>> = {
+      'lead-1': { id: 'lead-1', mergedIntoId: null, interestedServices: [], interestedUniversityIds: [] },
+      'lead-2': { id: 'lead-2', mergedIntoId: null, interestedServices: [], interestedUniversityIds: [] },
+    };
+
+    const prisma = {
+      lead: {
+        findUnique: vi.fn().mockImplementation(({ where }: { where: { id: string } }) => rows[where.id] ?? null),
+        update: vi.fn(),
+      },
+      leadActivity: { create: vi.fn(), updateMany: vi.fn() },
+      client: { findMany: vi.fn().mockResolvedValue(clients) },
+      $transaction: vi.fn(),
+    };
+    return prisma as unknown as PrismaService & typeof prisma;
+  }
+
+  it('refuses to fold away a lead that has become a client', async () => {
+    const prisma = mergeStub([{ code: 'KH-2026-0007', leadId: 'lead-2' }]);
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    await expect(service.merge('lead-1', 'lead-2', 'actor-1')).rejects.toThrow(/KH-2026-0007/);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('refuses to rewrite a target whose client has already been built', async () => {
+    const prisma = mergeStub([{ code: 'KH-2026-0008', leadId: 'lead-1' }]);
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    await expect(service.merge('lead-1', 'lead-2', 'actor-1')).rejects.toThrow(/KH-2026-0008/);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('goes ahead when neither side has been acted on', async () => {
+    const prisma = mergeStub([]);
+    prisma.$transaction.mockResolvedValue({ id: 'lead-1' });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    await expect(service.merge('lead-1', 'lead-2', 'actor-1')).resolves.toEqual({ id: 'lead-1' });
+  });
+});
+
 describe('Role', () => {
   it('carries the two staff roles added in 0-07', () => {
     expect(Role.CONSULTANT).toBe('CONSULTANT');

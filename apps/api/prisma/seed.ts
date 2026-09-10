@@ -4,6 +4,7 @@ import { hash } from 'bcryptjs';
 import { createHash } from 'node:crypto';
 import {
   BalanceTrigger,
+  CaseStage,
   DocStage,
   EducationLevel,
   GuarantorRelation,
@@ -80,7 +81,19 @@ async function seedServicePricing(): Promise<void> {
 }
 
 async function seedCaseFlowDefinitions(): Promise<void> {
-  await prisma.caseFlowDefinition.createMany({ data: buildCaseFlowDefinitions(), skipDuplicates: true });
+  const rows = buildCaseFlowDefinitions();
+  await prisma.caseFlowDefinition.createMany({ data: rows, skipDuplicates: true });
+
+  // A database seeded before 1N-06 still carries the resume edges that let a
+  // paused case come back at `BALANCE_PAID` or `COMPLETED`. `createMany` only
+  // adds, so the rows the builder no longer emits are dropped here — the graph
+  // is data, and stale data is an open door.
+  const wanted = new Set(rows.map((row) => `${row.serviceType}|${row.fromStage}|${row.toStage}`));
+  const seeded = await prisma.caseFlowDefinition.findMany({ where: { fromStage: CaseStage.ON_HOLD } });
+  const stale = seeded.filter((row) => !wanted.has(`${row.serviceType}|${row.fromStage}|${row.toStage}`));
+  if (stale.length > 0) {
+    await prisma.caseFlowDefinition.deleteMany({ where: { id: { in: stale.map((row) => row.id) } } });
+  }
 }
 
 /** Draft body per service (gksedu.md §5.4 field list) — admin edits the text via 1C-06. */

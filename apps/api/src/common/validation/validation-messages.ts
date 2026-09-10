@@ -20,6 +20,8 @@ const FIELD_LABELS: Record<string, string> = {
   amountKrw: 'Дүн (₩)',
   answer: 'Хариулт',
   appointmentAt: 'Товлосон цаг',
+  assignedConsultantId: 'Хариуцагч зөвлөх',
+  assignedToId: 'Хариуцагч',
   birthDate: 'Төрсөн огноо',
   blockers: 'Хязгаарлах нөхцөл',
   body: 'Агуулга',
@@ -146,10 +148,28 @@ function limitFrom(rendered: string): number | undefined {
   return numbers ? Number(numbers[numbers.length - 1]) : undefined;
 }
 
+/**
+ * Fields whose `@Matches` pattern means something a person can act on.
+ *
+ * A `ValidationError` keeps only the rendered English text, so a regex has no
+ * arguments left to read back and every pattern would otherwise flatten to
+ * "формат буруу байна". Naming the few that matter here is what keeps the
+ * wording out of the four DTOs that share the phone pattern.
+ */
+const PATTERN_MESSAGES: Record<string, string> = {
+  assignedConsultantId: 'Хариуцагч буруу байна',
+  assignedToId: 'Хариуцагч буруу байна',
+  phone: 'Утасны дугаар буруу байна',
+  phoneAlt: 'Нэмэлт утасны дугаар буруу байна',
+  guardianPhone: 'Асран хамгаалагчийн утасны дугаар буруу байна',
+};
+
 function translate(property: string, constraint: string, rendered: string): string {
   // A DTO that worded its own message meant it; only the defaults are ours to
   // rewrite, and they are the ones with no Cyrillic in them.
   if (CYRILLIC.test(rendered)) return rendered;
+
+  if (constraint === 'matches' && PATTERN_MESSAGES[property]) return PATTERN_MESSAGES[property];
 
   const reason = REASONS[constraint]?.(limitFrom(rendered)) ?? 'утга буруу байна';
   return `${label(property)}: ${reason}`;

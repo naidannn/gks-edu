@@ -1,4 +1,5 @@
 import { EducationLevel, ServiceType } from '../../prisma/client.js';
+import { MONTHS_PER_TOPIK_LEVEL } from '../study-plan/study-plan.rules.js';
 
 /**
  * The arithmetic behind the GKS self-check (ARCHITECTURE.md §3.5).
@@ -102,6 +103,7 @@ export interface GksRound {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MONTHS_PER_YEAR = 12;
 
 /* ---------------------------------------------------------------------- *
  * Grades
@@ -165,17 +167,30 @@ export const AGE_CAP: Record<GksDegree, number> = { BACHELOR: 25, MASTER: 40, PH
  * Whether an age clears the cap.
  *
  * The cap is measured on 1 March (undergraduate) or 1 September (graduate) of
- * the entry year, and we asked for an age, not a birth date — so the year
- * immediately below the cap is genuinely undecidable here, and it is returned
- * as `null` rather than guessed in either direction. Guessing *up* would turn
- * away somebody eligible; guessing *down* would tell somebody to spend a season
- * on an application that cannot be accepted.
+ * the entry year, which is 13 to 16 months out for somebody checking in
+ * November — so it is the age *at entry* that decides, not the age today.
+ * Comparing today's age told a 24-year-old they clear the undergraduate cap in
+ * a season they would sit at 25 or 26, which is the expensive direction (§3.5).
+ *
+ * We asked for an age, not a birth date, so only the birthdays that are certain
+ * are counted: whole years to entry. The year immediately below the cap is then
+ * genuinely undecidable and comes back as `null` rather than guessed — guessing
+ * *up* turns away somebody eligible, guessing *down* sends somebody into a
+ * season that cannot accept them.
  */
-export function checkAge(age: number, degree: GksDegree): boolean | null {
+export function checkAge(age: number, degree: GksDegree, monthsToEntry = 0): boolean | null {
   const cap = AGE_CAP[degree];
-  if (age >= cap) return false;
-  if (age === cap - 1) return null;
+  const ageAtEntry = age + Math.floor(Math.max(monthsToEntry, 0) / MONTHS_PER_YEAR);
+  if (ageAtEntry >= cap) return false;
+  if (ageAtEntry === cap - 1) return null;
   return true;
+}
+
+/** Whole months from `now` to the round's entry month; never negative. */
+export function monthsToEntry(round: Pick<GksRound, 'entryYear' | 'entryMonth'>, now: Date): number {
+  const months =
+    (round.entryYear - now.getUTCFullYear()) * MONTHS_PER_YEAR + (round.entryMonth - 1 - now.getUTCMonth());
+  return Math.max(months, 0);
 }
 
 /**
@@ -451,9 +466,6 @@ function achievementSummary(strengths: readonly GksStrength[]): string {
 /* ---------------------------------------------------------------------- *
  * What to do next
  * ---------------------------------------------------------------------- */
-
-/** Months of study per TOPIK level — the office's figure, one institute term. */
-export const MONTHS_PER_TOPIK_LEVEL = 3;
 
 /**
  * The moves available to this person, biggest first.

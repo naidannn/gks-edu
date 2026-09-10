@@ -1,17 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { IntakeStatus, ProgramLevel, ServiceType } from '../../prisma/client.js';
 import {
+  INTAKE_MONTHS,
+  INTAKE_MONTHS_BY_LEVEL,
   computeInternalDeadline,
   computeIntakePhase,
   daysUntil,
   isIntakeSelectable,
   resolveInternalDeadline,
   resolveIntakeDates,
+  resolveOverrideInternalDeadline,
   serviceAcceptsLevel,
+  toIntakeDate,
   type IntakeDateFields,
 } from './intake-deadline.js';
 
-const iso = (value: string) => new Date(`${value}T00:00:00.000Z`);
+/**
+ * Dates as the module stores them: a bare day means the whole of it, so the
+ * fixtures below sit at the last millisecond (1N-29). The old midnight
+ * fixtures agreed with the seed by accident and hid exactly this.
+ */
+const iso = (value: string) => new Date(`${value}T23:59:59.999Z`);
 
 /** A March 2027 language-prep round: school closes 31 Jan, we close 24 Jan. */
 function term(overrides: Partial<IntakeDateFields> = {}): IntakeDateFields {
@@ -169,6 +178,116 @@ describe('serviceAcceptsLevel', () => {
   it('lets a GKS case target any level', () => {
     for (const level of Object.values(ProgramLevel)) {
       expect(serviceAcceptsLevel(ServiceType.GKS_SCHOLARSHIP, level)).toBe(true);
+    }
+  });
+});
+
+
+describe('toIntakeDate (1N-29)', () => {
+  it('reads a bare day as the whole of it, not as its first instant', () => {
+    expect(toIntakeDate('2027-01-31')).toEqual(new Date('2027-01-31T23:59:59.999Z'));
+  });
+
+  it('leaves a value that carries a time exactly as it was sent', () => {
+    expect(toIntakeDate('2027-01-31T09:00:00.000Z')).toEqual(new Date('2027-01-31T09:00:00.000Z'));
+  });
+
+  it('has nothing to read from an empty value', () => {
+    expect(toIntakeDate(null)).toBeNull();
+    expect(toIntakeDate(undefined)).toBeNull();
+    expect(toIntakeDate('  ')).toBeNull();
+  });
+
+  /**
+   * The bug this exists for: read as midnight, our deadline expires at 08:00
+   * Ulaanbaatar on the morning of the day the office is still working to.
+   */
+  it('keeps the round open through the whole of the internal-deadline day', () => {
+    const deadline = computeInternalDeadline(toIntakeDate('2027-01-31'), 7);
+    // 09:00 in Улаанбаатар on the internal-deadline day itself. Read as
+    // midnight the round is already FINAL_CALL by now.
+    const officeMorning = new Date('2027-01-24T01:00:00.000Z');
+
+    expect(deadline).toEqual(new Date('2027-01-24T23:59:59.999Z'));
+    expect(officeMorning.getTime()).toBeLessThan((deadline as Date).getTime());
+    expect(computeIntakePhase(
+      { applicationDeadline: toIntakeDate('2027-01-31'), internalDeadline: deadline },
+      IntakeStatus.OPEN,
+      officeMorning,
+    )).toBe('OPEN');
+  });
+
+  it('re-saving a date the seed wrote does not move it back a day', () => {
+    const seeded = new Date('2027-01-31T23:59:59.999Z');
+    // The admin form posts the day it renders, and gets the same instant back.
+    expect(toIntakeDate(seeded.toISOString().slice(0, 10))).toEqual(seeded);
+  });
+});
+
+describe('resolveOverrideInternalDeadline (1N-28)', () => {
+  it('stores nothing when the override carries no dates of its own', () => {
+    expect(
+      resolveOverrideInternalDeadline({
+        applicationDeadline: null,
+        internalDeadline: null,
+        internalDeadlineIsManual: false,
+        leadDays: 7,
+      }),
+    ).toBeNull();
+  });
+
+  it('derives from the override\'s own school deadline when it has one', () => {
+    expect(
+      resolveOverrideInternalDeadline({
+        applicationDeadline: iso('2027-01-15'),
+        internalDeadline: null,
+        internalDeadlineIsManual: false,
+        leadDays: 7,
+      }),
+    ).toEqual(iso('2027-01-08'));
+  });
+
+  it('keeps a date a human typed', () => {
+    expect(
+      resolveOverrideInternalDeadline({
+        applicationDeadline: null,
+        internalDeadline: iso('2026-12-15'),
+        internalDeadlineIsManual: true,
+        leadDays: 7,
+      }),
+    ).toEqual(iso('2026-12-15'));
+  });
+
+  /**
+   * A `null` here is what lets the term keep answering: a copy of the term's
+   * date stored on the override is a snapshot nothing recomputes, and it wins
+   * over the term the next time the deadline or the lead time moves.
+   */
+  it('lets the term stay in charge of a dateless override', () => {
+    const stored = resolveOverrideInternalDeadline({
+      applicationDeadline: null,
+      internalDeadline: null,
+      internalDeadlineIsManual: false,
+      leadDays: 7,
+    });
+
+    const merged = resolveIntakeDates(term({ internalDeadline: iso('2027-01-10') }), {
+      internalDeadline: stored,
+      internalDeadlineIsManual: false,
+    });
+    expect(merged.internalDeadline).toEqual(iso('2027-01-10'));
+  });
+});
+
+describe('INTAKE_MONTHS_BY_LEVEL', () => {
+  it('runs language prep on all four quarters and degrees on two semesters', () => {
+    expect(INTAKE_MONTHS_BY_LEVEL[ProgramLevel.LANGUAGE_PREP]).toEqual([...INTAKE_MONTHS]);
+    expect(INTAKE_MONTHS_BY_LEVEL[ProgramLevel.BACHELOR]).toEqual([3, 9]);
+  });
+
+  it('never names a month outside the academic calendar', () => {
+    for (const months of Object.values(INTAKE_MONTHS_BY_LEVEL)) {
+      for (const month of months) expect(INTAKE_MONTHS).toContain(month);
     }
   });
 });

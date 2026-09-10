@@ -50,6 +50,9 @@ async function load() {
     templates.value = templateList;
     fx.value = rate;
     invoiceForm.fxRate = String(rate.rate);
+  } catch (e) {
+    // Uncaught, the screen simply rendered its "nothing here yet" copy.
+    error.value = apiErrorMessage(e, 'Мэдүүлгийн мэдээллийг ачаалж чадсангүй');
   } finally {
     pending.value = false;
   }

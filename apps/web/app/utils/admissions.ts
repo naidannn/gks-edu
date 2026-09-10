@@ -1,3 +1,6 @@
+import { NO_DATE } from './date';
+import { DEADLINE_SOON_DAYS, DEADLINE_URGENT_DAYS } from './labels';
+
 export type AdmissionStatus = 'OPEN' | 'CLOSING_SOON' | 'URGENT';
 
 export interface AdmissionCountdown {
@@ -20,9 +23,10 @@ export function getAdmissionCountdown(deadline: string, now: number): AdmissionC
   return { days, hours, minutes, seconds, totalMs };
 }
 
+/** The same two thresholds every other deadline badge uses (`utils/labels.ts`). */
 export function getAdmissionStatus(daysRemaining: number): AdmissionStatus {
-  if (daysRemaining <= 7) return 'URGENT';
-  if (daysRemaining <= 20) return 'CLOSING_SOON';
+  if (daysRemaining <= DEADLINE_URGENT_DAYS) return 'URGENT';
+  if (daysRemaining <= DEADLINE_SOON_DAYS) return 'CLOSING_SOON';
   return 'OPEN';
 }
 
@@ -34,7 +38,15 @@ export function getAdmissionProgress(startAt: string, deadline: string, now: num
   return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
 }
 
+/**
+ * `09/05` — an intake date, read in UTC.
+ *
+ * Intake dates are stamped at the end of their day in UTC, so reading them with
+ * the local getters shows the next day in Ulaanbaatar (+08) — the expensive
+ * direction for a deadline (`utils/date.ts`).
+ */
 export function formatAdmissionDate(value: string): string {
   const date = new Date(value);
-  return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+  if (Number.isNaN(date.getTime())) return NO_DATE;
+  return `${String(date.getUTCMonth() + 1).padStart(2, '0')}/${String(date.getUTCDate()).padStart(2, '0')}`;
 }

@@ -112,6 +112,9 @@ export function useMessengerThread() {
       );
       messages.value = [...page.items, ...messages.value];
       nextBefore.value = page.nextBefore;
+    } catch (e) {
+      // Silently doing nothing looks like "there is no more history".
+      error.value = apiErrorMessage(e, 'Өмнөх мессежүүдийг ачаалж чадсангүй');
     } finally {
       loadingOlder.value = false;
     }

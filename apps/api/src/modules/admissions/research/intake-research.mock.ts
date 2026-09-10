@@ -1,4 +1,5 @@
 import { ProgramLevel } from '../../../prisma/client.js';
+import { INTAKE_MONTHS_BY_LEVEL } from '../intake-deadline.js';
 import type { GeminiAnswer } from './gemini.service.js';
 import type { IntakeCandidate } from './intake-candidate.parser.js';
 
@@ -21,7 +22,7 @@ export function mockResearchAnswer(year: number, levels: ProgramLevel[]): Gemini
 
   const candidates: IntakeCandidate[] = wanted.flatMap((level) => {
     // Language prep runs four rounds a year, degree programmes two (§4.1, §4.2).
-    const months = level === ProgramLevel.LANGUAGE_PREP ? [3, 6, 9, 12] : [3, 9];
+    const months = INTAKE_MONTHS_BY_LEVEL[level];
 
     return months.map((month) => {
       // The window closes at the end of the month two months before classes.

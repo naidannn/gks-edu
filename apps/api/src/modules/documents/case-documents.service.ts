@@ -1,8 +1,8 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { paginate } from '../../common/dto/pagination.dto.js';
 import { isStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { type DocStage, DocumentStatus, Necessity, NotificationEvent, type Prisma } from '../../prisma/client.js';
+import { DocStage, DocumentStatus, Necessity, NotificationEvent, type Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { restorePatch, softDeletePatch } from '../../prisma/soft-delete.js';
 import { assertTransition, isClientTransition, SETTLED_STATUSES } from './document-status.js';
@@ -18,6 +18,7 @@ import {
   type UpdateCaseDocumentDto,
 } from './dto/case-document.dto.js';
 import { toTemplateCode, uniqueTemplateCode } from './template-code.js';
+import { DAY_MS } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { RequirementsService } from './requirements.service.js';
 
@@ -28,11 +29,37 @@ const REVIEW_TARGET: Record<ReviewAction, DocumentStatus> = {
   [ReviewAction.RETURN]: DocumentStatus.RESUBMIT_REQUIRED,
 };
 
+/**
+ * What a file version tells the outside world. `path` is deliberately absent:
+ * the bucket key never leaves the server, and the bytes are reached only
+ * through a short-lived signed token (§9, 1N-25).
+ */
+const DOCUMENT_FILE_SELECT = {
+  id: true,
+  version: true,
+  originalName: true,
+  sizeBytes: true,
+  mimeType: true,
+  isFinal: true,
+  uploadedById: true,
+  createdAt: true,
+} satisfies Prisma.DocumentFileSelect;
+
 const CHECKLIST_INCLUDE = {
   template: true,
-  files: { where: { deletedAt: null }, orderBy: { version: 'desc' } },
+  files: { where: { deletedAt: null }, orderBy: { version: 'desc' }, select: DOCUMENT_FILE_SELECT },
   workTasks: { orderBy: { createdAt: 'desc' } },
 } satisfies Prisma.CaseDocumentInclude;
+
+/**
+ * `WorkTask` rows are back-office: who is translating this, what it costs us,
+ * when it is due internally. The cabinet gets the same document row without
+ * them (1N-25).
+ */
+function forActor<T extends { workTasks: unknown }>(rows: T[], staff: boolean): (T | Omit<T, 'workTasks'>)[] {
+  if (staff) return rows;
+  return rows.map(({ workTasks: _workTasks, ...row }) => row);
+}
 
 export interface StageProgress {
   stage: DocStage;
@@ -71,12 +98,18 @@ export class CaseDocumentsService {
   async upsertConditions(caseId: string, dto: UpsertCaseConditionsDto, actor: AuthenticatedUser, stage: DocStage) {
     await this.assertCaseAccess(caseId, actor);
 
+    // The `stage` query parameter is a staff handle. A client answering their
+    // questionnaire may only rebuild the admission list — asking for `VISA`
+    // materialised a visa checklist for a visa case that does not exist yet
+    // (1N-25).
+    const resolveStage = isStaff(actor.role) ? stage : DocStage.ADMISSION;
+
     const conditions = await this.prisma.caseConditions.upsert({
       where: { caseId },
       create: { caseId, ...dto, answeredById: actor.id },
       update: { ...dto, answeredById: actor.id },
     });
-    const resolution = await this.requirements.resolveForCase(caseId, stage, actor.id);
+    const resolution = await this.requirements.resolveForCase(caseId, resolveStage, actor.id);
     return { conditions, resolution };
   }
 
@@ -87,7 +120,7 @@ export class CaseDocumentsService {
     await this.assertCaseAccess(caseId, actor);
     const staff = isStaff(actor.role);
 
-    const documents = await this.prisma.caseDocument.findMany({
+    const rows = await this.prisma.caseDocument.findMany({
       where: { caseId, stage, deletedAt: null },
       include: {
         ...CHECKLIST_INCLUDE,
@@ -100,7 +133,7 @@ export class CaseDocumentsService {
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
 
-    return { documents, progress: summarise(stage, documents) };
+    return { documents: forActor(rows, staff), progress: summarise(stage, rows) };
   }
 
   async progress(caseId: string, stage: DocStage): Promise<StageProgress> {
@@ -111,13 +144,53 @@ export class CaseDocumentsService {
     return summarise(stage, documents);
   }
 
+  /**
+   * The required documents of one stage that are not settled yet, named.
+   *
+   * The application gate (1E-03) and the visa gate (1F-01) are the same
+   * question asked twice, and each used to write its own version of it (1N-52).
+   */
+  async missingRequired(caseId: string, stage: DocStage) {
+    const documents = await this.prisma.caseDocument.findMany({
+      where: { caseId, stage, deletedAt: null, necessity: Necessity.REQUIRED },
+      select: { id: true, status: true, template: { select: { code: true, nameMn: true } } },
+    });
+    return { requiredTotal: documents.length, missing: documents.filter((doc) => !SETTLED_STATUSES.includes(doc.status)) };
+  }
+
+  /**
+   * What staff should chase today (1D-16 sidebar) — required documents whose
+   * deadline is inside the window and which nobody has settled.
+   *
+   * The 1D-12 reminder engine that used to own this query is gone; the
+   * reminders clients actually receive come from `ReminderSweepsService`. This
+   * is the staff-facing list, and it reads the documents directly.
+   */
+  async dueSoon(withinDays: number, now: Date = new Date()) {
+    return this.prisma.caseDocument.findMany({
+      where: {
+        deletedAt: null,
+        necessity: Necessity.REQUIRED,
+        dueAt: { not: null, lte: new Date(now.getTime() + withinDays * DAY_MS) },
+        status: { notIn: [...SETTLED_STATUSES] },
+      },
+      include: {
+        template: { select: { code: true, nameMn: true } },
+        case: { select: { id: true, code: true, user: { select: { id: true, name: true } } } },
+      },
+      orderBy: { dueAt: 'asc' },
+      take: 100,
+    });
+  }
+
   async findOne(id: string, actor: AuthenticatedUser) {
+    const staff = isStaff(actor.role);
     const doc = await this.prisma.caseDocument.findUnique({
       where: { id },
       include: {
         ...CHECKLIST_INCLUDE,
         notes: {
-          where: isStaff(actor.role) ? {} : { isInternal: false },
+          where: staff ? {} : { isInternal: false },
           orderBy: { createdAt: 'desc' },
           include: { author: { select: { id: true, name: true } } },
         },
@@ -126,7 +199,7 @@ export class CaseDocumentsService {
     });
     if (!doc || doc.deletedAt) throw new NotFoundException(`Материал ${id} олдсонгүй`);
     this.assertOwnership(doc.case.userId, actor);
-    return doc;
+    return forActor([doc], staff)[0];
   }
 
   /** The staff review queue (1D-16) — oldest submission first, so nobody waits. */
@@ -200,10 +273,23 @@ export class CaseDocumentsService {
       where: { caseId_templateId_stage: { caseId, templateId, stage: dto.stage } },
     });
     if (existing) {
-      return this.prisma.caseDocument.update({
+      const restored = await this.prisma.caseDocument.update({
         where: { id: existing.id },
         data: { ...restorePatch(), necessity: dto.necessity ?? existing.necessity, dueAt: dto.dueAt ? new Date(dto.dueAt) : existing.dueAt },
       });
+      // Asking again for a paper we already sent is a new job for the client.
+      // Left at "Сургуульд илгээсэн" the row still counts as settled, the
+      // cabinet shows nothing to do — and the email names it anyway (1N-21).
+      if (SETTLED_STATUSES.includes(existing.status)) {
+        return this.applyStatus(
+          existing.id,
+          existing.status,
+          DocumentStatus.RESUBMIT_REQUIRED,
+          null,
+          'Сургууль энэ материалыг дахин шаардсан',
+        );
+      }
+      return restored;
     }
 
     const last = await this.prisma.caseDocument.findFirst({
@@ -330,21 +416,19 @@ export class CaseDocumentsService {
    * verdict is the rejection; `REQUEST_FIX` is the softer one.
    */
   private async notifyReview(
-    doc: { id: string; case: { id: string; code: string; userId: string }; template: { nameMn: string } },
+    doc: { id: string; stage: DocStage; case: { id: string; code: string; userId: string }; template: { nameMn: string } },
     dto: ReviewDocumentDto,
   ): Promise<void> {
     if (dto.action === ReviewAction.ACCEPT) {
       // "Yours is in" is worth an email on its own: without it the client only
       // ever hears from us when something is wrong, and starts to assume
       // silence means rejection.
-      const remaining = await this.prisma.caseDocument.count({
-        where: {
-          caseId: doc.case.id,
-          deletedAt: null,
-          necessity: { not: Necessity.OPTIONAL },
-          status: { notIn: [...SETTLED_STATUSES] },
-        },
-      });
+      //
+      // Counted the way the cabinet counts it — required documents of *this*
+      // stage. The old count spanned both stages and included conditional
+      // paperwork, so the email and the progress bar disagreed (1N-21).
+      const stageProgress = await this.progress(doc.case.id, doc.stage);
+      const remaining = stageProgress.requiredTotal - stageProgress.requiredDone;
 
       await this.notifications.dispatch({
         event: NotificationEvent.DOCUMENT_APPROVED,
@@ -400,17 +484,31 @@ export class CaseDocumentsService {
       [DocumentStatus.SENT_TO_UNIVERSITY]: { sentToUniversityAt: now },
     };
 
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.caseDocument.update({ where: { id }, data: { status: to, ...(stamps[to] ?? {}) } }),
-      ...(note
-        ? [
-            this.prisma.documentReviewNote.create({
-              data: { caseDocumentId: id, authorId: actorId, body: note, fromStatus: from, toStatus: to },
-            }),
-          ]
-        : []),
-    ]);
-    return updated;
+    // The `where` re-checks the status this call read. Two officers opening the
+    // same submission both used to succeed, and the client was told the paper
+    // was accepted *and* needed fixing — the pattern `confirmPayment` uses.
+    const write = this.prisma.caseDocument.update({
+      where: { id, status: from },
+      data: { status: to, ...(stamps[to] ?? {}) },
+    });
+
+    try {
+      // Batching costs two extra round trips to a database 115 ms away, so it
+      // is worth it only when there is a note to write alongside.
+      if (!note) return await write;
+      const [updated] = await this.prisma.$transaction([
+        write,
+        this.prisma.documentReviewNote.create({
+          data: { caseDocumentId: id, authorId: actorId, body: note, fromStatus: from, toStatus: to },
+        }),
+      ]);
+      return updated;
+    } catch (error) {
+      if (isMissingRecord(error)) {
+        throw new ConflictException('Энэ материалын төлөв өөрчлөгдсөн байна — хуудсаа шинэчлээд дахин оролдоно уу');
+      }
+      throw error;
+    }
   }
 
   // ─── Access ─────────────────────────────────────────────────────────────────
@@ -451,4 +549,9 @@ export function summarise(stage: DocStage, documents: { necessity: Necessity; st
     awaitingReview: documents.filter((doc) => doc.status === DocumentStatus.SUBMITTED || doc.status === DocumentStatus.UNDER_REVIEW).length,
     needsFix: documents.filter((doc) => doc.status === DocumentStatus.NEEDS_FIX || doc.status === DocumentStatus.RESUBMIT_REQUIRED).length,
   };
+}
+
+/** Prisma's "no row matched the where" — here it means somebody else moved first. */
+function isMissingRecord(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2025';
 }

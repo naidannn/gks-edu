@@ -105,15 +105,15 @@ function markPaid(paymentId: string) {
  * from the contract snapshot on the server, so a typo at the desk cannot leave
  * the case owing a figure nobody agreed to.
  */
-const MANUAL_METHOD_OPTIONS: { value: PaymentMethod; label: string }[] = ['BANK_TRANSFER', 'CARD', 'CASH'].map(
-  (value) => ({ value: value as PaymentMethod, label: PAYMENT_METHOD_LABELS[value as PaymentMethod] }),
-);
+/** QPay registers itself; only the channels a person can witness are offered. */
+const MANUAL_METHODS: PaymentMethod[] = ['BANK_TRANSFER', 'CARD', 'CASH'];
+const MANUAL_METHOD_OPTIONS = MANUAL_METHODS.map((value) => ({ value, label: PAYMENT_METHOD_LABELS[value] }));
 
 const manualOpen = ref(false);
 const manual = reactive({
   kind: 'PREPAYMENT' as PaymentKind,
   method: 'BANK_TRANSFER' as PaymentMethod,
-  paidAt: new Date().toISOString().slice(0, 10),
+  paidAt: todayDateInput(),
   reference: '',
   note: '',
 });
@@ -178,17 +178,6 @@ const totals = computed(() => {
   const total = Number(contract.value?.totalAmountSnapshot ?? 0);
   return { total, paid, refunded, pending, remaining: Math.max(0, total - paid) };
 });
-
-/**
- * A QPay payment happened at a moment we recorded, so it is shown to the
- * minute. A manual registration is a *date* somebody typed — stored as UTC
- * midnight, and so read back in UTC. Formatting it locally would print an
- * 08:00 nobody entered, and west of UTC it would print the day before.
- */
-function formatPaymentDate(payment: PaymentItem): string {
-  if (payment.method === 'QPAY' || !payment.paidAt) return formatDateTime(payment.paidAt ?? payment.createdAt);
-  return formatDateUtc(payment.paidAt);
-}
 
 const needsPhysicalRegistration = computed(
   () =>
@@ -328,7 +317,7 @@ const needsPhysicalRegistration = computed(
         <div class="gks-cpay__grid">
           <DsSelect v-model="manual.kind" label="Төлбөрийн төрөл" :options="manualKindOptions" />
           <DsSelect v-model="manual.method" label="Төлсөн суваг" :options="MANUAL_METHOD_OPTIONS" />
-          <DsInput v-model="manual.paidAt" type="date" label="Мөнгө орсон огноо" :max="new Date().toISOString().slice(0, 10)" />
+          <DsInput v-model="manual.paidAt" type="date" label="Мөнгө орсон огноо" :max="todayDateInput()" />
           <DsInput v-model="manual.reference" label="Гүйлгээний дугаар" placeholder="Дансны гүйлгээ / баримтын дугаар" />
         </div>
         <DsTextarea v-model="manual.note" label="Тэмдэглэл" :rows="2" placeholder="Хэн, аль данснаас төлсөн г.м." />

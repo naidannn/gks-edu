@@ -166,6 +166,18 @@
 
 ---
 
+## 1N — Кодын аудит ба засвар (2026.09.11)
+
+> 52 таск дууссан → [`TASKS-DONE.md`](TASKS-DONE.md). Аудитаас гарсан гурван үлдэгдэл:
+
+| ID | Таск | Төлөв | Хэмжээ | Хамаарал |
+| --- | --- | --- | --- | --- |
+| `1N-53` | Нийтийн сургуулийн хуудсанд хөтөлбөрийн `IntakeProgramOverride` огноог тусгах — `findBySlug`, `selectableForUniversity` нь хөтөлбөрийн контекстгүй тул одоо зөвхөн улирлын огноог харуулна. Payload (`programs[].intakeDates`), `packages/shared` төрөл, вэб рендер гурвыг хамт нэмнэ. Кейс, портал, сануулга, самбар аль хэдийн override-ыг уншдаг | todo | M | 1N-28 |
+| `1N-54` | Үлдсэн давхардал: `DAY_MS` (4 файл), 20MB upload хязгаар (2 controller + storage), `toBoolean`-ыг `common/validation/transforms.ts` руу, `contracts/office-date.ts` ↔ `reports/report-period.ts` оффисын хуанлийн хоёр багц, `StaffMember`-ийг `packages/shared` руу | todo | S | 1N-52 |
+| `1N-55` | Имэйлийг production дээр жижиг үсэг болгох өгөгдлийн migration. Dev дээр холилдсон мөр алга; production шалгаж байж ажиллуулна:<br>`SELECT lower(btrim(email)) f, count(*) FROM users WHERE email IS NOT NULL GROUP BY 1 HAVING count(*) > 1;` — хоосон буцвал `UPDATE users SET email = lower(btrim(email)) WHERE email <> lower(btrim(email));` (мөн `clients`, `leads` — тэдгээр нь unique биш) | todo | S | 1N-41 |
+
+---
+
 ## Үе шат 2 — AI чат туслах  `→ M2-α 09.24 · M2-β 10.15 · M2-γ 11.10`
 
 2026-09-10-нд дахин төлөвлөсөн — хуучин `2-02`…`2-18` дугаарууд доорх `2A`–`2E` болж

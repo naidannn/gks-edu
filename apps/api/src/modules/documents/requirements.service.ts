@@ -94,6 +94,9 @@ export class RequirementsService {
 
     const summary: ResolutionSummary = { stage, created: 0, updated: 0, removed: 0, keptDespiteUnmatched: 0 };
     const matchedTemplateIds = new Set<string>();
+    const creates: Prisma.CaseDocumentCreateManyInput[] = [];
+    const updates: { id: string; sortOrder: number; ruleId: string }[] = [];
+    const removals: string[] = [];
 
     for (const [index, rule] of rules.entries()) {
       // Two rules can name the same template (e.g. a school-specific override);
@@ -102,36 +105,59 @@ export class RequirementsService {
       matchedTemplateIds.add(rule.templateId);
 
       const current = byTemplate.get(rule.templateId);
-      const data = {
-        ruleId: rule.id,
-        necessity: rule.necessity,
-        conditionNote: rule.conditionNote,
-        sortOrder: index,
-      };
-
       if (!current) {
-        await this.prisma.caseDocument.create({ data: { caseId, templateId: rule.templateId, stage, ...data } });
-        summary.created += 1;
-      } else {
-        await this.prisma.caseDocument.update({
-          where: { id: current.id },
-          // A row that had been dropped and is required again comes back with
-          // whatever the client had already uploaded to it.
-          data: { ...data, ...restorePatch() },
+        creates.push({
+          caseId,
+          templateId: rule.templateId,
+          stage,
+          ruleId: rule.id,
+          necessity: rule.necessity,
+          conditionNote: rule.conditionNote,
+          sortOrder: index,
         });
-        summary.updated += 1;
+      } else {
+        // `necessity` and `conditionNote` are written on create only. A staff
+        // member who softened one document to optional for this client, or
+        // typed a note about their particular situation, keeps that edit —
+        // re-resolving after a sponsor swap used to overwrite both (1N-18).
+        updates.push({ id: current.id, sortOrder: index, ruleId: rule.id });
       }
     }
 
     for (const doc of existing) {
       if (matchedTemplateIds.has(doc.templateId) || doc.deletedAt) continue;
-      if (doc.status === DocumentStatus.NOT_STARTED) {
-        await this.prisma.caseDocument.update({ where: { id: doc.id }, data: softDeletePatch() });
-        summary.removed += 1;
-      } else {
+      // A row with no `ruleId` is not the engine's to remove: staff added it by
+      // hand (1D-22) or the school asked for it through the application (1E-04).
+      // The client re-answering their questionnaire must not delete a document
+      // the school demanded — the readiness gate would then report ready.
+      if (doc.ruleId === null || doc.status !== DocumentStatus.NOT_STARTED) {
         summary.keptDespiteUnmatched += 1;
+        continue;
       }
+      removals.push(doc.id);
     }
+
+    // One round trip instead of N, and atomic: a half-resolved checklist is a
+    // client staring at a list nobody meant them to see (§7.1).
+    const writes: Prisma.PrismaPromise<unknown>[] = [
+      ...(creates.length ? [this.prisma.caseDocument.createMany({ data: creates })] : []),
+      // A row that had been dropped and is required again comes back with
+      // whatever the client had already uploaded to it.
+      ...updates.map((row) =>
+        this.prisma.caseDocument.update({
+          where: { id: row.id },
+          data: { ruleId: row.ruleId, sortOrder: row.sortOrder, ...restorePatch() },
+        }),
+      ),
+      ...(removals.length
+        ? [this.prisma.caseDocument.updateMany({ where: { id: { in: removals } }, data: softDeletePatch() })]
+        : []),
+    ];
+    if (writes.length) await this.prisma.$transaction(writes);
+
+    summary.created = creates.length;
+    summary.updated = updates.length;
+    summary.removed = removals.length;
 
     // Building the list *is* the start of collecting it, so the case follows
     // the button rather than waiting for someone to remember the stage select.

@@ -114,4 +114,32 @@ describe('LeadsService.createFromPublicForm', () => {
       data: expect.objectContaining({ leadId: 'existing-lead', body: 'Дахин холбогдлоо' }),
     });
   });
+
+  /**
+   * 1N-39 — a nervous visitor pressing the button twice is one lead, so it has
+   * to be one conversion. The browser mints a fresh `event_id` on every submit,
+   * so reporting that id counted the person twice and taught the campaign to
+   * look for more like them.
+   */
+  it('reports a repeat submission under the original lead id, so Meta deduplicates it', async () => {
+    const prisma = prismaStub({ recentLead: { id: 'existing-lead' } });
+    const meta = metaStub();
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), meta);
+
+    await service.createFromPublicForm({ ...base, tracking: { eventId: 'browser-event-2' } });
+
+    const tracked = (meta.track as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { eventId: string };
+    expect(tracked.eventId).toBe('existing-lead');
+  });
+
+  it('still honours the browser event id on a first submission', async () => {
+    const prisma = prismaStub();
+    const meta = metaStub();
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), meta);
+
+    await service.createFromPublicForm({ ...base, tracking: { eventId: 'browser-event-1' } });
+
+    const tracked = (meta.track as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { eventId: string };
+    expect(tracked.eventId).toBe('browser-event-1');
+  });
 });

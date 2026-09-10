@@ -1,4 +1,10 @@
 import { EducationLevel, ProgramLevel, ServiceType } from '../../prisma/client.js';
+import { INTAKE_MONTHS_BY_LEVEL, daysUntil } from '../admissions/intake-deadline.js';
+
+// The academic calendar and the countdown are the admissions module's, and
+// there has to be exactly one of each — re-exported so the planner's own
+// callers keep reading them off the rules file they already import.
+export { INTAKE_MONTHS_BY_LEVEL, daysUntil };
 
 /**
  * The planning arithmetic behind `/study-plan` (ARCHITECTURE.md §3.4).
@@ -12,8 +18,6 @@ import { EducationLevel, ProgramLevel, ServiceType } from '../../prisma/client.j
  * office's numbers, and the day they move they move here — see the open
  * question in ARCHITECTURE.md §18.
  */
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * What a person may apply to, given the diploma they already hold.
@@ -80,17 +84,6 @@ export function prepMonths(fromTopik: number, toTopik: number): number {
 }
 
 /**
- * The months each level starts in (§4.1). Language institutes run all four
- * quarters; degrees take the March and September semesters.
- */
-export const INTAKE_MONTHS_BY_LEVEL: Record<ProgramLevel, readonly number[]> = {
-  [ProgramLevel.LANGUAGE_PREP]: [3, 6, 9, 12],
-  [ProgramLevel.BACHELOR]: [3, 9],
-  [ProgramLevel.MASTER]: [3, 9],
-  [ProgramLevel.PHD]: [3, 9],
-};
-
-/**
  * How far ahead of classes registration closes when we have no `IntakeTerm`
  * row to read a real deadline off. Two months is the office's rule of thumb and
  * the figure the homepage planner has always shown.
@@ -137,12 +130,6 @@ export function calendarIntakes(
   }
 
   return found.sort((a, b) => a.classStart.getTime() - b.classStart.getTime());
-}
-
-/** Whole days from `now` to `target`; negative once it has passed. */
-export function daysUntil(target: Date | null | undefined, now: Date): number | null {
-  if (!target) return null;
-  return Math.ceil((target.getTime() - now.getTime()) / DAY_MS);
 }
 
 /** `now` plus a whole number of months, keeping the day of the month. */

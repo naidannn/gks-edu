@@ -97,7 +97,7 @@ const TAB_LINKS = [
 
       <DsCard title="Тусламж хэрэгтэй юу?">
         <p class="gks-home__lede">
-          Асуулт гарвал зөвлөхтэйгээ холбогдоорой: <a href="tel:+97677109000" class="gks-tnum">7710-9000</a>.
+          Асуулт гарвал зөвлөхтэйгээ холбогдоорой: <a :href="`tel:${COMPANY.phone}`" class="gks-tnum">{{ COMPANY.phoneLabel }}</a>.
           Түгээмэл асуултын хариуг <NuxtLink to="/faq">энд</NuxtLink> уншиж болно.
         </p>
       </DsCard>

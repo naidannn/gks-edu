@@ -9,17 +9,33 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { Roles } from '../../common/decorators/roles.decorator.js';
+import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { Role } from '../../prisma/client.js';
 import { CreateDocumentDto } from './dto/create-document.dto.js';
 import { SearchDto } from './dto/search.dto.js';
 import { VectorService } from './vector.service.js';
 
+/**
+ * The AI knowledge base (§11: "AI мэдлэгийн сан" is an admin scope).
+ *
+ * Admin-only as a whole, including the read side (1N-02). It carried nothing
+ * but bearer auth before, which made every stored document — internal pricing
+ * notes, process guidance — readable by any client with a login, and made the
+ * write side an open channel for putting words into the phase-2 assistant's
+ * mouth. There is no per-document access level here yet; until there is, the
+ * whole collection is internal.
+ */
 @ApiTags('documents')
 @ApiBearerAuth()
+@UseGuards(RolesGuard)
+@Roles(Role.ADMIN)
 @Controller('documents')
 export class VectorController {
   constructor(private readonly vector: VectorService) {}

@@ -14,7 +14,6 @@ const props = defineProps<{ workspaceCase: WorkspaceCase }>();
 const emit = defineEmits<{ changed: [] }>();
 
 const api = useApi();
-type StaffMember = { id: string; name: string | null; email: string | null; role: string };
 type Paginated<T> = { items: T[] };
 
 const staff = ref<StaffMember[]>([]);

@@ -3,14 +3,11 @@ import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { AccreditationGrade, ProgramLevel, UniversityType } from '../../../prisma/client.js';
+import { toBoolean } from '../../programs/dto/university-program.dto.js';
 
 /** `gks` first: it is the default order of the whole catalogue (1A-30). */
 export const UNIVERSITY_SORTS = ['gks', 'rank', 'name', 'students', 'founded', 'city'] as const;
 export type UniversitySort = (typeof UNIVERSITY_SORTS)[number];
-
-/** Query strings arrive as "true"/"false"; class-transformer needs the nudge. */
-const toBoolean = ({ value }: { value: unknown }) =>
-  value === true || value === 'true' ? true : value === false || value === 'false' ? false : undefined;
 
 export class QueryUniversitiesDto extends PaginationQueryDto {
   @ApiPropertyOptional({ description: 'Fuzzy search over Mongolian/English/Korean names and city' })

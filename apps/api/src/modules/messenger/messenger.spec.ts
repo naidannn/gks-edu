@@ -247,6 +247,62 @@ describe('MessengerService', () => {
   });
 });
 
+/**
+ * 1N-42 — resolving a thread from the inbox left `staffUnread` standing, and
+ * the badge did not filter by status, so the navigation kept counting a thread
+ * that had left the open inbox and nobody could find what to click.
+ */
+describe('MessengerService unread bookkeeping (1N-42)', () => {
+  it('clears the staff counter when a thread is resolved', async () => {
+    const { service, conversationUpdate } = makeService();
+
+    await service.setStatus(STAFF, 'conv-1', ConversationStatus.RESOLVED);
+
+    const data = conversationUpdate.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data.status).toBe(ConversationStatus.RESOLVED);
+    expect(data.staffUnread).toBe(0);
+    expect(data.staffReadAt).toBeInstanceOf(Date);
+  });
+
+  it('does not touch the counter when a thread is merely reopened', async () => {
+    const { service, conversationUpdate } = makeService({
+      conversation: conversationRow({ status: ConversationStatus.RESOLVED }),
+    });
+
+    await service.setStatus(STAFF, 'conv-1', ConversationStatus.OPEN);
+
+    const data = conversationUpdate.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data).not.toHaveProperty('staffUnread');
+  });
+
+  it('keeps resolved threads out of the staff badge', async () => {
+    const { service, prisma } = makeService();
+    await service.unreadSummary(STAFF);
+
+    const where = vi.mocked(prisma.conversation.count).mock.calls[0]![0]!.where as Record<string, unknown>;
+    expect(where.staffUnread).toEqual({ gt: 0 });
+    expect(where.status).toEqual({ not: ConversationStatus.RESOLVED });
+  });
+
+  it('leaves the client badge counting a resolved thread — the answer is still unread', async () => {
+    const { service, prisma } = makeService();
+    await service.unreadSummary(CLIENT);
+
+    const where = vi.mocked(prisma.conversation.count).mock.calls[0]![0]!.where as Record<string, unknown>;
+    expect(where).toEqual({ clientUserId: CLIENT.id, clientUnread: { gt: 0 } });
+  });
+
+  it('reads the thread once when opening it, not twice', async () => {
+    const { service, prisma } = makeService();
+
+    await service.messages(STAFF, 'conv-1', { limit: 40 });
+
+    // One `load`, and `markReadOn` reuses it instead of fetching the row again.
+    expect(vi.mocked(prisma.conversation.findUnique)).toHaveBeenCalledTimes(1);
+    expect(prisma.conversation.update).toHaveBeenCalled();
+  });
+});
+
 describe('MessengerEventsService', () => {
   it('delivers to named users and to every connected staff member', () => {
     const events = new MessengerEventsService();

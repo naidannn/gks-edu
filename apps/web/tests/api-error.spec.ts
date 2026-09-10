@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError, apiErrorMessage } from '../app/utils/api-error';
+import { ApiError, apiErrorMessage, apiErrorStatus } from '../app/utils/api-error';
 
 const FALLBACK = 'Хадгалахад алдаа гарлаа';
 
@@ -26,5 +26,28 @@ describe('apiErrorMessage', () => {
     expect(apiErrorMessage(new TypeError('Failed to fetch http://localhost:3001/leads'), FALLBACK)).toBe(FALLBACK);
     expect(apiErrorMessage(undefined, FALLBACK)).toBe(FALLBACK);
     expect(apiErrorMessage({ data: { message: '' } }, FALLBACK)).toBe(FALLBACK);
+  });
+});
+
+/**
+ * 1N-51: the school page turned every fetch failure into a 404, so a timeout
+ * told a visitor the school does not exist and told a crawler the URL is gone.
+ * Only a real 404 may be mapped that way, which is what this reads.
+ */
+describe('apiErrorStatus', () => {
+  it('reads the status off an ApiError', () => {
+    expect(apiErrorStatus(new ApiError(404, undefined, 'Олдсонгүй'))).toBe(404);
+  });
+
+  it("reads useFetch's FetchError shapes", () => {
+    expect(apiErrorStatus({ statusCode: 503 })).toBe(503);
+    expect(apiErrorStatus({ status: 500 })).toBe(500);
+    expect(apiErrorStatus({ response: { status: 404 } })).toBe(404);
+  });
+
+  it('is null when the request never got an answer', () => {
+    expect(apiErrorStatus(new TypeError('Failed to fetch'))).toBeNull();
+    expect(apiErrorStatus(null)).toBeNull();
+    expect(apiErrorStatus(undefined)).toBeNull();
   });
 });

@@ -12,17 +12,28 @@ export interface ReviewPayload {
   note?: string;
 }
 
+export interface CaseDocumentsOptions {
+  /**
+   * Which stage's checklist this screen is for. An option rather than a ref
+   * the caller assigns after the fact: `docs.stage.value = 'VISA'` tripped the
+   * watcher below and fired a second `GET /documents?stage=…` on every mount,
+   * including for cases that have no visa stage at all and whose first request
+   * was going to 404 anyway.
+   */
+  stage?: DocStage;
+}
+
 /**
  * One case's material checklist (1D-13 … 1D-15). Both the client screen and the
  * staff workspace go through this, so the two never drift on how a document is
  * uploaded, transitioned or downloaded.
  */
-export function useCaseDocuments(caseId: Ref<string> | string) {
+export function useCaseDocuments(caseId: Ref<string> | string, options: CaseDocumentsOptions = {}) {
   const api = useApi();
   const config = useRuntimeConfig();
   const id = computed(() => (typeof caseId === 'string' ? caseId : caseId.value));
 
-  const stage = ref<DocStage>('ADMISSION');
+  const stage = ref<DocStage>(options.stage ?? 'ADMISSION');
   const checklist = ref<DocumentChecklist | null>(null);
   const conditions = ref<CaseConditions | null>(null);
   const pending = ref(false);
