@@ -25,6 +25,15 @@ export interface GeminiAnswer {
  * without it the model is recalling a training set, and an intake deadline
  * recalled from memory is worse than no deadline at all.
  *
+ * `GEMINI_SEARCH=false` drops the search tool anyway, because grounding is
+ * billed per search query and an account with no grounding quota answers every
+ * grounded call with a 429 — no search *and* no dates. What the flag buys is a
+ * recalled calendar the reviewer is told to verify: the prompt loses its search
+ * order (`buildResearchPrompt`), the reply carries no grounding trail, and
+ * `parseResearchResult` therefore caps every candidate at LOW and prefixes the
+ * note that says so. It is the degraded mode, not the intended one; turn it
+ * back on when the Google project has grounding quota again.
+ *
  * With no `GEMINI_API_KEY` the service answers with a fixture instead of
  * calling Google, so the admin screen and its review flow are exercisable in
  * dev. Same arrangement as `QPAY_MOCK` (`qpay-client.service.ts`).
@@ -37,6 +46,11 @@ export class GeminiService {
 
   get isMock(): boolean {
     return this.config.get<boolean>('gemini.mock') ?? true;
+  }
+
+  /** Whether requests carry the Google Search tool. See the class comment. */
+  get isSearchEnabled(): boolean {
+    return this.config.get<boolean>('gemini.search') ?? true;
   }
 
   /**
@@ -66,8 +80,10 @@ export class GeminiService {
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: params.prompt }] }],
-        // Search grounding is the whole point — it turns the call into a lookup.
-        tools: [{ google_search: {} }],
+        // Search grounding is what turns the call into a lookup. Omitted, not
+        // sent empty: `tools: []` is still a tool-use request to Google and
+        // spends the same exhausted quota.
+        ...(this.isSearchEnabled ? { tools: [{ google_search: {} }] } : {}),
         generationConfig: {
           // Dates are facts; there is nothing to be creative about.
           temperature: 0,

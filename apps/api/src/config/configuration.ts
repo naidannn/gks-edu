@@ -102,6 +102,9 @@ export interface AppConfig {
     /** Fakes the response instead of calling Google — the default, so the
      *  feature is runnable without a key (same idea as `QPAY_MOCK`). */
     mock: boolean;
+    /** Sends the Google Search tool. False where the account has no grounding
+     *  quota: the model then answers from memory and every candidate is LOW. */
+    search: boolean;
   };
   meta: {
     /**
@@ -178,6 +181,10 @@ export const configuration = (): AppConfig => ({
     timeoutMs: Number.parseInt(process.env.GEMINI_TIMEOUT_MS ?? '120000', 10),
     // Defaults to mock unless a key is present AND mocking is not forced on.
     mock: (process.env.GEMINI_MOCK ?? (process.env.GEMINI_API_KEY ? 'false' : 'true')) === 'true',
+    // Google Search grounding. On by default because a searched date is worth
+    // far more than a recalled one; off where the account has no grounding
+    // quota, which turns every grounded call into a 429.
+    search: (process.env.GEMINI_SEARCH ?? 'true') === 'true',
   },
   sms: {
     provider: 'console',

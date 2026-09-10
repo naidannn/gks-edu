@@ -97,6 +97,12 @@ GEMINI_API_KEY=
 GEMINI_MODEL="gemini-3.1-flash-lite"
 GEMINI_TIMEOUT_MS=120000
 GEMINI_MOCK=true
+# Google Search grounding is billed per search query. This account has no
+# grounding quota — every grounded call came back 429 — so production runs
+# without the search tool and the model answers from memory: every candidate
+# lands LOW with a "verify this" note. Set it back to true once the Google
+# project has grounding quota.
+GEMINI_SEARCH=false
 
 # --- Storage ----------------------------------------------------------------
 # Uploaded documents live on the server's disk, outside the deployed code so

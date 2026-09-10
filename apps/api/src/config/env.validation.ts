@@ -71,6 +71,15 @@ class EnvironmentVariables {
   @IsOptional()
   GEMINI_MOCK?: string;
 
+  /**
+   * `false` drops the Google Search tool from the request and leaves the model
+   * answering from memory. Set on production because the account's grounding
+   * quota is exhausted; see `gemini.service.ts`.
+   */
+  @IsString()
+  @IsOptional()
+  GEMINI_SEARCH?: string;
+
   /** 1I-07 — DeepSeek, for the programme-and-tuition search. No grounding. */
   @IsString()
   @IsOptional()

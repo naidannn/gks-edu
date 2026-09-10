@@ -132,15 +132,20 @@ export class IntakeResearchService {
 
     try {
       const links = (run.university.links ?? {}) as { officialWebsite?: string | null };
-      const prompt = buildResearchPrompt({
-        nameMn: run.university.nameMn,
-        nameEn: run.university.nameEn,
-        nameKo: run.university.nameKo,
-        cityEn: run.university.cityEn,
-        officialWebsite: links.officialWebsite ?? null,
-        year: run.year,
-        levels: run.levels,
-      });
+      const prompt = buildResearchPrompt(
+        {
+          nameMn: run.university.nameMn,
+          nameEn: run.university.nameEn,
+          nameKo: run.university.nameKo,
+          cityEn: run.university.cityEn,
+          officialWebsite: links.officialWebsite ?? null,
+          year: run.year,
+          levels: run.levels,
+        },
+        // Ordering a search the request carries no tool for returns an empty
+        // list, by that prompt's own rule 0.
+        { search: this.gemini.isSearchEnabled },
+      );
 
       const answer = await this.gemini.generateJson({
         model: run.model,
@@ -155,7 +160,11 @@ export class IntakeResearchService {
       // do, and label HIGH. A mock run has no trail by construction and says so
       // in its own notes, so it is exempt rather than marked down.
       const grounded = this.gemini.isMock || answer.sources.length > 0;
-      if (!grounded) {
+      if (!grounded && !this.gemini.isSearchEnabled) {
+        // Expected here, not a fault: search is off, so the run is a recall by
+        // design and LOW is the honest label for all of it.
+        this.logger.log(`Хайлтгүй горим (${runId}): бүх санал LOW, шалгуулахаар тэмдэглэв`);
+      } else if (!grounded) {
         this.logger.warn(
           `Grounding хоосон (${runId}): загвар хайлт хийлгүй хариулсан тул бүх саналыг LOW болголоо`,
         );
