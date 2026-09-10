@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UniversityCard, UniversityFacets } from '@gks/shared';
 
-/** Public landing page: hero, planner, active admissions, services, trust wall, FAQ, CTA (1A-09). */
+/** Public landing page: hero, planner, active admissions, services, coming-soon teaser, trust wall, FAQ, CTA (1A-09). */
 const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets', { lazy: true });
 const selectedCity = ref('');
 // Our own recommendation order (1A-30) — the same order the catalogue uses, so
@@ -376,6 +376,8 @@ useSeoMeta({
         </div>
       </div>
     </dl>
+
+    <HomeComingSoon />
 
     <section v-if="trustWall.length">
       <div class="gks-section__head gks-trust__head">
