@@ -95,7 +95,7 @@ export class GeminiService {
 
     if (!response.ok) {
       const body = await response.text();
-      throw new ServiceUnavailableException(`Gemini хүсэлт амжилтгүй боллоо: ${response.status} ${body.slice(0, 300)}`);
+      throw new ServiceUnavailableException(`Gemini хүсэлт амжилтгүй боллоо: ${response.status} ${describeError(body)}`);
     }
 
     return this.parseResponse((await response.json()) as GeminiApiResponse);
@@ -131,6 +131,35 @@ export class GeminiService {
       responseTokens: payload.usageMetadata?.candidatesTokenCount ?? null,
     };
   }
+}
+
+/**
+ * The readable half of a Google error body.
+ *
+ * `error.message` is where the diagnosis lives, and on a 429 it is the only
+ * place: the boilerplate about plans and billing is followed by the lines that
+ * actually name the fault —
+ *
+ *   * Quota exceeded for metric: …generate_content_free_tier_requests,
+ *     limit: 0, model: gemini-3.1-pro
+ *
+ * which is a model with no free tier at all, not an account that ran out. This
+ * used to be `body.slice(0, 300)`, and 300 characters of a pretty-printed
+ * envelope reached exactly as far as "Quota ex" — the message read as "we are
+ * over our limit, wait" for a fault that waiting cannot fix. So: the message,
+ * not the envelope, and enough of it to carry those lines.
+ *
+ * Exported for the tests.
+ */
+export function describeError(body: string): string {
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: string } };
+    const message = parsed.error?.message?.trim();
+    if (message) return message.slice(0, 900);
+  } catch {
+    // Not JSON — a gateway or proxy answered. Show what it said.
+  }
+  return body.slice(0, 300);
 }
 
 /** The grounding links inlined in a reply. Exported for the tests. */

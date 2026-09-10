@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractJson, findGroundingRedirects } from './gemini.service.js';
+import { describeError, extractJson, findGroundingRedirects } from './gemini.service.js';
 import { IntakeResearchParseError, parseResearchResult } from './intake-candidate.parser.js';
 
 const good = {
@@ -210,5 +210,32 @@ describe('parseResearchResult', () => {
     );
 
     expect(result.sources).toEqual(['https://ok.ac.kr']);
+  });
+});
+
+describe('describeError', () => {
+  const quota = JSON.stringify({
+    error: {
+      code: 429,
+      message:
+        'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3.1-pro',
+      status: 'RESOURCE_EXHAUSTED',
+      details: [{ '@type': 'type.googleapis.com/google.rpc.Help' }],
+    },
+  });
+
+  it('keeps the line that names the model and the limit', () => {
+    const described = describeError(quota);
+    expect(described).toContain('limit: 0');
+    expect(described).toContain('gemini-3.1-pro');
+  });
+
+  it('drops the envelope, which is what used to crowd that line out', () => {
+    expect(describeError(quota)).not.toContain('RESOURCE_EXHAUSTED');
+    expect(describeError(quota).slice(0, 300)).not.toContain('"error"');
+  });
+
+  it('falls back to the raw body when the reply is not JSON', () => {
+    expect(describeError('<html>502 Bad Gateway</html>')).toBe('<html>502 Bad Gateway</html>');
   });
 });

@@ -163,13 +163,15 @@ async function save() {
         <p class="gks-adm-config__note">
           Хоёр судалгаа өөр ажил тул загвар нь ч тусдаа. Түлхүүр тохируулаагүй бол систем
           хуурамч (mock) хариу буцаана — судалгаа биш гэдгийг үр дүн дээр нь бичиж өгдөг.
+          Google хайлт одоогоор унтраалттай (эрх дууссан) тул хоёулаа зөвхөн загварын
+          мэдлэгээр хариулж, бүх санал <strong>LOW</strong> болж ирнэ.
         </p>
         <div class="gks-form-grid">
           <DsInput
             v-model="researchModel"
             label="Элсэлтийн хугацаа — загвар"
             placeholder="gemini-3.1-flash-lite"
-            hint="Google хайлттай ажилладаг тул Gemini байх ёстой."
+            hint="Gemini байх ёстой. Төлбөртэй загварууд (жишээ нь -pro) үнэгүй эрхгүй тул 429 өгдөг — gemini-3.1-flash-lite найдвартай."
           />
           <DsInput
             v-model="programResearchModel"
