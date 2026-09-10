@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
-import { ProgramLevel, UniversityType } from '../../../prisma/client.js';
+import { AccreditationGrade, ProgramLevel, UniversityType } from '../../../prisma/client.js';
 
 /** `gks` first: it is the default order of the whole catalogue (1A-30). */
 export const UNIVERSITY_SORTS = ['gks', 'rank', 'name', 'students', 'founded', 'city'] as const;
@@ -34,6 +34,14 @@ export class QueryUniversitiesDto extends PaginationQueryDto {
   @IsEnum(ProgramLevel)
   @IsOptional()
   level?: ProgramLevel;
+
+  @ApiPropertyOptional({
+    enum: AccreditationGrade,
+    description: "Only schools at this Ministry of Education certification tier (EXCELLENT = 우수인증대학)",
+  })
+  @IsEnum(AccreditationGrade)
+  @IsOptional()
+  accreditation?: AccreditationGrade;
 
   @ApiPropertyOptional({ description: 'Only schools that take language-prep students' })
   @Transform(toBoolean)

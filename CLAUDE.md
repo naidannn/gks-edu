@@ -122,6 +122,23 @@ Full entity definitions and state machines: `docs/ARCHITECTURE.md` §3–§9.
   one: the admin list sorts and flags on it (`staleTuition`), the public card does not carry
   it (`ARCHITECTURE.md` §3.3).
 
+## Accreditation is a visa signal, not a third rank
+
+`University.accreditation` is the Korean Ministry of Education's
+교육국제화역량 인증제 tier — `EXCELLENT` (우수인증대학), `CERTIFIED` (인증대학), `NONE`.
+It decides how hard the student visa is: an `EXCELLENT` school's students go through
+비자심사 간소화, simplified D-2/D-4 screening. It is **not** a quality ranking and must never
+be shown as one — Seoul National University is `CERTIFIED`, Joongbu University is `EXCELLENT`
+— so it never sorts the catalogue and never mixes with `theKoreaRank` or `gksRank`.
+
+The two published lists together name exactly the 135 schools in the catalogue, so `NONE`
+currently applies to nobody; when it does apply it means "on neither list", never "not
+checked". The lists live in
+`apps/api/src/modules/universities/accreditation/korea-accreditation.ts` and only
+`pnpm accreditation:import` writes the column — it resets every school to `NONE` first, so a
+school dropped from the next cycle loses its grade instead of keeping a stale one
+(`ARCHITECTURE.md` §3.1.1).
+
 ## University reference data
 
 `/Users/user/korean-universities-data` — 135 JSON records + 108 standardised logos, built
@@ -174,6 +191,8 @@ pnpm dev              # web :3000 + api :3001
 pnpm prisma:migrate   # after any schema change
 pnpm prisma:seed
 pnpm ranking:import   # THE South Korea rank → theKoreaRank (--dry to preview)
+pnpm accreditation:import   # 교육국제화역량 인증제 tier → University.accreditation (--dry)
+pnpm language-prep:import   # the office's "сургууль хугацаа" sheet → intakes + tuition (--dry)
 pnpm typecheck && pnpm lint && pnpm test
 pnpm tasks            # roadmap progress
 ```

@@ -21,6 +21,8 @@
     "prisma:seed": "prisma db seed",
     "universities:import": "tsx prisma/import-universities.ts",
     "ranking:import": "tsx prisma/import-the-ranking.ts",
+    "accreditation:import": "tsx prisma/import-accreditation.ts",
+    "language-prep:import": "tsx prisma/import-language-prep.ts",
     "clients:import": "tsx prisma/import-clients.ts",
     "contract:template:import": "tsx prisma/import-contract-template.ts",
     "postinstall": "prisma generate",

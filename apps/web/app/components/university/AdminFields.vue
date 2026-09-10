@@ -19,6 +19,7 @@ defineProps<{
 
 const TYPE_OPTIONS = selectOptions(UNIVERSITY_TYPE_LABELS);
 const AGENT_OPTIONS = selectOptions(AGENT_CONTRACT_STATUS_LABELS);
+const ACCREDITATION_OPTIONS = selectOptions(ACCREDITATION_LABELS);
 const TRISTATE_OPTIONS = [
   { value: '', label: 'Тодорхойгүй' },
   { value: 'true', label: 'Тийм' },
@@ -180,6 +181,12 @@ function removeAdvantage(index: number) {
         <DsSwitch v-model="form.isGksEligible" label="GKS тэтгэлэгт хамрагддаг" />
       </div>
       <div class="gks-uform__grid">
+        <DsSelect
+          v-model="form.accreditation"
+          label="Магадлан итгэмжлэл"
+          :options="ACCREDITATION_OPTIONS"
+          hint="Боловсролын яамны жагсаалт — ихэвчлэн `pnpm accreditation:import` бичдэг"
+        />
         <DsSelect v-model="form.agentContractStatus" label="Агентын гэрээний төлөв" :options="AGENT_OPTIONS" />
       </div>
       <DsTextarea

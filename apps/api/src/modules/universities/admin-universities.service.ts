@@ -27,6 +27,7 @@ const ROW_FIELDS = {
   studentsTotal: true,
   logoPath: true,
   shortIntroMn: true,
+  accreditation: true,
   acceptsLanguagePrep: true,
   acceptsFromMongolia: true,
   isGksEligible: true,
@@ -171,6 +172,7 @@ const NON_NULLABLE_FIELDS = [
   'regionMn',
   'advantages',
   'links',
+  'accreditation',
   'acceptsLanguagePrep',
   'acceptsFromMongolia',
   'isGksEligible',
@@ -340,6 +342,7 @@ export class AdminUniversitiesService {
     if (query.type) where.type = query.type;
     if (query.agentContractStatus) where.agentContractStatus = query.agentContractStatus;
     if (query.published !== undefined) where.isPublished = query.published;
+    if (query.accreditation) where.accreditation = query.accreditation;
     if (query.languagePrep) where.acceptsLanguagePrep = true;
     if (query.gks) where.isGksEligible = true;
     if (query.level) where.programs = { some: { level: query.level } };

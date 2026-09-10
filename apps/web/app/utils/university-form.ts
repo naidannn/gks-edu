@@ -1,4 +1,9 @@
-import type { AdminUniversityDetail, AgentContractStatus, UniversityType } from '@gks/shared';
+import type {
+  AccreditationGrade,
+  AdminUniversityDetail,
+  AgentContractStatus,
+  UniversityType,
+} from '@gks/shared';
 
 /**
  * The university form's shape, validation and payload, shared by the create and
@@ -57,6 +62,11 @@ export interface UniversityForm {
   dormDepositKrw: string;
   dormNote: string;
 
+  /**
+   * 교육국제화역량 인증제. Normally written by `pnpm accreditation:import`; the box
+   * exists so the office can correct one school without a re-import.
+   */
+  accreditation: AccreditationGrade;
   acceptsLanguagePrep: boolean;
   acceptsFromMongolia: boolean;
   isGksEligible: boolean;
@@ -89,6 +99,7 @@ export function emptyUniversityForm(): UniversityForm {
     officialWebsite: '', wikipedia: '', wikidata: '', coverUrl: '', googleMaps: '',
     dormAvailable: '', dormRoomTypes: '', dormPricePerMonthKrw: '', dormPricePerSemesterKrw: '',
     dormMealIncluded: '', dormDepositKrw: '', dormNote: '',
+    accreditation: 'NONE',
     acceptsLanguagePrep: false, acceptsFromMongolia: true, isGksEligible: false,
     agentContractStatus: 'NONE', commissionNote: '', internalNote: '', isPublished: false,
     theKoreaRank: '', theWorldRank: '', theRankYear: '', gksRankBoost: '0', gksManualRank: '',
@@ -145,6 +156,7 @@ export function fillFromUniversity(form: UniversityForm, u: AdminUniversityDetai
   form.dormDepositKrw = num(u.dormitory?.depositKrw);
   form.dormNote = str(u.dormitory?.note);
 
+  form.accreditation = u.accreditation;
   form.acceptsLanguagePrep = u.acceptsLanguagePrep;
   form.acceptsFromMongolia = u.acceptsFromMongolia;
   form.isGksEligible = u.isGksEligible;
@@ -281,6 +293,7 @@ export function universityPayload(form: UniversityForm): Record<string, unknown>
     },
     dormitory: dormitoryTouched ? dormitory : null,
 
+    accreditation: form.accreditation,
     acceptsLanguagePrep: form.acceptsLanguagePrep,
     acceptsFromMongolia: form.acceptsFromMongolia,
     isGksEligible: form.isGksEligible,

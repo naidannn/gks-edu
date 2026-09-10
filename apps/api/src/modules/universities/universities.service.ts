@@ -26,6 +26,9 @@ const CARD_FIELDS = {
   shortIntroMn: true,
   acceptsLanguagePrep: true,
   isGksEligible: true,
+  // The Ministry of Education's certification tier — public, and the strongest
+  // visa signal on a card (ARCHITECTURE.md §3.1).
+  accreditation: true,
   livingCost: true,
   // The base rank is public and citable; `gksScore`/`gksRank` are not — they
   // order the list and stay behind the admin screen (ARCHITECTURE.md §3.1).
@@ -226,7 +229,7 @@ export class UniversitiesService {
       async () => {
         const published = { isPublished: true } satisfies Prisma.UniversityWhereInput;
 
-        const [regions, types, languagePrep, gks, total] = await Promise.all([
+        const [regions, types, accreditations, languagePrep, gks, total] = await Promise.all([
           this.prisma.university.groupBy({
             by: ['regionEn', 'regionMn'],
             where: published,
@@ -235,6 +238,11 @@ export class UniversitiesService {
           }),
           this.prisma.university.groupBy({
             by: ['type'],
+            where: published,
+            _count: { _all: true },
+          }),
+          this.prisma.university.groupBy({
+            by: ['accreditation'],
             where: published,
             _count: { _all: true },
           }),
@@ -247,6 +255,7 @@ export class UniversitiesService {
           total,
           regions: regions.map((r) => ({ value: r.regionEn, label: r.regionMn, count: r._count._all })),
           types: types.map((t) => ({ value: t.type, count: t._count._all })),
+          accreditations: accreditations.map((a) => ({ value: a.accreditation, count: a._count._all })),
           languagePrep,
           gks,
         };
@@ -273,6 +282,7 @@ export class UniversitiesService {
     if (query.region) where.regionEn = query.region;
     if (query.type) where.type = query.type;
     if (query.languagePrep) where.acceptsLanguagePrep = true;
+    if (query.accreditation) where.accreditation = query.accreditation;
     if (query.gks) where.isGksEligible = true;
     if (query.level) where.programs = { some: { level: query.level, isPublished: true } };
 

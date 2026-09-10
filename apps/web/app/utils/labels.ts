@@ -6,6 +6,7 @@
  * its label from here so a wording change lands in one place (CLAUDE.md).
  */
 import type {
+  AccreditationGrade,
   AgentContractStatus,
   BannerPlacement,
   ApplicationDecision,
@@ -65,6 +66,37 @@ export const UNIVERSITY_TYPE_LABELS: Record<UniversityType, string> = {
   NATIONAL: 'Үндэсний',
   PUBLIC: 'Улсын',
   PRIVATE: 'Хувийн',
+};
+
+/**
+ * 교육국제화역량 인증제 — the Ministry of Education's certification tier. It is a
+ * visa signal, not a quality ranking: an `EXCELLENT` school's students get
+ * simplified D-2/D-4 screening, and Seoul National University is `CERTIFIED`.
+ */
+export const ACCREDITATION_LABELS: Record<AccreditationGrade, string> = {
+  EXCELLENT: 'Шилдэг магадлан итгэмжлэгдсэн',
+  CERTIFIED: 'Магадлан итгэмжлэгдсэн',
+  NONE: 'Магадлан итгэмжлэгдээгүй',
+};
+
+/** The short form the catalogue card has room for. */
+export const ACCREDITATION_SHORT_LABELS: Record<AccreditationGrade, string> = {
+  EXCELLENT: 'Шилдэг итгэмжлэл',
+  CERTIFIED: 'Итгэмжлэгдсэн',
+  NONE: 'Итгэмжлэлгүй',
+};
+
+export const ACCREDITATION_TONES: Record<AccreditationGrade, BadgeTone> = {
+  EXCELLENT: 'success',
+  CERTIFIED: 'neutral',
+  NONE: 'neutral',
+};
+
+/** What the tier actually buys a student, for the detail page's one-liner. */
+export const ACCREDITATION_NOTES: Record<AccreditationGrade, string> = {
+  EXCELLENT: 'Боловсролын яамны шилдэг итгэмжлэлтэй — оюутны визийн шалгалт хялбаршуулсан журмаар явна.',
+  CERTIFIED: 'Боловсролын яамны итгэмжлэлтэй — гадаад оюутан хүлээн авах эрхтэй.',
+  NONE: 'Боловсролын яамны итгэмжлэлийн жагсаалтад ороогүй.',
 };
 
 /** Whether GKS holds an agency agreement with the school (staff-only field). */

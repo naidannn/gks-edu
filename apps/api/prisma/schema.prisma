@@ -172,6 +172,23 @@ enum UniversityType {
   PRIVATE
 }
 
+/// 교육국제화역량 인증제 — the Korean Ministry of Education's certification of a
+/// university's capacity to host international students. It is re-published
+/// every cycle in two tiers, and it decides how hard the D-2/D-4 visa is: a
+/// student of an `EXCELLENT` school goes through 비자심사 간소화 (simplified
+/// screening), a `CERTIFIED` one does not.
+///
+/// `NONE` means the school is on neither published list — not "we have not
+/// checked". The lists cover every school in the catalogue, so a blank here is
+/// a real answer rather than a gap.
+enum AccreditationGrade {
+  /// 우수인증대학 — Шилдэг магадлан итгэмжлэгдсэн
+  EXCELLENT
+  /// 인증대학 — Магадлан итгэмжлэгдсэн
+  CERTIFIED
+  NONE
+}
+
 enum AgentContractStatus {
   NONE
   IN_TALKS
@@ -313,6 +330,11 @@ model University {
   gksScoreParts Json?
   gksScoredAt   DateTime?
 
+  /// The Ministry of Education's international-student certification tier.
+  /// Public: it is the single strongest visa signal a visitor can read off a
+  /// card, and it is written only by `pnpm accreditation:import`.
+  accreditation AccreditationGrade @default(NONE)
+
   // --- Staff-maintained; never touched by the importer ---
   acceptsLanguagePrep Boolean             @default(false)
   acceptsFromMongolia Boolean             @default(true)
@@ -347,6 +369,7 @@ model University {
   @@index([gksRank])
   @@index([gksManualRank])
   @@index([theKoreaRank])
+  @@index([accreditation])
   @@map("universities")
 }
 

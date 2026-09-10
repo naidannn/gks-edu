@@ -297,6 +297,7 @@ const facts = computed<Fact[]>(() => {
   const u = uni.value;
   const rows: Fact[] = [
     { label: 'Төрөл', value: UNIVERSITY_TYPE_LABELS[u.type] },
+    { label: 'Магадлан итгэмжлэл', value: ACCREDITATION_LABELS[u.accreditation] },
     { label: 'Байршил', value: place.value },
     { label: 'Хаяг', value: u.address },
     { label: 'Ойр метро / автобус', value: u.nearestTransit },
@@ -445,6 +446,13 @@ useSeoMeta({
           <div class="gks-uni__tags">
             <DsBadge tone="neutral">{{ UNIVERSITY_TYPE_LABELS[uni.type] }}</DsBadge>
             <DsBadge tone="neutral" icon="map-pin">{{ place }}</DsBadge>
+            <DsBadge
+              v-if="uni.accreditation !== 'NONE'"
+              :tone="ACCREDITATION_TONES[uni.accreditation]"
+              :title="ACCREDITATION_NOTES[uni.accreditation]"
+            >
+              {{ ACCREDITATION_LABELS[uni.accreditation] }}
+            </DsBadge>
             <DsBadge v-if="uni.acceptsLanguagePrep" tone="info">Хэлний бэлтгэл авдаг</DsBadge>
             <DsBadge v-if="uni.isGksEligible" tone="accent">GKS тэтгэлэг</DsBadge>
           </div>

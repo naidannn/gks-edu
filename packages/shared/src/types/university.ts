@@ -13,6 +13,16 @@ export type ProgramLevel = 'LANGUAGE_PREP' | 'BACHELOR' | 'MASTER' | 'PHD';
 export type IntakeStatus = 'PLANNED' | 'OPEN' | 'CLOSED' | 'CANCELLED';
 export type IntakeSource = 'MANUAL' | 'AI_ASSISTED' | 'IMPORTED';
 
+/**
+ * 교육국제화역량 인증제 — the Korean Ministry of Education's certification of a
+ * school's capacity to host international students. `EXCELLENT` (우수인증대학)
+ * means its students get simplified visa screening; `NONE` means the school is
+ * on neither published list, which is an answer, not a gap.
+ *
+ * It is not a quality ranking and must never be shown as one.
+ */
+export type AccreditationGrade = 'EXCELLENT' | 'CERTIFIED' | 'NONE';
+
 export interface LivingCost {
   tier?: string;
   tierLabelMn?: string;
@@ -77,6 +87,8 @@ export interface UniversityCard {
   shortIntroMn: string | null;
   acceptsLanguagePrep: boolean;
   isGksEligible: boolean;
+  /** The Ministry of Education's certification tier — public, see the type. */
+  accreditation: AccreditationGrade;
   livingCost: LivingCost | null;
   /**
    * Times Higher Education "South Korea Rank" — the base rank, and the only
@@ -175,6 +187,7 @@ export interface UniversityFacets {
   total: number;
   regions: { value: string; label: string; count: number }[];
   types: { value: UniversityType; count: number }[];
+  accreditations: { value: AccreditationGrade; count: number }[];
   languagePrep: number;
   gks: number;
 }
@@ -210,6 +223,7 @@ export interface AdminUniversityRow {
   studentsTotal: number | null;
   logoPath: string | null;
   shortIntroMn: string | null;
+  accreditation: AccreditationGrade;
   acceptsLanguagePrep: boolean;
   acceptsFromMongolia: boolean;
   isGksEligible: boolean;

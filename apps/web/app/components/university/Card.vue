@@ -81,6 +81,13 @@ const theRank = computed(() => props.university.theKoreaRank);
     </dl>
 
     <div class="gks-uni-card__tags">
+      <DsBadge
+        v-if="university.accreditation !== 'NONE'"
+        :tone="ACCREDITATION_TONES[university.accreditation]"
+        :title="ACCREDITATION_NOTES[university.accreditation]"
+      >
+        {{ ACCREDITATION_SHORT_LABELS[university.accreditation] }}
+      </DsBadge>
       <DsBadge v-if="university.acceptsLanguagePrep" tone="info">Хэлний бэлтгэл</DsBadge>
       <DsBadge v-if="university.isGksEligible" tone="accent">GKS</DsBadge>
     </div>

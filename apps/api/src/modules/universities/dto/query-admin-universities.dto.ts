@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
-import { AgentContractStatus, ProgramLevel, UniversityType } from '../../../prisma/client.js';
+import { AccreditationGrade, AgentContractStatus, ProgramLevel, UniversityType } from '../../../prisma/client.js';
 
 export const ADMIN_UNIVERSITY_SORTS = [
   'gks',
@@ -47,6 +47,11 @@ export class QueryAdminUniversitiesDto extends PaginationQueryDto {
   @IsEnum(ProgramLevel)
   @IsOptional()
   level?: ProgramLevel;
+
+  @ApiPropertyOptional({ enum: AccreditationGrade })
+  @IsEnum(AccreditationGrade)
+  @IsOptional()
+  accreditation?: AccreditationGrade;
 
   @ApiPropertyOptional({ enum: AgentContractStatus })
   @IsEnum(AgentContractStatus)

@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { PaginatedResult, UniversityCard, UniversityFacets, UniversityType } from '@gks/shared';
+import type {
+  AccreditationGrade,
+  PaginatedResult,
+  UniversityCard,
+  UniversityFacets,
+  UniversityType,
+} from '@gks/shared';
 
 /** Catalogue of the 135 Korean partner universities (1A-06). */
 type Paginated = PaginatedResult<UniversityCard>;
@@ -35,6 +41,7 @@ const filters = computed(() => ({
   q: str(route.query.q),
   region: str(route.query.region),
   type: str(route.query.type) as UniversityType | '',
+  accreditation: str(route.query.accreditation) as AccreditationGrade | '',
   languagePrep: route.query.languagePrep === '1',
   gks: route.query.gks === '1',
   sort: str(route.query.sort) || DEFAULT_SORT,
@@ -90,6 +97,7 @@ const query = computed(() => ({
   ...(filters.value.q ? { q: filters.value.q } : {}),
   ...(filters.value.region ? { region: filters.value.region } : {}),
   ...(filters.value.type ? { type: filters.value.type } : {}),
+  ...(filters.value.accreditation ? { accreditation: filters.value.accreditation } : {}),
   ...(filters.value.languagePrep ? { languagePrep: true } : {}),
   ...(filters.value.gks ? { gks: true } : {}),
 }));
@@ -98,9 +106,13 @@ const { data, status, error } = await useApiFetch<Paginated>('/universities', { 
 const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets', { lazy: true });
 
 const activeFilterCount = computed(() =>
-  [filters.value.region, filters.value.type, filters.value.languagePrep, filters.value.gks].filter(
-    Boolean,
-  ).length,
+  [
+    filters.value.region,
+    filters.value.type,
+    filters.value.accreditation,
+    filters.value.languagePrep,
+    filters.value.gks,
+  ].filter(Boolean).length,
 );
 
 const regionOptions = computed(() => [
@@ -114,6 +126,18 @@ const typeOptions = computed(() => [
     value: t.value,
     label: `${UNIVERSITY_TYPE_LABELS[t.value]} (${t.count})`,
   })),
+]);
+
+/**
+ * The certification tier is a visa fact, so the filter offers only the two
+ * tiers that exist — "NONE" would be a filter for schools nobody can use, and
+ * as it happens no school in the catalogue is on neither list.
+ */
+const accreditationOptions = computed(() => [
+  { value: '', label: 'Итгэмжлэл — бүгд' },
+  ...(facets.value?.accreditations ?? [])
+    .filter((a) => a.value !== 'NONE')
+    .map((a) => ({ value: a.value, label: `${ACCREDITATION_SHORT_LABELS[a.value]} (${a.count})` })),
 ]);
 
 const total = computed(() => data.value?.meta.total ?? 0);
@@ -165,6 +189,12 @@ useListingSeo('/universities');
         :model-value="filters.type"
         aria-label="Өмчийн хэлбэр"
         @update:model-value="apply({ type: $event })"
+      />
+      <DsSelect
+        :options="accreditationOptions"
+        :model-value="filters.accreditation"
+        aria-label="Магадлан итгэмжлэл"
+        @update:model-value="apply({ accreditation: $event })"
       />
       <DsSelect
         :options="SORTS"

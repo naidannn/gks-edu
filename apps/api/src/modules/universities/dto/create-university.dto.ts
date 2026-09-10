@@ -17,7 +17,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { AgentContractStatus, UniversityType } from '../../../prisma/client.js';
+import { AccreditationGrade, AgentContractStatus, UniversityType } from '../../../prisma/client.js';
 import { MAX_RANK_BOOST } from '../ranking/gks-ranking.math.js';
 import { DormitoryDto, UniversityLinksDto } from './university-json.dto.js';
 
@@ -220,6 +220,15 @@ export class CreateUniversityDto {
   dormitory?: DormitoryDto | null;
 
   // --- Staff-maintained flags; the importer never touches these ---
+
+  @ApiPropertyOptional({
+    enum: AccreditationGrade,
+    default: AccreditationGrade.NONE,
+    description: '교육국제화역량 인증제 tier. Normally written by `pnpm accreditation:import`.',
+  })
+  @IsEnum(AccreditationGrade)
+  @IsOptional()
+  accreditation?: AccreditationGrade;
 
   @ApiPropertyOptional({ default: false })
   @IsBoolean()
