@@ -61,6 +61,12 @@ const PROGRAM_NAME_MN = 'Солонгос хэлний бэлтгэл';
 const PROGRAM_NAME_EN = 'Korean Language Program';
 const PROGRAM_NAME_KO = '한국어교육원 정규과정';
 
+/**
+ * Staff-only provenance. It goes on the programme's `internalNote` and nowhere
+ * near `IntakeTerm.note`, which the public detail payload renders verbatim —
+ * "which spreadsheet this came from" is an answer for the office, not a
+ * sentence a visitor should be reading under a deadline.
+ */
 const SOURCE_NOTE = 'GKS EDU-ийн "сургууль хугацаа" хүснэгт (2026 оны 12 сарын элсэлт).';
 
 /** The intake this sheet describes: classes start in December 2026. */
@@ -206,7 +212,7 @@ async function main(): Promise<void> {
           month: INTAKE_MONTH,
         },
       },
-      select: { internalDeadline: true, internalDeadlineIsManual: true },
+      select: { internalDeadline: true, internalDeadlineIsManual: true, note: true },
     });
 
     const internalDeadline = resolveInternalDeadline({
@@ -215,6 +221,11 @@ async function main(): Promise<void> {
       internalDeadlineIsManual: existing?.internalDeadlineIsManual ?? false,
       leadDays,
     });
+
+    // Undefined leaves whatever the office typed alone; null clears a
+    // provenance line an earlier version of this script wrote into the public
+    // field before that was noticed.
+    const note = existing?.note === SOURCE_NOTE ? null : undefined;
 
     const flag = internalDeadline && internalDeadline < now ? '  ← already past' : '';
     console.log(
@@ -281,7 +292,7 @@ async function main(): Promise<void> {
         classStartDate,
         status: IntakeStatus.OPEN,
         sourceType: IntakeSource.IMPORTED,
-        note: SOURCE_NOTE,
+        note,
         verifiedAt: now,
       },
       create: {
@@ -294,7 +305,6 @@ async function main(): Promise<void> {
         classStartDate,
         status: IntakeStatus.OPEN,
         sourceType: IntakeSource.IMPORTED,
-        note: SOURCE_NOTE,
         verifiedAt: now,
       },
     });
