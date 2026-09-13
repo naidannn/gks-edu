@@ -31,7 +31,8 @@
     "clients:import": "pnpm --filter @gks/api clients:import",
     "contract:template:import": "pnpm --filter @gks/api contract:template:import",
     "tasks": "node scripts/task-status.mjs",
-    "email:preview": "pnpm --filter @gks/api email:preview"
+    "email:preview": "pnpm --filter @gks/api email:preview",
+    "storage:migrate": "pnpm --filter @gks/api storage:migrate"
   },
   "devDependencies": {
     "prettier": "^3.9.6",

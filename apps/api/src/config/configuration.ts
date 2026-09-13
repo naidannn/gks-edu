@@ -1,3 +1,17 @@
+export const STORAGE_DRIVER_NAMES = ['local', 's3', 'supabase'] as const;
+export type StorageDriverName = (typeof STORAGE_DRIVER_NAMES)[number];
+
+/**
+ * A misspelt `STORAGE_DRIVER` must not silently write client passports to the
+ * server's disk, so an unrecognised value is a boot failure rather than a
+ * fallback. Unset is still `local` — that is the dev default.
+ */
+function storageDriverName(raw: string | undefined): StorageDriverName {
+  if (!raw) return 'local';
+  if ((STORAGE_DRIVER_NAMES as readonly string[]).includes(raw)) return raw as StorageDriverName;
+  throw new Error(`Invalid STORAGE_DRIVER "${raw}" — expected one of ${STORAGE_DRIVER_NAMES.join(', ')}`);
+}
+
 export interface AppConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
@@ -134,13 +148,24 @@ export interface AppConfig {
     mock: boolean;
   };
   storage: {
-    /** `local` writes to disk; `supabase` needs SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (0-08). */
-    driver: 'local' | 'supabase';
+    /**
+     * `local` writes to disk (dev default); `s3` is production (0-08);
+     * `supabase` is the earlier backend, kept so an existing bucket stays
+     * readable. Anything unrecognised falls back to `local`.
+     */
+    driver: StorageDriverName;
     localDir: string;
     signingSecret: string;
     supabaseUrl?: string;
     supabaseServiceRoleKey?: string;
     supabaseBucket: string;
+    s3Bucket: string;
+    s3Region: string;
+    /** Absent = the SDK's default credential chain (EC2 instance role, shared config). */
+    s3AccessKeyId?: string;
+    s3SecretAccessKey?: string;
+    /** Only for S3-compatible stores (MinIO, R2); empty for real AWS. */
+    s3Endpoint?: string;
   };
 }
 
@@ -228,11 +253,18 @@ export const configuration = (): AppConfig => ({
     mock: (process.env.META_CAPI_MOCK ?? 'false') === 'true',
   },
   storage: {
-    driver: (process.env.STORAGE_DRIVER as 'local' | 'supabase') ?? 'local',
+    driver: storageDriverName(process.env.STORAGE_DRIVER),
     localDir: process.env.STORAGE_LOCAL_DIR ?? 'storage',
     signingSecret: process.env.STORAGE_SIGNING_SECRET ?? process.env.JWT_SECRET!,
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     supabaseBucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'gks-edu-files',
+    s3Bucket: process.env.S3_BUCKET ?? '',
+    // The production box is in ap-southeast-1; a bucket anywhere else pays
+    // cross-region transfer on every download.
+    s3Region: process.env.AWS_REGION ?? 'ap-southeast-1',
+    s3AccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    s3SecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    s3Endpoint: process.env.S3_ENDPOINT,
   },
 });
