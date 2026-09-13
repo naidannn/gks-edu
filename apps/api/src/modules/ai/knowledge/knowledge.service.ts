@@ -169,7 +169,7 @@ export class KnowledgeService {
         title: dto.title.trim(),
         kind: dto.kind,
         category: dto.category,
-        accessLevel: dto.accessLevel ?? AccessLevel.PUBLIC,
+        accessLevel: levelFor(dto.kind, dto.accessLevel),
         status: dto.status ?? KnowledgeStatus.DRAFT,
         universityId: dto.universityId ?? null,
         serviceType: dto.serviceType ?? null,
@@ -202,7 +202,9 @@ export class KnowledgeService {
       data: {
         ...(dto.title !== undefined ? { title: dto.title.trim() } : {}),
         ...(dto.category !== undefined ? { category: dto.category } : {}),
-        ...(dto.accessLevel !== undefined ? { accessLevel: dto.accessLevel } : {}),
+        ...(dto.accessLevel !== undefined
+          ? { accessLevel: levelFor(existing.kind, dto.accessLevel) }
+          : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         ...(dto.universityId !== undefined ? { universityId: dto.universityId ?? null } : {}),
         ...(dto.serviceType !== undefined ? { serviceType: dto.serviceType ?? null } : {}),
@@ -370,4 +372,18 @@ export class KnowledgeService {
       throw new BadRequestException('Файл баримтыг байршуулах замаар нэмнэ');
     }
   }
+}
+
+/**
+ * The level a kind is allowed to carry.
+ *
+ * A playbook is always INTERNAL, whatever the form sent. It is not material to
+ * quote: it is the instruction that tells the assistant *how* to behave when a
+ * visitor asks about price — "say what the service includes first, then offer a
+ * consultation". Published at any lower level it would become retrievable text,
+ * and the assistant would read the office's sales tactics out loud (2A-09).
+ */
+function levelFor(kind: KnowledgeKind, requested: AccessLevel | undefined): AccessLevel {
+  if (kind === KnowledgeKind.PLAYBOOK) return AccessLevel.INTERNAL;
+  return requested ?? AccessLevel.PUBLIC;
 }
