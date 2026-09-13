@@ -7,6 +7,7 @@ import { AdminKnowledgeController } from './knowledge/admin-knowledge.controller
 import { IngestProcessor } from './knowledge/ingest.processor.js';
 import { IngestService } from './knowledge/ingest.service.js';
 import { KnowledgeService } from './knowledge/knowledge.service.js';
+import { RetrievalService } from './knowledge/retrieval.service.js';
 
 /**
  * The phase-2 assistant (`docs/AI-ASSISTANT.md`).
@@ -21,7 +22,14 @@ import { KnowledgeService } from './knowledge/knowledge.service.js';
 @Module({
   imports: [BullModule.registerQueue({ name: AI_INGEST_QUEUE })],
   controllers: [AdminKnowledgeController],
-  providers: [AccessLevelService, EmbeddingService, KnowledgeService, IngestService, IngestProcessor],
-  exports: [AccessLevelService, EmbeddingService, KnowledgeService, IngestService],
+  providers: [
+    AccessLevelService,
+    EmbeddingService,
+    KnowledgeService,
+    RetrievalService,
+    IngestService,
+    IngestProcessor,
+  ],
+  exports: [AccessLevelService, EmbeddingService, KnowledgeService, RetrievalService, IngestService],
 })
 export class AiModule {}

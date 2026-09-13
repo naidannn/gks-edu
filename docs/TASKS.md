@@ -188,7 +188,6 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2A-06` | Hybrid хайлт: pgvector cosine + `tsv` (`simple`) + pg_trgm, RRF (k=60), universityId/category boost; `accessLevel = ANY(...)`, `status`, `validUntil` шүүлтүүр SQL `WHERE`-д; `minSimilarity` босго | todo | L | 2A-05 |
 | `2A-07` | `FaqItem`, нийтлэгдсэн `Post` автоматаар индексжих (create/update/delete → ingest job, `sourceRef`-ээр давхардуулахгүй) | todo | S | 2A-05 |
 | `2A-08` | Хариултын карт (`kind=ENTRY`): асуулт + баталгаат хариулт, ажилтан бичнэ; ингестийн адил зам | todo | S | 2A-05 |
 | `2A-09` | Борлуулалтын заавар (`kind=PLAYBOOK`, INTERNAL): system prompt-д зан төлөвийн заавар болж орно, хэзээ ч ишлэгдэхгүй, хэрэглэгчид гарахгүй | todo | S | 2A-05 |

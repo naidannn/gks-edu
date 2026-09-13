@@ -22,16 +22,18 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator.j
 import { Roles } from '../../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../../common/types/authenticated-user.js';
-import { Role } from '../../../prisma/client.js';
+import { AccessLevel, Role } from '../../../prisma/client.js';
 import { StorageService } from '../../../storage/storage.service.js';
 import {
   CreateKnowledgeDocumentDto,
   QueryKnowledgeDocumentsDto,
+  SearchKnowledgeDto,
   UpdateKnowledgeDocumentDto,
   UploadKnowledgeDocumentDto,
 } from './dto/knowledge-document.dto.js';
 import { IngestService } from './ingest.service.js';
 import { KnowledgeService } from './knowledge.service.js';
+import { RetrievalService } from './retrieval.service.js';
 
 /** 0-09's cap, restated here because multer enforces it before the service sees the bytes. */
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
@@ -56,6 +58,7 @@ export class AdminKnowledgeController {
     private readonly knowledge: KnowledgeService,
     private readonly ingest: IngestService,
     private readonly storage: StorageService,
+    private readonly retrieval: RetrievalService,
   ) {}
 
   @Get()
@@ -108,6 +111,21 @@ export class AdminKnowledgeController {
     await this.knowledge.findOne(id);
     await this.ingest.reindex(id);
     return { queued: true };
+  }
+
+  @Post('search-test')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Run the hybrid search and see what it returns, at any access level',
+    description:
+      'The level defaults to INTERNAL — staff testing their own corpus — and can be lowered to see exactly what a visitor would get back. Which legs of the search matched is part of the answer.',
+  })
+  searchTest(@Body() dto: SearchKnowledgeDto) {
+    return this.retrieval.search({
+      query: dto.query,
+      level: dto.accessLevel ?? AccessLevel.INTERNAL,
+      limit: dto.limit,
+    });
   }
 
   @Post('reindex-pending')
