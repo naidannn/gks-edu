@@ -417,3 +417,4 @@
 | `2-01` | pgvector суурь: `Document`/`DocumentChunk`, HNSW cosine индекс *(2A-01-д `KnowledgeDocument`/`KnowledgeChunk` болно)* | done | M | 0-03 |
 | `2A-01` | `vector` модулийг `ai/knowledge` болгож, `Document`/`DocumentChunk`-ийг `KnowledgeDocument`/`KnowledgeChunk` болгон өргөтгөх: `kind`, `category`, `accessLevel`, `status`, `universityId`, `serviceType`, `validUntil`, `sourceFile`, `sourceRef`, `contentHash`, `indexedAt`, `indexError`; chunk дээр `heading`, `tokenCount`, `accessLevel`, `tsv` (generated) + GIN | done | M | — |
 | `2A-02` | Жинхэнэ embedding — `EmbeddingService`-ийг `gemini-embedding-001` (`outputDimensionality` 1536) дээр; batch 32, retry, mock; `vector(1536)` хэвээр | done | M | 2A-01 |
+| `2A-03` | Файл задлах: DOCX (mammoth), PDF (`unpdf` — `pdf-parse` нь 40MB native canvas татдаг), MD/TXT → текст + гарчгийн мод; `StorageService`-д ерөнхий prefix (`knowledge/`) — одоо `cases/{caseId}/`-д хатуу (1K-11-тэй нэг ажил) | done | M | 2A-01 |

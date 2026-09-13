@@ -17,3 +17,13 @@ export const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
 
 /** Real magic-byte signatures for {@link ALLOWED_UPLOAD_EXTENSIONS} (0-09 MIME sniff). */
 export const ALLOWED_MIME_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png']);
+
+/**
+ * Magic-byte signatures for the knowledge base's sniffable uploads (2A-03).
+ * Markdown and plain text are absent on purpose — they have no signature, and
+ * `StorageService` checks them by decoding instead.
+ */
+export const KNOWLEDGE_MIME_BY_EXTENSION: Record<string, string> = {
+  pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
