@@ -428,3 +428,4 @@
 | `2E-01` | `/admin/ai/knowledge`: жагсаалт (төрөл, түвшин, ангилал, сургууль, статус, chunk тоо, индексжсэн огноо, алдаа, `validUntil` хуучирсан туг), upload, засах, дахин индексжүүлэх, chunk урьдчилан харах, "Хайлт турших"; навигацид "AI туслах"; `@Audit` | done | L | 2A-05 |
 | `2B-02` | `AiAssistantConfig` singleton (`AdmissionConfig` загвар) + `/admin/ai/config` API: enabled, загварууд, temperature, topK, minSimilarity, сессийн/өдрийн токен тааз, greeting, persona, capture дүрэм, ctaRules, handoffHours | done | S | — |
 | `2B-03` | Prisma: `ChatSession`, `ChatMessage`, `ChatFeedback`, `KnowledgeGap`; `Lead.aiQualification`, `Conversation.chatSessionId` | done | M | — |
+| `2B-01` | `LlmService` провайдерийн давхарга: Gemini + DeepSeek, стрийм, tool calling, usage; 429/5xx → `fallbackModel` нэг удаа; `GeminiService`/`DeepseekService` энэ дээр суух (`generateJson` хэвээр) | done | L | — |
