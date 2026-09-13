@@ -9,10 +9,11 @@ import {
 import type { AiConfigService } from '../ai-config.service.js';
 import type { RetrievalHit, RetrievalService } from '../knowledge/retrieval.service.js';
 import type { LlmService } from '../llm/llm.service.js';
-import type { LlmEvent } from '../llm/llm.types.js';
+import type { LlmEvent, LlmToolCall, LlmToolDefinition } from '../llm/llm.types.js';
 import type { BudgetService } from './budget.service.js';
 import type { ChatSessionService } from './chat-session.service.js';
 import { GuardService } from './guard.service.js';
+import type { ToolRegistry, ToolRun } from './tools/tool-registry.service.js';
 import { TurnOrchestrator, type TurnEvent } from './turn.orchestrator.js';
 
 const CONFIG = {
@@ -61,12 +62,41 @@ function hit(overrides: Partial<RetrievalHit> = {}): RetrievalHit {
   };
 }
 
+/** A tool the registry would hand the model, and the result it would give back. */
+function toolRun(overrides: Partial<ToolRun> = {}): ToolRun {
+  return {
+    ref: 'T1',
+    name: 'get_service_pricing',
+    title: 'Үйлчилгээний үнэ',
+    arguments: { serviceType: 'BACHELOR' },
+    content: '<tool_result id="T1" tool="get_service_pricing">{"нийт_төгрөг":1200000}</tool_result>',
+    card: { type: 'pricing', data: { totalAmount: 1_200_000 } },
+    ok: true,
+    durationMs: 12,
+    ...overrides,
+  };
+}
+
+const PRICING_TOOL: LlmToolDefinition = {
+  name: 'get_service_pricing',
+  description: 'Үнэ',
+  parameters: { type: 'object', properties: {} },
+};
+
 function harness(options: {
   config?: Partial<typeof CONFIG>;
   hits?: RetrievalHit[];
   answer?: string;
+  /** One answer per model call, when the turn takes more than one. */
+  answers?: string[];
   spentToday?: number;
   playbooks?: { title: string; body: string }[];
+  /** Tool definitions the caller's level unlocks. Empty by default. */
+  tools?: LlmToolDefinition[];
+  /** What the model asks for on each successive model call. */
+  toolCalls?: LlmToolCall[][];
+  /** What the registry hands back, in call order. */
+  toolRuns?: ToolRun[];
 } = {}) {
   const aiConfig = { get: async () => ({ ...CONFIG, ...options.config }) } as unknown as AiConfigService;
 
@@ -82,12 +112,18 @@ function harness(options: {
     playbooks: vi.fn().mockResolvedValue(options.playbooks ?? []),
   } as unknown as RetrievalService;
 
-  const answers = [options.answer ?? 'Материалаа эрт эхлэх нь зөв [K1].'];
+  const answers = options.answers ?? [options.answer ?? 'Материалаа эрт эхлэх нь зөв [K1].'];
+  let modelCall = 0;
   const llm = {
     stream: vi.fn().mockImplementation((_request: unknown, onResult?: (r: unknown) => void) => {
+      const round = modelCall;
+      modelCall += 1;
       const text = answers.shift() ?? 'Дахин бичсэн хариулт.';
+      const calls = options.toolCalls?.[round] ?? [];
+
       return (async function* (): AsyncIterable<LlmEvent> {
-        yield { type: 'text', delta: text };
+        if (text) yield { type: 'text', delta: text };
+        for (const call of calls) yield { type: 'tool-call', call };
         onResult?.({
           model: 'gemini-3.1-flash-lite',
           provider: 'gemini',
@@ -96,7 +132,7 @@ function harness(options: {
           costMicros: 285,
           usedFallback: false,
         });
-        yield { type: 'done', finishReason: 'stop' };
+        yield { type: 'done', finishReason: calls.length > 0 ? 'tool_calls' : 'stop' };
       })();
     }),
   } as unknown as LlmService;
@@ -110,8 +146,23 @@ function harness(options: {
     }),
   } as unknown as BudgetService;
 
-  const orchestrator = new TurnOrchestrator(aiConfig, sessions, retrieval, llm, new GuardService(), budget);
-  return { orchestrator, sessions, retrieval, llm, answers };
+  const pendingRuns = [...(options.toolRuns ?? [])];
+  const tools = {
+    definitions: vi.fn().mockReturnValue(options.tools ?? []),
+    labelFor: vi.fn().mockReturnValue('Шалгаж байна…'),
+    run: vi.fn().mockImplementation(async () => pendingRuns.shift() ?? toolRun()),
+  } as unknown as ToolRegistry;
+
+  const orchestrator = new TurnOrchestrator(
+    aiConfig,
+    sessions,
+    retrieval,
+    llm,
+    new GuardService(),
+    budget,
+    tools,
+  );
+  return { orchestrator, sessions, retrieval, llm, tools, answers };
 }
 
 async function run(orchestrator: TurnOrchestrator, overrides: Partial<Parameters<TurnOrchestrator['run']>[0]> = {}) {
@@ -285,6 +336,98 @@ describe('TurnOrchestrator', () => {
         expect.objectContaining({ type: 'error', fallback: 'messenger' }),
       ]);
       expect(built.sessions.recordAnswer).not.toHaveBeenCalled();
+    });
+  });
+  describe('when it uses tools', () => {
+    const call: LlmToolCall = {
+      id: 'call-1',
+      name: 'get_service_pricing',
+      arguments: { serviceType: 'BACHELOR' },
+    };
+
+    it('runs the tool, shows a card, and lets the answer cite it', async () => {
+      const { orchestrator, tools } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[call]],
+        answers: ['', 'Үйлчилгээний төлбөр 1,200,000₮ [T1].'],
+      });
+
+      const events = await run(orchestrator);
+
+      expect(tools.run).toHaveBeenCalledWith(
+        expect.objectContaining({ call, ref: 'T1' }),
+      );
+      expect(events.map((event) => event.type)).toEqual([
+        'tool',
+        'tool',
+        'card',
+        'token',
+        'sources',
+        'done',
+      ]);
+      // The figure reached the screen twice: once as prose the model wrote, and
+      // once as a card the model never touched.
+      expect(events.find((event) => event.type === 'card')).toMatchObject({
+        card: { type: 'pricing' },
+      });
+      expect(events.find((event) => event.type === 'sources')).toMatchObject({
+        sources: [{ ref: 'T1', kind: 'tool', title: 'Үйлчилгээний үнэ' }],
+      });
+      expect(events.at(-1)).toMatchObject({ grounded: true });
+    });
+
+    it('bills every model call of the turn, not just the last', async () => {
+      const { orchestrator, sessions } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[call]],
+        answers: ['', 'Хариулт [T1] 1,200,000₮.'],
+      });
+
+      await run(orchestrator);
+
+      // Two calls at 900/40 each. Billing only the last is how a tool loop
+      // spends a month's budget without the ceiling noticing.
+      expect(sessions.recordAnswer).toHaveBeenCalledWith(
+        expect.objectContaining({ promptTokens: 1_800, completionTokens: 80, costMicros: 570 }),
+      );
+    });
+
+    it('takes the tools away on the last call, so the turn ends in prose', async () => {
+      const { orchestrator, llm } = harness({
+        tools: [PRICING_TOOL],
+        // A model that would happily keep asking for ever.
+        toolCalls: [[call], [call], [call], [call]],
+        answers: ['', '', '', 'Эцсийн хариулт.'],
+      });
+
+      await run(orchestrator);
+
+      expect(llm.stream).toHaveBeenCalledTimes(4);
+      expect(vi.mocked(llm.stream).mock.calls[2]![0]).toHaveProperty('tools');
+      expect(vi.mocked(llm.stream).mock.calls[3]![0]).not.toHaveProperty('tools');
+    });
+
+    it('answers anyway when a tool fails', async () => {
+      const { orchestrator } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[call]],
+        toolRuns: [toolRun({ ok: false, card: undefined, title: 'Алдаа' })],
+        answers: ['', 'Төлбөрийг одоогоор шалгаж чадсангүй, зөвлөх хэлж өгнө.'],
+      });
+
+      const events = await run(orchestrator);
+
+      expect(events.some((event) => event.type === 'card')).toBe(false);
+      // A failed lookup is not a failed turn: the model was told, and said so.
+      expect(events.at(-1)).toMatchObject({ type: 'done' });
+    });
+
+    it('offers no tools at all when the level unlocks none', async () => {
+      const { orchestrator, llm } = harness();
+
+      await run(orchestrator);
+
+      expect(vi.mocked(llm.stream).mock.calls[0]![0]).not.toHaveProperty('tools');
     });
   });
 });

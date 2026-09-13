@@ -1,17 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AccessLevel, ChatSessionStatus, Prisma, type ChatSession } from '../../../prisma/client.js';
 import { AiConfigService } from '../ai-config.service.js';
-import { RetrievalService, type RetrievalHit } from '../knowledge/retrieval.service.js';
+import { RetrievalService } from '../knowledge/retrieval.service.js';
 import { LlmService } from '../llm/llm.service.js';
-import type { LlmMessage } from '../llm/llm.types.js';
+import type { LlmMessage, LlmToolCall } from '../llm/llm.types.js';
 import { BudgetService } from './budget.service.js';
 import { ChatSessionService } from './chat-session.service.js';
 import { GuardService, LONG_ANSWER_CHARS, NO_QUOTE_INSTRUCTION } from './guard.service.js';
 import { buildSystemPrompt, type SourceRef } from './prompt.builder.js';
+import { ToolRegistry, type ToolRun } from './tools/tool-registry.service.js';
+import type { ChatCard, ToolContext } from './tools/tool.types.js';
 
 /** What the SSE endpoint forwards to the browser (§5.6). */
 export type TurnEvent =
   | { type: 'token'; text: string }
+  | { type: 'tool'; name: string; status: 'running' | 'done'; label: string }
+  | { type: 'card'; card: ChatCard }
   | { type: 'sources'; sources: PublicSource[] }
   | { type: 'done'; messageId: string; grounded: boolean; truncated: boolean }
   | { type: 'error'; code: string; message: string; fallback: 'messenger' | 'consultation' };
@@ -21,20 +25,39 @@ export interface PublicSource {
   ref: string;
   title: string;
   heading: string | null;
+  /** A document from the knowledge base, or a live lookup in our own data. */
+  kind: 'knowledge' | 'tool';
 }
+
+/**
+ * Model calls allowed in one turn (2B-06: "≤4 давталт").
+ *
+ * The last one is made with no tools attached, so a turn always ends in prose.
+ * Left able to call again on its final go, a model that has been looping asks
+ * for one more lookup and the turn ends on a request nobody will answer — a
+ * blank reply, which is the one failure mode worse than an incomplete one.
+ */
+const MAX_MODEL_CALLS = 4;
 
 /**
  * One turn: question in, answer out (2B-04, AI-ASSISTANT.md §3).
  *
  * ```
- * kill switch + budget → history → retrieve → prompt → stream → guard → store
+ * kill switch + budget → history → retrieve → prompt → [model ⇄ tools] → guard → store
  * ```
  *
  * The order is the design. Retrieval happens before the model is called, so the
  * model never chooses what it is allowed to see; the guard runs after it has
  * spoken but before anything is stored or counted, so a leaked answer is never
- * a stored answer. Tools slot in between the prompt and the stream (2B-06) and
- * change none of this.
+ * a stored answer.
+ *
+ * Tools sit in the middle of that, and they are what keep the numbers honest:
+ * the knowledge base holds advice and procedure, while every price, deadline and
+ * exchange rate is read live from the tables the office already maintains
+ * (§5.3). The model asks; it never remembers. What comes back also goes to the
+ * browser as a **card** — the figures travel from the database to the screen
+ * without passing through the model's hands, so the worst a bad answer can do is
+ * describe a correct number badly (§5.4).
  *
  * The assistant is silent in three cases, and says so rather than improvising:
  * the switch is off, the day's budget is spent, or the session has been handed
@@ -51,6 +74,7 @@ export class TurnOrchestrator {
     private readonly llm: LlmService,
     private readonly guard: GuardService,
     private readonly budget: BudgetService,
+    private readonly tools: ToolRegistry,
   ) {}
 
   async *run(params: {
@@ -105,6 +129,8 @@ export class TurnOrchestrator {
     });
     const playbooks = await this.retrieval.playbooks(params.level);
 
+    const toolDefinitions = this.tools.definitions(params.level);
+
     const history = await this.sessions.history(params.session.id);
     const { system, sources } = buildSystemPrompt({
       persona: config.persona,
@@ -113,6 +139,7 @@ export class TurnOrchestrator {
       playbooks,
       profile: (params.session.profile as Record<string, unknown>) ?? {},
       history: params.session.summary,
+      toolNames: toolDefinitions.map((tool) => tool.name),
     });
 
     // `history` already ends with the question, because it was stored above.
@@ -130,24 +157,67 @@ export class TurnOrchestrator {
     // one, which is the right way round.
     const mayStream = playbooks.length === 0;
 
+    const toolContext: ToolContext = {
+      level: params.level,
+      session: params.session,
+      userId: params.session.userId,
+      now: new Date(),
+    };
+
     let answer = '';
-    let usage = { promptTokens: 0, completionTokens: 0, costMicros: 0, model: config.chatModel };
+    const runs: ToolRun[] = [];
+    const usage = new UsageMeter(config.chatModel);
 
     try {
-      for await (const event of this.llm.stream(
-        { system, messages, signal: params.signal },
-        (result) => {
-          usage = {
-            promptTokens: result.promptTokens,
-            completionTokens: result.completionTokens,
-            costMicros: result.costMicros,
-            model: result.model,
-          };
-        },
-      )) {
-        if (event.type === 'text') {
-          answer += event.delta;
-          if (mayStream) yield { type: 'token', text: event.delta };
+      for (let round = 0; round < MAX_MODEL_CALLS; round += 1) {
+        const offerTools = toolDefinitions.length > 0 && round < MAX_MODEL_CALLS - 1;
+        const calls: LlmToolCall[] = [];
+        let spoken = '';
+
+        for await (const event of this.llm.stream(
+          {
+            system,
+            messages,
+            ...(offerTools ? { tools: toolDefinitions } : {}),
+            signal: params.signal,
+          },
+          (result) => usage.add(result),
+        )) {
+          if (event.type === 'text') {
+            spoken += event.delta;
+            // Text before a tool call is a preamble — "Хугацааг шалгаад хэлье"
+            // — and it is left on screen rather than swallowed: it is what the
+            // visitor is reading while the lookup runs, and it is part of the
+            // stored answer, so what was shown is what was checked.
+            if (mayStream) yield { type: 'token', text: event.delta };
+          }
+          if (event.type === 'tool-call') calls.push(event.call);
+        }
+
+        answer += spoken;
+        if (calls.length === 0) break;
+
+        messages.push({ role: 'assistant', content: spoken, toolCalls: calls });
+
+        for (const call of calls) {
+          yield { type: 'tool', name: call.name, status: 'running', label: this.tools.labelFor(call.name) };
+
+          const run = await this.tools.run({
+            call,
+            context: toolContext,
+            ref: `T${runs.length + 1}`,
+          });
+          runs.push(run);
+
+          yield { type: 'tool', name: call.name, status: 'done', label: run.title };
+          if (run.card) yield { type: 'card', card: run.card };
+
+          messages.push({
+            role: 'tool',
+            content: run.content,
+            toolCallId: call.id,
+            name: call.name,
+          });
         }
       }
     } catch (error) {
@@ -156,7 +226,7 @@ export class TurnOrchestrator {
       return;
     }
 
-    const knownRefs = sources.map((source) => source.ref);
+    const knownRefs = [...sources.map((source) => source.ref), ...runs.map((run) => run.ref)];
 
     let verdict = this.guard.review({
       answer,
@@ -191,17 +261,18 @@ export class TurnOrchestrator {
       yield { type: 'token', text: verdict.text };
     }
 
-    const used = usedSources(verdict.text, sources, hits);
+    const used = usedSources(verdict.text, sources, runs);
     if (used.length > 0) yield { type: 'sources', sources: used };
 
+    const cards = runs.filter((run) => run.card).map((run) => run.card);
     const stored = await this.sessions.recordAnswer({
       sessionId: params.session.id,
       content: verdict.text,
       model: usage.model,
       grounded: verdict.grounded,
-      citations: sources.filter((source) =>
-        verdict.text.includes(`[${source.ref}]`),
-      ) as unknown as Prisma.InputJsonValue,
+      citations: used as unknown as Prisma.InputJsonValue,
+      ...(cards.length > 0 ? { cards: cards as unknown as Prisma.InputJsonValue } : {}),
+      ...(runs.length > 0 ? { toolCalls: toolLog(runs) as unknown as Prisma.InputJsonValue } : {}),
       promptTokens: usage.promptTokens,
       completionTokens: usage.completionTokens,
       costMicros: usage.costMicros,
@@ -236,6 +307,31 @@ export class TurnOrchestrator {
   }
 }
 
+/**
+ * The turn's bill.
+ *
+ * A turn is several model calls once tools are in play, and each one reports its
+ * own usage. Keeping only the last would bill a four-call turn as a one-call
+ * turn — and the daily ceiling is the only thing standing between a tool loop
+ * and a month's spend, so it has to see all of it.
+ */
+class UsageMeter {
+  promptTokens = 0;
+  completionTokens = 0;
+  costMicros = 0;
+
+  constructor(public model: string) {}
+
+  add(result: { model: string; promptTokens: number; completionTokens: number; costMicros: number }): void {
+    this.promptTokens += result.promptTokens;
+    this.completionTokens += result.completionTokens;
+    this.costMicros += result.costMicros;
+    // The model that answered last is the one the message is attributed to —
+    // it is the one whose words were kept.
+    this.model = result.model;
+  }
+}
+
 function offline(message: string, fallback: 'messenger' | 'consultation'): TurnEvent {
   return { type: 'error', code: 'assistant_unavailable', message, fallback };
 }
@@ -249,16 +345,37 @@ function citedRefs(answer: string): string[] {
  * The sources the answer actually cited, in the shape the widget shows.
  *
  * Only cited ones: listing everything retrieved would credit the answer with
- * material it did not use, which is the opposite of what a citation is for.
+ * material it did not use, which is the opposite of what a citation is for. A
+ * tool result is listed too — "энэ тоог хаанаас авав" is the same question
+ * whether the answer came from a document or from the price table.
  */
-function usedSources(answer: string, sources: SourceRef[], hits: RetrievalHit[]): PublicSource[] {
+function usedSources(answer: string, sources: SourceRef[], runs: ToolRun[]): PublicSource[] {
   const cited = new Set(citedRefs(answer));
 
-  return sources
+  const knowledge: PublicSource[] = sources
     .filter((source) => cited.has(source.ref))
-    .map((source, index) => ({
+    .map((source) => ({
       ref: source.ref,
       title: source.title,
-      heading: hits[index]?.heading ?? source.heading,
+      heading: source.heading,
+      kind: 'knowledge' as const,
     }));
+
+  const tools: PublicSource[] = runs
+    .filter((run) => run.ok && cited.has(run.ref))
+    .map((run) => ({ ref: run.ref, title: run.title, heading: null, kind: 'tool' as const }));
+
+  return [...knowledge, ...tools];
+}
+
+/** What the transcript keeps about a tool call — the call, not its payload. */
+function toolLog(runs: ToolRun[]) {
+  return runs.map((run) => ({
+    ref: run.ref,
+    name: run.name,
+    title: run.title,
+    arguments: run.arguments,
+    ok: run.ok,
+    durationMs: run.durationMs,
+  }));
 }

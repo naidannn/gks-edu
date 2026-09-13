@@ -3,6 +3,7 @@ export * from './schemas/user';
 export * from './schemas/pagination';
 export * from './schemas/lead';
 export * from './schemas/tracking';
+export * from './schemas/ai-tools';
 export * from './types/university';
 export * from './types/admissions';
 export * from './types/programs';
