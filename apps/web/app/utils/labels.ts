@@ -6,6 +6,7 @@
  * its label from here so a wording change lands in one place (CLAUDE.md).
  */
 import type {
+  AccessLevel,
   AccreditationGrade,
   AgentContractStatus,
   BannerPlacement,
@@ -21,6 +22,9 @@ import type {
   DocumentStatus,
   EducationLevel,
   FaqCategory,
+  KnowledgeCategory,
+  KnowledgeKind,
+  KnowledgeStatus,
   Gender,
   GuarantorRelation,
   GuarantorType,
@@ -876,4 +880,56 @@ export const NEXT_ACTION_ACTOR_ICONS_STAFF: Record<NextActionActor, string> = {
   STAFF: 'circle-arrow-right',
   SCHOOL: 'graduation-cap',
   NONE: 'circle-check',
+};
+
+// ── AI assistant: the knowledge base (2A, 2E-01) ───────────────────────────
+
+/**
+ * Who may read a document. Shown as a column rather than a setting buried in a
+ * form, because it is the question staff check first — the assistant hands out
+ * whatever sits at or below the asker's level.
+ */
+export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
+  PUBLIC: 'Нийтэд',
+  REGISTERED: 'Бүртгэлтэй',
+  CONTRACTED: 'Гэрээтэй',
+  INTERNAL: 'Дотоод',
+};
+
+export const KNOWLEDGE_KIND_LABELS: Record<KnowledgeKind, string> = {
+  FILE: 'Файл',
+  FAQ: 'Түгээмэл асуулт',
+  POST: 'Нийтлэл',
+  ENTRY: 'Хариултын карт',
+  PLAYBOOK: 'Борлуулалтын заавар',
+};
+
+export const KNOWLEDGE_CATEGORY_LABELS: Record<KnowledgeCategory, string> = {
+  SCHOOL: 'Сургууль',
+  SERVICE: 'Үйлчилгээ',
+  PRICING: 'Үнэ, төлбөр',
+  SCHOLARSHIP: 'Тэтгэлэг',
+  DOCUMENTS: 'Материал',
+  VISA: 'Виз',
+  LIVING: 'Амьдрал',
+  POLICY: 'Журам',
+  SALES: 'Борлуулалт',
+  FAQ: 'Түгээмэл асуулт',
+};
+
+export const KNOWLEDGE_STATUS_LABELS: Record<KnowledgeStatus, string> = {
+  DRAFT: 'Ноорог',
+  PUBLISHED: 'Нийтлэгдсэн',
+  ARCHIVED: 'Архивласан',
+};
+
+/**
+ * Which leg of the hybrid search matched (2A-06). Worth naming in the UI: a hit
+ * found by meaning alone and one found because the words are literally there are
+ * different kinds of evidence, and the search test is where staff learn that.
+ */
+export const SEARCH_LEG_LABELS: Record<'semantic' | 'lexical' | 'trigram', string> = {
+  semantic: 'Утга',
+  lexical: 'Үг',
+  trigram: 'Бичлэг',
 };

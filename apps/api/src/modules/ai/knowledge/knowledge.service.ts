@@ -5,6 +5,7 @@ import {
   KnowledgeKind,
   KnowledgeStatus,
   Prisma,
+  Role,
   type KnowledgeDocument,
 } from '../../../prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
@@ -71,11 +72,28 @@ export class KnowledgeService {
 
   // ─── Documents ──────────────────────────────────────────────────────────────
 
-  async list(query: QueryKnowledgeDocumentsDto) {
+  /**
+   * The levels a staff member may even see listed.
+   *
+   * A consultant works the knowledge base daily — writing cards, checking what a
+   * visitor gets — but INTERNAL documents are the office's own margins, agent
+   * terms and sales playbooks (AI-ASSISTANT.md §9). Admins see everything.
+   */
+  private visibleLevels(role: Role): AccessLevel[] | null {
+    if (role === Role.ADMIN) return null;
+    return [AccessLevel.PUBLIC, AccessLevel.REGISTERED, AccessLevel.CONTRACTED];
+  }
+
+  async list(query: QueryKnowledgeDocumentsDto, role: Role) {
+    const levels = this.visibleLevels(role);
+
     const where: Prisma.KnowledgeDocumentWhereInput = {
+      // The requested filter is intersected with what the role may see, never
+      // substituted for it: a consultant asking for `accessLevel=INTERNAL` gets
+      // an empty list rather than the office's margins.
+      accessLevel: resolveLevelFilter(levels, query.accessLevel),
       ...(query.kind ? { kind: query.kind } : {}),
       ...(query.category ? { category: query.category } : {}),
-      ...(query.accessLevel ? { accessLevel: query.accessLevel } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.universityId ? { universityId: query.universityId } : {}),
       ...(query.failedOnly === 'true' ? { indexError: { not: null } } : {}),
@@ -107,9 +125,11 @@ export class KnowledgeService {
   }
 
   /** One document with its chunks — `embedding` is never selected: it is huge and Unsupported. */
-  async findOne(id: string) {
-    const document = await this.prisma.knowledgeDocument.findUnique({
-      where: { id },
+  async findOne(id: string, role: Role = Role.ADMIN) {
+    const levels = this.visibleLevels(role);
+
+    const document = await this.prisma.knowledgeDocument.findFirst({
+      where: { id, ...(levels ? { accessLevel: { in: levels } } : {}) },
       select: {
         ...LIST_SELECT,
         body: true,
@@ -386,4 +406,14 @@ export class KnowledgeService {
 function levelFor(kind: KnowledgeKind, requested: AccessLevel | undefined): AccessLevel {
   if (kind === KnowledgeKind.PLAYBOOK) return AccessLevel.INTERNAL;
   return requested ?? AccessLevel.PUBLIC;
+}
+
+/** The `accessLevel` predicate for a list query: the role's ceiling ∩ the filter asked for. */
+function resolveLevelFilter(
+  allowed: AccessLevel[] | null,
+  requested: AccessLevel | undefined,
+): Prisma.EnumAccessLevelFilter | AccessLevel | undefined {
+  if (!requested) return allowed ? { in: allowed } : undefined;
+  if (!allowed) return requested;
+  return allowed.includes(requested) ? requested : { in: [] };
 }

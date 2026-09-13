@@ -28,40 +28,6 @@ export type KnowledgeCategory =
 
 export type KnowledgeStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
-export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
-  PUBLIC: 'Нийтэд',
-  REGISTERED: 'Бүртгэлтэй',
-  CONTRACTED: 'Гэрээтэй',
-  INTERNAL: 'Дотоод',
-};
-
-export const KNOWLEDGE_KIND_LABELS: Record<KnowledgeKind, string> = {
-  FILE: 'Файл',
-  FAQ: 'Түгээмэл асуулт',
-  POST: 'Нийтлэл',
-  ENTRY: 'Хариултын карт',
-  PLAYBOOK: 'Борлуулалтын заавар',
-};
-
-export const KNOWLEDGE_CATEGORY_LABELS: Record<KnowledgeCategory, string> = {
-  SCHOOL: 'Сургууль',
-  SERVICE: 'Үйлчилгээ',
-  PRICING: 'Үнэ, төлбөр',
-  SCHOLARSHIP: 'Тэтгэлэг',
-  DOCUMENTS: 'Материал',
-  VISA: 'Виз',
-  LIVING: 'Амьдрал',
-  POLICY: 'Журам',
-  SALES: 'Борлуулалт',
-  FAQ: 'Түгээмэл асуулт',
-};
-
-export const KNOWLEDGE_STATUS_LABELS: Record<KnowledgeStatus, string> = {
-  DRAFT: 'Ноорог',
-  PUBLISHED: 'Нийтлэгдсэн',
-  ARCHIVED: 'Архивласан',
-};
-
 interface NamedRef {
   id: string;
   name: string | null;
@@ -105,4 +71,23 @@ export interface KnowledgeDocumentDetail extends KnowledgeDocumentListItem {
   body: string | null;
   contentHash: string | null;
   chunks: KnowledgeChunkPreview[];
+}
+
+/** One hit from the hybrid search, as the admin "test the search" box shows it. */
+export interface KnowledgeSearchHit {
+  chunkId: string;
+  documentId: string;
+  title: string;
+  kind: KnowledgeKind;
+  category: KnowledgeCategory;
+  accessLevel: AccessLevel;
+  heading: string | null;
+  content: string;
+  /** Cosine similarity, or null when only the lexical legs found this chunk. */
+  similarity: number | null;
+  /** Fused score — comparable inside one result set, not between queries. */
+  score: number;
+  /** Which legs matched: semantic, lexical (tsv), trigram. */
+  matchedBy: ('semantic' | 'lexical' | 'trigram')[];
+  sourceRef: string | null;
 }

@@ -5,9 +5,11 @@ import {
   KnowledgeCategory,
   KnowledgeKind,
   KnowledgeStatus,
+  Role,
 } from '../../../prisma/client.js';
 import type { PrismaService } from '../../../prisma/prisma.service.js';
 import type { EmbeddingService } from '../embedding/embedding.service.js';
+import type { QueryKnowledgeDocumentsDto } from './dto/knowledge-document.dto.js';
 import { KnowledgeService } from './knowledge.service.js';
 
 const DOC = '55555555-5555-4555-8555-555555555555';
@@ -105,6 +107,63 @@ describe('KnowledgeService', () => {
       expect(vi.mocked(prisma.knowledgeDocument.update).mock.calls[0]![0].data).toMatchObject({
         accessLevel: AccessLevel.INTERNAL,
       });
+    });
+  });
+
+  describe('who sees what (2E-01)', () => {
+    function listHarness() {
+      const prisma = {
+        knowledgeDocument: {
+          findMany: vi.fn().mockResolvedValue([]),
+          count: vi.fn().mockResolvedValue(0),
+        },
+      } as unknown as PrismaService;
+      const embeddings = { size: 1536 } as unknown as EmbeddingService;
+      return { service: new KnowledgeService(prisma, embeddings), prisma };
+    }
+
+    /** `skip` is a getter on the DTO class, so spreading one loses it. */
+    const queryWith = (overrides: Partial<QueryKnowledgeDocumentsDto> = {}) =>
+      ({ page: 1, limit: 20, skip: 0, ...overrides }) as QueryKnowledgeDocumentsDto;
+
+    /** The `where` the service handed Prisma — where the whole rule lives. */
+    const whereOf = (prisma: PrismaService) =>
+      (vi.mocked(prisma.knowledgeDocument.findMany).mock.calls[0]![0] as { where: Record<string, unknown> })
+        .where;
+
+    it('shows an admin everything', async () => {
+      const { service, prisma } = listHarness();
+
+      await service.list(queryWith(), Role.ADMIN);
+
+      expect(whereOf(prisma)).toMatchObject({ accessLevel: undefined });
+    });
+
+    it('hides INTERNAL from a consultant', async () => {
+      const { service, prisma } = listHarness();
+
+      await service.list(queryWith(), Role.CONSULTANT);
+
+      expect(whereOf(prisma).accessLevel).toEqual({
+        in: [AccessLevel.PUBLIC, AccessLevel.REGISTERED, AccessLevel.CONTRACTED],
+      });
+    });
+
+    it('answers a consultant asking for INTERNAL with nothing, not with the documents', async () => {
+      const { service, prisma } = listHarness();
+
+      await service.list(queryWith({ accessLevel: AccessLevel.INTERNAL }), Role.CONSULTANT);
+
+      // Intersected with the ceiling, not substituted for it.
+      expect(whereOf(prisma).accessLevel).toEqual({ in: [] });
+    });
+
+    it('keeps a narrower filter a consultant is entitled to', async () => {
+      const { service, prisma } = listHarness();
+
+      await service.list(queryWith({ accessLevel: AccessLevel.CONTRACTED }), Role.CONSULTANT);
+
+      expect(whereOf(prisma).accessLevel).toBe(AccessLevel.CONTRACTED);
     });
   });
 
