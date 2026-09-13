@@ -426,3 +426,5 @@
 | `2A-09` | Борлуулалтын заавар (`kind=PLAYBOOK`, INTERNAL): system prompt-д зан төлөвийн заавар болж орно, хэзээ ч ишлэгдэхгүй, хэрэглэгчид гарахгүй | done | S | 2A-05 |
 | `2A-10` | Эрхийн түвшний тест: 4 түвшин × 4 хэрэглэгч матриц — дээд түвшний chunk SQL-ээс хэзээ ч буцахгүй; `resolveAccessLevel` (CONTRACTED = идэвхтэй `Contract`) нэгж тест | done | M | 2A-06 |
 | `2E-01` | `/admin/ai/knowledge`: жагсаалт (төрөл, түвшин, ангилал, сургууль, статус, chunk тоо, индексжсэн огноо, алдаа, `validUntil` хуучирсан туг), upload, засах, дахин индексжүүлэх, chunk урьдчилан харах, "Хайлт турших"; навигацид "AI туслах"; `@Audit` | done | L | 2A-05 |
+| `2B-02` | `AiAssistantConfig` singleton (`AdmissionConfig` загвар) + `/admin/ai/config` API: enabled, загварууд, temperature, topK, minSimilarity, сессийн/өдрийн токен тааз, greeting, persona, capture дүрэм, ctaRules, handoffHours | done | S | — |
+| `2B-03` | Prisma: `ChatSession`, `ChatMessage`, `ChatFeedback`, `KnowledgeGap`; `Lead.aiQualification`, `Conversation.chatSessionId` | done | M | — |

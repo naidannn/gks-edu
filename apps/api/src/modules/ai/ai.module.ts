@@ -2,6 +2,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AI_INGEST_QUEUE } from '../../queue/queue.constants.js';
 import { AccessLevelService } from './access-level.js';
+import { AdminAiConfigController } from './admin-ai-config.controller.js';
+import { AiConfigService } from './ai-config.service.js';
 import { EmbeddingService } from './embedding/embedding.service.js';
 import { AdminKnowledgeController } from './knowledge/admin-knowledge.controller.js';
 import { ContentSyncService } from './knowledge/content-sync.service.js';
@@ -22,9 +24,10 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
  */
 @Module({
   imports: [BullModule.registerQueue({ name: AI_INGEST_QUEUE })],
-  controllers: [AdminKnowledgeController],
+  controllers: [AdminKnowledgeController, AdminAiConfigController],
   providers: [
     AccessLevelService,
+    AiConfigService,
     EmbeddingService,
     KnowledgeService,
     RetrievalService,
@@ -34,6 +37,7 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
   ],
   exports: [
     AccessLevelService,
+    AiConfigService,
     EmbeddingService,
     KnowledgeService,
     RetrievalService,

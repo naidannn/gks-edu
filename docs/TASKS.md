@@ -195,8 +195,6 @@
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
 | `2B-01` | `LlmService` провайдерийн давхарга: Gemini + DeepSeek, стрийм, tool calling, usage; 429/5xx → `fallbackModel` нэг удаа; `GeminiService`/`DeepseekService` энэ дээр суух (`generateJson` хэвээр) | todo | L | — |
-| `2B-02` | `AiAssistantConfig` singleton (`AdmissionConfig` загвар) + `/admin/ai/config` API: enabled, загварууд, temperature, topK, minSimilarity, сессийн/өдрийн токен тааз, greeting, persona, capture дүрэм, ctaRules, handoffHours | todo | S | — |
-| `2B-03` | Prisma: `ChatSession`, `ChatMessage`, `ChatFeedback`, `KnowledgeGap`; `Lead.aiQualification`, `Conversation.chatSessionId` | todo | M | — |
 | `2B-04` | Нэг ээлжийн orchestrator: түвшин → хязгаар → түүх (12 мессеж + өнхрөх хураангуй) → асуулт дахин бичих → урьдчилсан hybrid хайлт (top-8) → LLM + tools (≤4 давталт) → стрийм → ишлэл задлах → хадгалах | todo | L | 2A-06, 2B-01, 2B-03 |
 | `2B-05` | System prompt давхаргууд (`policy.prompt.ts`, `prompt.builder.ts`): персона, бодлого (тоо зөвхөн tool-оос, мэдэхгүй бол хэл, ишлэл заавал, сургуулийн deadline хэзээ ч бүү хэл, монголоор хариул), түвшин, өнөөдрийн огноо/ханш, профайл, кабинет, playbook | todo | M | 2B-04 |
 | `2B-06` | Tool registry + zod схем `packages/shared/src/schemas/ai-tools.ts`: `search_universities`, `get_university`, `search_programs` (улирлын төлбөр + "жилд ×2" шошго), `get_intake_deadlines` (зөвхөн `internalDeadline`), `get_service_pricing`, `get_fx_rate`, `search_knowledge`; `gksRank/gksScore`, `tuitionYear` гарахгүй | todo | L | 2B-04 |

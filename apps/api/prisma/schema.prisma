@@ -108,6 +108,10 @@ model User {
   knowledgeDocsCreated KnowledgeDocument[] @relation("KnowledgeDocumentAuthor")
   knowledgeDocsEdited  KnowledgeDocument[] @relation("KnowledgeDocumentEditor")
 
+  chatSessions       ChatSession[]
+  assignedGaps       KnowledgeGap[]
+  aiAssistantConfigs AiAssistantConfig[]
+
   @@index([createdAt])
   @@map("users")
 }
@@ -240,7 +244,8 @@ model KnowledgeDocument {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chunks KnowledgeChunk[]
+  chunks       KnowledgeChunk[]
+  answeredGaps KnowledgeGap[]
 
   @@index([status, accessLevel])
   @@index([universityId])
@@ -962,12 +967,19 @@ model Lead {
   /// Marketing attribution: utm_source/medium/campaign, referrer, landing page.
   utm  Json?
 
+  /// 2C-07 — the assistant's read on a chat-born lead: service fit, urgency,
+  /// budget signal, timing, blockers, a proposed win probability and a summary.
+  /// A *proposal* a consultant accepts with one click; the AI never writes
+  /// `winProbability` itself (AI-ASSISTANT.md principle 6).
+  aiQualification Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   activities    LeadActivity[]
   workTasks     WorkTask[]
   notifications Notification[]
+  chatSessions  ChatSession[]
   /// Set once staff convert this lead into a client (1B-10) — the lead row stays as history.
   client        Client?
 
@@ -1346,8 +1358,9 @@ model Case {
   notifications  Notification[]
   conversations  Conversation[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  chatSessions ChatSession[]
 
   @@index([userId])
   @@index([stage])
@@ -2527,7 +2540,8 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  messages Message[]
+  messages    Message[]
+  chatSession ChatSession?
 
   /// The inbox's default order, and its "unassigned first" view.
   @@index([status, lastMessageAt])
@@ -2573,4 +2587,245 @@ model Message {
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@map("messages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI assistant: conversations and configuration (AI-ASSISTANT.md §11)
+//
+// Deliberately separate from `Conversation`/`Message` (1K). That is a human
+// talking to a human and has an inbox, an assignee and a response-time clock;
+// this is a bot turn with tool calls, citations and a token bill. Sharing one
+// table would mean every column of each being null for the other.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ChatChannel {
+  /// The widget on the public site.
+  WEB_WIDGET
+  /// The widget inside a client's cabinet, where the case is context.
+  PORTAL
+  /// The staff copilot (2D).
+  ADMIN_COPILOT
+}
+
+enum ChatSessionStatus {
+  ACTIVE
+  /// Handed to a human (§6.5). The assistant stops answering in this session.
+  HANDED_OFF
+  CLOSED
+}
+
+/// What the session produced — the sales loop's unit of measure (§6.8).
+enum ChatOutcome {
+  NONE
+  LEAD_CREATED
+  HANDOFF
+  CONTRACT_STARTED
+}
+
+model ChatSession {
+  id      String            @id @default(uuid()) @db.Uuid
+  code    String            @unique
+  channel ChatChannel
+  status  ChatSessionStatus @default(ACTIVE)
+
+  userId String? @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// A guest's 128-bit session token id — it identifies a browser, never a
+  /// person, and it is what lets a visitor reload the page mid-conversation.
+  anonymousId String?
+
+  /// The level this session started at. Re-resolved every turn (a contract
+  /// signed mid-conversation changes the answer), so this is history, not a
+  /// permission.
+  accessLevel AccessLevel
+
+  caseId String? @db.Uuid
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  leadId String? @db.Uuid
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  /// The 1K thread this session was handed off into (§6.5).
+  conversationId String?       @unique @db.Uuid
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  /// Six fields plus name and phone, collected a step at a time (§6.2).
+  profile Json        @default("{}")
+  /// Intent tags seen in this session: PRICE, DEADLINE, GKS, … (§6.1).
+  intents String[]    @default([])
+  outcome ChatOutcome @default(NONE)
+  /// Rolling summary, rewritten every few turns so the history stays short.
+  summary String?
+
+  utm         Json?
+  landingPage String?
+
+  messageCount     Int    @default(0)
+  promptTokens     Int    @default(0)
+  completionTokens Int    @default(0)
+  /// USD × 1e6 — the session's share of the monthly ceiling (§13).
+  costMicros       BigInt @default(0)
+
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  messages ChatMessage[]
+
+  @@index([userId, lastMessageAt])
+  @@index([anonymousId])
+  @@index([status, lastMessageAt])
+  @@index([leadId])
+  @@index([caseId])
+  @@map("chat_sessions")
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+  TOOL
+  SYSTEM
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid()) @db.Uuid
+  sessionId String      @db.Uuid
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  role    ChatRole
+  content String
+
+  /// ASSISTANT: the tools it called. TOOL: the result, with secrets stripped.
+  toolCalls Json?
+  /// `[{ref:"K1", chunkId}, {ref:"T1", tool:"get_service_pricing"}]` — what the
+  /// answer was built from, kept so a transcript can be audited later (§5.4).
+  citations Json?
+  /// Rich cards rendered beside the text: a school, a countdown, a price (§12.2).
+  cards     Json?
+
+  model    String?
+  /// False when a figure in the answer carried no citation — the QA signal,
+  /// not an error (§5.5).
+  grounded Boolean @default(true)
+
+  promptTokens     Int?
+  completionTokens Int?
+  latencyMs        Int?
+
+  createdAt DateTime @default(now())
+
+  feedback ChatFeedback?
+
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}
+
+enum FeedbackValue {
+  UP
+  DOWN
+}
+
+enum FeedbackReason {
+  WRONG
+  INCOMPLETE
+  IRRELEVANT
+  OTHER
+}
+
+model ChatFeedback {
+  id        String      @id @default(uuid()) @db.Uuid
+  messageId String      @unique @db.Uuid
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  value   FeedbackValue
+  reason  FeedbackReason?
+  comment String?
+
+  createdAt DateTime @default(now())
+
+  @@map("chat_feedback")
+}
+
+enum GapStatus {
+  OPEN
+  ANSWERED
+  IGNORED
+}
+
+/// A question the assistant could not answer (§10.3).
+///
+/// This is how the system tells staff what it does not know. Duplicates are
+/// merged by embedding rather than by text, so "GKS-д хэдэн нас хүртэл?" and
+/// "насны хязгаар хэд вэ" are one row with `occurrences: 2` instead of two rows
+/// nobody prioritises.
+model KnowledgeGap {
+  id        String                       @id @default(uuid()) @db.Uuid
+  question  String
+  /// Used only to merge near-duplicates (cosine ≥ 0.9).
+  embedding Unsupported("vector(1536)")?
+
+  occurrences    Int      @default(1)
+  firstSessionId String?  @db.Uuid
+  lastAskedAt    DateTime @default(now())
+
+  status      GapStatus          @default(OPEN)
+  /// The answer card written for it (2A-08), once somebody writes one.
+  answerDocId String?            @db.Uuid
+  answerDoc   KnowledgeDocument? @relation(fields: [answerDocId], references: [id], onDelete: SetNull)
+
+  assigneeId String? @db.Uuid
+  assignee   User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([status, occurrences])
+  @@index([assigneeId])
+  @@map("knowledge_gaps")
+}
+
+/// Singleton, like `AdmissionConfig` — every knob the business turns lives here
+/// rather than in code (AI-ASSISTANT.md principle 7).
+model AiAssistantConfig {
+  id String @id @default("default")
+
+  /// The kill switch (principle 8). False sends the widget to the messenger or
+  /// the consultation form instead of leaving a dead screen.
+  enabled Boolean @default(false)
+
+  /// Model names, not providers: a `deepseek-` prefix routes to DeepSeek and
+  /// anything else to Gemini, the rule 1H-16 already established.
+  chatModel      String @default("gemini-3.1-flash-lite")
+  fallbackModel  String @default("deepseek-v4-flash")
+  /// Changing this one re-embeds the whole knowledge base, so it moves rarely.
+  embeddingModel String @default("gemini-embedding-001")
+
+  temperature     Float @default(0.2)
+  maxOutputTokens Int   @default(700)
+
+  retrievalTopK Int   @default(8)
+  /// Measured on this corpus, not inherited from the plan — see
+  /// `retrieval.service.ts` for why 0.66 rather than 0.62.
+  minSimilarity Float @default(0.66)
+
+  sessionMessageLimit Int @default(40)
+  sessionTokenBudget  Int @default(60000)
+  dailyTokenBudget    Int @default(3000000)
+
+  /// Turns before the assistant asks for the visitor's situation once (§6.2).
+  leadCaptureAfterMessages Int @default(3)
+
+  greeting String @default("Сайн байна уу. Солонгост суралцах талаар юу ч асууж болно — сургууль, хугацаа, материал, тэтгэлэг.")
+  persona  String @default("Чи GKS EDU-ийн туслах. Нэргүй, хүн шиг дүр зохиохгүй, хэрэглэгчийг «та» гэж дуудна. Найрсаг, товч, монголоор хариулна.")
+
+  /// Which call-to-action card follows which intent (§6.4).
+  ctaRules     Json @default("[]")
+  /// Office hours for a live handoff: Mon-Fri 09-18, Sat 10-14 (§15-30).
+  handoffHours Json @default("{\"mon-fri\":[\"09:00\",\"18:00\"],\"sat\":[\"10:00\",\"14:00\"]}")
+
+  copilotEnabled Boolean @default(true)
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?  @db.Uuid
+  updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("ai_assistant_config")
 }
