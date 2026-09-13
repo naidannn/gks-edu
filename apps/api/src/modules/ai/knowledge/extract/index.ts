@@ -5,6 +5,7 @@ import { extractPdf } from './pdf.js';
 import type { ExtractedDocument } from './text-block.js';
 
 export * from './text-block.js';
+export { htmlToBlocks } from './html.js';
 export { extractDocx, extractMarkdown, extractPdf };
 
 /** What the knowledge base accepts as an uploaded source file (2A-03). */

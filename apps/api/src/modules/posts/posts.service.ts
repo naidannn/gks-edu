@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreatePostDto } from './dto/create-post.dto.js';
 import type { QueryPostsDto } from './dto/query-posts.dto.js';
 import type { UpdatePostDto } from './dto/update-post.dto.js';
+import { ContentSyncService } from '../ai/knowledge/content-sync.service.js';
 
 const CARD_FIELDS = {
   id: true,
@@ -29,7 +30,11 @@ const DETAIL_FIELDS = {
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    /** 2A-07 — a published article is knowledge the assistant should answer from. */
+    private readonly knowledgeSync: ContentSyncService,
+  ) {}
 
   /** Public list — published posts only, newest first (1A-12). */
   async findPublished(query: QueryPostsDto) {
@@ -88,7 +93,7 @@ export class PostsService {
 
   async create(dto: CreatePostDto, authorId: string) {
     await this.assertSlugFree(dto.slug);
-    return this.prisma.post.create({
+    const post = await this.prisma.post.create({
       data: {
         ...dto,
         authorId,
@@ -96,13 +101,16 @@ export class PostsService {
       },
       select: DETAIL_FIELDS,
     });
+
+    await this.knowledgeSync.syncPost(post);
+    return post;
   }
 
   async update(id: string, dto: UpdatePostDto) {
     await this.findOneAdmin(id);
     if (dto.slug) await this.assertSlugFree(dto.slug, id);
 
-    return this.prisma.post.update({
+    const post = await this.prisma.post.update({
       where: { id },
       data: {
         ...dto,
@@ -114,11 +122,17 @@ export class PostsService {
       },
       select: DETAIL_FIELDS,
     });
+
+    // 2A-07 — a draft or archived article is removed from the index rather than
+    // left behind, so the assistant cannot quote something that is not on the site.
+    await this.knowledgeSync.syncPost(post);
+    return post;
   }
 
   async remove(id: string): Promise<void> {
     await this.findOneAdmin(id);
     await this.prisma.post.delete({ where: { id } });
+    await this.knowledgeSync.removePost(id);
   }
 
   private async assertSlugFree(slug: string, excludeId?: string): Promise<void> {

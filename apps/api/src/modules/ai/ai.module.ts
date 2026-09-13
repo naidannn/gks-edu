@@ -4,6 +4,7 @@ import { AI_INGEST_QUEUE } from '../../queue/queue.constants.js';
 import { AccessLevelService } from './access-level.js';
 import { EmbeddingService } from './embedding/embedding.service.js';
 import { AdminKnowledgeController } from './knowledge/admin-knowledge.controller.js';
+import { ContentSyncService } from './knowledge/content-sync.service.js';
 import { IngestProcessor } from './knowledge/ingest.processor.js';
 import { IngestService } from './knowledge/ingest.service.js';
 import { KnowledgeService } from './knowledge/knowledge.service.js';
@@ -29,7 +30,15 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     RetrievalService,
     IngestService,
     IngestProcessor,
+    ContentSyncService,
   ],
-  exports: [AccessLevelService, EmbeddingService, KnowledgeService, RetrievalService, IngestService],
+  exports: [
+    AccessLevelService,
+    EmbeddingService,
+    KnowledgeService,
+    RetrievalService,
+    IngestService,
+    ContentSyncService,
+  ],
 })
 export class AiModule {}

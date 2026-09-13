@@ -421,3 +421,4 @@
 | `2A-04` | Chunking: гарчигт мэдрэмжтэй (`H1 > H2 > H3` зам `heading`-д), 300–500 токен, 15% давхцал, хүснэгт таслахгүй; монгол кирилл тест | done | M | 2A-03 |
 | `2A-05` | BullMQ `ai-ingest`: extract → hash (өөрчлөгдөөгүй бол зогсох) → chunk → embed → upsert нэг гүйлгээнд; алдаа мөрөнд, 3 оролдлого; "дахин индексжүүлэх" = hash тэглэх | done | M | 2A-02, 2A-04 |
 | `2A-06` | Hybrid хайлт: pgvector cosine + `tsv` (`simple`) + pg_trgm, RRF (k=60), universityId/category boost; `accessLevel = ANY(...)`, `status`, `validUntil` шүүлтүүр SQL `WHERE`-д; `minSimilarity` босго (0.62 → **0.66** хэмжилтээр) | done | L | 2A-05 |
+| `2A-07` | `FaqItem`, нийтлэгдсэн `Post` автоматаар индексжих (create/update/delete → ingest job, `sourceRef`-ээр давхардуулахгүй) | done | S | 2A-05 |
