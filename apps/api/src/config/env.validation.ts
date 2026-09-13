@@ -59,6 +59,15 @@ class EnvironmentVariables {
   @IsOptional()
   GEMINI_MODEL?: string;
 
+  /** 2A-02 — the knowledge base's embedder. Changing it re-embeds everything. */
+  @IsString()
+  @IsOptional()
+  GEMINI_EMBEDDING_MODEL?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_EMBEDDING_TIMEOUT_MS?: string;
+
   @IsString()
   @IsOptional()
   GEMINI_BASE_URL?: string;

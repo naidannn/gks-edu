@@ -188,7 +188,6 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2A-02` | Жинхэнэ embedding — `EmbeddingService`-ийг `gemini-embedding-001` (`outputDimensionality` 1536) дээр; batch 32, retry, mock; `vector(1536)` хэвээр | todo | M | 2A-01 |
 | `2A-03` | Файл задлах: DOCX (mammoth), PDF (pdf-parse), MD/TXT → текст + гарчгийн мод; `StorageService`-д ерөнхий prefix (`knowledge/`) — одоо `cases/{caseId}/`-д хатуу (1K-11-тэй нэг ажил) | todo | M | 2A-01 |
 | `2A-04` | Chunking: гарчигт мэдрэмжтэй (`H1 > H2 > H3` зам `heading`-д), 300–500 токен, 15% давхцал, хүснэгт таслахгүй; монгол кирилл тест | todo | M | 2A-03 |
 | `2A-05` | BullMQ `ai-ingest`: extract → hash (өөрчлөгдөөгүй бол зогсох) → chunk → embed → upsert нэг гүйлгээнд; алдаа мөрөнд, 3 оролдлого; "дахин индексжүүлэх" = hash тэглэх | todo | M | 2A-02, 2A-04 |

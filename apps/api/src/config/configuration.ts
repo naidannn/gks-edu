@@ -96,6 +96,15 @@ export interface AppConfig {
     apiKey: string;
     /** Overridden per run by `AdmissionConfig.researchModel`; this is the fallback. */
     model: string;
+    /**
+     * 2A-02 — the knowledge base's embedder. Separate from `model` because the
+     * two are different models with different lifetimes: the chat model is
+     * retuned from the admin screen, while changing this one means re-embedding
+     * every chunk in the base, so it moves only on purpose.
+     */
+    embeddingModel: string;
+    /** A 32-text batch is far quicker than a grounded search; it gets its own budget. */
+    embeddingTimeoutMs: number;
     baseUrl: string;
     /** A grounded search takes 30-90s; the request must outlive it. */
     timeoutMs: number;
@@ -177,6 +186,8 @@ export const configuration = (): AppConfig => ({
   gemini: {
     apiKey: process.env.GEMINI_API_KEY ?? '',
     model: process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite',
+    embeddingModel: process.env.GEMINI_EMBEDDING_MODEL ?? 'gemini-embedding-001',
+    embeddingTimeoutMs: Number.parseInt(process.env.GEMINI_EMBEDDING_TIMEOUT_MS ?? '60000', 10),
     baseUrl: process.env.GEMINI_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta',
     timeoutMs: Number.parseInt(process.env.GEMINI_TIMEOUT_MS ?? '120000', 10),
     // Defaults to mock unless a key is present AND mocking is not forced on.
