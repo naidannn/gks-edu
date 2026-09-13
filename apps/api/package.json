@@ -29,7 +29,8 @@
     "email:preview": "tsx scripts/preview-emails.ts",
     "contract:preview": "tsx scripts/preview-contract.ts",
     "checklist:preview": "tsx scripts/preview-checklist.ts",
-    "storage:migrate": "tsx scripts/migrate-storage-to-s3.ts"
+    "storage:migrate": "tsx scripts/migrate-storage-to-s3.ts",
+    "storage:verify": "tsx scripts/verify-storage-migration.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",
