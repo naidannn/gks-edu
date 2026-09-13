@@ -17,9 +17,9 @@ export default defineEventHandler((event) => {
     '/admin/', // CRM
     '/app/', // client cabinet
     '/account/',
-    '/documents',
     '/messages',
-    '/search',
+    // The assistant's own page — a conversation is not a landing page (2C-02).
+    '/chat',
     // Auth screens: no content, and a search result landing on one is a dead end.
     '/login',
     '/register',

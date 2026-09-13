@@ -415,3 +415,4 @@
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
 | `2-01` | pgvector суурь: `Document`/`DocumentChunk`, HNSW cosine индекс *(2A-01-д `KnowledgeDocument`/`KnowledgeChunk` болно)* | done | M | 0-03 |
+| `2A-01` | `vector` модулийг `ai/knowledge` болгож, `Document`/`DocumentChunk`-ийг `KnowledgeDocument`/`KnowledgeChunk` болгон өргөтгөх: `kind`, `category`, `accessLevel`, `status`, `universityId`, `serviceType`, `validUntil`, `sourceFile`, `sourceRef`, `contentHash`, `indexedAt`, `indexError`; chunk дээр `heading`, `tokenCount`, `accessLevel`, `tsv` (generated) + GIN | done | M | — |

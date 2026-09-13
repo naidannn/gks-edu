@@ -63,7 +63,6 @@ model User {
   updatedAt DateTime @updatedAt
 
   refreshTokens     RefreshToken[]
-  documents         Document[]
   leads             Lead[]
   assignedLeads     Lead[]            @relation("LeadAssignee")
   leadActivities    LeadActivity[]
@@ -106,6 +105,9 @@ model User {
   verifiedPrograms    UniversityProgram[]
   programResearchRuns ProgramResearchRun[]
 
+  knowledgeDocsCreated KnowledgeDocument[] @relation("KnowledgeDocumentAuthor")
+  knowledgeDocsEdited  KnowledgeDocument[] @relation("KnowledgeDocumentEditor")
+
   @@index([createdAt])
   @@map("users")
 }
@@ -125,36 +127,161 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model Document {
-  id        String   @id @default(uuid()) @db.Uuid
-  title     String
-  source    String?
-  metadata  Json     @default("{}")
-  authorId  String?  @db.Uuid
-  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+// ─────────────────────────────────────────────────────────────────────────────
+// AI knowledge base (AI-ASSISTANT.md §4, §11)
+//
+// The phase-2 assistant answers from two sources and keeps them apart: numbers
+// come from the database through tools, *advice* comes from here. So nothing in
+// this table should ever carry a price, an exchange rate or a deadline — those
+// live in `ServicePricing`, `FxRate` and `IntakeTerm`, where one admin screen
+// owns them. A figure typed into a Word file is a second truth that nobody
+// updates (2E-10 says this on its first line).
+//
+// This replaces the boilerplate `Document`/`DocumentChunk` pair — renamed so it
+// can never be confused with `CaseDocument`, the client's passport scan.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Who may see a piece of knowledge. Ordered: PUBLIC < REGISTERED < CONTRACTED
+/// < INTERNAL, and a search returns the caller's level *and below*. The filter
+/// is a SQL `WHERE`, never a prompt instruction — a model cannot leak what was
+/// never put in front of it (AI-ASSISTANT.md §4.5).
+enum AccessLevel {
+  /// A visitor who has not logged in.
+  PUBLIC
+  /// Any signed-in `USER`.
+  REGISTERED
+  /// A signed-in user with an active `Contract` — derived from contract state,
+  /// not a role (ARCHITECTURE.md §11).
+  CONTRACTED
+  /// Staff: CONSULTANT, DOC_OFFICER, ADMIN.
+  INTERNAL
+}
+
+/// Where a document's text came from, which also decides who writes it.
+enum KnowledgeKind {
+  /// An uploaded DOCX / PDF / MD / TXT, chunked by the ingest job.
+  FILE
+  /// A published `FaqItem`, mirrored automatically (2A-07).
+  FAQ
+  /// A published `Post`, mirrored automatically (2A-07).
+  POST
+  /// An answer card: one question, one approved answer, written by staff —
+  /// usually straight out of the knowledge-gap queue (2A-08, §10.3).
+  ENTRY
+  /// A sales playbook: behaviour guidance that joins the system prompt and is
+  /// *never* cited and never shown to a client (2A-09).
+  PLAYBOOK
+}
+
+enum KnowledgeCategory {
+  SCHOOL
+  SERVICE
+  PRICING
+  SCHOLARSHIP
+  DOCUMENTS
+  VISA
+  LIVING
+  POLICY
+  SALES
+  FAQ
+}
+
+enum KnowledgeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model KnowledgeDocument {
+  id          String            @id @default(uuid()) @db.Uuid
+  title       String
+  kind        KnowledgeKind
+  category    KnowledgeCategory
+  accessLevel AccessLevel       @default(PUBLIC)
+  status      KnowledgeStatus   @default(DRAFT)
+
+  /// Set when the document is about one school — the retrieval step boosts a
+  /// match whose school is the one being asked about.
+  universityId String?      @db.Uuid
+  university   University?  @relation(fields: [universityId], references: [id], onDelete: SetNull)
+  /// Set when it is about one service line.
+  serviceType  ServiceType?
+
+  /// After this date the document drops out of search on its own and shows as
+  /// stale to staff — "the 2026 GKS call" goes quiet in 2027 without anybody
+  /// remembering to archive it.
+  validUntil DateTime?
+
+  /// FILE: the storage path. ENTRY/PLAYBOOK/FAQ/POST: null.
+  sourceFile String?
+  /// FAQ/POST: `faq:<id>` / `post:<id>`, so the sync hook updates its own row
+  /// instead of inserting a second copy.
+  sourceRef  String? @unique
+  /// ENTRY: the question it answers. Other kinds: null.
+  question   String?
+  /// ENTRY/PLAYBOOK/FAQ/POST: the text itself. FILE: null — the text lives in
+  /// the chunks, and keeping a second copy here would double the storage of
+  /// every uploaded handbook.
+  body       String?
+
+  /// SHA-256 of the extracted text. Re-ingesting unchanged content stops here
+  /// rather than paying for the embeddings again; "reindex" clears it.
+  contentHash String?
+  chunkCount  Int       @default(0)
+  indexedAt   DateTime?
+  /// The last ingest failure, shown in the admin list. Null once it succeeds.
+  indexError  String?
+
+  createdById String? @db.Uuid
+  createdBy   User?   @relation("KnowledgeDocumentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String? @db.Uuid
+  updatedBy   User?   @relation("KnowledgeDocumentEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chunks DocumentChunk[]
+  chunks KnowledgeChunk[]
 
-  @@index([authorId])
-  @@map("documents")
+  @@index([status, accessLevel])
+  @@index([universityId])
+  @@index([kind])
+  @@index([createdById])
+  @@index([updatedById])
+  @@map("knowledge_documents")
 }
 
-model DocumentChunk {
-  id         String                       @id @default(uuid()) @db.Uuid
-  documentId String                       @db.Uuid
-  document   Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  /// Position of this chunk inside the parent document.
+model KnowledgeChunk {
+  id         String            @id @default(uuid()) @db.Uuid
+  documentId String            @db.Uuid
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// Position inside the parent document.
   chunkIndex Int
+  /// The `H1 > H2 > H3` path this chunk sits under, embedded with the text so
+  /// that "Ёнсэгийн дотуур байр" does not get lost in a generic "Дотуур байр"
+  /// section (AI-ASSISTANT.md §4.3).
+  heading    String?
   content    String
+  tokenCount Int               @default(0)
+
+  /// Copied from the parent so the access filter is a plain column predicate —
+  /// no join in the hot retrieval query (AI-ASSISTANT.md §4.5).
+  accessLevel  AccessLevel
+  /// Copied from the parent for the same reason, for the school boost.
+  universityId String?                      @db.Uuid
   /// pgvector column. Keep the dimension in sync with EMBEDDING_DIMENSIONS.
-  embedding  Unsupported("vector(1536)")?
-  createdAt  DateTime                     @default(now())
+  embedding    Unsupported("vector(1536)")?
+  /// `GENERATED ALWAYS AS (to_tsvector('simple', …)) STORED` — written by the
+  /// migration, not by Prisma. `simple` because Postgres has no Mongolian
+  /// stemmer; the lexical half of the hybrid search is what finds "TOPIK" and
+  /// "D-2" that a semantic search blurs away (AI-ASSISTANT.md §4.4).
+  tsv          Unsupported("tsvector")?
+
+  createdAt DateTime @default(now())
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
-  @@map("document_chunks")
+  @@index([accessLevel])
+  @@map("knowledge_chunks")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -362,6 +489,7 @@ model University {
   applications        Application[]
   researchRuns        IntakeResearchRun[]
   programResearchRuns ProgramResearchRun[]
+  knowledgeDocuments  KnowledgeDocument[]
 
   @@index([isPublished])
   @@index([regionEn])

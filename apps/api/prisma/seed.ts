@@ -1,8 +1,8 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { config as loadEnv } from 'dotenv';
 import { hash } from 'bcryptjs';
-import { createHash } from 'node:crypto';
 import {
+  AccessLevel,
   BalanceTrigger,
   CaseStage,
   DocStage,
@@ -10,6 +10,9 @@ import {
   GuarantorRelation,
   GuarantorType,
   IntakeStatus,
+  KnowledgeCategory,
+  KnowledgeKind,
+  KnowledgeStatus,
   Necessity,
   type Prisma,
   PrepaymentMode,
@@ -29,22 +32,6 @@ const prisma = new PrismaClient({
   // Seeding writes DDL-free data; the pooled URL is fine.
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
-
-const DIMENSIONS = Number.parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10);
-
-/** Mirrors EmbeddingService.pseudoEmbed so seeded vectors match runtime search. */
-function pseudoEmbed(text: string): number[] {
-  const vector = new Array<number>(DIMENSIONS).fill(0);
-  let state = createHash('sha256').update(text).digest().readUInt32BE(0) || 1;
-
-  for (let i = 0; i < DIMENSIONS; i += 1) {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    vector[i] = (state / 0xffffffff) * 2 - 1;
-  }
-
-  const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0)) || 1;
-  return vector.map((value) => value / magnitude);
-}
 
 async function seedServicePricing(): Promise<void> {
   const anchor = new Date('2024-01-01T00:00:00Z');
@@ -455,30 +442,58 @@ async function main(): Promise<void> {
     create: { email: 'student@gks.edu', password, name: 'Student', role: Role.USER },
   });
 
-  const chunks = [
-    'Eigenvalues describe how a linear transformation scales its eigenvectors.',
-    'A matrix is invertible exactly when its determinant is non-zero.',
-    'Gram-Schmidt turns any basis into an orthonormal one.',
+  // The knowledge base starts with two rows rather than a fixture, because the
+  // shape is the lesson: an answer card a visitor may see, and a playbook only
+  // the prompt ever sees. Neither carries a price or a date — those live in
+  // `ServicePricing` and `IntakeTerm`, and a figure copied into knowledge text
+  // is a second truth nobody updates (AI-ASSISTANT.md §4.1).
+  //
+  // They are left un-indexed on purpose: embedding is the ingest job's work
+  // (2A-05), so the chunks are written by the real model rather than seeded with
+  // vectors that would not match a live query.
+  const knowledgeSeeds = [
+    {
+      sourceRef: 'seed:entry:gks-deadline',
+      title: 'GKS-ийн мэдүүлгийг хэзээ эхлэх ёстой вэ',
+      kind: KnowledgeKind.ENTRY,
+      category: KnowledgeCategory.SCHOLARSHIP,
+      accessLevel: AccessLevel.PUBLIC,
+      status: KnowledgeStatus.PUBLISHED,
+      question: 'GKS-ийн материалаа хэзээнээс бэлдэж эхлэх вэ?',
+      body: [
+        'Тэтгэлгийн материал бүрдүүлэх нь орчуулга, нотариат, шуудангаар илгээх гэсэн',
+        'гурван ажлыг дотроо агуулдаг тул зарлал гарахаас нааш хүлээх шаардлагагүй.',
+        'Бид өөрсдийн дотоод хугацаагаар ажилладаг — энэ нь сургуулийн хугацаанаас',
+        'эрт бөгөөд яг хэдэн хоногийн зөрүүтэйг зөвлөх тань хэлнэ.',
+        '',
+        'Хамгийн эрт хийж болох хоёр зүйл: диплом, хавсралтаа орчуулгад өгөх, мөн',
+        'хэлний түвшнээ (TOPIK эсвэл IELTS) баталгаажуулах төлөвлөгөө гаргах.',
+      ].join(' '),
+    },
+    {
+      sourceRef: 'seed:playbook:pricing-question',
+      title: 'Үнэ асуусан зочинтой хэрхэн ярих вэ',
+      kind: KnowledgeKind.PLAYBOOK,
+      category: KnowledgeCategory.SALES,
+      accessLevel: AccessLevel.INTERNAL,
+      status: KnowledgeStatus.PUBLISHED,
+      question: null,
+      body: [
+        'Зочин үнэ асуувал дүнг нүүр рүү шидэхгүй. Эхлээд үйлчилгээнд юу багтдагийг',
+        'хэлж, дараа нь урьдчилгаа ба үлдэгдлийн зарчмыг тайлбарла, тэгээд зөвлөхтэй',
+        'холбогдохыг санал болго — яг дүнг зөвлөх хүний нөхцөлөөр хэлнэ.',
+        'Нэвтрээгүй зочинд тодорхой тоо хэлэхгүй (§15-32).',
+      ].join(' '),
+    },
   ];
 
-  const existing = await prisma.document.findFirst({ where: { title: 'Linear algebra basics' } });
-  if (!existing) {
-    const document = await prisma.document.create({
-      data: {
-        title: 'Linear algebra basics',
-        source: 'seed',
-        metadata: { subject: 'math', level: 'intro' },
-        authorId: admin.id,
-      },
+  for (const seed of knowledgeSeeds) {
+    const { sourceRef, ...rest } = seed;
+    await prisma.knowledgeDocument.upsert({
+      where: { sourceRef },
+      create: { sourceRef, createdById: admin.id, updatedById: admin.id, ...rest },
+      update: {},
     });
-
-    for (const [index, content] of chunks.entries()) {
-      const literal = `[${pseudoEmbed(content).join(',')}]`;
-      await prisma.$executeRaw`
-        INSERT INTO document_chunks (id, "documentId", "chunkIndex", content, embedding, "createdAt")
-        VALUES (gen_random_uuid(), ${document.id}::uuid, ${index}, ${content}, ${literal}::vector, NOW())
-      `;
-    }
   }
 
   await seedServicePricing();

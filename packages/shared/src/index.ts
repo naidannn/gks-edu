@@ -21,4 +21,5 @@ export * from './types/messenger';
 export * from './types/study-plan';
 export * from './types/gks-eligibility';
 export * from './types/reports';
+export * from './types/ai-knowledge';
 export * from './tuition';
