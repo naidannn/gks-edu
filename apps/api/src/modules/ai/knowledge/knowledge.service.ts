@@ -13,6 +13,7 @@ import type {
   CreateKnowledgeDocumentDto,
   QueryKnowledgeDocumentsDto,
   UpdateKnowledgeDocumentDto,
+  UploadKnowledgeDocumentDto,
 } from './dto/knowledge-document.dto.js';
 
 /** One chunk ready to be stored — what the chunker (2A-04) produces. */
@@ -122,6 +123,36 @@ export class KnowledgeService {
 
     if (!document) throw new NotFoundException(`Мэдлэгийн баримт ${id} олдсонгүй`);
     return document;
+  }
+
+  /**
+   * Stores an uploaded source file as a `FILE` document. The text is not read
+   * here — that is the ingest job's work, and it is why the row starts with no
+   * hash and no chunks.
+   */
+  async createFromFile(params: {
+    dto: UploadKnowledgeDocumentDto;
+    sourceFile: string;
+    actorId: string | null;
+  }) {
+    const { dto, sourceFile, actorId } = params;
+
+    return this.prisma.knowledgeDocument.create({
+      data: {
+        title: dto.title.trim(),
+        kind: KnowledgeKind.FILE,
+        category: dto.category,
+        accessLevel: dto.accessLevel ?? AccessLevel.PUBLIC,
+        status: dto.status ?? KnowledgeStatus.DRAFT,
+        universityId: dto.universityId ?? null,
+        serviceType: dto.serviceType ?? null,
+        validUntil: dto.validUntil ? new Date(dto.validUntil) : null,
+        sourceFile,
+        createdById: actorId,
+        updatedById: actorId,
+      },
+      select: LIST_SELECT,
+    });
   }
 
   async create(dto: CreateKnowledgeDocumentDto, actorId: string | null) {

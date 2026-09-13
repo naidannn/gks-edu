@@ -57,3 +57,15 @@ export const PROGRAM_RESEARCH_JOB = 'research-programs';
  */
 export const META_CAPI_QUEUE = 'meta-capi';
 export const META_CAPI_JOB = 'send-event';
+
+/**
+ * Knowledge ingest (2A-05) — extract, chunk, embed, store. On demand, not
+ * scheduled: a job is added when staff upload a file, edit a document, publish a
+ * FAQ, or press "reindex". It is a job because embedding a 40-page handbook is
+ * dozens of HTTP calls to Google, and because a failed run has to be retried
+ * without the uploader sitting on a request.
+ */
+export const AI_INGEST_QUEUE = 'ai-ingest';
+export const AI_INGEST_JOB = 'ingest-document';
+/** Three attempts, then the failure stays on the row for staff to see. */
+export const AI_INGEST_ATTEMPTS = 3;

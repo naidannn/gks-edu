@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,21 +11,30 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Audit } from '../../../common/decorators/audit.decorator.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../../common/types/authenticated-user.js';
 import { Role } from '../../../prisma/client.js';
+import { StorageService } from '../../../storage/storage.service.js';
 import {
   CreateKnowledgeDocumentDto,
   QueryKnowledgeDocumentsDto,
   UpdateKnowledgeDocumentDto,
+  UploadKnowledgeDocumentDto,
 } from './dto/knowledge-document.dto.js';
+import { IngestService } from './ingest.service.js';
 import { KnowledgeService } from './knowledge.service.js';
+
+/** 0-09's cap, restated here because multer enforces it before the service sees the bytes. */
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 /**
  * The knowledge base as staff manage it (2A-01; the full screen is 2E-01).
@@ -42,7 +52,11 @@ import { KnowledgeService } from './knowledge.service.js';
 @Roles(Role.ADMIN)
 @Controller('admin/ai/knowledge')
 export class AdminKnowledgeController {
-  constructor(private readonly knowledge: KnowledgeService) {}
+  constructor(
+    private readonly knowledge: KnowledgeService,
+    private readonly ingest: IngestService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Knowledge documents, newest edit first' })
@@ -59,19 +73,69 @@ export class AdminKnowledgeController {
   @Post()
   @Audit({ action: 'ai.knowledge.create', entity: 'KnowledgeDocument', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Write an answer card or a playbook' })
-  create(@Body() dto: CreateKnowledgeDocumentDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.knowledge.create(dto, user.id);
+  async create(@Body() dto: CreateKnowledgeDocumentDto, @CurrentUser() user: AuthenticatedUser) {
+    const document = await this.knowledge.create(dto, user.id);
+    await this.ingest.enqueue(document.id);
+    return document;
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES } }))
+  @ApiConsumes('multipart/form-data')
+  @Audit({ action: 'ai.knowledge.upload', entity: 'KnowledgeDocument', idFrom: 'response.id' })
+  @ApiOperation({ summary: 'Upload a DOCX, PDF, MD or TXT source file and queue it for indexing' })
+  async upload(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() dto: UploadKnowledgeDocumentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    if (!file) throw new BadRequestException('Файл хавсаргана уу');
+
+    const { path } = await this.storage.uploadKnowledgeFile({
+      buffer: file.buffer,
+      filename: file.originalname,
+    });
+    const document = await this.knowledge.createFromFile({ dto, sourceFile: path, actorId: user.id });
+    await this.ingest.enqueue(document.id);
+    return document;
+  }
+
+  @Post(':id/reindex')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Audit({ action: 'ai.knowledge.reindex', entity: 'KnowledgeDocument' })
+  @ApiOperation({ summary: 'Clear the content hash and queue a fresh ingest run' })
+  async reindex(@Param('id', ParseUUIDPipe) id: string) {
+    await this.knowledge.findOne(id);
+    await this.ingest.reindex(id);
+    return { queued: true };
+  }
+
+  @Post('reindex-pending')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Audit({ action: 'ai.knowledge.reindexPending', entity: 'KnowledgeDocument' })
+  @ApiOperation({ summary: 'Queue every published document that is not currently indexed' })
+  async reindexPending() {
+    return { queued: await this.ingest.enqueuePending() };
   }
 
   @Patch(':id')
   @Audit({ action: 'ai.knowledge.update', entity: 'KnowledgeDocument' })
   @ApiOperation({ summary: 'Edit a document — a changed body drops it out of the index until re-ingested' })
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateKnowledgeDocumentDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.knowledge.update(id, dto, user.id);
+    const document = await this.knowledge.update(id, dto, user.id);
+
+    // An access level or a school moved on the document has to move on its
+    // chunks too, or the retrieval filter keeps answering with the old level.
+    if (dto.accessLevel !== undefined || dto.universityId !== undefined) {
+      await this.knowledge.syncChunkAccess(id);
+    }
+    await this.ingest.enqueue(id);
+
+    return document;
   }
 
   @Delete(':id')

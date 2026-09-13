@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
@@ -82,6 +82,17 @@ export class CreateKnowledgeDocumentDto {
 }
 
 export class UpdateKnowledgeDocumentDto extends PartialType(CreateKnowledgeDocumentDto) {}
+
+/**
+ * The metadata beside an uploaded file. `kind` is not a field: an upload is a
+ * `FILE` by definition, and `question`/`body` belong to text documents — a
+ * handbook's text lives in its chunks.
+ */
+export class UploadKnowledgeDocumentDto extends OmitType(CreateKnowledgeDocumentDto, [
+  'kind',
+  'question',
+  'body',
+] as const) {}
 
 export class QueryKnowledgeDocumentsDto extends PaginationQueryDto {
   @ApiPropertyOptional({ description: 'Matches the title, question or body' })
