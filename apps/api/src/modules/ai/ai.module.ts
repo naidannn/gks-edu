@@ -1,9 +1,17 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { AI_INGEST_QUEUE } from '../../queue/queue.constants.js';
 import { AccessLevelService } from './access-level.js';
 import { AdminAiConfigController } from './admin-ai-config.controller.js';
 import { AiConfigService } from './ai-config.service.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
+import { BudgetService } from './chat/budget.service.js';
+import { ChatController } from './chat/chat.controller.js';
+import { ChatSessionService } from './chat/chat-session.service.js';
+import { GuardService } from './chat/guard.service.js';
+import { OptionalUserService } from './chat/optional-user.service.js';
+import { TurnOrchestrator } from './chat/turn.orchestrator.js';
 import { LlmService } from './llm/llm.service.js';
 import { DeepseekChatProvider } from './llm/providers/deepseek.provider.js';
 import { GeminiChatProvider } from './llm/providers/gemini.provider.js';
@@ -26,8 +34,8 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
  * number.
  */
 @Module({
-  imports: [BullModule.registerQueue({ name: AI_INGEST_QUEUE })],
-  controllers: [AdminKnowledgeController, AdminAiConfigController],
+  imports: [BullModule.registerQueue({ name: AI_INGEST_QUEUE }), JwtModule.register({}), NotificationsModule],
+  controllers: [AdminKnowledgeController, AdminAiConfigController, ChatController],
   providers: [
     AccessLevelService,
     AiConfigService,
@@ -40,6 +48,11 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     IngestService,
     IngestProcessor,
     ContentSyncService,
+    ChatSessionService,
+    BudgetService,
+    GuardService,
+    TurnOrchestrator,
+    OptionalUserService,
   ],
   exports: [
     AccessLevelService,
@@ -50,6 +63,7 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     RetrievalService,
     IngestService,
     ContentSyncService,
+    ChatSessionService,
   ],
 })
 export class AiModule {}

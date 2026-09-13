@@ -194,15 +194,10 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2B-04` | Нэг ээлжийн orchestrator: түвшин → хязгаар → түүх (12 мессеж + өнхрөх хураангуй) → асуулт дахин бичих → урьдчилсан hybrid хайлт (top-8) → LLM + tools (≤4 давталт) → стрийм → ишлэл задлах → хадгалах | todo | L | 2A-06, 2B-01, 2B-03 |
-| `2B-05` | System prompt давхаргууд (`policy.prompt.ts`, `prompt.builder.ts`): персона, бодлого (тоо зөвхөн tool-оос, мэдэхгүй бол хэл, ишлэл заавал, сургуулийн deadline хэзээ ч бүү хэл, монголоор хариул), түвшин, өнөөдрийн огноо/ханш, профайл, кабинет, playbook | todo | M | 2B-04 |
 | `2B-06` | Tool registry + zod схем `packages/shared/src/schemas/ai-tools.ts`: `search_universities`, `get_university`, `search_programs` (улирлын төлбөр + "жилд ×2" шошго), `get_intake_deadlines` (зөвхөн `internalDeadline`), `get_service_pricing`, `get_fx_rate`, `search_knowledge`; `gksRank/gksScore`, `tuitionYear` гарахгүй | todo | L | 2B-04 |
 | `2B-07` | `build_study_plan` (`StudyPlanService.build`) ба `check_gks_eligibility` (`GksEligibilityService.check`) tool-ууд — хуудастай яг ижил хариулт, карт болж гарна *(хуучин 1J-12, 1L-10)* | todo | M | 2B-06 |
-| `2B-08` | Хамгаалалт (`guard.service.ts`): INTERNAL/CONTRACTED chunk-ын 8-gram давхцал → хаяж дахин үүсгэх; ₮/₩/$/огноо/хувь ишлэлгүй бол `grounded=false` + "зөвлөхөөр баталгаажуулна уу" мөр; оролт 2000 тэмдэгт, HTML цэвэрлэх; tool үр дүн хашилтад | todo | M | 2B-04 |
-| `2B-09` | SSE стрийм endpoint (`@Public`, зочны 128-бит сесс token, Throttler IP 30/10мин + сесс 20/10мин): `token/tool/card/sources/suggestions/action/done/error`; 25 сек heartbeat | todo | M | 2B-04 |
 | `2B-10` | Semantic cache (Redis): PUBLIC, профайлгүй, tool-гүй хариулт нормчилсон асуултаар 24 цаг; мэдлэгийн сан/persona өөрчлөгдөхөд цэвэрлэх | todo | S | 2B-04 |
 | `2B-11` | BullMQ `ai-post-turn`: intent таг, профайл extraction (загвар мартсан бол), `KnowledgeGap` илрүүлэх/нэгтгэх (embedding ≥ 0.9), өртөг тооцох, 6 мессеж тутам хураангуй, сэжимийн чанар (2C-07) | todo | M | 2B-04 |
-| `2B-12` | Өртгийн хяналт: сессийн/өдрийн токен тааз, kill switch, давсан үед `error{fallback}` → виджет мессенжер/зөвлөгөөний форм руу; Slack сэрэмжлүүлэг 80%/100% | todo | S | 2B-02, 2B-11 |
 
 ### 2C — Чат UI ба борлуулалтын гогцоо
 
