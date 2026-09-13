@@ -26,6 +26,7 @@
 | `0-15` | Production орчин: API + web deploy, `prisma migrate deploy` release дээр. *(EC2 + nginx + PostgreSQL 17 + Redis, Let's Encrypt SSL, `deploy/*.sh` — `deploy/README.md`)* | done | L | 0-14 |
 | `0-17` | Токен сэргээлтийн уралдааныг таслах (single-flight) — API нь refresh токеныг эргүүлдэг тул зэрэг явсан хүсэлтүүд нэг л токеныг зэрэг үзүүлж, ялагдсан нь 401 аваад сая шинэчилсэн сессийг устгадаг байв. `/admin` дөрвөн хүсэлт зэрэг явуулдаг тул 15 минут тутам ажилтан санамсаргүй гарч байсан. `app/utils/single-flight.ts` | done | S | 0-06 |
 | `0-18` | `POST /auth/register`-д throttle тавих — бүртгэл бүр угтах и-мэйл илгээж, Slack-д мэдэгдэл бичдэг тул хязгааргүй нь дурын хаяг руу чиглүүлсэн мэйл буу байсан (цагт 10) | done | S | 0-06 |
+| `0-23` | Файл хадгалалтыг AWS S3 руу шилжүүлэх — `S3StorageDriver`, `storage:migrate`, `storage:verify`, `deploy/AWS-S3-SETUP.md`. `gksedu` bucket (ap-southeast-1, private, versioned) + зөвхөн түүнд эрхтэй `gksedu-api` IAM хэрэглэгч. Серверийн хоёр хавтсаас 23 файл хуулж, DB дэх зам бүрийг баталгаажуулж, production `STORAGE_DRIVER=s3` болов | done | M | 0-08 |
 
 ---
 
