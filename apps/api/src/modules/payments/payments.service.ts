@@ -10,6 +10,7 @@ import {
   CaseStage,
   type Contract,
   ContractStatus,
+  DocStage,
   NotificationEvent,
   PaymentKind,
   type PaymentMethod,
@@ -27,6 +28,7 @@ import {
 } from '../../queue/queue.constants.js';
 import { CasesService } from '../cases/cases.service.js';
 import { CASE_STAGE_LABELS } from '../cases/case-stage-labels.js';
+import { RequirementsService } from '../documents/requirements.service.js';
 import { PAYMENT_KIND_LABELS, PAYMENT_METHOD_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
@@ -63,6 +65,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cases: CasesService,
+    private readonly requirements: RequirementsService,
     private readonly qpay: QpayClientService,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
@@ -522,11 +525,11 @@ export class PaymentsService {
 
   /**
    * What a credited payment does to the rest of the case: the contract goes
-   * ACTIVE, the stage moves on.
+   * ACTIVE, the stage moves on, and a prepayment opens the material checklist.
    *
-   * Both are consequences of money that is already in the bank, so a missing
-   * edge is reported, not raised — the office is told the case needs a hand,
-   * and the webhook still answers 200 (1N-07).
+   * All three are consequences of money that is already in the bank, so a
+   * missing edge is reported, not raised — the office is told the case needs a
+   * hand, and the webhook still answers 200 (1N-07).
    */
   private async applyPaymentProgress(payment: {
     id: string;
@@ -557,6 +560,49 @@ export class PaymentsService {
           { label: 'Шалтгаан', value: reason },
         ],
         link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${payment.caseId}` },
+      });
+      return;
+    }
+
+    if (payment.kind === PaymentKind.PREPAYMENT) await this.openAdmissionChecklist(payment.caseId, payment.case.code);
+  }
+
+  /**
+   * The admission checklist is what the prepayment buys (gksedu.md §9), so it
+   * is built the moment the money lands rather than when somebody in the
+   * office remembers to press "resolve".
+   *
+   * Until this ran, a client who paid through QPay at 23:00 was left on a
+   * documents tab holding nothing but the conditions questionnaire — the one
+   * screen in the portal whose "next step" needs an answer before it can name
+   * a next step. The engine runs off the facts the case already has (the
+   * client's education level, their sponsor if they named one), and answering
+   * the questionnaire later re-resolves and appends whatever those answers add;
+   * rows the client has already worked on are never destroyed (§7.1).
+   *
+   * It runs after the stage transition has committed, not inside it:
+   * `resolveForCase` refuses to build a list for a case still standing before
+   * `PREPAYMENT_PAID`, and it opens `DOCUMENTS` itself once it has one.
+   *
+   * A checklist that fails to build must not fail the payment either — the
+   * money is credited, the stage has moved, and the office can press the button
+   * by hand. So this reports and returns, like the transition above it.
+   */
+  private async openAdmissionChecklist(caseId: string, caseCode: string): Promise<void> {
+    try {
+      const summary = await this.requirements.resolveForCase(caseId, DocStage.ADMISSION);
+      this.logger.log(`${caseCode}: урьдчилгаа орлоо — ${summary.created} материал үүсгэлээ`);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`${caseCode}: материалын жагсаалт үүсгэж чадсангүй — ${reason}`);
+      await this.slack.notify({
+        emoji: '⚠️',
+        title: 'Урьдчилгаа орсон ч материалын жагсаалт үүссэнгүй',
+        fields: [
+          { label: 'Үйлчилгээ', value: caseCode },
+          { label: 'Шалтгаан', value: reason },
+        ],
+        link: { label: 'Үйлчилгээг нээх', path: `/admin/cases/${caseId}` },
       });
     }
   }

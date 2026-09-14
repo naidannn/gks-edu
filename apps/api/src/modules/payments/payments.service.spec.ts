@@ -7,6 +7,8 @@ import { CaseStage, ContractStatus, PaymentKind, PaymentMethod, PaymentStatus, R
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { StorageService } from '../../storage/storage.service.js';
 import type { CasesService } from '../cases/cases.service.js';
+import { DocStage } from '../../prisma/client.js';
+import type { RequirementsService } from '../documents/requirements.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import { DEFAULT_PAYMENT_DUE_DAYS } from '../pricing/payment-terms.js';
 import type { PricingService } from '../pricing/pricing.service.js';
@@ -75,6 +77,9 @@ function buildHarness(options: {
   const prismaTyped = prisma as unknown as PrismaService & typeof prisma;
 
   const cases = { applySystemTransition: vi.fn().mockResolvedValue(undefined) } as unknown as CasesService;
+  const requirements = {
+    resolveForCase: vi.fn().mockResolvedValue({ stage: DocStage.ADMISSION, created: 7, updated: 0, removed: 0, keptDespiteUnmatched: 0 }),
+  } as unknown as RequirementsService;
   const qpay = {
     createInvoice: vi.fn().mockResolvedValue({ invoiceId: 'MOCK-1', qrText: 'mock-qr', qrImage: null }),
     checkPayment: vi.fn(),
@@ -102,9 +107,9 @@ function buildHarness(options: {
   const meta = { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService;
 
   const service = new PaymentsService(
-    prismaTyped, cases, qpay, config, notifications, slack, storage, pricing, meta, pollQueue,
+    prismaTyped, cases, requirements, qpay, config, notifications, slack, storage, pricing, meta, pollQueue,
   );
-  return { service, prisma: prismaTyped, cases, qpay, pollQueue, notifications, slack, storage, pricing, meta };
+  return { service, prisma: prismaTyped, cases, requirements, qpay, pollQueue, notifications, slack, storage, pricing, meta };
 }
 
 const student: AuthenticatedUser = { id: 'student-1', email: 's@gks.edu', role: Role.USER };
@@ -388,6 +393,39 @@ describe('PaymentsService.confirmPayment (1C-15 — payment confirmed advances t
     );
   });
 
+  it('builds the admission checklist as soon as the prepayment is credited', async () => {
+    // What the prepayment buys (gksedu.md §9). Without it the client lands on
+    // a documents tab with nothing on it but the conditions questionnaire.
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+
+    await harness.service.confirmPayment('payment-1');
+
+    expect(harness.requirements.resolveForCase).toHaveBeenCalledWith('case-1', DocStage.ADMISSION);
+  });
+
+  it('keeps the money when the checklist cannot be built', async () => {
+    harness.prisma.payment.findUnique.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PENDING,
+      kind: PaymentKind.PREPAYMENT,
+      caseId: 'case-1',
+      case: makeCase(),
+    });
+    vi.mocked(harness.requirements.resolveForCase).mockRejectedValue(new Error('дүрэм олдсонгүй'));
+
+    await expect(harness.service.confirmPayment('payment-1')).resolves.toBeDefined();
+
+    expect(harness.slack.notify).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Урьдчилгаа орсон ч материалын жагсаалт үүссэнгүй' }),
+    );
+  });
+
   it('does not touch the contract for a BALANCE payment', async () => {
     harness.prisma.payment.findUnique.mockResolvedValue({
       id: 'payment-2',
@@ -401,6 +439,9 @@ describe('PaymentsService.confirmPayment (1C-15 — payment confirmed advances t
 
     expect(harness.prisma.contract.update).not.toHaveBeenCalled();
     expect(harness.cases.applySystemTransition).toHaveBeenCalledWith(expect.anything(), 'case-1', CaseStage.BALANCE_PAID);
+    // The admission list belongs to the prepayment; the balance is the far end
+    // of the same case and must not rebuild it.
+    expect(harness.requirements.resolveForCase).not.toHaveBeenCalled();
   });
 });
 
