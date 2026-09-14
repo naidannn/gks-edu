@@ -87,9 +87,15 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { to: '/admin/content', label: 'Контент', icon: 'newspaper', keywords: 'blog content' },
       {
         to: '/admin/ai/knowledge',
-        label: 'AI туслах',
+        label: 'AI мэдлэгийн сан',
         icon: 'bot',
         keywords: 'ai чат туслах мэдлэгийн сан knowledge assistant баримт карт',
+      },
+      {
+        to: '/admin/ai/settings',
+        label: 'AI туслахын тохиргоо',
+        icon: 'sliders-horizontal',
+        keywords: 'ai туслах тохиргоо асаах унтраах загвар төсөв персона enabled settings model budget',
       },
       { to: '/admin/settings/staff', label: 'Системийн хэрэглэгч', icon: 'user-cog', keywords: 'staff user role ажилтан эрх хэрэглэгч' },
     ],
