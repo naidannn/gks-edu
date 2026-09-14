@@ -128,7 +128,7 @@ const originals = computed(() => appointmentView.value?.physicalOriginals ?? [])
 
     <DsCard v-else-if="!docs.pending.value" title="Материалын жагсаалт">
       <p class="gks-docs__empty">
-        Нөхцөлөө бөглөсний дараа шаардлагатай материалын жагсаалт энд гарч ирнэ.
+        Урьдчилгаа төлбөр баталгаажмагц шаардлагатай материалын жагсаалт энд автоматаар үүснэ.
       </p>
     </DsCard>
 

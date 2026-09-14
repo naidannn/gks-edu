@@ -13,7 +13,8 @@ import { activePricingWhere } from '../pricing/active-pricing.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { StartMyCaseDto } from './dto/start-case.dto.js';
 import type { UpsertMyProfileDto } from './dto/upsert-my-profile.dto.js';
-import { nextAction } from '../cases/next-action.js';
+import { visibleCaseTabs } from '../cases/case-tabs.js';
+import { type CaseSnapshot, nextAction } from '../cases/next-action.js';
 import { profileCompleteness } from './profile-completeness.js';
 
 /** A case in one of these is over — a new one for the same service may be opened. */
@@ -283,29 +284,36 @@ export class MeService {
         })(row.intake)
       : null;
 
+    // One snapshot, read twice: what the client should do next, and which
+    // tabs the case has actually opened. Computing them apart is how the
+    // portal ends up pointing a button at a tab it is not rendering.
+    const snapshot: CaseSnapshot = {
+      serviceType: row.serviceType,
+      stage: row.stage,
+      contract: row.contract
+        ? {
+            type: row.contract.type,
+            status: row.contract.status,
+            acceptedAt: row.contract.acceptedAt,
+            otpVerifiedAt: row.contract.otpVerifiedAt,
+            balanceTriggerSnapshot: row.contract.balanceTriggerSnapshot,
+          }
+        : null,
+      payments: row.payments.map((payment) => ({ kind: payment.kind, status: payment.status })),
+      admissionDocs,
+      visaDocs,
+      daysUntilIntakeDeadline: intake?.daysUntilInternalDeadline ?? null,
+    };
+    const action = nextAction(snapshot);
+
     return {
       ...row,
       intake,
       contract: row.contract ? toClientContract(row.contract) : null,
       journey,
       documents: { admission: admissionDocs, visa: visaDocs } satisfies Record<string, StageProgress>,
-      nextAction: nextAction({
-        serviceType: row.serviceType,
-        stage: row.stage,
-        contract: row.contract
-          ? {
-              type: row.contract.type,
-              status: row.contract.status,
-              acceptedAt: row.contract.acceptedAt,
-              otpVerifiedAt: row.contract.otpVerifiedAt,
-              balanceTriggerSnapshot: row.contract.balanceTriggerSnapshot,
-            }
-          : null,
-        payments: row.payments.map((payment) => ({ kind: payment.kind, status: payment.status })),
-        admissionDocs,
-        visaDocs,
-        daysUntilIntakeDeadline: intake?.daysUntilInternalDeadline ?? null,
-      }),
+      nextAction: action,
+      visibleTabs: visibleCaseTabs(snapshot, action),
     };
   }
 

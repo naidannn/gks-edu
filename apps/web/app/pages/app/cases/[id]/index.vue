@@ -67,7 +67,7 @@ const consultant = computed(() => gksCase.value?.assignedConsultant ?? null);
           <NuxtLink :to="`/app/cases/${gksCase.id}/documents`" class="gks-overview__link">Материал руу очих</NuxtLink>
         </template>
         <p v-else class="gks-overview__unknown">
-          Материалын жагсаалт нөхцөлийн анкет бөглөсний дараа үүснэ.
+          Урьдчилгаа төлбөр баталгаажмагц материалын жагсаалт автоматаар үүснэ.
         </p>
       </DsCard>
 

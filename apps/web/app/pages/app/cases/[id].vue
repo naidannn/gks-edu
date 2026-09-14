@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PortalCaseDetail } from '@gks/shared';
+import type { CaseTab, PortalCaseDetail } from '@gks/shared';
 
 /**
  * Shell for one case: stage header, the next step, and the tabs that walk the
@@ -31,15 +31,42 @@ async function load() {
 onMounted(load);
 provide('caseDetail', { gksCase, reload: load });
 
-const TABS = [
-  { to: (i: string) => `/app/cases/${i}`, label: 'Явц', exact: true },
-  { to: (i: string) => `/app/cases/${i}/contract`, label: 'Гэрээ' },
-  { to: (i: string) => `/app/cases/${i}/payment`, label: 'Төлбөр' },
-  { to: (i: string) => `/app/cases/${i}/documents`, label: 'Материал' },
-  { to: (i: string) => `/app/cases/${i}/application`, label: 'Мэдүүлэг' },
-  { to: (i: string) => `/app/cases/${i}/visa`, label: 'Виз' },
-  { to: (i: string) => `/app/cases/${i}/departure`, label: 'Бэлтгэл' },
+const TABS: { key: CaseTab; label: string; to: (i: string) => string; exact?: boolean }[] = [
+  { key: 'overview', to: (i: string) => `/app/cases/${i}`, label: 'Явц', exact: true },
+  { key: 'contract', to: (i: string) => `/app/cases/${i}/contract`, label: 'Гэрээ' },
+  { key: 'payment', to: (i: string) => `/app/cases/${i}/payment`, label: 'Төлбөр' },
+  { key: 'documents', to: (i: string) => `/app/cases/${i}/documents`, label: 'Материал' },
+  { key: 'application', to: (i: string) => `/app/cases/${i}/application`, label: 'Мэдүүлэг' },
+  { key: 'visa', to: (i: string) => `/app/cases/${i}/visa`, label: 'Виз' },
+  { key: 'departure', to: (i: string) => `/app/cases/${i}/departure`, label: 'Бэлтгэл' },
 ];
+
+/**
+ * Only the tabs the case has actually opened (`visibleTabs`, computed on the
+ * server from the same snapshot as the next step). All seven from day one read
+ * as a list of things the client had forgotten to do; "Виз" is not a screen a
+ * client who signed their contract this morning can act on.
+ */
+const tabs = computed(() => {
+  const open = gksCase.value?.visibleTabs;
+  return open ? TABS.filter((tab) => open.includes(tab.key)) : [];
+});
+
+/** The tab the URL is on — the last path segment, or the overview. */
+const currentTab = computed<CaseTab>(() => {
+  const segment = route.path.replace(/\/+$/, '').split('/').pop();
+  return TABS.find((tab) => tab.key === segment)?.key ?? 'overview';
+});
+
+// A bookmark, or a link from an older notification, can point at a tab this
+// case has not opened — and a hidden tab still renders its page underneath.
+// Send those back to the overview rather than leaving the client on a screen
+// with no way back into the nav.
+watch([gksCase, currentTab], () => {
+  const open = gksCase.value?.visibleTabs;
+  if (!open || open.includes(currentTab.value)) return;
+  void navigateTo(`/app/cases/${id.value}`, { replace: true });
+});
 
 
 useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйлчилгээ') });
@@ -70,7 +97,7 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйл�
 
       <nav class="gks-mycase__tabs">
         <NuxtLink
-          v-for="tab in TABS"
+          v-for="tab in tabs"
           :key="tab.label"
           :to="tab.to(id)"
           class="gks-mycase__tab"
@@ -101,19 +128,21 @@ useHead({ title: () => (gksCase.value ? gksCase.value.code : 'Миний үйл�
 .gks-mycase__tab:hover { color: var(--text-strong); }
 .gks-mycase__tab--active { color: var(--brand-700); border-bottom-color: var(--brand-600); font-weight: var(--fw-semibold); }
 
-/* Seven underline tabs do not fit a phone, and scrolling them sideways hides
-   the four that matter later in the journey. Below 700px they become a grid of
-   chips: two rows, everything visible, nothing to swipe. */
+/* Underline tabs do not fit a phone, and scrolling them sideways hides the
+   ones that matter later in the journey. Below 700px they become wrapping
+   chips: everything visible, nothing to swipe, and a case showing two tabs
+   looks the same as one showing seven. */
 @media (max-width: 700px) {
   .gks-mycase__tabs {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--sp-2);
     border-bottom: 0;
     overflow: visible;
   }
   .gks-mycase__tab {
-    padding: var(--sp-2) var(--sp-1);
+    flex: 1 1 auto;
+    padding: var(--sp-2) var(--sp-3);
     border: var(--border-hair) solid var(--line-hairline);
     border-radius: var(--radius-pill);
     background: var(--surface-card);

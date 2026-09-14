@@ -111,6 +111,13 @@ export interface PortalCase {
   journey: CaseStage[];
   documents: { admission: StageProgress; visa: StageProgress };
   nextAction: NextAction;
+  /**
+   * The tabs this case has actually opened, in display order (`case-tabs.ts`).
+   * A tab appears when the stage that opens it is reached and never goes away
+   * again, so the portal shows the journey so far rather than all seven
+   * screens from day one. The `nextAction.tab` is always among them.
+   */
+  visibleTabs: CaseTab[];
 }
 
 export interface PortalCaseDetail extends PortalCase {

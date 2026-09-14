@@ -11,8 +11,18 @@ const errorMsg = ref<string | null>(null);
 const meta = useMetaTracking();
 
 const payments = computed(() => gksCase.value?.payments ?? []);
+/**
+ * The live row for a debt, mirroring the server's `LIVE_STATUSES`: an EXPIRED,
+ * FAILED or REFUNDED row is history. Reading those as "the payment" left the
+ * card showing a dead invoice with no way past it — the QR block wants PENDING
+ * and the "төлөх" button only renders when there is no payment at all, so a
+ * client whose 15-minute invoice timed out could never ask for a second one.
+ * The API would have issued one: `openPayment` ignores those statuses too.
+ */
 function latest(kind: PaymentKind): PaymentItem | undefined {
-  return payments.value.filter((p) => p.kind === kind).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  return payments.value
+    .filter((p) => p.kind === kind && (p.status === 'PENDING' || p.status === 'PAID'))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 const prepayment = computed(() => latest('PREPAYMENT'));
 /** QPay invoices only exist once the contract is signed (1C-12 guards this too). */
@@ -20,6 +30,32 @@ const contractSigned = computed(() =>
   Boolean(gksCase.value?.contract && ['SIGNED', 'ACTIVE', 'COMPLETED'].includes(gksCase.value.contract.status)));
 const balance = computed(() => latest('BALANCE'));
 const pendingPayment = computed(() => payments.value.find((p) => p.status === 'PENDING'));
+
+/**
+ * Whether the balance is due *now* — the case stands on the stage the flow
+ * moves to `BALANCE_PAID` from.
+ *
+ * `journey` is `CASE_FLOWS[serviceType]`, which is also what the API's system
+ * edges are built from, so reading the next stage off it asks the server's own
+ * question: `assertReadyFor` refuses an invoice anywhere else. It has to be the
+ * journey rather than a fixed stage, because the two families disagree about
+ * where the balance sits — regular brokerage collects it after the visa, GKS
+ * after the scholarship result (gksedu.md §9).
+ *
+ * The card used to appear the moment the prepayment was paid, months early,
+ * with a button whose only possible outcome was an error message.
+ */
+const balanceDue = computed(() => {
+  const journey = gksCase.value?.journey ?? [];
+  const stage = gksCase.value?.stage;
+  if (!stage) return false;
+  return journey[journey.indexOf(stage) + 1] === 'BALANCE_PAID';
+});
+
+/** Once the money is in, the next step is almost always on another tab. */
+const showNextAction = computed(
+  () => prepayment.value?.status === 'PAID' && gksCase.value?.nextAction.tab !== 'payment',
+);
 
 const creating = ref<PaymentKind | null>(null);
 async function create(kind: PaymentKind) {
@@ -148,7 +184,18 @@ onBeforeUnmount(stopPolling);
         <DsButton v-else :loading="creating === 'PREPAYMENT'" @click="create('PREPAYMENT')">Урьдчилгаа төлөх</DsButton>
       </DsCard>
 
-      <DsCard v-if="prepayment?.status === 'PAID'" title="Үлдэгдэл">
+      <!-- A client who has just paid is standing on this screen, and a badge
+           turning green says nothing about where they go next — which is how
+           "төлчихөөд гацлаа" starts. The server already answers that question
+           for the overview; the same card answers it here, so the wording
+           cannot drift and the step is never invented locally. -->
+      <PortalNextActionCard
+        v-if="gksCase && showNextAction"
+        :action="gksCase.nextAction"
+        :case-id="gksCase.id"
+      />
+
+      <DsCard v-if="balanceDue || balance" title="Үлдэгдэл">
         <template v-if="balance">
           <p class="gks-payment__amount gks-tnum">{{ formatMntOrDash(balance.amountMnt) }}</p>
           <DsBadge :tone="balance.status === 'PAID' ? 'success' : 'warning'">{{ PAYMENT_STATUS_LABELS[balance.status] }}</DsBadge>
@@ -158,7 +205,6 @@ onBeforeUnmount(stopPolling);
           </div>
         </template>
         <DsButton v-else :loading="creating === 'BALANCE'" @click="create('BALANCE')">Үлдэгдэл төлөх</DsButton>
-        <p v-if="!balance" class="gks-payment__hint">Таны үйлчилгээ зохих шатандаа хүрээгүй бол алдаа гарч болно.</p>
       </DsCard>
     </template>
   </div>
