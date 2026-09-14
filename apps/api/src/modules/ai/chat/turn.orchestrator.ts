@@ -182,11 +182,24 @@ export class TurnOrchestrator {
         const offerTools = toolDefinitions.length > 0 && round < MAX_MODEL_CALLS - 1;
         const calls: LlmToolCall[] = [];
         let spoken = '';
+        let reasoning = '';
 
         for await (const event of this.llm.stream(
           {
             system,
             messages,
+            // Whichever model answered the last round answers this one.
+            //
+            // A turn is up to four model calls over one growing history, and
+            // that history is provider-shaped: a Gemini `functionCall` carries
+            // a `thoughtSignature` that Gemini requires back, and a DeepSeek
+            // tool call has none. Left to pick freshly each round, a turn whose
+            // first round fell back to DeepSeek would hand DeepSeek's tool call
+            // to Gemini on the second and be refused — "Function call is
+            // missing a thought_signature", a 400 that ends the turn after the
+            // lookups have already been paid for. The fallback is a decision
+            // about the turn, not about one call in it.
+            model: usage.model,
             ...(offerTools ? { tools: toolDefinitions } : {}),
             signal: params.signal,
           },
@@ -201,12 +214,20 @@ export class TurnOrchestrator {
             if (mayStream) yield { type: 'token', text: event.delta };
           }
           if (event.type === 'tool-call') calls.push(event.call);
+          // Opaque, provider-owned, and required back on the next call of this
+          // turn. It is carried, never read and never stored with the answer.
+          if (event.type === 'done' && event.reasoning) reasoning = event.reasoning;
         }
 
         answer += spoken;
         if (calls.length === 0) break;
 
-        messages.push({ role: 'assistant', content: spoken, toolCalls: calls });
+        messages.push({
+          role: 'assistant',
+          content: spoken,
+          toolCalls: calls,
+          ...(reasoning ? { reasoning } : {}),
+        });
 
         for (const call of calls) {
           yield { type: 'tool', name: call.name, status: 'running', label: this.tools.labelFor(call.name) };
@@ -248,7 +269,12 @@ export class TurnOrchestrator {
     if (verdict.leaked) {
       // One more attempt, with the rule restated as an instruction. What the
       // visitor saw so far is discarded by the client on `retry`.
-      const retry = await this.regenerate({ system, messages, signal: params.signal });
+      const retry = await this.regenerate({
+        system,
+        messages,
+        model: usage.model,
+        signal: params.signal,
+      });
       verdict = this.guard.review({
         answer: retry,
         level: params.level,
@@ -300,6 +326,8 @@ export class TurnOrchestrator {
   private async regenerate(params: {
     system: string;
     messages: LlmMessage[];
+    /** The model the turn settled on — the history is shaped for that provider. */
+    model: string;
     signal?: AbortSignal;
   }): Promise<string> {
     let text = '';
@@ -307,6 +335,7 @@ export class TurnOrchestrator {
     for await (const event of this.llm.stream({
       system: `${params.system}\n\n${NO_QUOTE_INSTRUCTION}`,
       messages: params.messages,
+      model: params.model,
       signal: params.signal,
     })) {
       if (event.type === 'text') text += event.delta;

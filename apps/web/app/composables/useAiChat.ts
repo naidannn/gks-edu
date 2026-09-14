@@ -252,11 +252,26 @@ export function useAiChat() {
       { id: null, role: 'ASSISTANT', content: '', sources: [], cards: [], grounded: true, pending: true, feedback: null },
     ];
 
-    const answer = () => messages.value[messages.value.length - 1]!;
+    // The answer bubble is the last one — until it is dropped for being empty,
+    // after which the last one is the question and must not be touched. Every
+    // helper below therefore checks the role rather than trusting the position.
+    const answer = (): AiChatBubble | null => {
+      const last = messages.value[messages.value.length - 1];
+      return last?.role === 'ASSISTANT' ? last : null;
+    };
+
     const patch = (changes: Partial<AiChatBubble>): void => {
+      const current = answer();
+      if (!current) return;
+
       const next = [...messages.value];
-      next[next.length - 1] = { ...answer(), ...changes };
+      next[next.length - 1] = { ...current, ...changes };
       messages.value = next;
+    };
+
+    /** An apology under a blank bubble reads as two failures rather than one. */
+    const dropIfEmpty = (): void => {
+      if (answer()?.content === '') messages.value = messages.value.slice(0, -1);
     };
 
     const abort = new AbortController();
@@ -286,19 +301,20 @@ export function useAiChat() {
 
         lastFrameAt = Date.now();
         for (const frame of parser.push(decoder.decode(value, { stream: true }))) {
-          apply(JSON.parse(frame.data) as AiStreamEvent, patch, answer);
+          apply(JSON.parse(frame.data) as AiStreamEvent, patch, answer, dropIfEmpty);
         }
       }
 
       const tail = parser.flush();
-      if (tail) apply(JSON.parse(tail.data) as AiStreamEvent, patch, answer);
+      if (tail) apply(JSON.parse(tail.data) as AiStreamEvent, patch, answer, dropIfEmpty);
 
       // A stream that ended without a `done` frame — a dropped connection, a
       // restarted API — leaves the bubble mid-sentence. Say so, rather than
       // presenting a truncated answer as a finished one.
-      if (answer().pending) {
+      if (answer()?.pending) {
         patch({ pending: false });
-        if (!answer().content) {
+        if (!answer()?.content) {
+          dropIfEmpty();
           offline.value = {
             message: 'Хариулт тасарлаа. Дахин оролдоно уу, эсвэл зөвлөхтэй холбогдоно уу.',
             fallback: 'messenger',
@@ -307,11 +323,7 @@ export function useAiChat() {
       }
     } catch {
       patch({ pending: false });
-      if (!answer().content) {
-        // Drop the empty bubble: an apology under a blank answer reads as two
-        // failures rather than one.
-        messages.value = messages.value.slice(0, -1);
-      }
+      dropIfEmpty();
       offline.value = {
         message: 'Холболт тасарлаа. Дахин оролдоно уу, эсвэл зөвлөхтэй шууд холбогдоно уу.',
         fallback: 'messenger',
@@ -326,17 +338,20 @@ export function useAiChat() {
   function apply(
     event: AiStreamEvent,
     patch: (changes: Partial<AiChatBubble>) => void,
-    answer: () => AiChatBubble,
+    answer: () => AiChatBubble | null,
+    dropIfEmpty: () => void,
   ): void {
+    const current = answer();
+
     switch (event.type) {
       case 'token':
-        patch({ content: answer().content + event.text });
+        patch({ content: (current?.content ?? '') + event.text });
         return;
       case 'tool':
         activity.value = event.status === 'running' ? { name: event.name, label: event.label } : null;
         return;
       case 'card':
-        patch({ cards: [...answer().cards, event.card] });
+        patch({ cards: [...(current?.cards ?? []), event.card] });
         return;
       case 'sources':
         patch({ sources: event.sources });
@@ -347,7 +362,11 @@ export function useAiChat() {
         return;
       case 'error':
         patch({ pending: false });
+        // Anything already spoken stays — a turn that got half an answer out
+        // before the model died is still worth showing. A blank one goes.
+        dropIfEmpty();
         offline.value = { message: event.message, fallback: event.fallback };
+        activity.value = null;
         return;
     }
   }
