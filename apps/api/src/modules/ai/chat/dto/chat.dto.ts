@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsObject, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
-import { ChatChannel } from '../../../../prisma/client.js';
+import { ChatChannel, FeedbackReason, FeedbackValue } from '../../../../prisma/client.js';
 
 export class StartChatSessionDto {
   @ApiPropertyOptional({ enum: ChatChannel, default: ChatChannel.WEB_WIDGET })
@@ -41,4 +41,28 @@ export class SendChatMessageDto {
   // The same ceiling the guard enforces; rejecting here saves a round trip.
   @MaxLength(2_000)
   message!: string;
+}
+
+/**
+ * 👍/👎 on one answer (2C-11).
+ *
+ * A thumb is one click and carries no reason; a 👎 is asked for one, because
+ * "wrong" and "incomplete" send the answer to different places — the first to
+ * whoever wrote the document, the second to the gap queue (§10.3).
+ */
+export class ChatFeedbackDto {
+  @ApiProperty({ enum: FeedbackValue })
+  @IsEnum(FeedbackValue)
+  value!: FeedbackValue;
+
+  @ApiPropertyOptional({ enum: FeedbackReason })
+  @IsEnum(FeedbackReason)
+  @IsOptional()
+  reason?: FeedbackReason;
+
+  @ApiPropertyOptional({ description: 'What was wrong, in the visitor’s own words' })
+  @IsString()
+  @MaxLength(1_000)
+  @IsOptional()
+  comment?: string;
 }

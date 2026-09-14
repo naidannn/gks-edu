@@ -29,6 +29,16 @@ export interface LlmToolCall {
 export interface LlmMessage {
   role: LlmRole;
   content: string;
+  /**
+   * The model's own thinking trace, echoed back on the next call.
+   *
+   * The message-level twin of `LlmToolCall.signature`, and required for the
+   * same reason by the other provider: DeepSeek in thinking mode refuses a
+   * continued tool conversation with "The `reasoning_content` in the thinking
+   * mode must be passed back to the API". Opaque, never shown, never stored
+   * with the answer — it belongs to one turn's wire format.
+   */
+  reasoning?: string;
   /** ASSISTANT turns that asked for tools. */
   toolCalls?: LlmToolCall[];
   /** TOOL turns: which call this answers. */
@@ -63,7 +73,7 @@ export type LlmEvent =
   | { type: 'text'; delta: string }
   | { type: 'tool-call'; call: LlmToolCall }
   | { type: 'usage'; promptTokens: number; completionTokens: number }
-  | { type: 'done'; finishReason: LlmFinishReason };
+  | { type: 'done'; finishReason: LlmFinishReason; reasoning?: string };
 
 export interface LlmProvider {
   readonly name: 'gemini' | 'deepseek';

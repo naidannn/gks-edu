@@ -201,17 +201,12 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2C-01` | `useAiChat` composable + `useSseReader` (`useMessengerStream`-ийн frame parser-ийг салгаж хоёулаа ашиглах); сесс token, watchdog 45 сек | todo | M | 2B-09 |
-| `2C-02` | Виджет (`default` + `portal` layout, мобайл bottom-sheet) + `/chat` бүтэн хуудас (noindex); нэвтрэх үед зочны сессийг `userId`-д залгах | todo | L | 2C-01 |
 | `2C-03` | Баялаг картууд: сургууль, хөтөлбөр/төлбөр, countdown, төлөвлөгөө, GKS шалгуур, үнэ — `components/catalog`, `plan`, `gks`-ийн бэлэн компонентуудыг ороох; тоо DB-ээс UI руу шууд | todo | L | 2C-02, 2B-07 |
 | `2C-04` | Хурдан хариулт (suggestions) ба CTA картууд: `/plan?…`, `/gks-check`, `/consultation` (урьдчилан бөглөсөн), `/app/start`, утас; `ctaRules` тохиргоогоор | todo | M | 2C-02 |
-| `2C-05` | `save_visitor_profile` tool + алхам алхмаар capture: 6 талбар + нэр/утас, `leadCaptureAfterMessages`-ийн дараа нэг удаа асуух, утсыг үнэ цэнэ өгсний дараа, татгалзвал дахин асуухгүй | todo | M | 2B-06 |
-| `2C-06` | `create_consultation_request` tool → `LeadsService.createFromPublicForm` (`source=AI_CHAT`, note=хураангуй, utm, tracking, профайл талбарууд) — давхардал, Meta CAPI, `LEAD_CREATED`, `autoAssign` автоматаар; `ChatSession.leadId`, `LeadActivity{CHAT}`; `Client` бол шинэ сэжим биш activity | todo | M | 2C-05 |
 | `2C-07` | Сэжимийн чанар `Lead.aiQualification` (serviceFit, urgency, budgetSignal, timing, blockers, proposedWinProbability, summary) + сэжимийн картан дээр "AI үнэлгээ" → зөвлөх нэг товшилтоор авна | todo | M | 2C-06, 2B-11 |
 | `2C-08` | Handoff: нэвтэрсэн → `Conversation` (1K) + `SYSTEM` мөр хураангуй + сессийн линк; зочин → `Lead` + `WorkTask{FOLLOW_UP, +1 ажлын өдөр}`; `staffOnline`/`handoffHours`-оор "онлайн"/"дараагийн ажлын өдөр"; сесс `HANDED_OFF` | todo | M | 2C-06 |
 | `2C-09` | Хугацааны шахалт: `get_intake_deadlines` зөвхөн `internalDeadline`; countdown карт "X хоног үлдлээ"; `intake-deadline.ts`-ээс өөр газар тооцохгүй | todo | S | 2B-06, 2C-03 |
 | `2C-10` | Дагах автоматжуулалт (`ai-followup`): `AI_CHAT` сэжим `NEW` 3 хоног → `LEAD_FOLLOW_UP_DUE` + танилцуулга имэйл; `Lead.plannedIntakeId` дээр `INTAKE_DEADLINE_NEAR`; handoff-ын дараа 1 ажлын өдөр хариугүй → админд | todo | M | 2C-06 |
-| `2C-11` | 👍/👎 + шалтгаан (`WRONG/INCOMPLETE/IRRELEVANT/OTHER`) + тайлбар; хариулт бүрийн эх сурвалж жагсаалт UI | todo | S | 2C-02, 2B-03 |
 | `2C-12` | Хөрвөлтийн хэмжилт: виджет нээсэн (`ViewContent`) / 3+ мессеж / профайл / сэжим (`Lead`) / handoff (`Contact`) — Meta pixel + тайлан | todo | S | 2C-06 |
 
 ### 2D — Кабинет ба ажилтны туслах
@@ -231,7 +226,6 @@
 | `2E-02` | `/admin/ai/entries`: хариултын карт CRUD | todo | S | 2A-08 |
 | `2E-03` | `/admin/ai/gaps`: цоорхойн дараалал (асуулт, давтамж, сүүлд хэзээ, статус) → "Хариулт бичих" → `ENTRY` карт индексжиж gap `ANSWERED`; долоо хоногийн тайланд шинэ/хаагдсан | todo | M | 2B-11, 2E-02 |
 | `2E-04` | `/admin/ai/sessions`: жагсаалт (огноо, суваг, түвшин, мессеж, профайл, outcome, сэжим/хэрэг линк, өртөг, 👍/👎) + нэг сессийн бүтэн транскрипт tool дуудлага, ишлэлтэй | todo | M | 2B-03 |
-| `2E-05` | `/admin/ai/settings`: `AiAssistantConfig` бүхэлдээ (2B-02) — enabled, загварууд, temperature, topK, босго, төсөв, мэндчилгээ, персона, capture, CTA дүрэм, ажлын цаг; persona өөрчлөгдөхөд cache цэвэрлэх | todo | M | 2B-02 |
 | `2E-06` | Алтан асуулт `AiEvalCase` (50+: асуулт, түвшин, хүлээгдэх/хориотой баримт, хүлээгдэх tool) + `ai-eval` гүйлгэлт (шулуун тест, LLM-judge биш) + `/admin/ai/evals` — загвар сонгож гүйлгэх, хоёр загвар харьцуулах (чанар × өртөг × хугацаа) | todo | L | 2B-04 |
 | `2E-07` | Алдагдлын тест *(хуучин 2-16)*: INTERNAL/CONTRACTED баримт эрхгүй хэрэглэгчид гарахгүй — алтан асуултын хориотой баримт + нэгж тест; deploy-ийн өмнө заавал | todo | M | 2A-10, 2B-08 |
 | `2E-08` | Тайлан: сесс, идэвхтэй (3+), профайл, сэжим/сесс, handoff %, хариулаагүй %, 👎 %, өртөг/сэжим — `/admin/ai/reports` эсвэл 1M-д таб; юүлүүрт `AI_CHAT` | todo | M | 2C-12 |

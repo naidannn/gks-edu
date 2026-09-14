@@ -82,6 +82,26 @@ export function readInt(
   return Math.min(max, Math.max(min, Math.trunc(parsed)));
 }
 
+/**
+ * A decimal, clamped into range. `"3.8"` and `3.8` both read as 3.8.
+ *
+ * Separate from `readInt` because truncating is right for a page size and
+ * catastrophic for a grade: `Math.trunc(3.8)` is a 3.0 student, and nobody
+ * reading the lead card afterwards would know the difference.
+ */
+export function readNumber(
+  args: Record<string, unknown>,
+  key: string,
+  min: number,
+  max: number,
+): number | undefined {
+  const raw = args[key];
+  const parsed = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : Number.NaN;
+  if (!Number.isFinite(parsed)) return undefined;
+
+  return Math.min(max, Math.max(min, parsed));
+}
+
 /** `true`, `"true"` and `"yes"` are true; `false` and `"false"` are false. */
 export function readBoolean(args: Record<string, unknown>, key: string): boolean | undefined {
   const raw = args[key];

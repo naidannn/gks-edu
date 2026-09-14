@@ -72,14 +72,24 @@ export class LeadsService {
   ) {}
 
   /**
-   * Consultation request from the public website (1A-15).
+   * Consultation request from the public website (1A-15), or from the
+   * assistant on the visitor's behalf (2C-06).
    *
    * Bots are answered with a plausible-looking result and nothing is written —
    * telling a spammer their submission failed only invites a retry.
+   *
+   * `origin` is how the assistant joins this path rather than writing its own.
+   * Everything that happens after a lead is created — the phone-number dedupe
+   * window, the Meta `Lead` conversion, the Slack line, the staff notification,
+   * the acknowledgement email — is the same work whether a form or a
+   * conversation produced it, and a second implementation of it would drift.
+   * Only two things differ: which `source` the row carries, and whether there is
+   * an account to attach it to.
    */
   async createFromPublicForm(
     dto: CreatePublicLeadDto,
     request: MetaRequestContext = {},
+    origin: { source?: LeadSource; userId?: string | null } = {},
   ): Promise<PublicLeadResult> {
     if (dto.website) {
       this.logger.warn('Нээлттэй сэжмийн формын honeypot ажиллаа — хүсэлтийг хассан');
@@ -87,6 +97,7 @@ export class LeadsService {
     }
 
     const phone = normalizePhone(dto.phone);
+    const fromChat = (origin.source ?? LeadSource.WEBSITE) === LeadSource.AI_CHAT;
     const universityIds = await this.resolveUniversityIds(dto.interestedUniversitySlugs);
 
     const recent = await this.prisma.lead.findFirst({
@@ -99,9 +110,12 @@ export class LeadsService {
       await this.prisma.leadActivity.create({
         data: {
           leadId: recent.id,
-          type: LeadActivityType.NOTE,
-          body: dto.note ?? 'Вебсайтаас давтан хүсэлт илгээсэн',
-          meta: { channel: 'website_form', repeat: true } satisfies Prisma.InputJsonObject,
+          type: fromChat ? LeadActivityType.CHAT : LeadActivityType.NOTE,
+          body: dto.note ?? (fromChat ? 'AI туслахтай яриа' : 'Вебсайтаас давтан хүсэлт илгээсэн'),
+          meta: {
+            channel: fromChat ? 'ai_chat' : 'website_form',
+            repeat: true,
+          } satisfies Prisma.InputJsonObject,
         },
       });
       // A second form inside the dedupe window means the visitor is still
@@ -141,14 +155,21 @@ export class LeadsService {
         interestedUniversityIds: universityIds,
         interestedMajor: dto.interestedMajor,
         note: dto.note,
-        source: LeadSource.WEBSITE,
+        source: origin.source ?? LeadSource.WEBSITE,
+        ...(origin.userId ? { userId: origin.userId } : {}),
         utm: dto.utm ? (dto.utm as Prisma.InputJsonObject) : Prisma.JsonNull,
         activities: {
-          create: {
-            type: LeadActivityType.NOTE,
-            body: dto.note ?? 'Вебсайтын зөвлөгөөний хүсэлт',
-            meta: { channel: 'website_form' } satisfies Prisma.InputJsonObject,
-          },
+          create: fromChat
+            ? {
+                type: LeadActivityType.CHAT,
+                body: dto.note ?? 'AI туслахтай ярианаас үүссэн хүсэлт',
+                meta: { channel: 'ai_chat' } satisfies Prisma.InputJsonObject,
+              }
+            : {
+                type: LeadActivityType.NOTE,
+                body: dto.note ?? 'Вебсайтын зөвлөгөөний хүсэлт',
+                meta: { channel: 'website_form' } satisfies Prisma.InputJsonObject,
+              },
         },
       },
       select: {

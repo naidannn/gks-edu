@@ -12,7 +12,7 @@ interface DeltaToolCall {
 
 interface DeepseekChunk {
   choices?: {
-    delta?: { content?: string; tool_calls?: DeltaToolCall[] };
+    delta?: { content?: string; reasoning_content?: string; tool_calls?: DeltaToolCall[] };
     finish_reason?: string | null;
   }[];
   usage?: { prompt_tokens?: number; completion_tokens?: number };
@@ -70,12 +70,20 @@ export class DeepseekChatProvider implements LlmProvider {
 
     const pending = new Map<number, { id: string; name: string; args: string }>();
     let finishReason: LlmFinishReason = 'stop';
+    // The thinking trace, accumulated the same way the text is. It is never
+    // shown and never stored — it exists only to be handed straight back on the
+    // next call of this turn, which the API requires (see `LlmMessage.reasoning`).
+    let reasoning = '';
 
     for await (const payload of sseDataLines(response.body, request.signal)) {
       if (payload === '[DONE]') break;
 
       const chunk = JSON.parse(payload) as DeepseekChunk;
       const choice = chunk.choices?.[0];
+
+      if (choice?.delta?.reasoning_content) {
+        reasoning += choice.delta.reasoning_content;
+      }
 
       if (choice?.delta?.content) {
         yield { type: 'text', delta: choice.delta.content };
@@ -119,7 +127,11 @@ export class DeepseekChatProvider implements LlmProvider {
       };
     }
 
-    yield { type: 'done', finishReason: pending.size > 0 ? 'tool_calls' : finishReason };
+    yield {
+      type: 'done',
+      finishReason: pending.size > 0 ? 'tool_calls' : finishReason,
+      ...(reasoning ? { reasoning } : {}),
+    };
   }
 }
 
@@ -132,6 +144,9 @@ function toMessage(message: LlmMessage) {
     return {
       role: 'assistant',
       content: message.content || null,
+      // Required back verbatim in thinking mode; omitted entirely when the
+      // model produced none, because an empty string is not the same as absent.
+      ...(message.reasoning ? { reasoning_content: message.reasoning } : {}),
       tool_calls: message.toolCalls.map((call) => ({
         id: call.id,
         type: 'function',

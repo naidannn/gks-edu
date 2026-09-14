@@ -476,6 +476,9 @@ async function onLogout() {
         <span class="gks-tabbar__label">Цэс</span>
       </button>
     </nav>
+
+    <!-- Draws nothing until the server says the assistant is switched on (2C-02). -->
+    <AiChatWidget channel="WEB_WIDGET" />
   </div>
 </template>
 
