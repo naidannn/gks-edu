@@ -72,7 +72,8 @@ function makeService(overrides: {
       create: vi.fn().mockResolvedValue({ id: 'conv-1' }),
       update: conversationUpdate,
       findUniqueOrThrow: vi.fn().mockResolvedValue(conversationRow()),
-      count: vi.fn().mockResolvedValue(0),
+      // `generateCode` reads the highest code issued this year, not a count.
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     message: { create: messageCreate },
   };

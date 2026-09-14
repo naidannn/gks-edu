@@ -570,7 +570,15 @@ export class MessengerService {
 
   /** `CH-2026-0007` — "чат". */
   private generateCode(db: Db): Promise<string> {
-    return nextYearlyCode('CH', (stem) => db.conversation.count({ where: { code: { startsWith: stem } } }));
+    return nextYearlyCode('CH', async (stem) =>
+      (
+        await db.conversation.findFirst({
+          where: { code: { startsWith: stem } },
+          orderBy: { code: 'desc' },
+          select: { code: true },
+        })
+      )?.code ?? null,
+    );
   }
 
   /** Push the new message and the refreshed thread head to everyone concerned. */

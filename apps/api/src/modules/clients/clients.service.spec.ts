@@ -57,7 +57,8 @@ function prismaStub(overrides: { registerTaken?: boolean; account?: AccountRow; 
       // row from one the client already had.
       create: vi.fn().mockImplementation(({ data }: { data: { userId: string } }) =>
         Promise.resolve({ ...created, userId: data.userId })),
-      count: vi.fn().mockResolvedValue(0),
+      // `generateCode` reads the highest code issued this year, not a count.
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     lead: { update: vi.fn() },
     leadActivity: { create: vi.fn() },
@@ -68,6 +69,7 @@ function prismaStub(overrides: { registerTaken?: boolean; account?: AccountRow; 
       findUnique: vi.fn().mockImplementation(({ where }: { where: { registerNumber?: string } }) =>
         where.registerNumber && overrides.registerTaken ? { code: 'KH-2026-0009' } : null),
       count: vi.fn().mockResolvedValue(0),
+      findFirst: vi.fn().mockResolvedValue(null),
       create: tx.client.create,
     },
     user: {

@@ -496,6 +496,14 @@ export class CasesService {
 
   /** `GKS-2026-0007` (§5). */
   private generateCode(db: Db): Promise<string> {
-    return nextYearlyCode('GKS', (stem) => db.case.count({ where: { code: { startsWith: stem } } }));
+    return nextYearlyCode('GKS', async (stem) =>
+      (
+        await db.case.findFirst({
+          where: { code: { startsWith: stem } },
+          orderBy: { code: 'desc' },
+          select: { code: true },
+        })
+      )?.code ?? null,
+    );
   }
 }
