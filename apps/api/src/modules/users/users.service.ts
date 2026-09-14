@@ -370,7 +370,8 @@ const STAFF_TRACE_COUNTS = {
   applicationResults: true,
   invitations: true,
   officeAppointments: true,
-  documents: true,
+  knowledgeDocsCreated: true,
+  knowledgeDocsEdited: true,
   posts: true,
   auditLogs: true,
 } satisfies Prisma.UserCountOutputTypeSelect;

@@ -1,6 +1,22 @@
 <script setup lang="ts">
 defineOptions({ inheritAttrs: false });
 
+/**
+ * A class written on the component belongs to the *field*, not to the control
+ * inside it: every caller passes a layout class (`gks-form-grid__full`), and
+ * with `inheritAttrs: false` those were landing on the `<input>` itself, where
+ * `grid-column` means nothing — so "make this field span the row" silently did
+ * nothing on every form in the app. Class and style go to the wrapper; the rest
+ * of the attributes (`type`, `required`, `placeholder`, …) go to the control.
+ */
+const attrs = useAttrs();
+const wrapperClass = computed(() => attrs.class as string | undefined);
+const wrapperStyle = computed(() => attrs.style as string | undefined);
+const controlAttrs = computed(() => {
+  const { class: _class, style: _style, ...rest } = attrs;
+  return rest;
+});
+
 defineProps<{
   label?: string;
   hint?: string;
@@ -18,7 +34,7 @@ const inputId = useId();
 </script>
 
 <template>
-  <div class="gks-field">
+  <div class="gks-field" :class="wrapperClass" :style="wrapperStyle">
     <label v-if="label" :for="inputId" class="gks-field__label">
       {{ label }}<span v-if="required" class="gks-field__required">*</span>
     </label>
@@ -32,7 +48,7 @@ const inputId = useId();
         class="gks-field__input"
         :disabled="disabled"
         :value="modelValue"
-        v-bind="$attrs"
+        v-bind="controlAttrs"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       >
       <span v-if="suffix" class="gks-field__suffix">{{ suffix }}</span>

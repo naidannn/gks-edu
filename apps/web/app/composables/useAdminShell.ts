@@ -85,6 +85,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { to: '/admin/settings/notifications', label: 'Мэдэгдлийн загвар', icon: 'bell-ring', keywords: 'notification email' },
       { to: '/admin/settings/admissions', label: 'Элсэлтийн тохиргоо', icon: 'calendar-cog', keywords: 'intake config' },
       { to: '/admin/content', label: 'Контент', icon: 'newspaper', keywords: 'blog content' },
+      {
+        to: '/admin/ai/knowledge',
+        label: 'AI туслах',
+        icon: 'bot',
+        keywords: 'ai чат туслах мэдлэгийн сан knowledge assistant баримт карт',
+      },
       { to: '/admin/settings/staff', label: 'Системийн хэрэглэгч', icon: 'user-cog', keywords: 'staff user role ажилтан эрх хэрэглэгч' },
     ],
   },

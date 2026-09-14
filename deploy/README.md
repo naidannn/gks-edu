@@ -126,6 +126,23 @@ development ones.
 
 ---
 
+## File storage
+
+Client documents (contract scans, passports, diplomas) currently live on the
+server's disk under `/var/www/gks-edu/storage`, backed up by nothing. The S3
+driver is in place and the move is written up step by step in
+[AWS-S3-SETUP.md](AWS-S3-SETUP.md) — bucket, scoped IAM user, migration, and the
+one-line switch to `STORAGE_DRIVER=s3`.
+
+One thing to know before touching those files: an absolute `STORAGE_LOCAL_DIR`
+used to be joined onto the cwd rather than resolved, so the box holds **two**
+storage trees — the declared one and a nested
+`/var/www/gks-edu/api/var/www/gks-edu/storage`. Both hold real documents. The
+code is fixed; the two trees still have to be merged (or copied into S3, which
+the runbook does).
+
+---
+
 ## Secrets
 
 `deploy/.env.production` holds the production secrets and is gitignored along

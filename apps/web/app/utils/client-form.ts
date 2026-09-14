@@ -42,9 +42,12 @@ export function choiceLimitsFor(serviceType: ServiceType | '') {
  * scholarship rows are placed first: they are the choices the contract is
  * really about, and the fallback is the one to lose.
  */
-export function reconcileChoices(form: ClientForm): void {
-  const limits = choiceLimitsFor(form.primaryServiceType);
-  const ordered = [...form.universityChoices].sort(
+export function retrackChoices(
+  serviceType: ServiceType | '',
+  choices: readonly ClientUniversityChoice[],
+): ClientUniversityChoice[] {
+  const limits = choiceLimitsFor(serviceType);
+  const ordered = [...choices].sort(
     (a, b) => Number(b.track === 'SCHOLARSHIP') - Number(a.track === 'SCHOLARSHIP'),
   );
 
@@ -61,8 +64,12 @@ export function reconcileChoices(form: ClientForm): void {
     }
   }
 
-  form.universityChoices =
-    kept.length > 0 ? kept : [{ universityId: '', track: defaultChoiceTrack(form.primaryServiceType) }];
+  return kept.length > 0 ? kept : [{ universityId: '', track: defaultChoiceTrack(serviceType) }];
+}
+
+/** The same rule applied in place to the client form. */
+export function reconcileChoices(form: ClientForm): void {
+  form.universityChoices = retrackChoices(form.primaryServiceType, form.universityChoices);
 }
 
 /**

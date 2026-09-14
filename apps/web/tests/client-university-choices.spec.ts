@@ -5,6 +5,7 @@ import {
   filledChoices,
   myProfilePayload,
   reconcileChoices,
+  retrackChoices,
   validateClientForm,
   type ClientForm,
 } from '../app/utils/client-form';
@@ -146,5 +147,33 @@ describe('reconcileChoices', () => {
     const form = filledForm({ universityChoices: [] });
     reconcileChoices(form);
     expect(form.universityChoices).toEqual([{ universityId: '', track: 'REGULAR' }]);
+  });
+});
+
+/**
+ * The same rule, used without a client form: opening a service on a client who
+ * was registered without one starts from the school already on their record.
+ */
+describe('retrackChoices', () => {
+  it('moves the schools onto the scholarship track when the service becomes GKS', () => {
+    const kept = retrackChoices('GKS_SCHOLARSHIP', [{ universityId: SNU, track: 'REGULAR' }]);
+    expect(kept).toEqual([{ universityId: SNU, track: 'SCHOLARSHIP' }]);
+  });
+
+  it('drops what the new service has no room for, keeping the scholarship picks', () => {
+    const kept = retrackChoices('BACHELOR', [
+      { universityId: SNU, track: 'SCHOLARSHIP' },
+      { universityId: KOREA, track: 'SCHOLARSHIP' },
+      { universityId: HANYANG, track: 'REGULAR' },
+    ]);
+    expect(kept).toEqual([
+      { universityId: SNU, track: 'REGULAR' },
+      { universityId: KOREA, track: 'REGULAR' },
+      { universityId: HANYANG, track: 'REGULAR' },
+    ]);
+  });
+
+  it('always leaves one row for the form to render', () => {
+    expect(retrackChoices('MASTER', [])).toEqual([{ universityId: '', track: 'REGULAR' }]);
   });
 });

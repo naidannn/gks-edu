@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(sed -n:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm -r lint:*)",
+      "Bash(pnpm -r test:*)",
+      "Bash(pnpm -r typecheck:*)",
+      "Bash(pnpm tasks:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(node scripts/task-status.mjs:*)",
+      "Bash(node_modules/.bin/prisma generate:*)",
+      "Bash(node_modules/.bin/prisma format:*)",
+      "Bash(node_modules/.bin/prisma validate:*)",
+      "Bash(node_modules/.bin/prisma migrate status:*)",
+      "Bash(node_modules/.bin/prisma migrate diff:*)"
+    ]
+  }
+}

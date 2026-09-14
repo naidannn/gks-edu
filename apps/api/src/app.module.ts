@@ -33,10 +33,10 @@ import { PricingModule } from './modules/pricing/pricing.module.js';
 import { ReportsModule } from './modules/reports/reports.module.js';
 import { SavedUniversitiesModule } from './modules/saved-universities/saved-universities.module.js';
 import { AdmissionsModule } from './modules/admissions/admissions.module.js';
+import { AiModule } from './modules/ai/ai.module.js';
 import { UniversitiesModule } from './modules/universities/universities.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { VisaModule } from './modules/visa/visa.module.js';
-import { VectorModule } from './modules/vector/vector.module.js';
 import { OtpModule } from './otp/otp.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QueueModule } from './queue/queue.module.js';
@@ -90,7 +90,7 @@ import { StorageModule } from './storage/storage.module.js';
     FaqModule,
     BannersModule,
     ReportsModule,
-    VectorModule,
+    AiModule,
   ],
   providers: [
     // Everything is authenticated unless a route opts out with @Public().

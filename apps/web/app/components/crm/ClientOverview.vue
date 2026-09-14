@@ -164,11 +164,7 @@ const summary = computed(() => {
     </template>
 
     <div v-else class="gks-cov__cols">
-      <DsCard title="Үйлчилгээ эхлээгүй">
-        <p class="gks-cov__empty">
-          Энэ үйлчлүүлэгч дээр зуучлалын үйлчилгээ эхлээгүй тул явц, төлбөр, материал хараахан үүсээгүй байна.
-        </p>
-      </DsCard>
+      <CrmClientStartCase :client="client" @changed="emit('changed')" />
 
       <aside class="gks-cov__side">
         <CrmClientPortalAccess :client="client" @changed="emit('changed')" />
@@ -223,7 +219,6 @@ const summary = computed(() => {
 .gks-cov__school-program { color: var(--text-muted); font-size: var(--fs-body-sm); }
 
 .gks-cov__note { font-size: var(--fs-body-sm); white-space: pre-wrap; }
-.gks-cov__empty { font-size: var(--fs-body-sm); color: var(--text-muted); }
 
 @media (max-width: 1100px) {
   .gks-cov__cols { grid-template-columns: 1fr; }

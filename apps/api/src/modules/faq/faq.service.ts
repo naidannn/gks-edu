@@ -5,6 +5,7 @@ import { FaqCategory } from '../../prisma/client.js';
 import type { CreateFaqDto } from './dto/create-faq.dto.js';
 import type { QueryFaqDto } from './dto/query-faq.dto.js';
 import type { UpdateFaqDto } from './dto/update-faq.dto.js';
+import { ContentSyncService } from '../ai/knowledge/content-sync.service.js';
 
 const CACHE_TTL_MS = 300_000;
 /** Every cache key `findPublished` can produce — small and fixed, so listing beats pattern-scanning. */
@@ -15,6 +16,8 @@ export class FaqService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    /** 2A-07 — a published FAQ is knowledge the assistant should answer from. */
+    private readonly knowledgeSync: ContentSyncService,
   ) {}
 
   /** Public list, grouped for the accordion page (1A-13). */
@@ -46,6 +49,7 @@ export class FaqService {
   async create(dto: CreateFaqDto) {
     const faq = await this.prisma.faqItem.create({ data: dto });
     await this.invalidate();
+    await this.knowledgeSync.syncFaq(faq);
     return faq;
   }
 
@@ -53,6 +57,9 @@ export class FaqService {
     await this.findOneAdmin(id);
     const faq = await this.prisma.faqItem.update({ where: { id }, data: dto });
     await this.invalidate();
+    // Unpublishing removes the mirror: an answer the office took down must stop
+    // being quoted back to visitors.
+    await this.knowledgeSync.syncFaq(faq);
     return faq;
   }
 
@@ -60,6 +67,7 @@ export class FaqService {
     await this.findOneAdmin(id);
     await this.prisma.faqItem.delete({ where: { id } });
     await this.invalidate();
+    await this.knowledgeSync.removeFaq(id);
   }
 
   private async invalidate(): Promise<void> {

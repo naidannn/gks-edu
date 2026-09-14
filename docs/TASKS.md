@@ -188,34 +188,15 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2A-01` | `vector` модулийг `ai/knowledge` болгож, `Document`/`DocumentChunk`-ийг `KnowledgeDocument`/`KnowledgeChunk` болгон өргөтгөх: `kind`, `category`, `accessLevel`, `status`, `universityId`, `serviceType`, `validUntil`, `sourceFile`, `sourceRef`, `contentHash`, `indexedAt`, `indexError`; chunk дээр `heading`, `tokenCount`, `accessLevel`, `tsv` (generated) + GIN | todo | M | — |
-| `2A-02` | Жинхэнэ embedding — `EmbeddingService`-ийг `gemini-embedding-001` (`outputDimensionality` 1536) дээр; batch 32, retry, mock; `vector(1536)` хэвээр | todo | M | 2A-01 |
-| `2A-03` | Файл задлах: DOCX (mammoth), PDF (pdf-parse), MD/TXT → текст + гарчгийн мод; `StorageService`-д ерөнхий prefix (`knowledge/`) — одоо `cases/{caseId}/`-д хатуу (1K-11-тэй нэг ажил) | todo | M | 2A-01 |
-| `2A-04` | Chunking: гарчигт мэдрэмжтэй (`H1 > H2 > H3` зам `heading`-д), 300–500 токен, 15% давхцал, хүснэгт таслахгүй; монгол кирилл тест | todo | M | 2A-03 |
-| `2A-05` | BullMQ `ai-ingest`: extract → hash (өөрчлөгдөөгүй бол зогсох) → chunk → embed → upsert нэг гүйлгээнд; алдаа мөрөнд, 3 оролдлого; "дахин индексжүүлэх" = hash тэглэх | todo | M | 2A-02, 2A-04 |
-| `2A-06` | Hybrid хайлт: pgvector cosine + `tsv` (`simple`) + pg_trgm, RRF (k=60), universityId/category boost; `accessLevel = ANY(...)`, `status`, `validUntil` шүүлтүүр SQL `WHERE`-д; `minSimilarity` босго | todo | L | 2A-05 |
-| `2A-07` | `FaqItem`, нийтлэгдсэн `Post` автоматаар индексжих (create/update/delete → ingest job, `sourceRef`-ээр давхардуулахгүй) | todo | S | 2A-05 |
-| `2A-08` | Хариултын карт (`kind=ENTRY`): асуулт + баталгаат хариулт, ажилтан бичнэ; ингестийн адил зам | todo | S | 2A-05 |
-| `2A-09` | Борлуулалтын заавар (`kind=PLAYBOOK`, INTERNAL): system prompt-д зан төлөвийн заавар болж орно, хэзээ ч ишлэгдэхгүй, хэрэглэгчид гарахгүй | todo | S | 2A-05 |
-| `2A-10` | Эрхийн түвшний тест: 4 түвшин × 4 хэрэглэгч матриц — дээд түвшний chunk SQL-ээс хэзээ ч буцахгүй; `resolveAccessLevel` (CONTRACTED = идэвхтэй `Contract`) нэгж тест | todo | M | 2A-06 |
 | `2A-11` | Эхний контент: 20–30 баримт + 50 хариултын карт (бизнес талаас); "тоо файлд бичихгүй" дүрмээр | todo | M | 2A-08 |
 
 ### 2B — Хариулт хөдөлгүүр
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2B-01` | `LlmService` провайдерийн давхарга: Gemini + DeepSeek, стрийм, tool calling, usage; 429/5xx → `fallbackModel` нэг удаа; `GeminiService`/`DeepseekService` энэ дээр суух (`generateJson` хэвээр) | todo | L | — |
-| `2B-02` | `AiAssistantConfig` singleton (`AdmissionConfig` загвар) + `/admin/ai/config` API: enabled, загварууд, temperature, topK, minSimilarity, сессийн/өдрийн токен тааз, greeting, persona, capture дүрэм, ctaRules, handoffHours | todo | S | — |
-| `2B-03` | Prisma: `ChatSession`, `ChatMessage`, `ChatFeedback`, `KnowledgeGap`; `Lead.aiQualification`, `Conversation.chatSessionId` | todo | M | — |
-| `2B-04` | Нэг ээлжийн orchestrator: түвшин → хязгаар → түүх (12 мессеж + өнхрөх хураангуй) → асуулт дахин бичих → урьдчилсан hybrid хайлт (top-8) → LLM + tools (≤4 давталт) → стрийм → ишлэл задлах → хадгалах | todo | L | 2A-06, 2B-01, 2B-03 |
-| `2B-05` | System prompt давхаргууд (`policy.prompt.ts`, `prompt.builder.ts`): персона, бодлого (тоо зөвхөн tool-оос, мэдэхгүй бол хэл, ишлэл заавал, сургуулийн deadline хэзээ ч бүү хэл, монголоор хариул), түвшин, өнөөдрийн огноо/ханш, профайл, кабинет, playbook | todo | M | 2B-04 |
-| `2B-06` | Tool registry + zod схем `packages/shared/src/schemas/ai-tools.ts`: `search_universities`, `get_university`, `search_programs` (улирлын төлбөр + "жилд ×2" шошго), `get_intake_deadlines` (зөвхөн `internalDeadline`), `get_service_pricing`, `get_fx_rate`, `search_knowledge`; `gksRank/gksScore`, `tuitionYear` гарахгүй | todo | L | 2B-04 |
 | `2B-07` | `build_study_plan` (`StudyPlanService.build`) ба `check_gks_eligibility` (`GksEligibilityService.check`) tool-ууд — хуудастай яг ижил хариулт, карт болж гарна *(хуучин 1J-12, 1L-10)* | todo | M | 2B-06 |
-| `2B-08` | Хамгаалалт (`guard.service.ts`): INTERNAL/CONTRACTED chunk-ын 8-gram давхцал → хаяж дахин үүсгэх; ₮/₩/$/огноо/хувь ишлэлгүй бол `grounded=false` + "зөвлөхөөр баталгаажуулна уу" мөр; оролт 2000 тэмдэгт, HTML цэвэрлэх; tool үр дүн хашилтад | todo | M | 2B-04 |
-| `2B-09` | SSE стрийм endpoint (`@Public`, зочны 128-бит сесс token, Throttler IP 30/10мин + сесс 20/10мин): `token/tool/card/sources/suggestions/action/done/error`; 25 сек heartbeat | todo | M | 2B-04 |
 | `2B-10` | Semantic cache (Redis): PUBLIC, профайлгүй, tool-гүй хариулт нормчилсон асуултаар 24 цаг; мэдлэгийн сан/persona өөрчлөгдөхөд цэвэрлэх | todo | S | 2B-04 |
 | `2B-11` | BullMQ `ai-post-turn`: intent таг, профайл extraction (загвар мартсан бол), `KnowledgeGap` илрүүлэх/нэгтгэх (embedding ≥ 0.9), өртөг тооцох, 6 мессеж тутам хураангуй, сэжимийн чанар (2C-07) | todo | M | 2B-04 |
-| `2B-12` | Өртгийн хяналт: сессийн/өдрийн токен тааз, kill switch, давсан үед `error{fallback}` → виджет мессенжер/зөвлөгөөний форм руу; Slack сэрэмжлүүлэг 80%/100% | todo | S | 2B-02, 2B-11 |
 
 ### 2C — Чат UI ба борлуулалтын гогцоо
 
@@ -248,7 +229,6 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `2E-01` | `/admin/ai/knowledge`: жагсаалт (төрөл, түвшин, ангилал, сургууль, статус, chunk тоо, индексжсэн огноо, алдаа, `validUntil` хуучирсан туг), upload, засах, дахин индексжүүлэх, chunk урьдчилан харах, "Хайлт турших"; навигацид "AI туслах"; `@Audit` | todo | L | 2A-05 |
 | `2E-02` | `/admin/ai/entries`: хариултын карт CRUD | todo | S | 2A-08 |
 | `2E-03` | `/admin/ai/gaps`: цоорхойн дараалал (асуулт, давтамж, сүүлд хэзээ, статус) → "Хариулт бичих" → `ENTRY` карт индексжиж gap `ANSWERED`; долоо хоногийн тайланд шинэ/хаагдсан | todo | M | 2B-11, 2E-02 |
 | `2E-04` | `/admin/ai/sessions`: жагсаалт (огноо, суваг, түвшин, мессеж, профайл, outcome, сэжим/хэрэг линк, өртөг, 👍/👎) + нэг сессийн бүтэн транскрипт tool дуудлага, ишлэлтэй | todo | M | 2B-03 |

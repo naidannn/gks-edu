@@ -58,9 +58,12 @@ Do not restate that here; extend it when infrastructure changes.
 3. **Every route is guarded by default** (`JwtAuthGuard` is global). Public endpoints need
    `@Public()`. Role checks use `@Roles(Role.ADMIN)` + `RolesGuard`.
 4. **`embedding` columns are `Unsupported("vector(1536)")`** — untouchable through the typed
-   client. All vector SQL lives in `vector.service.ts`.
-5. **`EmbeddingService` is a hash-based stub.** It has no semantics. Replace it before any
-   RAG task is called "done"; keep `EMBEDDING_DIMENSIONS` in sync with the `vector(N)` column.
+   client. Every query that reads or writes one is raw SQL in `modules/ai/knowledge`.
+5. **`EmbeddingService` is `gemini-embedding-001` at 1536 dimensions.** With no
+   `GEMINI_API_KEY` it falls back to a deterministic hash vector so the pipeline runs in dev —
+   that vector has no semantics, so any search or eval result measured without a key is
+   meaningless. `EMBEDDING_DIMENSIONS`, the `vector(N)` column and the model's
+   `outputDimensionality` are one number; changing it re-embeds every chunk.
 6. **One `.env` at the repo root** serves the whole workspace.
 7. **New native dependency?** add it to `allowBuilds` in `pnpm-workspace.yaml` or
    `pnpm install` fails.

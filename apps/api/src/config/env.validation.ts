@@ -59,6 +59,15 @@ class EnvironmentVariables {
   @IsOptional()
   GEMINI_MODEL?: string;
 
+  /** 2A-02 — the knowledge base's embedder. Changing it re-embeds everything. */
+  @IsString()
+  @IsOptional()
+  GEMINI_EMBEDDING_MODEL?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_EMBEDDING_TIMEOUT_MS?: string;
+
   @IsString()
   @IsOptional()
   GEMINI_BASE_URL?: string;
@@ -212,6 +221,28 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   SUPABASE_STORAGE_BUCKET?: string;
+
+  /** Required when STORAGE_DRIVER=s3 — see the cross-check below. */
+  @IsString()
+  @IsOptional()
+  S3_BUCKET?: string;
+
+  @IsString()
+  @IsOptional()
+  AWS_REGION?: string;
+
+  @IsString()
+  @IsOptional()
+  AWS_ACCESS_KEY_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  AWS_SECRET_ACCESS_KEY?: string;
+
+  /** S3-compatible stores only (MinIO, R2); leave unset for real AWS. */
+  @IsString()
+  @IsOptional()
+  S3_ENDPOINT?: string;
 }
 
 /**
@@ -227,6 +258,14 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
       .map((error) => Object.values(error.constraints ?? {}).join(', '))
       .join('\n  - ');
     throw new Error(`Invalid environment configuration:\n  - ${details}`);
+  }
+
+  // A bucket name is the one S3 setting with no sane default: without it the
+  // app boots happily and fails on the first upload, after a client has already
+  // chosen a file. Credentials are not checked here — an EC2 instance role
+  // supplies them without any env var.
+  if (config.STORAGE_DRIVER === 's3' && !String(config.S3_BUCKET ?? '').trim()) {
+    throw new Error('Invalid environment configuration:\n  - S3_BUCKET is required when STORAGE_DRIVER=s3');
   }
 
   return config;

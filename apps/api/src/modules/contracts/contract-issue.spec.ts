@@ -207,6 +207,52 @@ describe('ContractsService.registerPhysical — a paper contract is registered o
   });
 });
 
+describe('ContractsService.changeType — the wrong button is not a dead end (1C-39)', () => {
+  it('turns an unsigned electronic contract into a paper one, ready to register', async () => {
+    const { service, update } = signingHarness(ContractStatus.SENT, ContractType.ELECTRONIC);
+
+    await service.changeType('contract-1', ContractType.PHYSICAL);
+
+    // DRAFT, because `registerPhysical` registers a paper contract out of
+    // DRAFT and nothing else.
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'contract-1' },
+      data: {
+        type: ContractType.PHYSICAL,
+        status: ContractStatus.DRAFT,
+        sentAt: null,
+        acceptedAt: null,
+        otpVerifiedAt: null,
+      },
+    });
+  });
+
+  it('drops the acceptance when the route changes', async () => {
+    // The harness's contract is already accepted; leaving that behind would
+    // walk the client into the OTP step of a contract now signed on paper.
+    const { service, update } = signingHarness(ContractStatus.SENT, ContractType.ELECTRONIC);
+
+    await service.changeType('contract-1', ContractType.PHYSICAL);
+
+    expect(update.mock.calls[0]![0].data.acceptedAt).toBeNull();
+  });
+
+  it('refuses to re-route a contract two people have signed', async () => {
+    const { service, update } = signingHarness(ContractStatus.SIGNED, ContractType.PHYSICAL);
+
+    await expect(service.changeType('contract-1', ContractType.ELECTRONIC)).rejects.toThrow(BadRequestException);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('writes nothing when the type already is what was asked for', async () => {
+    const { service, update } = signingHarness(ContractStatus.DRAFT, ContractType.PHYSICAL);
+
+    await service.changeType('contract-1', ContractType.PHYSICAL);
+
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
 describe('ContractsService.accept — no fresh OTP for a contract already in force (1N-12)', () => {
   it('refuses an ACTIVE electronic contract', async () => {
     const { service } = signingHarness(ContractStatus.ACTIVE, ContractType.ELECTRONIC);
