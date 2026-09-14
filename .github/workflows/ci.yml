@@ -29,11 +29,15 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      # These three are pinned to the majors that run on Node 24. The v4 line
+      # still worked, but the runner forced it onto Node 24 anyway and warned
+      # about it on every run; a version that declares node24 is the same
+      # execution without the deprecation notice.
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
