@@ -102,11 +102,19 @@ describe('ANNUAL_TUITION_SQL (1N-30)', () => {
   it('coalesces onto the per-term price, scaled by the level', () => {
     expect(ANNUAL_TUITION_SQL.sql.replace(/\s+/g, ' ')).toBe(
       'COALESCE( p."tuitionPerYearKrw", p."tuitionPerTermKrw" * CASE p."level" ' +
-        "WHEN 'LANGUAGE_PREP' THEN ? ELSE ? END )",
+        `WHEN 'LANGUAGE_PREP' THEN ${TERMS_PER_YEAR[ProgramLevel.LANGUAGE_PREP]} ` +
+        `ELSE ${TERMS_PER_YEAR[ProgramLevel.BACHELOR]} END )`,
     );
-    expect(ANNUAL_TUITION_SQL.values).toEqual([
-      TERMS_PER_YEAR[ProgramLevel.LANGUAGE_PREP],
-      TERMS_PER_YEAR[ProgramLevel.BACHELOR],
-    ]);
+  });
+
+  /**
+   * The multipliers must be written into the statement, not bound. Bound, they
+   * arrive beside nothing Postgres can infer a type from, come through as
+   * `text`, and every query using this expression fails with
+   * `42883 operator does not exist: integer * text` — which is what took the
+   * ranking screen and the programme facets down in production.
+   */
+  it('binds no parameters', () => {
+    expect(ANNUAL_TUITION_SQL.values).toEqual([]);
   });
 });

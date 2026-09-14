@@ -55,14 +55,27 @@ export function annualTuitionKrw(program: {
 /**
  * The same expression in SQL, for the aggregates Prisma cannot express. Assumes
  * the programme table is aliased `p`.
+ *
+ * The terms-per-year figures are written into the statement rather than bound.
+ * A bound parameter here has no type Postgres can infer — the only thing beside
+ * it is the `CASE` arm it shares — so the driver hands it over as `text` and the
+ * whole query dies with `42883 operator does not exist: integer * text`. They
+ * are compile-time constants from `TERMS_PER_YEAR`, never user input, so
+ * inlining them is safe and lets the planner see the number (CLAUDE.md).
  */
 export const ANNUAL_TUITION_SQL = Prisma.sql`COALESCE(
   p."tuitionPerYearKrw",
   p."tuitionPerTermKrw" * CASE p."level"
-    WHEN 'LANGUAGE_PREP' THEN ${TERMS_PER_YEAR.LANGUAGE_PREP}
-    ELSE ${TERMS_PER_YEAR.BACHELOR}
+    WHEN 'LANGUAGE_PREP' THEN ${sqlInt(TERMS_PER_YEAR[ProgramLevel.LANGUAGE_PREP])}
+    ELSE ${sqlInt(TERMS_PER_YEAR[ProgramLevel.BACHELOR])}
   END
 )`;
+
+/** Writes a whole number straight into the statement — refuses anything else. */
+function sqlInt(value: number): Prisma.Sql {
+  if (!Number.isInteger(value)) throw new Error(`Not an integer: ${value}`);
+  return Prisma.raw(String(value));
+}
 
 /**
  * A budget filter over the derived figure, as a `where` clause.
