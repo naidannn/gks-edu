@@ -9,6 +9,8 @@ import {
   ChatSessionStatus,
   Prisma,
   type ChatSession,
+  type FeedbackReason,
+  type FeedbackValue,
 } from '../../../prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import type { LlmMessage } from '../llm/llm.types.js';
@@ -200,6 +202,83 @@ export class ChatSessionService {
         createdAt: true,
         feedback: { select: { value: true, reason: true, comment: true } },
       },
+    });
+  }
+
+  /**
+   * The transcript as the widget reads it back after a reload (2C-01).
+   *
+   * Deliberately not `transcript()`. That one is the admin viewer's, and it
+   * carries which model answered, what the turn cost in tokens and how long it
+   * took — operational figures that belong to the office, not to the visitor
+   * whose question they describe. `toolCalls` is left out for the same reason:
+   * the arguments the model chose are a debugging artefact, and they can quote
+   * the question back in a form nobody expected to be shown.
+   *
+   * What does come back is what the conversation looked like: the words, the
+   * cards beside them, the citations under them, and whether a thumb has
+   * already been given so the buttons render in the right state.
+   */
+  async publicTranscript(sessionId: string) {
+    const rows = await this.prisma.chatMessage.findMany({
+      where: { sessionId, role: { in: [ChatRole.USER, ChatRole.ASSISTANT] } },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        role: true,
+        content: true,
+        citations: true,
+        cards: true,
+        grounded: true,
+        createdAt: true,
+        feedback: { select: { value: true, reason: true } },
+      },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      role: row.role,
+      content: row.content,
+      sources: Array.isArray(row.citations) ? row.citations : [],
+      cards: Array.isArray(row.cards) ? row.cards : [],
+      grounded: row.grounded,
+      feedback: row.feedback,
+      createdAt: row.createdAt,
+    }));
+  }
+
+  /**
+   * Records a thumb on one answer (2C-11).
+   *
+   * The message has to belong to the session the caller proved they own —
+   * otherwise a known message id is enough to vote on somebody else's
+   * conversation, and the quality signal the office reads becomes noise anyone
+   * can write. An upsert, because changing your mind is not a second opinion.
+   */
+  async recordFeedback(params: {
+    sessionId: string;
+    messageId: string;
+    value: FeedbackValue;
+    reason?: FeedbackReason | null;
+    comment?: string | null;
+  }) {
+    const message = await this.prisma.chatMessage.findFirst({
+      where: { id: params.messageId, sessionId: params.sessionId, role: ChatRole.ASSISTANT },
+      select: { id: true },
+    });
+    if (!message) throw new NotFoundException('Энэ яриан дотор ийм хариулт алга');
+
+    const data = {
+      value: params.value,
+      reason: params.reason ?? null,
+      comment: params.comment?.trim() || null,
+    };
+
+    return this.prisma.chatFeedback.upsert({
+      where: { messageId: message.id },
+      create: { messageId: message.id, ...data },
+      update: data,
+      select: { value: true, reason: true },
     });
   }
 

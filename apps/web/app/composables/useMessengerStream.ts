@@ -1,4 +1,5 @@
 import type { MessengerStreamEvent, UnreadSummary } from '@gks/shared';
+import { createSseParser } from '~/utils/sse';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -109,7 +110,10 @@ export function useMessengerStream() {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
+    // The framing itself lives in `~/utils/sse`, shared with the assistant's
+    // stream (2C-01) — both read a POST/bearer response by hand, and a chunk
+    // boundary lands mid-frame for both of them.
+    const parser = createSseParser();
 
     for (;;) {
       const { done, value } = await reader.read();
@@ -118,27 +122,14 @@ export function useMessengerStream() {
       // Any traffic at all counts, heartbeat frames included: what the
       // watchdog watches for is silence, not for messages.
       runtime.value.lastEventAt = Date.now();
-      buffer += decoder.decode(value, { stream: true });
 
-      // SSE frames are separated by a blank line. Anything after the last one
-      // is a partial frame and stays in the buffer for the next chunk.
-      let boundary = buffer.indexOf('\n\n');
-      while (boundary !== -1) {
-        handleFrame(buffer.slice(0, boundary));
-        buffer = buffer.slice(boundary + 2);
-        boundary = buffer.indexOf('\n\n');
+      for (const frame of parser.push(decoder.decode(value, { stream: true }))) {
+        handleFrame(frame.data);
       }
     }
   }
 
-  function handleFrame(frame: string): void {
-    const data = frame
-      .split('\n')
-      .filter((line) => line.startsWith('data:'))
-      .map((line) => line.slice(5).trimStart())
-      .join('\n');
-    if (!data) return;
-
+  function handleFrame(data: string): void {
     try {
       const event = JSON.parse(data) as MessengerStreamEvent;
       if (event.type === 'ping') return;

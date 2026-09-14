@@ -9,6 +9,7 @@ import type {
   AccessLevel,
   AccreditationGrade,
   AgentContractStatus,
+  AiFeedbackReason,
   BannerPlacement,
   ApplicationDecision,
   ApplicationStatus,
@@ -932,4 +933,18 @@ export const SEARCH_LEG_LABELS: Record<'semantic' | 'lexical' | 'trigram', strin
   semantic: 'Утга',
   lexical: 'Үг',
   trigram: 'Бичлэг',
+};
+
+/**
+ * Why an answer earned a 👎 (2C-11).
+ *
+ * The order is the order the buttons appear in, and it is deliberate: the two
+ * that name a fixable defect come first, because a visitor picks the first
+ * plausible option and the ones worth acting on should be the plausible ones.
+ */
+export const AI_FEEDBACK_REASON_LABELS: Record<AiFeedbackReason, string> = {
+  WRONG: 'Буруу мэдээлэл',
+  INCOMPLETE: 'Дутуу хариулсан',
+  IRRELEVANT: 'Асуултад хамаагүй',
+  OTHER: 'Бусад',
 };

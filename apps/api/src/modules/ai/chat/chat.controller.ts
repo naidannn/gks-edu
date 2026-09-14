@@ -18,7 +18,7 @@ import { AccessLevelService } from '../access-level.js';
 import { AiConfigService } from '../ai-config.service.js';
 import { ChatSessionService } from './chat-session.service.js';
 import { OptionalUserService } from './optional-user.service.js';
-import { SendChatMessageDto, StartChatSessionDto } from './dto/chat.dto.js';
+import { ChatFeedbackDto, SendChatMessageDto, StartChatSessionDto } from './dto/chat.dto.js';
 import { TurnOrchestrator, type TurnEvent } from './turn.orchestrator.js';
 
 /** nginx closes an idle upstream at `proxy_read_timeout`; a comment keeps it awake. */
@@ -48,6 +48,23 @@ export class ChatController {
     private readonly aiConfig: AiConfigService,
     private readonly optionalUser: OptionalUserService,
   ) {}
+
+  /**
+   * Whether there is an assistant to talk to (2C-02).
+   *
+   * The widget asks this before it draws anything. Without it the only way to
+   * learn the switch is off is to try to start a conversation and be refused,
+   * which means a launcher button that appears, is pressed, and apologises —
+   * worse than no button. One indexed-free read, behind the config service's
+   * own 30-second memo, so a page view costs nothing.
+   */
+  @Get('status')
+  @Public()
+  @ApiOperation({ summary: 'Whether the assistant is switched on' })
+  async status() {
+    const config = await this.aiConfig.get();
+    return { enabled: config.enabled, greeting: config.enabled ? config.greeting : null };
+  }
 
   @Post('sessions')
   @Public()
@@ -103,8 +120,42 @@ export class ChatController {
     return {
       sessionId: session.id,
       status: session.status,
-      messages: await this.sessions.transcript(session.id),
+      messages: await this.sessions.publicTranscript(session.id),
     };
+  }
+
+  /**
+   * 👍/👎 on one answer (2C-11).
+   *
+   * Authorised through the session, not the message: the caller proves they own
+   * the conversation, and `recordFeedback` then checks the message is in it. A
+   * message id alone must not be enough to vote, or the signal the office reads
+   * to find its worst answers becomes something anyone can write.
+   */
+  @Post('sessions/:id/messages/:messageId/feedback')
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 600_000 } })
+  @ApiOperation({ summary: 'Rate one answer' })
+  async feedback(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+    @Body() dto: ChatFeedbackDto,
+    @Req() request: Request,
+  ) {
+    const user = await this.optionalUser.resolve(request);
+    const session = await this.sessions.authorise({
+      sessionId: id,
+      token: OptionalUserService.chatToken(request),
+      userId: user?.id ?? null,
+    });
+
+    return this.sessions.recordFeedback({
+      sessionId: session.id,
+      messageId,
+      value: dto.value,
+      reason: dto.reason ?? null,
+      comment: dto.comment ?? null,
+    });
   }
 
   /**

@@ -154,6 +154,11 @@ async function onLogout() {
         <span class="gks-portal__tab-label">{{ item.short }}</span>
       </NuxtLink>
     </nav>
+
+    <!-- The cabinet's own assistant (2C-02). A signed-in caller is recognised
+         on every turn, so the same widget answers from their case rather than
+         in general — and `PORTAL` is what tells the two apart in the reports. -->
+    <AiChatWidget channel="PORTAL" />
   </div>
 </template>
 
