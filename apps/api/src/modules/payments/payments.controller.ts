@@ -86,6 +86,14 @@ export class PaymentsController {
     return this.payments.refund(id, user.id);
   }
 
+  /**
+   * QPay v2 calls this with GET, not POST — the first real payment through the
+   * live merchant answered a 404 and was only credited eight seconds later by
+   * the polling fallback. Both verbs are accepted because QPay's own docs and
+   * its behaviour disagree, and the handler does not care: it reads nothing
+   * from the request but the id, and re-verifies that against QPay anyway.
+   */
+  @Get('payments/qpay/webhook')
   @Post('payments/qpay/webhook')
   @Public()
   @ApiOperation({ summary: 'QPay callback (1C-13) — re-verified against QPay before crediting anything' })
