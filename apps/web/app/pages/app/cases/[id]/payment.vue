@@ -11,8 +11,18 @@ const errorMsg = ref<string | null>(null);
 const meta = useMetaTracking();
 
 const payments = computed(() => gksCase.value?.payments ?? []);
+/**
+ * The live row for a debt, mirroring the server's `LIVE_STATUSES`: an EXPIRED,
+ * FAILED or REFUNDED row is history. Reading those as "the payment" left the
+ * card showing a dead invoice with no way past it — the QR block wants PENDING
+ * and the "төлөх" button only renders when there is no live payment at all, so
+ * a client whose invoice timed out could never ask for a second one. The API
+ * would have issued one: `openPayment` ignores those statuses too.
+ */
 function latest(kind: PaymentKind): PaymentItem | undefined {
-  return payments.value.filter((p) => p.kind === kind).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  return payments.value
+    .filter((p) => p.kind === kind && (p.status === 'PENDING' || p.status === 'PAID'))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 const prepayment = computed(() => latest('PREPAYMENT'));
 /** QPay invoices only exist once the contract is signed (1C-12 guards this too). */
@@ -22,12 +32,19 @@ const balance = computed(() => latest('BALANCE'));
 const pendingPayment = computed(() => payments.value.find((p) => p.status === 'PENDING'));
 
 const creating = ref<PaymentKind | null>(null);
-async function create(kind: PaymentKind) {
+/**
+ * `reissue` is the same call with the old QR taken down first (1C-38). An
+ * invoice now lives a day, so the client who cannot use the one on screen —
+ * a tab left open since yesterday, a phone that will not read the image — asks
+ * for another one here instead of waiting the day out.
+ */
+async function create(kind: PaymentKind, mode: 'create' | 'reissue' = 'create') {
   if (!gksCase.value) return;
   errorMsg.value = null;
   creating.value = kind;
   try {
-    const payment = await api.post<PaymentItem>(`/cases/${gksCase.value.id}/payments`, { kind });
+    const path = mode === 'reissue' ? 'payments/reissue' : 'payments';
+    const payment = await api.post<PaymentItem>(`/cases/${gksCase.value.id}/${path}`, { kind });
     await reload();
     // Both halves of this conversion key on the payment id, so neither side
     // has to tell the other anything — the API fires the same event when it
@@ -57,6 +74,17 @@ async function create(kind: PaymentKind) {
  * poll stops itself the moment it has an answer.
  */
 const POLL_INTERVAL_MS = 3_000;
+/**
+ * How long the invoice counts as "being paid right now" (1C-38).
+ *
+ * The QR lives a day, and three seconds apart for a day is 28,800 requests out
+ * of one forgotten tab. Somebody who is actually scanning answers within a
+ * minute or two, so the fast rate covers that and everything after it drops to
+ * a rate that costs nothing and still catches the payment made at lunch.
+ */
+const POLL_FAST_WINDOW_MS = 2 * 60 * 1000;
+const POLL_SLOW_INTERVAL_MS = 30_000;
+
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
 /** Bumped on every (re)start, so a tick from a superseded run does nothing. */
 let pollRun = 0;
@@ -67,7 +95,13 @@ function stopPolling(): void {
   pollTimer = undefined;
 }
 
-watch(pendingPayment, (payment) => {
+/** Measured from the invoice, not from the visit: a QR opened yesterday starts slow. */
+function pollDelay(createdAt: string): number {
+  const age = Date.now() - new Date(createdAt).getTime();
+  return age < POLL_FAST_WINDOW_MS ? POLL_INTERVAL_MS : POLL_SLOW_INTERVAL_MS;
+}
+
+watch(pendingPayment, (payment, _previous, onCleanup) => {
   stopPolling();
   if (!payment) return;
 
@@ -92,6 +126,12 @@ watch(pendingPayment, (payment) => {
 
   const tick = async () => {
     if (run !== pollRun) return;
+    // A hidden tab has nobody watching it change, and a QR left open overnight
+    // is exactly the tab that would otherwise ask all night.
+    if (typeof document !== 'undefined' && document.hidden) {
+      pollTimer = setTimeout(() => void tick(), POLL_SLOW_INTERVAL_MS);
+      return;
+    }
     try {
       const fresh = await api.get<{ status: string }>(`/payments/${payment.id}`);
       if (run !== pollRun) return;
@@ -105,10 +145,22 @@ watch(pendingPayment, (payment) => {
       // on screen and the next tick asks again.
     }
     if (run !== pollRun) return;
-    pollTimer = setTimeout(() => void tick(), POLL_INTERVAL_MS);
+    pollTimer = setTimeout(() => void tick(), pollDelay(payment.createdAt));
   };
 
-  pollTimer = setTimeout(() => void tick(), POLL_INTERVAL_MS);
+  // Coming back to the tab asks at once rather than waiting out the slow tick —
+  // the client has just paid on their phone and is looking at this screen.
+  if (typeof document !== 'undefined') {
+    const onVisible = () => {
+      if (run !== pollRun || document.hidden) return;
+      clearTimeout(pollTimer);
+      pollTimer = setTimeout(() => void tick(), 0);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    onCleanup(() => document.removeEventListener('visibilitychange', onVisible));
+  }
+
+  pollTimer = setTimeout(() => void tick(), pollDelay(payment.createdAt));
 }, { immediate: true });
 onBeforeUnmount(stopPolling);
 
@@ -143,6 +195,17 @@ onBeforeUnmount(stopPolling);
             <img v-if="prepayment.qrImage" :src="`data:image/png;base64,${prepayment.qrImage}`" alt="QPay QR" class="gks-payment__qr-img">
             <p v-else class="gks-payment__qr-text gks-tnum">{{ prepayment.qrText }}</p>
             <p class="gks-payment__hint">QPay апп-аар уншуулж төлнө үү. Төлбөр баталгаажмагц энэ хуудас автоматаар шинэчлэгдэнэ.</p>
+            <p v-if="prepayment.expiresAt" class="gks-payment__hint">
+              Энэ QR код <strong>{{ formatDayMonthTime(prepayment.expiresAt) }}</strong> хүртэл хүчинтэй.
+            </p>
+            <DsButton
+              variant="ghost"
+              size="sm"
+              :loading="creating === 'PREPAYMENT'"
+              @click="create('PREPAYMENT', 'reissue')"
+            >
+              Шинэ QR код авах
+            </DsButton>
           </div>
         </template>
         <DsButton v-else :loading="creating === 'PREPAYMENT'" @click="create('PREPAYMENT')">Урьдчилгаа төлөх</DsButton>
@@ -155,6 +218,12 @@ onBeforeUnmount(stopPolling);
           <div v-if="balance.status === 'PENDING'" class="gks-payment__qr">
             <img v-if="balance.qrImage" :src="`data:image/png;base64,${balance.qrImage}`" alt="QPay QR" class="gks-payment__qr-img">
             <p v-else class="gks-payment__qr-text gks-tnum">{{ balance.qrText }}</p>
+            <p v-if="balance.expiresAt" class="gks-payment__hint">
+              Энэ QR код <strong>{{ formatDayMonthTime(balance.expiresAt) }}</strong> хүртэл хүчинтэй.
+            </p>
+            <DsButton variant="ghost" size="sm" :loading="creating === 'BALANCE'" @click="create('BALANCE', 'reissue')">
+              Шинэ QR код авах
+            </DsButton>
           </div>
         </template>
         <DsButton v-else :loading="creating === 'BALANCE'" @click="create('BALANCE')">Үлдэгдэл төлөх</DsButton>

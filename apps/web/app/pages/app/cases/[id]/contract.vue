@@ -28,14 +28,40 @@ const accepting = ref(false);
 const sentTo = ref<string | null>(null);
 const email = computed(() => sentTo.value ?? overview.value?.account.email ?? null);
 
+/**
+ * A code is worth waiting a minute for before asking for another (1C-39).
+ *
+ * The endpoint allows five sends in five minutes, and a client who has not seen
+ * the mail arrive yet presses the button far faster than that: four impatient
+ * clicks spend the whole allowance and the fifth is refused. The wait is also
+ * the honest advice — a second code invalidates the first, so somebody who
+ * keeps pressing while the mail is in flight ends up typing a dead code.
+ */
+const RESEND_COOLDOWN_SECONDS = 60;
+const cooldown = ref(0);
+let cooldownTimer: ReturnType<typeof setInterval> | undefined;
+
+function startCooldown(): void {
+  clearInterval(cooldownTimer);
+  cooldown.value = RESEND_COOLDOWN_SECONDS;
+  cooldownTimer = setInterval(() => {
+    cooldown.value -= 1;
+    if (cooldown.value > 0) return;
+    clearInterval(cooldownTimer);
+    cooldownTimer = undefined;
+  }, 1000);
+}
+onBeforeUnmount(() => clearInterval(cooldownTimer));
+
 async function sendCode(): Promise<boolean> {
-  if (!contract.value) return false;
+  if (!contract.value || cooldown.value > 0) return false;
   errorMsg.value = null;
   noticeMsg.value = null;
   accepting.value = true;
   try {
     const { email: to } = await api.post<{ sent: boolean; email: string }>(`/contracts/${contract.value.id}/accept`);
     sentTo.value = to;
+    startCooldown();
     // Nothing on screen changes on a resend, so without this the button just
     // stops spinning and the client cannot tell whether anything happened.
     noticeMsg.value = `Шинэ код ${to} хаяг руу илгээлээ.`;
@@ -180,7 +206,9 @@ async function downloadPdf() {
           <DsButton variant="accent" :disabled="otpCode.length !== 6" :loading="verifying" @click="verify">
             Баталгаажуулах
           </DsButton>
-          <DsButton variant="ghost" size="sm" :loading="accepting" @click="sendCode">Код дахин илгээх</DsButton>
+          <DsButton variant="ghost" size="sm" :loading="accepting" :disabled="cooldown > 0" @click="sendCode">
+            {{ cooldown > 0 ? `Код дахин илгээх (${cooldown} сек)` : 'Код дахин илгээх' }}
+          </DsButton>
         </div>
       </DsCard>
 

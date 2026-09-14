@@ -12,7 +12,7 @@ import {
   ContractStatus,
   NotificationEvent,
   PaymentKind,
-  type PaymentMethod,
+  PaymentMethod,
   PaymentStatus,
   type Prisma,
   type ServiceType,
@@ -20,10 +20,11 @@ import {
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { StorageService } from '../../storage/storage.service.js';
 import {
+  QPAY_INVOICE_TTL_MS,
   QPAY_POLL_INTERVAL_MS,
   QPAY_POLL_LIMIT,
   QPAY_POLL_QUEUE,
-  QPAY_POLL_TIMEOUT_MS,
+  QPAY_POLL_WINDOW_MS,
 } from '../../queue/queue.constants.js';
 import { CasesService } from '../cases/cases.service.js';
 import { CASE_STAGE_LABELS } from '../cases/case-stage-labels.js';
@@ -75,8 +76,15 @@ export class PaymentsService {
 
   // ─── Creating an invoice (1C-12) ───────────────────────────────────────────
 
-  /** Self-service by design (gksedu.md §5.5: the user pays via QPay) — staff may also create one on a case they don't own. */
-  async createForCase(caseId: string, dto: CreatePaymentDto, actor: AuthenticatedUser) {
+  /**
+   * Self-service by design (gksedu.md §5.5: the user pays via QPay) — staff may
+   * also create one on a case they don't own.
+   *
+   * `keepDueAt` is passed only by `reissueForCase`: a replacement QR is the same
+   * debt, so it inherits the date the client is chased on rather than being
+   * given a fresh window (1C-38).
+   */
+  async createForCase(caseId: string, dto: CreatePaymentDto, actor: AuthenticatedUser, keepDueAt?: Date | null) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, include: { contract: true } });
     if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
     assertOwnerOrCrm(gksCase.userId, actor, 'Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
@@ -105,7 +113,7 @@ export class PaymentsService {
             kind: dto.kind,
             amountMnt,
             status: PaymentStatus.PENDING,
-            dueAt: await this.dueAtFor(gksCase.serviceType),
+            dueAt: keepDueAt ?? (await this.dueAtFor(gksCase.serviceType)),
           },
         });
       } catch (error) {
@@ -159,6 +167,49 @@ export class PaymentsService {
     });
 
     return this.forActor(updated, actor);
+  }
+
+  /**
+   * A second QR for a debt the client is already holding one for (1C-38).
+   *
+   * `createForCase` deliberately hands the *same* invoice back on a second
+   * press, which is right for a double click and wrong for everything else: a
+   * QR that has been sitting in a browser tab since yesterday, an invoice QPay
+   * has lost, a phone that will not read the image. The client had no way past
+   * that except to wait out the timeout, which is now a whole day — so the way
+   * past it is this, and it is theirs to press, not the office's to do for them.
+   *
+   * The old invoice is taken down at QPay before the new one is minted: two
+   * live QRs for one debt is exactly how §6.4's double payment happens.
+   */
+  async reissueForCase(caseId: string, dto: CreatePaymentDto, actor: AuthenticatedUser) {
+    const gksCase = await this.prisma.case.findUnique({ where: { id: caseId }, include: { contract: true } });
+    if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
+    assertOwnerOrCrm(gksCase.userId, actor, 'Энэ үйлчилгээнд төлбөр үүсгэх эрхгүй байна');
+    // Checked before anything is retired: a replacement that cannot be issued
+    // must not leave the client with one fewer invoice than they started with.
+    await this.assertReadyFor(gksCase, dto.kind);
+
+    const existing = await this.openPayment(caseId, dto.kind);
+    if (existing?.status === PaymentStatus.PAID) {
+      throw new BadRequestException(`${PAYMENT_KIND_LABELS[dto.kind]} аль хэдийн төлөгдсөн байна`);
+    }
+    // Money the office has already booked by hand (1C-27) is not a QR, and
+    // retiring that row would drop a payment record on the floor.
+    if (existing && existing.method !== PaymentMethod.QPAY) {
+      throw new BadRequestException(
+        `${PAYMENT_KIND_LABELS[dto.kind]}-ийг ажилтан гараар бүртгэсэн байна — хариуцсан зөвлөхтэйгээ холбогдоно уу`,
+      );
+    }
+
+    // The QR's life and the debt's deadline are two different clocks: `dueAt`
+    // is the date the reminder and the receivables report run on (1C-31), so it
+    // comes across unchanged. Recomputing it would hand the client a fresh week
+    // every time they asked for a new QR.
+    const keepDueAt = existing?.dueAt ?? null;
+    if (existing) await this.expireInvoice(existing);
+
+    return this.createForCase(caseId, dto, actor, keepDueAt);
   }
 
   /** The invoice as the caller may see it — the same narrowing `findOne` does (1N-04). */
@@ -336,11 +387,47 @@ export class PaymentsService {
       return;
     }
 
-    // The schedule has run out. A PENDING row holds the (caseId, kind) slot, so
+    // The invoice's day is up. A PENDING row holds the (caseId, kind) slot, so
     // leaving it there means the client can never be given a fresh QR — expire
     // it instead, and take QPay's copy of the invoice down with it (1N-09).
-    if (Date.now() - payment.createdAt.getTime() > QPAY_POLL_TIMEOUT_MS) {
+    if (Date.now() - payment.createdAt.getTime() > QPAY_INVOICE_TTL_MS) {
       await this.expireInvoice(payment);
+    }
+  }
+
+  /**
+   * The slow half of the polling fallback (1C-38).
+   *
+   * The per-invoice scheduler asks QPay every ten seconds for fifteen minutes —
+   * the window in which somebody is actually looking at the QR. An invoice now
+   * lives a full day, and the hours after that window belong here: every open
+   * invoice is re-checked on one pass, and the ones that have run out their day
+   * are retired. Rows still inside the fast window are skipped so the two tiers
+   * never ask QPay about the same invoice twice in the same breath.
+   *
+   * One invoice at a time, and one failure never ends the pass: this is the
+   * path that runs when QPay's callback did not arrive, so it has to survive
+   * QPay being unreliable — that is the thing it exists to compensate for.
+   */
+  async sweepOpenInvoices(): Promise<void> {
+    const open = await this.prisma.payment.findMany({
+      where: {
+        status: PaymentStatus.PENDING,
+        qpayInvoiceId: { not: null },
+        createdAt: { lt: new Date(Date.now() - QPAY_POLL_WINDOW_MS) },
+      },
+      select: { id: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    for (const invoice of open) {
+      try {
+        await this.pollOnce(invoice.id);
+      } catch (error) {
+        this.logger.warn(
+          `QPay нэхэмжлэх шалгах үед алдаа (${invoice.id}): ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
   }
 

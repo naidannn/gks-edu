@@ -8,7 +8,7 @@ import { ClientsService } from '../clients/clients.service.js';
 import { CLIENT_CONTRACT_SELECT, toClientContract } from '../contracts/client-contract.select.js';
 import { ContractsService } from '../contracts/contracts.service.js';
 import { CaseDocumentsService, type StageProgress } from '../documents/case-documents.service.js';
-import { CLIENT_PAYMENT_SELECT } from '../payments/client-payment.select.js';
+import { CLIENT_PAYMENT_SELECT, toClientPayment } from '../payments/client-payment.select.js';
 import { activePricingWhere } from '../pricing/active-pricing.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { StartMyCaseDto } from './dto/start-case.dto.js';
@@ -287,6 +287,9 @@ export class MeService {
       ...row,
       intake,
       contract: row.contract ? toClientContract(row.contract) : null,
+      // Already narrowed by `CASE_INCLUDE`; this adds the QR's own deadline to
+      // it (1C-38), which is the payment tab's answer to "how long have I got".
+      payments: row.payments.map(toClientPayment),
       journey,
       documents: { admission: admissionDocs, visa: visaDocs } satisfies Record<string, StageProgress>,
       nextAction: nextAction({

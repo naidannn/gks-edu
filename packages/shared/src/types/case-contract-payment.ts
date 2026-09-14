@@ -128,6 +128,13 @@ export interface PaymentItem {
   paidAt: string | null;
   /** When this invoice falls due — set from `ServicePricing.paymentDueDays` when it is raised. */
   dueAt: string | null;
+  /**
+   * When the QR itself stops working (1C-38) — a different clock from `dueAt`,
+   * which is the date the debt is chased on. Sent on client payloads only, and
+   * `null` on anything that is not a live QPay invoice; staff screens read
+   * `createdAt` instead.
+   */
+  expiresAt?: string | null;
   refundOfId: string | null;
   createdAt: string;
 }
