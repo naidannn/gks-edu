@@ -35,6 +35,28 @@ export class ReviewDocumentDto {
   note?: string;
 }
 
+/**
+ * Registering a paper handed over the office desk (1D-24).
+ *
+ * Deliberately not a status transition with a different name: the receipt is a
+ * fact of its own. The document may already be `ACCEPTED` from a scan when the
+ * original finally arrives, and one handed in across the desk may still fail
+ * review — so the endpoint stamps the receipt and only *then* decides whether
+ * the status has anywhere to move.
+ */
+export class ReceiveDocumentDto {
+  @ApiPropertyOptional({ description: 'Хэрэглэгчид харагдах тайлбар — юуг хэдэн хувь гардан авсан' })
+  @IsString()
+  @MaxLength(2000)
+  @IsOptional()
+  note?: string;
+
+  @ApiPropertyOptional({ description: 'Гардан авсан огноо. Хоцорч бүртгэж буй бол өнгөрсөн цаг; хоосон бол одоо' })
+  @IsDateString()
+  @IsOptional()
+  receivedAt?: string;
+}
+
 export class AddDocumentNoteDto {
   @ApiProperty()
   @IsString()

@@ -67,11 +67,23 @@ function onReview(documentId: string, action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN
 function onTransition(documentId: string, toStatus: DocumentStatus) {
   return act(() => api.post(`/case-documents/${documentId}/transitions`, { toStatus }));
 }
+/**
+ * 1D-24 — the paper crossed the desk. The API stamps the receipt and, when the
+ * row was still waiting for a submission, moves it into the review queue; the
+ * card then offers "Зөвшөөрөх" like any other submission.
+ */
+function onReceive(documentId: string, note: string) {
+  return act(() => api.post(`/case-documents/${documentId}/receive`, { note: note || undefined }));
+}
+
 function onSend(documentId: string, payload: { files: File[]; note: string }) {
   return act(async () => {
     if (payload.files.length) {
       const body = new FormData();
       for (const file of payload.files) body.append('files', file);
+      // "Эцсийн хувилбар" is the certified copy staff produced. A scan of the
+      // paper a client just brought in is not one — asking for it here left
+      // the row unsubmitted and unreviewable (1D-26); the API decides.
       await api.post(`/case-documents/${documentId}/files?isFinal=true`, body);
     }
     if (payload.note) await api.post(`/case-documents/${documentId}/notes`, { body: payload.note });
@@ -211,11 +223,14 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           :busy="busy"
           @review="(action, note) => onReview(document.id, action, note)"
           @transition="(status) => onTransition(document.id, status)"
+          @receive="(note) => onReceive(document.id, note)"
           @send="(payload) => onSend(document.id, payload)"
           @open="openFile"
         />
       </li>
     </ul>
+
+    <CrmOfficeVisit v-if="stage === 'ADMISSION'" :case-id="caseId" :busy="busy" @changed="load" />
   </div>
 </template>
 

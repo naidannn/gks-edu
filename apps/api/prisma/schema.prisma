@@ -82,6 +82,7 @@ model User {
 
   caseConditions      CaseConditions[]
   documentFiles       DocumentFile[]
+  receivedDocuments   CaseDocument[]       @relation("CaseDocumentReceiver")
   documentReviewNotes DocumentReviewNote[]
   assignedWorkTasks   WorkTask[]           @relation("WorkTaskAssignee")
   createdWorkTasks    WorkTask[]           @relation("WorkTaskCreator")
@@ -1760,6 +1761,12 @@ model CaseDocument {
   acceptedAt         DateTime?
   readyAt            DateTime?
   sentToUniversityAt DateTime?
+  /// The paper itself was handed over the desk (1D-24). Independent of
+  /// `status`: a scan may already have been accepted online and the original
+  /// only arrives later, and a paper handed in may still fail review.
+  receivedAt         DateTime?
+  receivedById       String?   @db.Uuid
+  receivedBy         User?     @relation("CaseDocumentReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
   /// Soft delete (ARCHITECTURE.md §9) — a de-required document is hidden, not erased.
   deletedAt          DateTime?
 

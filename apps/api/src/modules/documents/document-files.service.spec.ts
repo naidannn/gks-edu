@@ -100,3 +100,48 @@ describe('DocumentFilesService.upload — every buffer is judged before any is s
     expect(prisma.documentFile.findFirst).toHaveBeenCalledTimes(2);
   });
 });
+
+/**
+ * 1D-26 — both staff screens asked for `isFinal=true` on every upload, and
+ * `isFinal` skips the submission. So an officer scanning the paper a client
+ * had just handed over stored the file and left the row at "Эхлээгүй", where
+ * the card offers no review buttons: collected in the office, invisible here.
+ */
+describe('DocumentFilesService.upload — a scan of a paper just handed in is not the final copy (1D-26)', () => {
+  const STAFF = { id: 'staff-1', role: Role.DOC_OFFICER } as unknown as AuthenticatedUser;
+
+  it('submits the document even though staff asked for isFinal', async () => {
+    const { service, prisma, documents } = harness();
+
+    await service.upload('doc-1', [file('passport.pdf', PDF)], STAFF, { isFinal: true });
+
+    expect(documents.applyStatus).toHaveBeenCalledWith(
+      'doc-1',
+      DocumentStatus.NOT_STARTED,
+      DocumentStatus.SUBMITTED,
+      'staff-1',
+      null,
+    );
+    expect(prisma.documentFile.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ isFinal: false }) }),
+    );
+  });
+
+  it('still marks the certified copy final once the document is past review', async () => {
+    const { service, prisma, documents } = harness();
+    (prisma.caseDocument.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'doc-1',
+      status: DocumentStatus.IN_TRANSLATION,
+      deletedAt: null,
+      template: { code: 'PASSPORT', acceptedFileTypes: ['pdf'] },
+      case: { id: 'case-1', userId: 'student-1' },
+    });
+
+    await service.upload('doc-1', [file('translated.pdf', PDF)], STAFF, { isFinal: true });
+
+    expect(prisma.documentFile.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ isFinal: true }) }),
+    );
+    expect(documents.applyStatus).not.toHaveBeenCalled();
+  });
+});

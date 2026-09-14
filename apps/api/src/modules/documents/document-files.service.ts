@@ -7,14 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { softDeletePatch } from '../../prisma/soft-delete.js';
 import { StorageService } from '../../storage/storage.service.js';
 import { CaseDocumentsService } from './case-documents.service.js';
-
-/** Statuses from which a new upload means "here is my (re)submission" (§7.2). */
-const SUBMIT_FROM: readonly DocumentStatus[] = [
-  DocumentStatus.NOT_STARTED,
-  DocumentStatus.IN_PROGRESS,
-  DocumentStatus.NEEDS_FIX,
-  DocumentStatus.RESUBMIT_REQUIRED,
-];
+import { AWAITING_SUBMISSION } from './document-status.js';
 
 /** How many times a version collision is worth re-reading the high-water mark. */
 const VERSION_ATTEMPTS = 3;
@@ -50,8 +43,12 @@ export class DocumentFilesService {
     if (!doc || doc.deletedAt) throw new NotFoundException(`Материал ${caseDocumentId} олдсонгүй`);
     await this.documents.assertCaseAccess(doc.case.id, actor);
 
-    // `isFinal` marks the certified copy staff produced — never a client upload.
-    const isFinal = Boolean(options.isFinal) && isStaff(actor.role);
+    // `isFinal` marks the certified copy staff produced — never a client
+    // upload, and never a document still waiting to be handed in. The staff
+    // screens asked for `isFinal=true` unconditionally, so scanning a paper a
+    // client brought to the desk stored the file, skipped the submission and
+    // left the row at "Эхлээгүй" with no way to accept it (1D-26).
+    const isFinal = Boolean(options.isFinal) && isStaff(actor.role) && !AWAITING_SUBMISSION.includes(doc.status);
 
     // Every buffer is judged before a single byte is stored. Validating inside
     // the write loop meant a rejected second file left the first one in the
@@ -70,7 +67,7 @@ export class DocumentFilesService {
 
     // A client's upload advances the document; staff attaching a certified copy
     // must not silently reset a document they are mid-review on.
-    if (!isFinal && SUBMIT_FROM.includes(doc.status)) {
+    if (!isFinal && AWAITING_SUBMISSION.includes(doc.status)) {
       await this.documents.applyStatus(caseDocumentId, doc.status, DocumentStatus.SUBMITTED, actor.id, null);
     }
 

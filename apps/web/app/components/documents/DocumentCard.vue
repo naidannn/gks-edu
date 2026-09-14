@@ -17,6 +17,8 @@ const emit = defineEmits<{
   send: [payload: { files: File[]; note: string }];
   review: [action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string];
   transition: [status: DocumentStatus];
+  /** Staff registering the paper handed over the office desk (1D-24). */
+  receive: [note: string];
   open: [fileId: string];
 }>();
 
@@ -51,6 +53,24 @@ const canUpload = computed(() =>
   ['NOT_STARTED', 'IN_PROGRESS', 'NEEDS_FIX', 'RESUBMIT_REQUIRED'].includes(props.document.status) || props.mode === 'staff',
 );
 const canReview = computed(() => props.mode === 'staff' && ['SUBMITTED', 'UNDER_REVIEW'].includes(props.document.status));
+
+/**
+ * 1D-24 — a client standing at the desk with the paper in their hand.
+ *
+ * Offered for anything still awaiting a submission, not only for templates
+ * flagged "эх хувиар авчрах": people bring what they happen to have printed,
+ * and refusing to record it is how a document ends up collected in the office
+ * and "Эхлээгүй" in the system.
+ */
+const canReceive = computed(
+  () => props.mode === 'staff' && AWAITING_SUBMISSION.includes(props.document.status),
+);
+
+const receivedLabel = computed(() => {
+  if (!props.document.receivedAt) return null;
+  const who = props.document.receivedBy?.name;
+  return `Оффист хүлээн авсан · ${formatDayMonth(props.document.receivedAt)}${who ? ` · ${who}` : ''}`;
+});
 
 /** The next processing step staff can push an accepted document to (§7.2). */
 const nextSteps = computed<{ status: DocumentStatus; label: string }[]>(() => {
@@ -105,6 +125,11 @@ function send() {
   clientNote.value = '';
 }
 
+function receive() {
+  emit('receive', clientNote.value.trim());
+  clientNote.value = '';
+}
+
 function formatSize(bytes: number): string {
   return bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)}MB` : `${Math.ceil(bytes / 1024)}KB`;
 }
@@ -139,6 +164,9 @@ function formatSize(bytes: number): string {
       </span>
       <span v-if="document.files.length" class="gks-doc__chip">
         <DsIcon name="paperclip" :size="12" /> {{ document.files.length }} файл
+      </span>
+      <span v-if="receivedLabel" class="gks-doc__chip gks-doc__chip--received">
+        <DsIcon name="package-check" :size="12" /> {{ receivedLabel }}
       </span>
     </div>
 
@@ -193,6 +221,18 @@ function formatSize(bytes: number): string {
           </button>
         </li>
       </ul>
+
+      <!-- 1D-24: the paper crossed the desk. Recorded as its own fact, then the
+           row joins the review queue like any other submission. -->
+      <div v-if="canReceive" class="gks-doc__desk">
+        <div class="gks-doc__desk-text">
+          <DsIcon name="briefcase" :size="14" />
+          <span>Үйлчлүүлэгч биетээр авчирсан бол энд бүртгэнэ — материал шалгах дараалалд орно.</span>
+        </div>
+        <DsButton size="sm" variant="secondary" icon-left="package-check" :disabled="busy" @click="receive">
+          Оффист хүлээн авсан
+        </DsButton>
+      </div>
 
       <div v-if="canReview" class="gks-doc__review">
         <DsTextarea v-model="reviewNote" :rows="2" placeholder="Тайлбар — засвар хүсэх/буцаах үед заавал" />
@@ -256,6 +296,24 @@ function formatSize(bytes: number): string {
 </template>
 
 <style scoped>
+.gks-doc__chip--received { color: var(--success-fg); }
+.gks-doc__desk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3);
+  border: var(--border-hair) dashed var(--line-soft);
+  border-radius: var(--radius-2);
+}
+.gks-doc__desk-text {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+}
 .gks-doc {
   border: var(--border-hair) solid var(--line-soft);
   border-radius: var(--radius-2);

@@ -144,6 +144,9 @@ export interface CaseDocument {
   dueAt: string | null;
   submittedAt: string | null;
   acceptedAt: string | null;
+  /** The paper itself was handed over the office desk (1D-24) — not a status. */
+  receivedAt: string | null;
+  receivedBy?: { id: string; name: string | null } | null;
   template: DocumentTemplate;
   files: DocumentFile[];
   notes?: DocumentReviewNote[];
@@ -210,7 +213,38 @@ export interface OfficeAppointment {
 
 export interface OfficeAppointmentView {
   appointments: OfficeAppointment[];
-  physicalOriginals: { id: string; status: DocumentStatus; template: { id: string; code: string; nameMn: string } }[];
+  physicalOriginals: {
+    id: string;
+    status: DocumentStatus;
+    receivedAt: string | null;
+    template: { id: string; code: string; nameMn: string };
+  }[];
+}
+
+/**
+ * One row of the front-office day sheet (1D-25) — who is coming, for which
+ * case, and how many originals are still outstanding on it.
+ */
+export interface OfficeAppointmentRow extends OfficeAppointment {
+  outstandingOriginals: number;
+  case: {
+    id: string;
+    code: string;
+    serviceType: ServiceType;
+    user: { id: string; name: string | null; email: string | null; phone: string | null };
+  };
+}
+
+/** Registering a hand-in across the desk (1D-24). */
+export interface ReceiveDocumentInput {
+  note?: string;
+  receivedAt?: string;
+}
+
+export interface UpdateOfficeAppointmentInput {
+  scheduledAt?: string;
+  status?: AppointmentStatus;
+  note?: string;
 }
 
 /** Short-lived signed download token minted by the API (§9). */

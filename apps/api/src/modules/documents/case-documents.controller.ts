@@ -33,11 +33,16 @@ import {
   CreateCaseDocumentDto,
   QueryCaseDocumentsDto,
   QueryDueDocumentsDto,
+  ReceiveDocumentDto,
   ReviewDocumentDto,
   TransitionDocumentDto,
   UpdateCaseDocumentDto,
 } from './dto/case-document.dto.js';
-import { CreateOfficeAppointmentDto, UpdateOfficeAppointmentDto } from './dto/office-appointment.dto.js';
+import {
+  CreateOfficeAppointmentDto,
+  QueryOfficeAppointmentsDto,
+  UpdateOfficeAppointmentDto,
+} from './dto/office-appointment.dto.js';
 import { OfficeAppointmentsService } from './office-appointments.service.js';
 import { RequirementsService } from './requirements.service.js';
 
@@ -219,6 +224,13 @@ export class DocumentActionsController {
     return this.documents.review(id, dto, user);
   }
 
+  @Post('case-documents/:id/receive')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Материалыг оффист биетээр гардан авсныг бүртгэх (1D-24)' })
+  receive(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReceiveDocumentDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.documents.receive(id, dto, user);
+  }
+
   @Post('case-documents/:id/notes')
   @ApiOperation({ summary: 'Add a comment to a document (1D-15)' })
   addNote(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AddDocumentNoteDto, @CurrentUser() user: AuthenticatedUser) {
@@ -248,6 +260,13 @@ export class DocumentActionsController {
   @ApiOperation({ summary: 'Withdraw an uploaded version (soft delete, §9)' })
   removeFile(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.files.remove(id, user);
+  }
+
+  @Get('office-appointments')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Оффист ирэхээр товлосон бүх уулзалт — ажилтны өдрийн хуудас (1D-25)' })
+  deskSheet(@Query() query: QueryOfficeAppointmentsDto) {
+    return this.appointments.findUpcoming(query);
   }
 
   @Patch('office-appointments/:id')

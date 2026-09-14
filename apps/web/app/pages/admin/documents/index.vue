@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import type { CaseDocument, DocStage, DocumentStatus, PaginatedResult, ReviewQueueItem, SignedFile } from '@gks/shared';
+import type {
+  CaseDocument,
+  DocStage,
+  DocumentStatus,
+  OfficeAppointmentRow,
+  PaginatedResult,
+  ReviewQueueItem,
+  SignedFile,
+} from '@gks/shared';
 
 /**
  * 1D-16 — the review workspace. A queue on the left (oldest submission first,
@@ -26,6 +34,8 @@ const page = ref(1);
 
 const data = ref<Paginated | null>(null);
 const upcoming = ref<ReviewQueueItem[]>([]);
+/** Who is walking through the door, and with how much still to hand over (1D-25). */
+const visits = ref<OfficeAppointmentRow[]>([]);
 const selectedId = ref<string | null>(null);
 const selected = ref<CaseDocument | null>(null);
 const pending = ref(true);
@@ -45,12 +55,14 @@ async function load() {
   pending.value = true;
   error.value = null;
   try {
-    const [list, due] = await Promise.all([
+    const [list, due, sheet] = await Promise.all([
       api.get<Paginated>('/case-documents', { query: query.value }),
       api.get<ReviewQueueItem[]>('/case-documents/reminders'),
+      api.get<OfficeAppointmentRow[]>('/office-appointments'),
     ]);
     data.value = list;
     upcoming.value = due;
+    visits.value = sheet;
     if (!selectedId.value && list.items[0]) await select(list.items[0].id);
   } catch (e) {
     error.value = apiErrorMessage(e, 'Дарааллыг ачаалж чадсангүй');
@@ -88,6 +100,10 @@ function onReview(action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string) {
 }
 function onTransition(toStatus: DocumentStatus) {
   return act(() => api.post(`/case-documents/${selectedId.value}/transitions`, { toStatus }));
+}
+/** 1D-24 — the client handed the paper across the desk. */
+function onReceive(note: string) {
+  return act(() => api.post(`/case-documents/${selectedId.value}/receive`, { note: note || undefined }));
 }
 function onSend(payload: { files: File[]; note: string }) {
   return act(async () => {
@@ -189,10 +205,25 @@ useHead({ title: 'Материал шалгах · CRM' });
           :busy="busy"
           @review="onReview"
           @transition="onTransition"
+          @receive="onReceive"
           @send="onSend"
           @open="openFile"
         />
         <DsCard v-else padding="var(--sp-8)"><p class="gks-empty">Зүүн талаас материал сонгоно уу.</p></DsCard>
+
+        <!-- 1D-25: the front desk's own list — booked from the client's cabinet,
+             invisible to the office until now. -->
+        <DsCard v-if="visits.length" title="Оффист ирэх" eyebrow="Товлосон ирэлт">
+          <ul class="gks-review__visits">
+            <li v-for="visit in visits.slice(0, 10)" :key="visit.id">
+              <span class="gks-review__visit-when gks-tnum">{{ formatDayMonthTime(visit.scheduledAt) }}</span>
+              <NuxtLink :to="`/admin/cases/${visit.case.id}`" class="gks-review__due-link">
+                {{ visit.case.user.name ?? visit.case.code }}
+              </NuxtLink>
+              <span class="gks-review__visit-count">{{ visit.outstandingOriginals }} материал</span>
+            </li>
+          </ul>
+        </DsCard>
 
         <DsCard v-if="upcoming.length" title="Хугацаа дөхсөн" eyebrow="Дараагийн 7 хоног">
           <ul class="gks-review__due">
@@ -220,5 +251,9 @@ useHead({ title: 'Материал шалгах · CRM' });
 .gks-review__due li { display: grid; grid-template-columns: minmax(140px, auto) 1fr auto; gap: var(--sp-3); align-items: baseline; }
 .gks-review__due-link { color: var(--brand-700); text-decoration: none; }
 .gks-review__due-date { color: var(--text-subtle); font-size: var(--fs-caption); }
+.gks-review__visits { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-body-sm); }
+.gks-review__visits li { display: grid; grid-template-columns: minmax(120px, auto) 1fr auto; gap: var(--sp-3); align-items: baseline; }
+.gks-review__visit-when { color: var(--text-body); }
+.gks-review__visit-count { color: var(--text-subtle); font-size: var(--fs-caption); }
 </style>
 

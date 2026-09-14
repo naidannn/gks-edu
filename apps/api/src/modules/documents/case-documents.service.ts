@@ -5,13 +5,14 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user.js
 import { DocStage, DocumentStatus, Necessity, NotificationEvent, type Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { restorePatch, softDeletePatch } from '../../prisma/soft-delete.js';
-import { assertTransition, isClientTransition, SETTLED_STATUSES } from './document-status.js';
+import { assertTransition, AWAITING_SUBMISSION, isClientTransition, SETTLED_STATUSES } from './document-status.js';
 import type { UpsertCaseConditionsDto } from './dto/case-conditions.dto.js';
 import {
   type AddDocumentNoteDto,
   type CreateCaseDocumentDto,
   type NewDocumentTemplateDto,
   type QueryCaseDocumentsDto,
+  type ReceiveDocumentDto,
   ReviewAction,
   type ReviewDocumentDto,
   type TransitionDocumentDto,
@@ -47,6 +48,7 @@ const DOCUMENT_FILE_SELECT = {
 
 const CHECKLIST_INCLUDE = {
   template: true,
+  receivedBy: { select: { id: true, name: true } },
   files: { where: { deletedAt: null }, orderBy: { version: 'desc' }, select: DOCUMENT_FILE_SELECT },
   workTasks: { orderBy: { createdAt: 'desc' } },
 } satisfies Prisma.CaseDocumentInclude;
@@ -379,6 +381,43 @@ export class CaseDocumentsService {
     }
 
     return this.applyStatus(id, doc.status, dto.toStatus, actor.id, dto.note ?? null);
+  }
+
+  /**
+   * 1D-24 — the paper was handed over the office desk.
+   *
+   * Two facts, not one. The receipt is stamped unconditionally, because it is
+   * true regardless of where the row sits: a scan may already be `ACCEPTED`
+   * when the original finally arrives, and a school can ask for a paper we
+   * already posted. The status only moves when the document is still waiting
+   * for a submission — and then it moves to `SUBMITTED`, not `ACCEPTED`,
+   * because handing a paper across the desk is not the same as checking it.
+   */
+  async receive(id: string, dto: ReceiveDocumentDto, actor: AuthenticatedUser) {
+    const doc = await this.getOrThrow(id, { case: { select: { userId: true } } });
+    this.assertOwnership(doc.case.userId, actor);
+
+    const receivedAt = dto.receivedAt ? new Date(dto.receivedAt) : new Date();
+    if (receivedAt.getTime() > Date.now()) {
+      throw new BadRequestException('Ирээдүйн огноогоор гардан авсан гэж бүртгэх боломжгүй');
+    }
+
+    await this.prisma.caseDocument.update({
+      where: { id },
+      data: { receivedAt, receivedById: actor.id },
+    });
+
+    const note = dto.note?.trim() || null;
+    if (AWAITING_SUBMISSION.includes(doc.status)) {
+      return this.applyStatus(id, doc.status, DocumentStatus.SUBMITTED, actor.id, note);
+    }
+
+    // Nowhere to move — the row is already in review or past it. The receipt is
+    // recorded either way, and a note is the only thing left to write.
+    if (note) {
+      await this.prisma.documentReviewNote.create({ data: { caseDocumentId: id, authorId: actor.id, body: note } });
+    }
+    return this.prisma.caseDocument.findUniqueOrThrow({ where: { id } });
   }
 
   /** Staff verdict on a submitted document (1D-09). */

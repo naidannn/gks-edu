@@ -690,6 +690,13 @@ export const DOCUMENT_STATUS_TONE: Record<DocumentStatus, BadgeTone> = {
   SENT_TO_UNIVERSITY: 'success',
 };
 
+/**
+ * Statuses from which the next thing that happens is a submission — the same
+ * list the API keeps in `document-status.ts`. It decides whether staff are
+ * offered "Оффист хүлээн авсан" on a document (1D-24).
+ */
+export const AWAITING_SUBMISSION: DocumentStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'NEEDS_FIX', 'RESUBMIT_REQUIRED'];
+
 export const NECESSITY_LABELS: Record<Necessity, string> = {
   REQUIRED: 'Заавал',
   CONDITIONAL: 'Нөхцөлт',

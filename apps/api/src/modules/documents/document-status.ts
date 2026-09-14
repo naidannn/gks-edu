@@ -41,6 +41,20 @@ export const CLIENT_TRANSITIONS: readonly `${DocumentStatus}->${DocumentStatus}`
   `${DocumentStatus.RESUBMIT_REQUIRED}->${DocumentStatus.SUBMITTED}`,
 ];
 
+/**
+ * Statuses from which the next thing that happens is a submission — a client
+ * uploading, or staff registering the paper handed over the desk (1D-24).
+ *
+ * One list, because the upload path and the office path must agree on what
+ * "still waiting for this" means; they each used to carry their own copy.
+ */
+export const AWAITING_SUBMISSION: readonly DocumentStatus[] = [
+  DocumentStatus.NOT_STARTED,
+  DocumentStatus.IN_PROGRESS,
+  DocumentStatus.NEEDS_FIX,
+  DocumentStatus.RESUBMIT_REQUIRED,
+];
+
 /** A document that counts as collected for progress and for the application gate (1E-03). */
 export const SETTLED_STATUSES: readonly DocumentStatus[] = [
   DocumentStatus.ACCEPTED,

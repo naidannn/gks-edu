@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { DocStage, DocumentStatus, Necessity, NotificationEvent, Role } from '../../prisma/client.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
@@ -227,5 +227,73 @@ describe('CaseDocumentsService.upsertConditions — a client only re-resolves ad
     await scoped.upsertConditions('case-1', {}, STAFF, DocStage.VISA);
 
     expect(requirements.resolveForCase).toHaveBeenCalledWith('case-1', DocStage.VISA, 'staff-1');
+  });
+});
+
+/**
+ * 1D-24 — the counter. Until this existed the only way a document could reach
+ * the review queue was a file upload, so a client who walked in with the paper
+ * in their hand left the office with the row still at "Эхлээгүй".
+ */
+describe('CaseDocumentsService.receive — the paper crossed the desk (1D-24)', () => {
+  function receiving(status: DocumentStatus) {
+    const found = harness();
+    (found.prisma.caseDocument.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'doc-1',
+      status,
+      deletedAt: null,
+      case: { userId: 'student-1' },
+    });
+    (found.prisma.caseDocument as unknown as { findUniqueOrThrow: ReturnType<typeof vi.fn> }).findUniqueOrThrow = vi
+      .fn()
+      .mockResolvedValue({ id: 'doc-1', status });
+    return found;
+  }
+
+  it('stamps who took it and moves an untouched document into the queue', async () => {
+    const { service, prisma } = receiving(DocumentStatus.NOT_STARTED);
+
+    await service.receive('doc-1', {}, STAFF);
+
+    expect(prisma.caseDocument.update).toHaveBeenCalledWith({
+      where: { id: 'doc-1' },
+      data: expect.objectContaining({ receivedById: 'staff-1', receivedAt: expect.any(Date) }),
+    });
+    expect(prisma.caseDocument.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'doc-1', status: DocumentStatus.NOT_STARTED },
+        data: expect.objectContaining({ status: DocumentStatus.SUBMITTED }),
+      }),
+    );
+  });
+
+  it('records the receipt without a transition once the scan is already accepted', async () => {
+    const { service, prisma } = receiving(DocumentStatus.ACCEPTED);
+
+    await service.receive('doc-1', {}, STAFF);
+
+    // The original arriving after the scan was approved is the ordinary case;
+    // it must not drag an accepted document back to "Илгээсэн".
+    expect(prisma.caseDocument.update).toHaveBeenCalledTimes(1);
+    expect(prisma.caseDocument.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ receivedById: 'staff-1' }) }),
+    );
+  });
+
+  it('keeps the note even when there is nowhere for the status to go', async () => {
+    const { service, prisma } = receiving(DocumentStatus.READY);
+
+    await service.receive('doc-1', { note: 'Эх хувь 2ш' }, STAFF);
+
+    expect(prisma.documentReviewNote.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: 'Эх хувь 2ш' }) }),
+    );
+  });
+
+  it('refuses a receipt dated in the future', async () => {
+    const { service } = receiving(DocumentStatus.NOT_STARTED);
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString();
+
+    await expect(service.receive('doc-1', { receivedAt: tomorrow }, STAFF)).rejects.toBeInstanceOf(BadRequestException);
   });
 });
