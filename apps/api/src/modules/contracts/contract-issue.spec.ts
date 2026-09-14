@@ -40,7 +40,10 @@ function caseRow() {
     universityChoices: [],
     user: {
       name: 'Батбаяр Түвшин',
-      email: 'tuvshin@example.mn',
+      // `User.email` is nullable in the schema, and the 1C-41 cases below set
+      // it to null — without the annotation the literal narrows to `string` and
+      // those two lines stop compiling.
+      email: 'tuvshin@example.mn' as string | null,
       phone: '99112233',
       client: {
         lastName: 'Батбаяр',
