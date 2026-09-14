@@ -186,6 +186,10 @@ export class ContractsService {
       userId: gksCase.userId,
       type: dto.type,
       status: dto.type === ContractType.ELECTRONIC ? ContractStatus.SENT : ContractStatus.DRAFT,
+      // An electronic contract is issued already sent — it is waiting for the
+      // client, not for us — so the timestamp is written with the status
+      // rather than left null under it.
+      sentAt: dto.type === ContractType.ELECTRONIC ? contractDate : null,
       templateId: template.id,
       totalAmountSnapshot: pricing.totalAmount,
       prepaymentModeSnapshot: pricing.prepaymentMode,
@@ -446,6 +450,45 @@ export class ContractsService {
     if (!valid) throw new BadRequestException('OTP код буруу эсвэл хугацаа дууссан байна');
 
     return this.finalizeSigning(contract, { signedAt: new Date(), signedIp: ip ?? null });
+  }
+
+  // ─── Correcting the route a contract is signed by (1C-39) ──────────────────
+
+  /**
+   * Switch an unsigned contract between "цахим" and "биет".
+   *
+   * The type is not a label on the contract, it is which of two flows finishes
+   * it: an electronic one is signed by the client in their cabinet with an
+   * emailed OTP, a paper one is printed, signed at the desk and registered by
+   * staff with the scan. Picking the wrong button at issue time used to be
+   * final — the office could not sign an electronic contract for a client who
+   * had never claimed their login, and the scan form is only offered on a
+   * physical one, so the case simply stopped at `CONTRACT_DRAFT`.
+   *
+   * Only before a signature: from `SIGNED` on, the route taken is a fact about
+   * a document two people put their names to.
+   */
+  async changeType(id: string, type: ContractType) {
+    const contract = await this.getOrThrow(id);
+    if (!PRE_SIGNATURE_STATUSES.includes(contract.status)) {
+      throw new BadRequestException('Гарын үсэг зурсан гэрээний төрлийг өөрчлөх боломжгүй');
+    }
+    if (contract.type === type) return contract;
+
+    const now = new Date();
+    // Acceptance belongs to the electronic route: leaving it behind would let
+    // a client who pressed "Зөвшөөрч байна" walk straight into the OTP step of
+    // a contract that is now signed on paper.
+    return this.prisma.contract.update({
+      where: { id },
+      data: {
+        type,
+        status: type === ContractType.ELECTRONIC ? ContractStatus.SENT : ContractStatus.DRAFT,
+        sentAt: type === ContractType.ELECTRONIC ? now : null,
+        acceptedAt: null,
+        otpVerifiedAt: null,
+      },
+    });
   }
 
   // ─── Physical contract registration (1C-09) ────────────────────────────────

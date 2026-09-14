@@ -61,6 +61,22 @@ async function printContract(contractId: string) {
   });
 }
 
+/**
+ * Which flow finishes this contract (1C-39).
+ *
+ * An electronic contract is signed by the client in their own cabinet with an
+ * emailed code — staff have no button for it, and a client who has not claimed
+ * their login cannot sign at all. A physical one is printed, signed at the desk
+ * and registered below with its scan. Picking the wrong one at issue time used
+ * to leave the case stuck, so an unsigned contract can still change route.
+ */
+const canChangeType = computed(() => contract.value?.status === 'DRAFT' || contract.value?.status === 'SENT');
+const otherType = computed<ContractType>(() => (contract.value?.type === 'ELECTRONIC' ? 'PHYSICAL' : 'ELECTRONIC'));
+
+function changeType(contractId: string) {
+  return act(() => api.patch(`/contracts/${contractId}/type`, { type: otherType.value }));
+}
+
 const physicalSignedAt = ref('');
 const physicalFile = ref<File | null>(null);
 function registerPhysical(contractId: string) {
@@ -254,7 +270,23 @@ const needsPhysicalRegistration = computed(
           <DsButton size="sm" variant="ghost" @click="showBody = !showBody">
             {{ showBody ? 'Эхийг хаах' : 'Гэрээний эх харах' }}
           </DsButton>
+          <DsButton
+            v-if="canChangeType"
+            size="sm"
+            variant="ghost"
+            icon-left="repeat"
+            :loading="busy"
+            @click="changeType(contract.id)"
+          >
+            {{ otherType === 'PHYSICAL' ? 'Биет гэрээ болгох' : 'Цахим гэрээ болгох' }}
+          </DsButton>
         </div>
+
+        <p v-if="contract.type === 'ELECTRONIC' && canChangeType" class="gks-cpay__muted">
+          Цахим гэрээг үйлчлүүлэгч өөрөө кабинетдаа имэйлээр ирэх кодоор баталгаажуулна — ажилтны талд гарын үсэг
+          зурах товч байхгүй. Оффис дээр цаасаар гарын үсэг зурахаар бол «Биет гэрээ болгох» дарж, сканыг нь эндээс
+          хавсаргана.
+        </p>
 
         <div v-if="showBody" class="gks-cpay__sheet">
           <ContractDocument :body="contract.bodyMn" :number="contract.number" :date="contract.createdAt" />

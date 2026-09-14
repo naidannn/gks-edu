@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -26,6 +27,7 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { Role, type ServiceType } from '../../prisma/client.js';
 import { ContractsService } from './contracts.service.js';
+import { ChangeContractTypeDto } from './dto/change-contract-type.dto.js';
 import { CreateContractDto } from './dto/create-contract.dto.js';
 import { CreateContractTemplateDto } from './dto/create-contract-template.dto.js';
 import { QueryContractsDto } from './dto/query-contracts.dto.js';
@@ -126,6 +128,13 @@ export class ContractsController {
     @Req() req: Request,
   ) {
     return this.contracts.verifyOtp(id, dto.code, user, req.ip);
+  }
+
+  @Patch(':id/type')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Switch an unsigned contract between electronic and physical signing (1C-39)' })
+  changeType(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ChangeContractTypeDto) {
+    return this.contracts.changeType(id, dto.type);
   }
 
   @Post(':id/physical')
