@@ -54,6 +54,11 @@ export const EVENT_PRESENTATION: Record<NotificationEvent, EventPresentation> = 
   },
 
   // Гэрээ ба төлбөр (§5)
+  [NotificationEvent.CONTRACT_READY]: {
+    eyebrow: 'Гэрээ',
+    tone: 'info',
+    ctaLabel: 'Гэрээгээ уншиж зөвшөөрөх',
+  },
   [NotificationEvent.CONTRACT_CONFIRMED]: {
     eyebrow: 'Гэрээ',
     tone: 'success',

@@ -163,6 +163,28 @@ export const NOTIFICATION_TEMPLATES: NotificationTemplateSeed[] = [
 
   // ── Гэрээ ба төлбөр (§5) ─────────────────────────────────────────────────
   {
+    event: NotificationEvent.CONTRACT_READY,
+    channel: NotificationChannel.IN_APP,
+    titleMn: 'Гэрээ гарын үсэг хүлээж байна',
+    bodyMn: '{{serviceName}} үйлчилгээний {{contractNumber}} дугаартай гэрээ бэлэн боллоо. Уншиж танилцаад зөвшөөрснөөр имэйлээр баталгаажуулах код очно.',
+    linkMn: CASE_CONTRACT,
+  },
+  {
+    event: NotificationEvent.CONTRACT_READY,
+    channel: NotificationChannel.EMAIL,
+    titleMn: 'Гэрээ тань бэлэн боллоо — {{contractNumber}}',
+    bodyMn:
+      'Сайн байна уу, {{clientName}}.\n\n' +
+      '{{serviceName}} үйлчилгээний зуучлалын гэрээ тань бэлэн боллоо.\n' +
+      'Гэрээний дугаар: {{contractNumber}}\n' +
+      'Үйлчилгээ: {{caseCode}}\n' +
+      'Нийт төлбөр: {{totalAmount}}₮\n\n' +
+      'Гэрээг кабинетаасаа уншиж танилцаад «Зөвшөөрч, баталгаажуулах код авах» товчийг дарна уу — ' +
+      'энэ хаяг руу 6 оронтой код очиж, түүнийг оруулснаар гэрээ хүчин төгөлдөр болно: {{link}}\n\n' +
+      'GKS EDU GROUP',
+    linkMn: CASE_CONTRACT,
+  },
+  {
     event: NotificationEvent.CONTRACT_CONFIRMED,
     channel: NotificationChannel.IN_APP,
     titleMn: 'Гэрээ баталгаажлаа',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContractType, PaymentItem, PaymentKind, PaymentMethod, WorkspaceCase } from '@gks/shared';
+import type { ClientDetail, ContractType, PaymentItem, PaymentKind, PaymentMethod, WorkspaceCase } from '@gks/shared';
 
 /**
  * Payments tab (1G-17) — the money side of one case in one place: the contract
@@ -9,27 +9,40 @@ import type { ContractType, PaymentItem, PaymentKind, PaymentMethod, WorkspaceCa
  * Every call here is the one `/admin/cases/:id` already made (1C-18); the
  * pricing, the QPay invoice and the signature flow are untouched.
  */
-const props = defineProps<{ workspaceCase: WorkspaceCase }>();
+const props = defineProps<{ workspaceCase: WorkspaceCase; client: ClientDetail }>();
 const emit = defineEmits<{ changed: [] }>();
 
 const api = useApi();
 const config = useRuntimeConfig();
 
 const busy = ref(false);
-const errorMsg = ref<string | null>(null);
 const showBody = ref(false);
+const notice = ref<string | null>(null);
 
 const contract = computed(() => props.workspaceCase.contract);
 const payments = computed(() => props.workspaceCase.payments);
 
-async function act(action: () => Promise<unknown>) {
+/**
+ * Which card an action belongs to — the contract card or the payments card.
+ *
+ * Both used to write into one `errorMsg` rendered above the money tiles at the
+ * top of the tab. On a long case that line sits off-screen, so pressing
+ * "Урьдчилгаа нэхэмжлэх" on a contract nobody has signed looked like a button
+ * that did nothing at all (1C-42). The message now appears in the card the
+ * pressed button lives in.
+ */
+type Area = 'contract' | 'payment';
+const errors = reactive<Record<Area, string | null>>({ contract: null, payment: null });
+
+async function act(area: Area, action: () => Promise<unknown>) {
   busy.value = true;
-  errorMsg.value = null;
+  errors[area] = null;
+  notice.value = null;
   try {
     await action();
     emit('changed');
   } catch (err) {
-    errorMsg.value = apiErrorMessage(err, 'Үйлдэл амжилтгүй боллоо');
+    errors[area] = apiErrorMessage(err, 'Үйлдэл амжилтгүй боллоо');
   } finally {
     busy.value = false;
   }
@@ -37,11 +50,11 @@ async function act(action: () => Promise<unknown>) {
 
 // ── Contract (1C-18) ───────────────────────────────────────────────────────
 function createContract(type: ContractType) {
-  return act(() => api.post('/contracts', { caseId: props.workspaceCase.id, type }));
+  return act('contract', () => api.post('/contracts', { caseId: props.workspaceCase.id, type }));
 }
 
 async function downloadPdf(contractId: string) {
-  await act(async () => {
+  await act('contract', async () => {
     const { downloadUrl } = await api.get<{ downloadUrl: string }>(`/contracts/${contractId}/pdf`);
     const base = String(config.public.apiBase).replace(/\/api\/v1$/, '');
     window.open(`${base}${downloadUrl}`, '_blank');
@@ -55,7 +68,7 @@ async function downloadPdf(contractId: string) {
  * from a blob rather than through a signed storage link.
  */
 async function printContract(contractId: string) {
-  await act(async () => {
+  await act('contract', async () => {
     const blob = await api.get<Blob>(`/contracts/${contractId}/print`, { responseType: 'blob' });
     openPdfBlob(blob, `Гэрээ-${contract.value?.number.replace(/\//g, '-') ?? contractId}.pdf`);
   });
@@ -74,7 +87,36 @@ const canChangeType = computed(() => contract.value?.status === 'DRAFT' || contr
 const otherType = computed<ContractType>(() => (contract.value?.type === 'ELECTRONIC' ? 'PHYSICAL' : 'ELECTRONIC'));
 
 function changeType(contractId: string) {
-  return act(() => api.patch(`/contracts/${contractId}/type`, { type: otherType.value }));
+  return act('contract', () => api.patch(`/contracts/${contractId}/type`, { type: otherType.value }));
+}
+
+/**
+ * The code that signs an electronic contract goes to the address on the
+ * account (1C-33), so a client registered without one cannot sign at all. The
+ * API refuses such a contract; the button says so before it is pressed.
+ */
+const canSignElectronically = computed(() => Boolean(props.client.email));
+
+/**
+ * "Сануулга илгээх" (1C-41) — the office's only handle on a client who has not
+ * signed. It re-sends the same "гэрээ тань бэлэн боллоо" the issue sent.
+ */
+const waitingOnClient = computed(() => contract.value?.type === 'ELECTRONIC' && canChangeType.value);
+
+function remind(contractId: string) {
+  return act('contract', async () => {
+    await api.post(`/contracts/${contractId}/remind`);
+    notice.value = `Гэрээ хүлээгдэж байгаа тухай мэдэгдлийг ${props.client.email} хаяг руу дахин илгээлээ.`;
+  });
+}
+
+/** The scan of the signed paper contract, back out of storage (1C-36). */
+async function openScan(contractId: string) {
+  await act('contract', async () => {
+    const { downloadUrl } = await api.get<{ downloadUrl: string }>(`/contracts/${contractId}/scan`);
+    const base = String(config.public.apiBase).replace(/\/api\/v1$/, '');
+    window.open(`${base}${downloadUrl}`, '_blank', 'noopener');
+  });
 }
 
 const physicalSignedAt = ref('');
@@ -84,7 +126,7 @@ function registerPhysical(contractId: string) {
   const body = new FormData();
   body.append('signedAt', new Date(physicalSignedAt.value).toISOString());
   body.append('file', physicalFile.value);
-  return act(() => api.post(`/contracts/${contractId}/physical`, body));
+  return act('contract', () => api.post(`/contracts/${contractId}/physical`, body));
 }
 
 // Collateral contract — language prep only, metadata never priced (§5.4).
@@ -105,15 +147,15 @@ function saveCollateral(contractId: string) {
   if (collateral.startDate) body.append('startDate', new Date(collateral.startDate).toISOString());
   if (collateral.endDate) body.append('endDate', new Date(collateral.endDate).toISOString());
   if (collateralFile.value) body.append('file', collateralFile.value);
-  return act(() => api.put(`/contracts/${contractId}/collateral`, body));
+  return act('contract', () => api.put(`/contracts/${contractId}/collateral`, body));
 }
 
 // ── Payments ───────────────────────────────────────────────────────────────
 function invoice(kind: PaymentKind) {
-  return act(() => api.post(`/cases/${props.workspaceCase.id}/payments`, { kind }));
+  return act('payment', () => api.post(`/cases/${props.workspaceCase.id}/payments`, { kind }));
 }
 function markPaid(paymentId: string) {
-  return act(() => api.post(`/payments/${paymentId}/dev-mark-paid`));
+  return act('payment', () => api.post(`/payments/${paymentId}/dev-mark-paid`));
 }
 
 /**
@@ -155,8 +197,8 @@ async function registerManual() {
   if (manual.note.trim()) body.append('note', manual.note.trim());
   if (manualReceipt.value) body.append('receipt', manualReceipt.value);
 
-  await act(() => api.post(`/cases/${props.workspaceCase.id}/payments/manual`, body));
-  if (errorMsg.value) return;
+  await act('payment', () => api.post(`/cases/${props.workspaceCase.id}/payments/manual`, body));
+  if (errors.payment) return;
 
   manualOpen.value = false;
   manual.reference = '';
@@ -165,7 +207,7 @@ async function registerManual() {
 }
 
 async function openReceipt(paymentId: string) {
-  await act(async () => {
+  await act('payment', async () => {
     const signed = await api.get<{ token: string }>(`/payments/${paymentId}/receipt-url`);
     window.open(`${config.public.apiBase}/files/${signed.token}`, '_blank', 'noopener');
   });
@@ -177,7 +219,7 @@ function methodDetail(payment: PaymentItem): string {
   return payment.reference ? `${label} · ${payment.reference}` : label;
 }
 function refund(paymentId: string) {
-  return act(() => api.post(`/payments/${paymentId}/refund`));
+  return act('payment', () => api.post(`/payments/${paymentId}/refund`));
 }
 
 // ── Money summary ──────────────────────────────────────────────────────────
@@ -195,18 +237,18 @@ const totals = computed(() => {
   return { total, paid, refunded, pending, remaining: Math.max(0, total - paid) };
 });
 
+/**
+ * A paper contract is registered exactly once, out of `DRAFT` — the only state
+ * `POST /contracts/:id/physical` accepts (1N-12). Offering the form on
+ * anything else put an upload in front of staff that the API would refuse.
+ */
 const needsPhysicalRegistration = computed(
-  () =>
-    contract.value?.type === 'PHYSICAL'
-    && contract.value.status !== 'SIGNED'
-    && contract.value.status !== 'ACTIVE',
+  () => contract.value?.type === 'PHYSICAL' && contract.value.status === 'DRAFT',
 );
 </script>
 
 <template>
   <div class="gks-cpay">
-    <DsCard v-if="errorMsg" accent><p class="gks-cpay__error">{{ errorMsg }}</p></DsCard>
-
     <!-- The financial position, before any of the machinery below it. -->
     <div class="gks-cpay__totals">
       <DsCard class="gks-cpay__tile">
@@ -231,9 +273,16 @@ const needsPhysicalRegistration = computed(
       <div v-if="!contract" class="gks-cpay__actions">
         <p class="gks-cpay__muted">Энэ үйлчилгээнд гэрээ үүсээгүй байна.</p>
         <div class="gks-cpay__buttons">
-          <DsButton :loading="busy" @click="createContract('ELECTRONIC')">Цахим гэрээ үүсгэх</DsButton>
+          <DsButton :loading="busy" :disabled="!canSignElectronically" @click="createContract('ELECTRONIC')">
+            Цахим гэрээ үүсгэх
+          </DsButton>
           <DsButton variant="secondary" :loading="busy" @click="createContract('PHYSICAL')">Биет гэрээ үүсгэх</DsButton>
         </div>
+        <p v-if="!canSignElectronically" class="gks-cpay__muted">
+          Энэ үйлчлүүлэгчид имэйл хаяг бүртгэгдээгүй тул цахим гэрээг баталгаажуулах код илгээх газаргүй —
+          имэйлийг нь нэмэх, эсвэл биет гэрээ үүсгэнэ үү.
+        </p>
+        <p v-if="errors.contract" class="gks-cpay__error-inline">{{ errors.contract }}</p>
       </div>
 
       <template v-else>
@@ -271,21 +320,46 @@ const needsPhysicalRegistration = computed(
             {{ showBody ? 'Эхийг хаах' : 'Гэрээний эх харах' }}
           </DsButton>
           <DsButton
+            v-if="contract.physicalScanPath"
+            size="sm"
+            variant="secondary"
+            icon-left="file-search"
+            :loading="busy"
+            @click="openScan(contract.id)"
+          >
+            Гарын үсэгтэй скан
+          </DsButton>
+          <DsButton
+            v-if="waitingOnClient"
+            size="sm"
+            variant="ghost"
+            icon-left="send"
+            :loading="busy"
+            @click="remind(contract.id)"
+          >
+            Сануулга илгээх
+          </DsButton>
+          <DsButton
             v-if="canChangeType"
             size="sm"
             variant="ghost"
             icon-left="repeat"
             :loading="busy"
+            :disabled="otherType === 'ELECTRONIC' && !canSignElectronically"
             @click="changeType(contract.id)"
           >
             {{ otherType === 'PHYSICAL' ? 'Биет гэрээ болгох' : 'Цахим гэрээ болгох' }}
           </DsButton>
         </div>
 
-        <p v-if="contract.type === 'ELECTRONIC' && canChangeType" class="gks-cpay__muted">
+        <p v-if="errors.contract" class="gks-cpay__error-inline">{{ errors.contract }}</p>
+        <p v-else-if="notice" class="gks-cpay__notice-inline">{{ notice }}</p>
+
+        <p v-if="waitingOnClient" class="gks-cpay__muted">
           Цахим гэрээг үйлчлүүлэгч өөрөө кабинетдаа имэйлээр ирэх кодоор баталгаажуулна — ажилтны талд гарын үсэг
-          зурах товч байхгүй. Оффис дээр цаасаар гарын үсэг зурахаар бол «Биет гэрээ болгох» дарж, сканыг нь эндээс
-          хавсаргана.
+          зурах товч байхгүй. Гэрээ бэлэн болсон тухай мэдэгдэл
+          <strong>{{ client.email ?? 'бүртгэлийн хаяг' }}</strong> руу илгээгдсэн; удвал «Сануулга илгээх» дарж
+          давтана. Оффис дээр цаасаар гарын үсэг зурахаар бол «Биет гэрээ болгох» дарж, сканыг нь эндээс хавсаргана.
         </p>
 
         <div v-if="showBody" class="gks-cpay__sheet">
@@ -325,6 +399,8 @@ const needsPhysicalRegistration = computed(
       <template #action>
         <NuxtLink to="/admin/payments" class="gks-cpay__link">Бүх төлбөр →</NuxtLink>
       </template>
+
+      <p v-if="errors.payment" class="gks-cpay__error-inline">{{ errors.payment }}</p>
 
       <div class="gks-cpay__buttons">
         <DsButton size="sm" :loading="busy" @click="invoice('PREPAYMENT')">Урьдчилгаа нэхэмжлэх</DsButton>
@@ -418,7 +494,9 @@ const needsPhysicalRegistration = computed(
   border: 1px solid var(--line-hairline);
   border-radius: var(--radius-1);
 }
-.gks-cpay__error { color: var(--danger-fg); }
+/* Beside the button that failed, not at the top of a tab the office has scrolled past (1C-42). */
+.gks-cpay__error-inline { margin-bottom: var(--sp-3); font-size: var(--fs-body-sm); color: var(--danger-fg); }
+.gks-cpay__notice-inline { margin-bottom: var(--sp-3); font-size: var(--fs-body-sm); color: var(--success-fg); }
 
 .gks-cpay__totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); }
 .gks-cpay__tile-label { font-size: var(--fs-caption); color: var(--text-subtle); }

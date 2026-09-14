@@ -2283,6 +2283,8 @@ enum NotificationEvent {
   DOCUMENT_FIX_REQUIRED
   DOCUMENT_APPROVED
   // Contract & payment (§5)
+  /// To the client: an electronic contract is waiting for their signature.
+  CONTRACT_READY
   CONTRACT_CONFIRMED
   PAYMENT_DUE
   PAYMENT_CONFIRMED

@@ -90,6 +90,21 @@ function isUniqueViolation(error: unknown): boolean {
   return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
 }
 
+/**
+ * The electronic route is only walkable by an account with an address (1C-41).
+ *
+ * A client the office registered without an email has no `User.email`, so the
+ * signing code has nowhere to go and the "Зөвшөөрч байна" button on their side
+ * would answer with an error — if they could reach it at all. Refusing at issue
+ * time says so while the office is still standing in front of the choice.
+ */
+function assertSignableElectronically(email: string | null | undefined): void {
+  if (email) return;
+  throw new BadRequestException(
+    'Энэ бүртгэлд имэйл хаяг алга — цахим гэрээг баталгаажуулах код илгээх газаргүй тул биет гэрээ үүсгэнэ үү',
+  );
+}
+
 /** What a client edit did to that client's contracts (1C-30). */
 export interface ContractSyncResult {
   /** Unsigned contracts re-rendered with the corrected details. */
@@ -162,6 +177,11 @@ export class ContractsService {
     ]);
     if (!template) throw new NotFoundException(`${gksCase.serviceType} үйлчилгээнд идэвхтэй гэрээний загвар алга байна`);
 
+    // Nothing signs an electronic contract but a code mailed to the account
+    // (1C-33), so issuing one to an address-less account is a dead end the
+    // office only discovers days later (1C-41).
+    if (dto.type === ContractType.ELECTRONIC) assertSignableElectronically(gksCase.user.email);
+
     // The client record is where the contract's legal identity lives (1B-14):
     // full name, register number, and the guardian who signs for a minor.
     const client = gksCase.user.client;
@@ -181,7 +201,7 @@ export class ContractsService {
       }),
     );
 
-    return this.createNumbered(contractDate, {
+    const contract = await this.createNumbered(contractDate, {
       caseId: gksCase.id,
       userId: gksCase.userId,
       type: dto.type,
@@ -198,6 +218,62 @@ export class ContractsService {
       refundPolicy: {},
       bodyMn,
     });
+
+    // The electronic route runs on the client, so the client has to be told it
+    // has started — until 1C-41 the office pressed the button and nobody
+    // anywhere heard about it. A paper contract is signed at the desk, so it
+    // announces itself.
+    if (contract.type === ContractType.ELECTRONIC) {
+      await this.announceReady(contract, gksCase.serviceType, gksCase.code);
+    }
+
+    return contract;
+  }
+
+  /**
+   * "Гэрээ тань бэлэн боллоо" — §16 `CONTRACT_READY` (1C-41).
+   *
+   * Sent when an electronic contract starts waiting for its signature: at
+   * issue, when a paper contract is moved onto the electronic route, and when
+   * staff press "Сануулга илгээх" on one nobody has signed.
+   */
+  private async announceReady(
+    contract: { id: string; userId: string; caseId: string; number: string; totalAmountSnapshot: DecimalLike },
+    serviceType: ServiceType,
+    caseCode: string,
+  ): Promise<void> {
+    await this.notifications.dispatch({
+      event: NotificationEvent.CONTRACT_READY,
+      userIds: [contract.userId],
+      caseId: contract.caseId,
+      context: {
+        caseId: contract.caseId,
+        caseCode,
+        contractNumber: contract.number,
+        serviceName: SERVICE_TYPE_LABELS[serviceType],
+        totalAmount: formatAmount(contract.totalAmountSnapshot),
+      },
+    });
+  }
+
+  /**
+   * Nudge a client whose electronic contract is still unsigned (1C-41).
+   *
+   * The same notification the issue sends, on demand: before this the office
+   * could see the ball was with the client and had no way to pass it back.
+   */
+  async remind(id: string) {
+    const contract = await this.getOrThrow(id);
+    this.assertElectronicSendable(contract);
+
+    const kase = await this.prisma.case.findUniqueOrThrow({
+      where: { id: contract.caseId },
+      select: { code: true, serviceType: true, user: { select: { email: true } } },
+    });
+    assertSignableElectronically(kase.user.email);
+
+    await this.announceReady(contract, kase.serviceType, kase.code);
+    return { sent: true, email: kase.user.email };
   }
 
   /** The template a new contract of this service is issued from — the one lookup `MeService` also asks before it opens a case. */
@@ -357,6 +433,23 @@ export class ContractsService {
   }
 
   /**
+   * The scan of the signed paper contract (1C-36) — staff only.
+   *
+   * It was write-only until now: `registerPhysical` filed it and no route ever
+   * handed it back, so the one piece of evidence the physical route produces
+   * could not be looked at again. It stays off the client's payload, which
+   * carries the rendered PDF and none of the office's storage paths (1N-04).
+   */
+  async scanUrl(id: string) {
+    const contract = await this.getOrThrow(id);
+    if (!contract.physicalScanPath) {
+      throw new BadRequestException('Энэ гэрээнд гарын үсэгтэй скан хавсрагдаагүй байна');
+    }
+    const { token } = this.storage.sign(contract.physicalScanPath);
+    return { downloadUrl: `/api/v1/files/${token}` };
+  }
+
+  /**
    * The paper copy (1C-25). A physical contract is signed with a pen, so the
    * office needs the sheet *before* there is anything to scan back in, and
    * `pdfPath` is only written once a contract is signed. This renders the body
@@ -475,11 +568,17 @@ export class ContractsService {
     }
     if (contract.type === type) return contract;
 
+    const kase = await this.prisma.case.findUniqueOrThrow({
+      where: { id: contract.caseId },
+      select: { code: true, serviceType: true, user: { select: { email: true } } },
+    });
+    if (type === ContractType.ELECTRONIC) assertSignableElectronically(kase.user.email);
+
     const now = new Date();
     // Acceptance belongs to the electronic route: leaving it behind would let
     // a client who pressed "Зөвшөөрч байна" walk straight into the OTP step of
     // a contract that is now signed on paper.
-    return this.prisma.contract.update({
+    const moved = await this.prisma.contract.update({
       where: { id },
       data: {
         type,
@@ -489,6 +588,12 @@ export class ContractsService {
         otpVerifiedAt: null,
       },
     });
+
+    // Moving onto the electronic route starts the same wait an issue does, so
+    // it is announced the same way (1C-41).
+    if (type === ContractType.ELECTRONIC) await this.announceReady(moved, kase.serviceType, kase.code);
+
+    return moved;
   }
 
   // ─── Physical contract registration (1C-09) ────────────────────────────────
@@ -550,6 +655,7 @@ export class ContractsService {
     extra: Prisma.ContractUpdateInput = {},
   ) {
     const full = await this.prisma.contract.findUniqueOrThrow({ where: { id: contract.id }, include: { case: true } });
+    const isESigned = full.type === ContractType.ELECTRONIC;
 
     const pdfBuffer = await this.pdf.render({
       title: CONTRACT_TITLE,
@@ -557,8 +663,12 @@ export class ContractsService {
       number: full.number,
       contractDate: full.createdAt,
       bodyMn: full.bodyMn,
-      signedAt: signature.signedAt,
-      signedIp: signature.signedIp,
+      // "Цахимаар баталгаажсан" is a statement about how this document was
+      // signed, and the archived copy of a paper contract used to carry it
+      // anyway — the office scanned a pen signature and filed a PDF claiming an
+      // electronic one. `renderPrintable` already knew better (1C-36).
+      signedAt: isESigned ? signature.signedAt : null,
+      signedIp: isESigned ? signature.signedIp : null,
     });
     const { path: pdfPath } = await this.storage.upload({ caseId: contract.caseId, docCode: 'CONTRACT_PDF', buffer: pdfBuffer });
 
@@ -569,7 +679,7 @@ export class ContractsService {
           status: ContractStatus.SIGNED,
           signedAt: signature.signedAt,
           signedIp: signature.signedIp,
-          otpVerifiedAt: full.type === ContractType.ELECTRONIC ? signature.signedAt : null,
+          otpVerifiedAt: isESigned ? signature.signedAt : null,
           pdfPath,
           ...extra,
         },

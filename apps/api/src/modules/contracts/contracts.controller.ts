@@ -130,6 +130,23 @@ export class ContractsController {
     return this.contracts.verifyOtp(id, dto.code, user, req.ip);
   }
 
+  @Get(':id/scan')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Signed link for the scan of a paper contract (1C-36)' })
+  scanUrl(@Param('id', ParseUUIDPipe) id: string) {
+    return this.contracts.scanUrl(id);
+  }
+
+  // One mail per press, to a client who is already late — the ceiling is a
+  // consultant's patience, not a browser's request rate.
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @Post(':id/remind')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Re-send "гэрээ бэлэн боллоо" to the client of an unsigned electronic contract (1C-41)' })
+  remind(@Param('id', ParseUUIDPipe) id: string) {
+    return this.contracts.remind(id);
+  }
+
   @Patch(':id/type')
   @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Switch an unsigned contract between electronic and physical signing (1C-39)' })

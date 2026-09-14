@@ -225,6 +225,7 @@ useHead({
           <CrmClientPayments
             v-else-if="tab === 'payments'"
             :workspace-case="activeCase"
+            :client="client"
             @changed="workspace.refresh()"
           />
         </template>

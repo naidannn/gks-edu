@@ -161,6 +161,22 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     );
   });
 
+  it('refuses an unsigned electronic contract in the same words, not the stage`s (1C-42)', async () => {
+    // An electronic contract is issued straight to the client as SENT, so the
+    // DRAFT-only test above let it through to the stage check, which answered
+    // with a sentence about `CONTRACT_DRAFT` instead of the one true thing.
+    const { service } = buildHarness({
+      gksCase: makeCase({
+        stage: CaseStage.CONTRACT_DRAFT,
+        contract: { ...contractSnapshot, status: ContractStatus.SENT },
+      }),
+    });
+
+    await expect(service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, staff)).rejects.toThrow(
+      'Гэрээ гарын үсэг зураагүй тул төлбөр үүсгэх боломжгүй',
+    );
+  });
+
   it('hands back the existing PENDING invoice instead of creating a duplicate', async () => {
     const { service, prisma, qpay } = buildHarness({
       existingPayment: {

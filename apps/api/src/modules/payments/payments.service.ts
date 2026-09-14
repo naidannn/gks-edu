@@ -55,6 +55,13 @@ const PROGRESS_TARGET: Partial<Record<PaymentKind, CaseStage>> = {
 /** A debt is settled or still owed; anything else is history and never blocks a new invoice. */
 const LIVE_STATUSES: PaymentStatus[] = [PaymentStatus.PENDING, PaymentStatus.PAID];
 
+/**
+ * Where an unsigned contract waits, on either route: `DRAFT` is a paper one
+ * still to be signed at the desk, `SENT` an electronic one still with the
+ * client. Neither can carry an invoice (1C-42).
+ */
+const UNSIGNED_CONTRACT_STATUSES: ContractStatus[] = [ContractStatus.DRAFT, ContractStatus.SENT];
+
 function isUniqueViolation(error: unknown): boolean {
   return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
 }
@@ -836,7 +843,13 @@ export class PaymentsService {
     gksCase: { serviceType: ServiceType; stage: CaseStage; contract: Contract | null },
     kind: PaymentKind,
   ): Promise<Contract> {
-    if (!gksCase.contract || gksCase.contract.status === ContractStatus.DRAFT) {
+    // Both routes park an unsigned contract, and they park it in different
+    // statuses: a paper one waits in `DRAFT`, an electronic one in `SENT`
+    // (issued straight to the client). Testing only `DRAFT` let an unsigned
+    // electronic contract past this check and into the stage test below, which
+    // then refused it with a sentence about the case's stage instead of the
+    // one true thing — nobody has signed yet (1C-42).
+    if (!gksCase.contract || UNSIGNED_CONTRACT_STATUSES.includes(gksCase.contract.status)) {
       throw new BadRequestException('Гэрээ гарын үсэг зураагүй тул төлбөр үүсгэх боломжгүй');
     }
 

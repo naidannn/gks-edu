@@ -6,6 +6,7 @@ import {
   CaseStage,
   ContractStatus,
   ContractType,
+  NotificationEvent,
   PrepaymentMode,
   Role,
   ServiceType,
@@ -30,6 +31,7 @@ const PRICING = {
 function caseRow() {
   return {
     id: 'case-1',
+    code: 'GKS-2026-0001',
     userId: 'user-1',
     serviceType: ServiceType.GKS_SCHOLARSHIP,
     stage: CaseStage.CONTRACT_DRAFT,
@@ -80,9 +82,11 @@ function issuingHarness(options: { issuedThisYear?: number; takenNumbers?: strin
   } as unknown as PrismaService & { contract: { count: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn> } };
 
   const pricing = { getActive: vi.fn().mockResolvedValue(PRICING) } as unknown as PricingService;
+  // Issuing an electronic contract now tells the client about it (1C-41).
+  const notifications = { dispatch: vi.fn().mockResolvedValue(1) } as unknown as NotificationsService;
   const stub = null as never;
-  const service = new ContractsService(prisma, stub, pricing, stub, stub, stub, stub, stub, stub);
-  return { service, prisma };
+  const service = new ContractsService(prisma, stub, pricing, stub, stub, stub, stub, notifications, stub);
+  return { service, prisma, notifications };
 }
 
 afterEach(() => {
@@ -136,6 +140,7 @@ function signingHarness(status: ContractStatus, type: ContractType = ContractTyp
     number: 'СГ/26/001',
     type,
     status,
+    totalAmountSnapshot: 5_000_000,
     bodyMn: 'Гэрээний бие',
     createdAt: new Date('2026-09-01T03:00:00.000Z'),
     acceptedAt: new Date('2026-09-01T03:00:00.000Z'),
@@ -149,6 +154,15 @@ function signingHarness(status: ContractStatus, type: ContractType = ContractTyp
       findUnique: vi.fn().mockResolvedValue(contract),
       findUniqueOrThrow: vi.fn().mockResolvedValue(contract),
       update,
+    },
+    // `changeType` and `remind` read the case for the notification's wording
+    // and for the address the electronic route needs (1C-41).
+    case: {
+      findUniqueOrThrow: vi.fn().mockResolvedValue({
+        code: 'GKS-2026-0001',
+        serviceType: ServiceType.GKS_SCHOLARSHIP,
+        user: { email: 'tuvshin@example.mn' },
+      }),
     },
     $transaction: vi.fn().mockImplementation((arg: unknown) =>
       typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(prisma) : Promise.all(arg as Promise<unknown>[]),
@@ -173,7 +187,7 @@ function signingHarness(status: ContractStatus, type: ContractType = ContractTyp
     notifications,
     slack,
   );
-  return { service, prisma, storage, update };
+  return { service, prisma, storage, update, notifications, pdf };
 }
 
 describe('ContractsService.registerPhysical — a paper contract is registered once (1N-12)', () => {
@@ -260,5 +274,101 @@ describe('ContractsService.accept — no fresh OTP for a contract already in for
     await expect(service.accept('contract-1', { id: 'user-1', email: 'tuvshin@example.mn', role: Role.USER })).rejects.toThrow(
       BadRequestException,
     );
+  });
+});
+
+describe('the electronic route only opens where a signature can arrive (1C-41)', () => {
+  it('refuses to issue an electronic contract to an account with no address', async () => {
+    const { service, prisma } = issuingHarness();
+    const noEmail = caseRow();
+    noEmail.user.email = null;
+    (prisma.case.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(noEmail);
+
+    // Nothing signs one but a code mailed to the account (1C-33), so this is a
+    // contract the office could only unstick days later by re-routing it.
+    await expect(service.createForCase({ caseId: 'case-1', type: ContractType.ELECTRONIC })).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(prisma.contract.create).not.toHaveBeenCalled();
+  });
+
+  it('still issues a paper contract to that same account', async () => {
+    const { service, prisma } = issuingHarness();
+    const noEmail = caseRow();
+    noEmail.user.email = null;
+    (prisma.case.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(noEmail);
+
+    const created = (await service.createForCase({ caseId: 'case-1', type: ContractType.PHYSICAL })) as {
+      status: ContractStatus;
+    };
+
+    expect(created.status).toBe(ContractStatus.DRAFT);
+  });
+
+  it('tells the client an electronic contract is waiting for them', async () => {
+    const { service, notifications } = issuingHarness();
+
+    await service.createForCase({ caseId: 'case-1', type: ContractType.ELECTRONIC });
+
+    expect(notifications.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: NotificationEvent.CONTRACT_READY,
+        userIds: ['user-1'],
+        caseId: 'case-1',
+      }),
+    );
+  });
+
+  it('says nothing when the contract is signed at the desk', async () => {
+    const { service, notifications } = issuingHarness();
+
+    await service.createForCase({ caseId: 'case-1', type: ContractType.PHYSICAL });
+
+    expect(notifications.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('announces the move when a paper contract is put on the electronic route', async () => {
+    const { service, notifications } = signingHarness(ContractStatus.DRAFT, ContractType.PHYSICAL);
+
+    await service.changeType('contract-1', ContractType.ELECTRONIC);
+
+    expect(notifications.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ event: NotificationEvent.CONTRACT_READY }),
+    );
+  });
+
+  it('re-sends the same notice when staff press "Сануулга илгээх"', async () => {
+    const { service, notifications } = signingHarness(ContractStatus.SENT, ContractType.ELECTRONIC);
+
+    await service.remind('contract-1');
+
+    expect(notifications.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ event: NotificationEvent.CONTRACT_READY }),
+    );
+  });
+
+  it('refuses a reminder on a contract already signed', async () => {
+    const { service, notifications } = signingHarness(ContractStatus.ACTIVE, ContractType.ELECTRONIC);
+
+    await expect(service.remind('contract-1')).rejects.toThrow(BadRequestException);
+    expect(notifications.dispatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('the archived PDF says how the contract was actually signed (1C-36)', () => {
+  it('leaves the e-signature line off a contract signed with a pen', async () => {
+    const { service, pdf } = signingHarness(ContractStatus.DRAFT, ContractType.PHYSICAL);
+
+    await service.registerPhysical('contract-1', { signedAt: '2026-09-02T00:00:00.000Z' }, Buffer.from('scan'));
+
+    // `renderPrintable` already knew this; the copy filed in storage did not,
+    // so the office's archive claimed "Цахимаар баталгаажсан" over a pen
+    // signature.
+    const rendered = (pdf.render as ReturnType<typeof vi.fn>).mock.calls[0]![0] as {
+      signedAt: Date | null;
+      signedIp: string | null;
+    };
+    expect(rendered.signedAt).toBeNull();
+    expect(rendered.signedIp).toBeNull();
   });
 });
