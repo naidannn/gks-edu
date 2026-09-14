@@ -7,6 +7,7 @@ import { AdminAiConfigController } from './admin-ai-config.controller.js';
 import { AiConfigService } from './ai-config.service.js';
 import { AdmissionsModule } from '../admissions/admissions.module.js';
 import { FxModule } from '../fx/fx.module.js';
+import { LeadsModule } from '../leads/leads.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { ProgramsModule } from '../programs/programs.module.js';
@@ -19,6 +20,7 @@ import { OptionalUserService } from './chat/optional-user.service.js';
 import { AdmissionsTools } from './chat/tools/admissions.tools.js';
 import { CatalogTools } from './chat/tools/catalog.tools.js';
 import { KnowledgeTools } from './chat/tools/knowledge.tools.js';
+import { LeadTools } from './chat/tools/lead.tools.js';
 import { PricingTools } from './chat/tools/pricing.tools.js';
 import { ToolRegistry } from './chat/tools/tool-registry.service.js';
 import { TurnOrchestrator } from './chat/turn.orchestrator.js';
@@ -55,6 +57,10 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     AdmissionsModule,
     PricingModule,
     FxModule,
+    // The one module the assistant *writes* through: a chat-born lead goes down
+    // the same path the website's form does, so the dedupe window, the Meta
+    // conversion and the staff notification are not reimplemented (§6.3).
+    LeadsModule,
   ],
   controllers: [AdminKnowledgeController, AdminAiConfigController, ChatController],
   providers: [
@@ -76,6 +82,7 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     AdmissionsTools,
     PricingTools,
     KnowledgeTools,
+    LeadTools,
     ToolRegistry,
     TurnOrchestrator,
     OptionalUserService,

@@ -5,6 +5,7 @@ import type { LlmToolCall, LlmToolDefinition } from '../../llm/llm.types.js';
 import { AdmissionsTools } from './admissions.tools.js';
 import { CatalogTools } from './catalog.tools.js';
 import { KnowledgeTools } from './knowledge.tools.js';
+import { LeadTools } from './lead.tools.js';
 import { PricingTools } from './pricing.tools.js';
 import {
   ToolArgumentError,
@@ -60,8 +61,9 @@ export class ToolRegistry {
     admissions: AdmissionsTools,
     pricing: PricingTools,
     knowledge: KnowledgeTools,
+    lead: LeadTools,
   ) {
-    const all = [catalog, admissions, pricing, knowledge].flatMap((provider) => provider.tools());
+    const all = [catalog, admissions, pricing, knowledge, lead].flatMap((provider) => provider.tools());
     this.registry = new Map(all.map((tool) => [tool.name, tool]));
   }
 

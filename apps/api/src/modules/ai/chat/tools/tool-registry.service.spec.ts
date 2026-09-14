@@ -28,6 +28,7 @@ function registryOf(...tools: AiTool[]): ToolRegistry {
     empty as never,
     empty as never,
     empty as never,
+    empty as never,
   );
 }
 

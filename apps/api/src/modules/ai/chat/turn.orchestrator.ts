@@ -132,14 +132,23 @@ export class TurnOrchestrator {
     const toolDefinitions = this.tools.definitions(params.level);
 
     const history = await this.sessions.history(params.session.id);
+    const profile = (params.session.profile as Record<string, unknown>) ?? {};
     const { system, sources } = buildSystemPrompt({
       persona: config.persona,
       level: params.level,
       hits,
       playbooks,
-      profile: (params.session.profile as Record<string, unknown>) ?? {},
+      profile,
       history: params.session.summary,
       toolNames: toolDefinitions.map((tool) => tool.name),
+      capture: {
+        // `messageCount` counts both sides, and the user's message for this
+        // turn is already in it — so it is halved and rounded up to get the
+        // number of times this visitor has actually spoken.
+        turns: Math.ceil((params.session.messageCount + 1) / 2),
+        askAfter: config.leadCaptureAfterMessages,
+        contactSettled: Boolean(profile.phone) || profile.contactDeclined === true,
+      },
     });
 
     // `history` already ends with the question, because it was stored above.
