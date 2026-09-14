@@ -261,8 +261,14 @@ export class ChatSessionService {
 
   /** `AI-2026-0042`. */
   private generateCode(): Promise<string> {
-    return nextYearlyCode('AI', (stem) =>
-      this.prisma.chatSession.count({ where: { code: { startsWith: stem } } }),
+    return nextYearlyCode('AI', async (stem) =>
+      (
+        await this.prisma.chatSession.findFirst({
+          where: { code: { startsWith: stem } },
+          orderBy: { code: 'desc' },
+          select: { code: true },
+        })
+      )?.code ?? null,
     );
   }
 }
