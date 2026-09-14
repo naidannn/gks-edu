@@ -49,6 +49,7 @@ function buildHarness(options: {
     case: { findUnique: vi.fn().mockResolvedValue(gksCase) },
     payment: {
       findFirst: vi.fn().mockResolvedValue(options.existingPayment ?? null),
+      findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn(),
       create: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => ({ id: 'payment-1', ...data })),
       update: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => ({ id: 'payment-1', ...data })),
@@ -162,7 +163,12 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
 
   it('hands back the existing PENDING invoice instead of creating a duplicate', async () => {
     const { service, prisma, qpay } = buildHarness({
-      existingPayment: { id: 'payment-old', status: PaymentStatus.PENDING, qpayInvoiceId: 'MOCK-old' },
+      existingPayment: {
+        id: 'payment-old',
+        status: PaymentStatus.PENDING,
+        qpayInvoiceId: 'MOCK-old',
+        createdAt: new Date(),
+      },
     });
     const result = await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
     expect(result).toMatchObject({ id: 'payment-old', qpayInvoiceId: 'MOCK-old' });
@@ -214,7 +220,12 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     prisma.payment.create.mockRejectedValue(Object.assign(new Error('unique'), { code: 'P2002' }));
     prisma.payment.findFirst
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: 'payment-winner', status: PaymentStatus.PENDING, qpayInvoiceId: 'MOCK-w' });
+      .mockResolvedValueOnce({
+        id: 'payment-winner',
+        status: PaymentStatus.PENDING,
+        qpayInvoiceId: 'MOCK-w',
+        createdAt: new Date(),
+      });
 
     const result = await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
 
@@ -716,10 +727,10 @@ describe('PaymentsService — QPay invoice hygiene (1N-09, 1N-10)', () => {
     };
   }
 
-  it('expires a QR the poller has given up on, and takes QPay`s copy down with it', async () => {
+  it('expires a QR that has run out its day, and takes QPay`s copy down with it', async () => {
     const harness = buildHarness();
     harness.prisma.payment.findUnique.mockResolvedValue(
-      pendingRow({ createdAt: new Date(Date.now() - 60 * 60 * 1000) }),
+      pendingRow({ createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000) }),
     );
     vi.mocked(harness.qpay.checkPayment).mockResolvedValue({ paid: false });
 
@@ -745,6 +756,21 @@ describe('PaymentsService — QPay invoice hygiene (1N-09, 1N-10)', () => {
     expect(harness.qpay.cancelInvoice).not.toHaveBeenCalled();
   });
 
+  it('leaves an hour-old QR alive — an invoice lives a day, not a poll window (1C-38)', async () => {
+    const harness = buildHarness();
+    harness.prisma.payment.findUnique.mockResolvedValue(
+      pendingRow({ createdAt: new Date(Date.now() - 60 * 60 * 1000) }),
+    );
+    vi.mocked(harness.qpay.checkPayment).mockResolvedValue({ paid: false });
+
+    await harness.service.pollOnce('payment-1');
+
+    // The fast schedule stopped forty-five minutes ago; that is the sweep's
+    // cue to take over, not the invoice's cue to die.
+    expect(harness.prisma.payment.updateMany).not.toHaveBeenCalled();
+    expect(harness.qpay.cancelInvoice).not.toHaveBeenCalled();
+  });
+
   it('will not credit a debt on less money than it asked for', async () => {
     const harness = buildHarness();
     harness.prisma.payment.findUnique.mockResolvedValue(pendingRow());
@@ -754,5 +780,143 @@ describe('PaymentsService — QPay invoice hygiene (1N-09, 1N-10)', () => {
 
     expect(harness.prisma.payment.updateMany).not.toHaveBeenCalled();
     expect(harness.slack.notify).toHaveBeenCalledWith(expect.objectContaining({ title: 'QPay дутуу төлбөр ирлээ' }));
+  });
+});
+
+
+describe('PaymentsService.sweepOpenInvoices (1C-38 — the slow half of the fallback)', () => {
+  function openRow(id: string, minutesOld: number) {
+    return {
+      id,
+      caseId: 'case-1',
+      kind: PaymentKind.PREPAYMENT,
+      amountMnt: 200_000,
+      status: PaymentStatus.PENDING,
+      qpayInvoiceId: `MOCK-${id}`,
+      qpayPaymentId: null,
+      createdAt: new Date(Date.now() - minutesOld * 60_000),
+      case: makeCase(),
+    };
+  }
+
+  it('only looks at invoices the fast poll has stopped watching', async () => {
+    const harness = buildHarness();
+    harness.prisma.payment.findMany.mockResolvedValue([]);
+
+    await harness.service.sweepOpenInvoices();
+
+    const where = harness.prisma.payment.findMany.mock.calls[0]![0].where;
+    expect(where.status).toBe(PaymentStatus.PENDING);
+    expect(where.qpayInvoiceId).toEqual({ not: null });
+    // Anything younger than the fifteen-minute window is still being asked
+    // about every ten seconds; asking twice would only double the QPay calls.
+    const cutoff = (where.createdAt as { lt: Date }).lt.getTime();
+    expect(Date.now() - cutoff).toBeGreaterThanOrEqual(15 * 60 * 1000);
+    expect(Date.now() - cutoff).toBeLessThan(16 * 60 * 1000);
+  });
+
+  it('credits a payment whose webhook never arrived, hours after the poll gave up', async () => {
+    const harness = buildHarness();
+    const row = openRow('payment-1', 5 * 60);
+    harness.prisma.payment.findMany.mockResolvedValue([{ id: 'payment-1' }]);
+    harness.prisma.payment.findUnique.mockResolvedValue(row);
+    vi.mocked(harness.qpay.checkPayment).mockResolvedValue({ paid: true, qpayPaymentId: 'qpay-9', paidAmount: 200_000 });
+
+    await harness.service.sweepOpenInvoices();
+
+    expect(harness.qpay.checkPayment).toHaveBeenCalledWith('MOCK-payment-1');
+    expect(harness.prisma.payment.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: PaymentStatus.PAID }) }),
+    );
+  });
+
+  it('finishes the pass when QPay refuses one invoice — that is the failure it exists for', async () => {
+    const harness = buildHarness();
+    harness.prisma.payment.findMany.mockResolvedValue([{ id: 'payment-1' }, { id: 'payment-2' }]);
+    harness.prisma.payment.findUnique.mockImplementation(({ where }: { where: { id: string } }) =>
+      Promise.resolve(openRow(where.id, 5 * 60)),
+    );
+    vi.mocked(harness.qpay.checkPayment)
+      .mockRejectedValueOnce(new Error('QPay 503'))
+      .mockResolvedValue({ paid: false });
+
+    await expect(harness.service.sweepOpenInvoices()).resolves.toBeUndefined();
+
+    expect(harness.qpay.checkPayment).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('PaymentsService.reissueForCase (1C-38 — a second QR, asked for by the client)', () => {
+  const existing = {
+    id: 'payment-1',
+    caseId: 'case-1',
+    kind: PaymentKind.PREPAYMENT,
+    amountMnt: 200_000,
+    status: PaymentStatus.PENDING,
+    method: PaymentMethod.QPAY,
+    qpayInvoiceId: 'MOCK-1',
+    qpayPaymentId: null,
+    dueAt: new Date('2026-09-20T00:00:00.000Z'),
+    createdAt: new Date(Date.now() - 20 * 60 * 60 * 1000),
+    case: makeCase(),
+  };
+
+  /** The old row is gone by the time `createForCase` looks for a live one. */
+  function harnessWithExisting(row: Record<string, unknown> = existing) {
+    const harness = buildHarness({ existingPayment: row });
+    harness.prisma.payment.findUnique.mockResolvedValue(row);
+    harness.prisma.payment.findFirst.mockResolvedValueOnce(row).mockResolvedValue(null);
+    return harness;
+  }
+
+  it('retires the old invoice at QPay before minting the new one', async () => {
+    const harness = harnessWithExisting();
+
+    await harness.service.reissueForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
+
+    expect(harness.prisma.payment.updateMany).toHaveBeenCalledWith({
+      where: { id: 'payment-1', status: PaymentStatus.PENDING },
+      data: { status: PaymentStatus.EXPIRED },
+    });
+    // Two live QRs for one debt is how §6.4's double payment happens.
+    expect(harness.qpay.cancelInvoice).toHaveBeenCalledWith('MOCK-1');
+    expect(harness.qpay.createInvoice).toHaveBeenCalledTimes(1);
+  });
+
+  it('carries the debt`s own deadline across, instead of granting a fresh week', async () => {
+    const harness = harnessWithExisting();
+
+    await harness.service.reissueForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
+
+    expect(harness.prisma.payment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ dueAt: existing.dueAt }) }),
+    );
+    expect(harness.pricing.getActive).not.toHaveBeenCalled();
+  });
+
+  it('refuses a debt that is already paid', async () => {
+    const harness = harnessWithExisting({ ...existing, status: PaymentStatus.PAID });
+
+    await expect(
+      harness.service.reissueForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(harness.qpay.cancelInvoice).not.toHaveBeenCalled();
+  });
+
+  it('will not retire money the office registered by hand (1C-27)', async () => {
+    const harness = harnessWithExisting({ ...existing, method: PaymentMethod.BANK_TRANSFER, qpayInvoiceId: null });
+
+    await expect(
+      harness.service.reissueForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(harness.prisma.payment.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('refuses somebody else`s case outright', async () => {
+    const harness = harnessWithExisting();
+
+    await expect(
+      harness.service.reissueForCase('case-1', { kind: PaymentKind.PREPAYMENT }, otherStudent),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

@@ -1,9 +1,41 @@
-/** QPay polling fallback (1C-14) — 10s interval, per invoice, `jobId` = paymentId for idempotent (re-)scheduling. */
+/**
+ * QPay polling fallback (1C-14) — 10s interval, per invoice, `jobId` = paymentId
+ * for idempotent (re-)scheduling. This is the *fast* tier: it covers the person
+ * standing in front of the QR with their phone out, and stops after a quarter of
+ * an hour. What happens for the rest of the invoice's day is `QPAY_SWEEP_QUEUE`.
+ */
 export const QPAY_POLL_QUEUE = 'qpay-poll';
 export const QPAY_POLL_JOB = 'poll-invoice';
 export const QPAY_POLL_INTERVAL_MS = 10_000;
-export const QPAY_POLL_TIMEOUT_MS = 15 * 60 * 1000;
-export const QPAY_POLL_LIMIT = Math.ceil(QPAY_POLL_TIMEOUT_MS / QPAY_POLL_INTERVAL_MS);
+/** How long the per-invoice scheduler keeps asking before the sweep takes over. */
+export const QPAY_POLL_WINDOW_MS = 15 * 60 * 1000;
+export const QPAY_POLL_LIMIT = Math.ceil(QPAY_POLL_WINDOW_MS / QPAY_POLL_INTERVAL_MS);
+
+/**
+ * How long an unpaid QPay invoice stays scannable (1C-38).
+ *
+ * It used to be the same fifteen minutes as the poll, because one constant did
+ * both jobs — and fifteen minutes is the length of a QR session, not of a
+ * decision. A client who opened the invoice on a laptop and went to find their
+ * phone, or who wanted to move money across from another bank first, came back
+ * to a dead QR and no way to ask for another one. A day is the office's answer.
+ */
+export const QPAY_INVOICE_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The slow tier (1C-38): every open invoice is re-checked against QPay, and one
+ * that has run out its day is retired. A sweep rather than a longer per-invoice
+ * schedule because polling each invoice every ten seconds for a day would be
+ * 8,640 jobs apiece; the office never has more than a handful open at once, so
+ * one query every couple of minutes covers all of them together.
+ *
+ * Two minutes is chosen against the webhook, not against the client: the
+ * callback credits a payment in about a second, and this only runs at all when
+ * that callback never arrived.
+ */
+export const QPAY_SWEEP_QUEUE = 'qpay-sweep';
+export const QPAY_SWEEP_JOB = 'sweep-open-invoices';
+export const QPAY_SWEEP_INTERVAL_MS = 2 * 60 * 1000;
 
 /** Daily Mongolbank FX pull (1E-07) — invoices snapshot the rate, so one fetch a day is enough. */
 export const FX_RATE_QUEUE = 'fx-rates';

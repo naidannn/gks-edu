@@ -8,7 +8,7 @@ import { CaseStage, Prisma, Role, type ServiceType } from '../../prisma/client.j
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AdmissionsService } from '../admissions/admissions.service.js';
 import { CLIENT_CONTRACT_SELECT, toClientContract } from '../contracts/client-contract.select.js';
-import { CLIENT_PAYMENT_SELECT } from '../payments/client-payment.select.js';
+import { CLIENT_PAYMENT_SELECT, toClientPayment } from '../payments/client-payment.select.js';
 import { CASE_FLOWS, mainLineForward } from './case-flow.js';
 import { CASE_STAGE_LABELS } from './case-stage-labels.js';
 import type { AssignCaseDto } from './dto/assign-case.dto.js';
@@ -274,8 +274,19 @@ export class CasesService {
     this.assertReadAccess(found, user);
 
     if (staff) return found;
-    const contract = (found as { contract?: { pdfPath: string | null } | null }).contract;
-    return { ...found, contract: contract ? toClientContract(contract) : null };
+    // `getOrThrow` takes a runtime include, so what came back is typed as the
+    // bare row; the two relations the client's copy rewrites are read off it.
+    const narrowed = found as {
+      contract?: { pdfPath: string | null } | null;
+      payments?: Parameters<typeof toClientPayment>[0][];
+    };
+    return {
+      ...found,
+      contract: narrowed.contract ? toClientContract(narrowed.contract) : null,
+      // Already narrowed by the select; this is what adds the QR's own deadline
+      // to it, so the client is never left guessing how long the code lives.
+      payments: (narrowed.payments ?? []).map(toClientPayment),
+    };
   }
 
   async assign(id: string, dto: AssignCaseDto) {

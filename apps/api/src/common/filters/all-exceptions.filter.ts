@@ -50,13 +50,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
     error?: string;
   } {
     if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+
+      // Every 429 in the app comes from the throttler, and its own body is the
+      // English `ThrottlerException: Too many requests` — which a client who
+      // pressed "send the code again" once too often would have read verbatim.
+      if (status === HttpStatus.TOO_MANY_REQUESTS) {
+        return {
+          status,
+          message: 'Хэт олон удаа хүсэлт илгээлээ. Хэсэг хүлээгээд дахин оролдоно уу',
+          error: exception.name,
+        };
+      }
+
       const body = exception.getResponse();
       const message =
         typeof body === 'string'
           ? body
           : ((body as { message?: string | string[] }).message ?? exception.message);
 
-      return { status: exception.getStatus(), message, error: exception.name };
+      return { status, message, error: exception.name };
     }
 
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { STAFF_ROLES } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -25,6 +26,20 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Create a QPay invoice for a case`s prepayment/balance — self-service by the owning user, or staff (1C-12)' })
   create(@Param('caseId', ParseUUIDPipe) caseId: string, @Body() dto: CreatePaymentDto, @CurrentUser() user: AuthenticatedUser) {
     return this.payments.createForCase(caseId, dto, user);
+  }
+
+  /**
+   * Each press mints a real QPay invoice and takes the previous one down, so the
+   * ceiling is the number of genuinely dead QRs one stuck client could work
+   * through, not the rate a browser can click at.
+   */
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
+  @Post('cases/:caseId/payments/reissue')
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Replace a live QPay invoice with a fresh QR — the client`s own way past a dead one (1C-38)' })
+  reissue(@Param('caseId', ParseUUIDPipe) caseId: string, @Body() dto: CreatePaymentDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.payments.reissueForCase(caseId, dto, user);
   }
 
   @Post('cases/:caseId/payments/manual')
