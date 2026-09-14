@@ -22,6 +22,15 @@ const consultant = computed(
     ?? props.client.assignedConsultant?.email
     ?? 'Хариуцагчгүй',
 );
+/**
+ * Whether this cycle was signed on screen or on paper (1C-08 vs 1C-09).
+ *
+ * It changes what the office does next — a physical contract is registered at
+ * the desk and scanned, an electronic one signs itself — so it belongs beside
+ * the stage rather than three clicks away on the payments tab.
+ */
+const contractType = computed(() => props.activeCase?.contract?.type ?? null);
+
 const target = computed(() => {
   const university = universityName(props.activeCase?.university ?? props.client.targetUniversity, '');
   const major = props.client.targetMajor;
@@ -57,6 +66,13 @@ const target = computed(() => {
       <div class="gks-clienthead__facts">
         <span class="gks-clienthead__service">{{ SERVICE_LABELS[activeCase.serviceType] }}</span>
         <DsBadge :tone="CASE_STAGE_TONE[activeCase.stage]">{{ CASE_STAGE_LABELS[activeCase.stage] }}</DsBadge>
+        <DsBadge
+          v-if="contractType"
+          tone="info"
+          :icon="contractType === 'ELECTRONIC' ? 'monitor-smartphone' : 'pen-line'"
+        >
+          {{ CONTRACT_TYPE_LABELS[contractType] }}
+        </DsBadge>
         <span v-if="target" class="gks-clienthead__target">{{ target }}</span>
         <span class="gks-clienthead__consultant"><DsIcon name="user-check" :size="14" /> {{ consultant }}</span>
       </div>

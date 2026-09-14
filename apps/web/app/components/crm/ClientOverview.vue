@@ -44,7 +44,10 @@ const summary = computed(() => {
       key: 'contract',
       icon: 'file-text',
       label: 'Гэрээ',
-      value: row.contract ? CONTRACT_STATUS_LABELS[row.contract.status] : 'Үүсээгүй',
+      // Цахим/биет first: it is the fact that decides who does the next thing.
+      value: row.contract
+        ? `${CONTRACT_TYPE_LABELS[row.contract.type]} · ${CONTRACT_STATUS_LABELS[row.contract.status]}`
+        : 'Үүсээгүй',
       tab: 'payments' as Tab,
     },
     {
