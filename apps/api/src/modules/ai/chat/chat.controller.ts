@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  Res,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
@@ -44,9 +54,21 @@ export class ChatController {
   @Throttle({ default: { limit: 10, ttl: 600_000 } })
   @ApiOperation({ summary: 'Start a conversation and get its token and greeting' })
   async start(@Body() dto: StartChatSessionDto, @Req() request: Request) {
+    // The kill switch is checked before a row is written, not only before an
+    // answer is generated. `enabled` is false until the office turns the
+    // assistant on, and while it is false the endpoint has to be inert rather
+    // than merely quiet: a session minted here is a `ChatSession` row, a code
+    // out of the same counter the real conversations will use, and a token
+    // handed to an anonymous caller. Nothing renders a chat yet (2C-02 is
+    // still todo), so the only thing that can reach this endpoint while the
+    // switch is off is something we did not build.
+    const config = await this.aiConfig.get();
+    if (!config.enabled) {
+      throw new ServiceUnavailableException('AI туслах одоогоор идэвхгүй байна.');
+    }
+
     const user = await this.optionalUser.resolve(request);
     const level = await this.accessLevel.resolve(user);
-    const config = await this.aiConfig.get();
 
     const { session, token } = await this.sessions.start({
       channel: dto.channel ?? ChatChannel.WEB_WIDGET,
