@@ -1044,7 +1044,15 @@ export class ClientsService {
 
   /** `KH-2026-0007` — "харилцагч". */
   private generateCode(db: Db): Promise<string> {
-    return nextYearlyCode('KH', (stem) => db.client.count({ where: { code: { startsWith: stem } } }));
+    return nextYearlyCode('KH', async (stem) =>
+      (
+        await db.client.findFirst({
+          where: { code: { startsWith: stem } },
+          orderBy: { code: 'desc' },
+          select: { code: true },
+        })
+      )?.code ?? null,
+    );
   }
 }
 
