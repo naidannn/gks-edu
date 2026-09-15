@@ -30,6 +30,7 @@ import { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 import { MergeLeadDto } from './dto/merge-lead.dto.js';
 import { TransitionLeadDto } from './dto/transition-lead.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
+import { LeadSource } from '../../prisma/client.js';
 import { metaRequestContext } from '../meta/request-context.js';
 import { LeadsService } from './leads.service.js';
 
@@ -52,6 +53,17 @@ export class LeadsController {
     // service: they belong to the HTTP request, and the service is also called
     // from tests and (one day) a queue.
     return this.leads.createFromPublicForm(dto, metaRequestContext(request));
+  }
+
+  @Post('office')
+  @Public()
+  // Everyone in the waiting area is on the office Wi-Fi, so they share one
+  // address — the website form's 5 an hour would lock out the sixth visitor.
+  @Throttle({ default: { limit: 60, ttl: 60 * 60 * 1000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Self-registration by a visitor waiting at the office, via the wall QR code — 1B-21' })
+  createFromOffice(@Body() dto: CreatePublicLeadDto) {
+    return this.leads.createFromPublicForm(dto, {}, { source: LeadSource.OFFICE });
   }
 
   @Post()

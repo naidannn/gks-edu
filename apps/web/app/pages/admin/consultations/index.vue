@@ -97,6 +97,9 @@ useHead({ title: 'Зөвлөгөө хүсэлт · CRM' });
         <p v-if="data" class="gks-result-count gks-tnum">{{ data.meta.total }} хүсэлт</p>
       </div>
       <div class="gks-page__actions">
+        <DsButton variant="secondary" icon-left="qr-code" @click="navigateTo('/admin/consultations/qr')">
+          Оффисын QR
+        </DsButton>
         <DsButton variant="accent" icon-left="user-plus" @click="navigateTo('/admin/consultations/new')">
           Зөвлөгөө бүртгэх
         </DsButton>

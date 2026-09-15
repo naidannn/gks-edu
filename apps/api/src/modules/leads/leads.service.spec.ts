@@ -142,4 +142,51 @@ describe('LeadsService.createFromPublicForm', () => {
     const tracked = (meta.track as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { eventId: string };
     expect(tracked.eventId).toBe('browser-event-1');
   });
+
+  /**
+   * 1B-21 — the QR code on the office wall. The person is sitting in the
+   * waiting area, so nobody should email them "we will call you", and a walk-in
+   * is not something a Meta campaign produced.
+   */
+  it('files an office QR registration as a visit, without the ad-funnel side effects', async () => {
+    const prisma = prismaStub();
+    const email = emailStub();
+    const meta = metaStub();
+    const service = new LeadsService(prisma, notificationsStub(), email, slackStub(), meta);
+
+    await service.createFromPublicForm(
+      { ...base, email: 'visitor@example.com', schoolName: ' 1-р сургууль ', note: 'GKS-ийн талаар' },
+      {},
+      { source: LeadSource.OFFICE },
+    );
+
+    const data = prisma.lead.create.mock.calls[0]![0].data;
+    expect(data.source).toBe(LeadSource.OFFICE);
+    expect(data.schoolName).toBe('1-р сургууль');
+    expect(data.activities.create).toMatchObject({
+      type: LeadActivityType.MEETING,
+      body: 'Оффис дээр ирж, QR кодоор бүртгүүлсэн\n\nGKS-ийн талаар',
+      meta: { channel: 'office_qr' },
+    });
+    expect(email.send).not.toHaveBeenCalled();
+    expect(meta.track).not.toHaveBeenCalled();
+  });
+
+  it('logs a repeat office registration on the existing lead', async () => {
+    const prisma = prismaStub({ recentLead: { id: 'existing-lead' } });
+    const meta = metaStub();
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), meta);
+
+    const result = await service.createFromPublicForm(base, {}, { source: LeadSource.OFFICE });
+
+    expect(result).toEqual({ id: 'existing-lead', merged: true });
+    expect(prisma.leadActivity.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        leadId: 'existing-lead',
+        type: LeadActivityType.MEETING,
+        body: 'Оффис дээр ирж, QR кодоор дахин бүртгүүлсэн',
+      }),
+    });
+    expect(meta.track).not.toHaveBeenCalled();
+  });
 });

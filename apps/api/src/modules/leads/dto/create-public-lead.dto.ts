@@ -95,6 +95,13 @@ export class CreatePublicLeadDto {
   @IsOptional()
   educationLevel?: EducationLevel;
 
+  /** The school they attend or graduated from — the office QR form asks for it (1B-21). */
+  @ApiPropertyOptional()
+  @IsString()
+  @MaxLength(120)
+  @IsOptional()
+  schoolName?: string;
+
   @ApiPropertyOptional({ description: 'Grade average; the scale itself is unsettled (gksedu.md §24)' })
   @Type(() => Number)
   @IsNumber()

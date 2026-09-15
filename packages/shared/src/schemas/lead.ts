@@ -37,6 +37,7 @@ export const publicLeadSchema = z.object({
   email: z.email('Имэйл хаяг буруу байна').max(200).optional().or(z.literal('')),
   age: z.number().int().min(14).max(70).optional(),
   educationLevel: educationLevelSchema.optional(),
+  schoolName: z.string().trim().max(120).optional(),
   gpa: z.number().min(0).max(100).optional(),
   /** Which scale that average is on — asked since the GKS self-check (§24 Q1). */
   gpaScale: z.string().max(20).optional(),

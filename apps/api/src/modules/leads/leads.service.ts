@@ -22,6 +22,51 @@ import type { UpdateLeadDto } from './dto/update-lead.dto.js';
 /** A second submission from the same number inside this window is the same person. */
 const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * What differs between the three ways a person reaches the public intake path:
+ * the website form, the assistant (2C-06), and the QR code on the office wall
+ * (1B-21). Everything else — dedupe, the staff page, the Slack line — is shared.
+ */
+interface IntakeChannel {
+  key: 'website_form' | 'ai_chat' | 'office_qr';
+  activityType: LeadActivityType;
+  /** The opening (or repeat) timeline entry. */
+  body: (note: string | undefined, repeat: boolean) => string;
+  /** Only the website form is an ad funnel: Meta conversion + emailed receipt. */
+  isAdConversion: boolean;
+}
+
+function channelOf(source: LeadSource): IntakeChannel {
+  switch (source) {
+    case LeadSource.AI_CHAT:
+      return {
+        key: 'ai_chat',
+        activityType: LeadActivityType.CHAT,
+        body: (note, repeat) => note ?? (repeat ? 'AI туслахтай яриа' : 'AI туслахтай ярианаас үүссэн хүсэлт'),
+        isAdConversion: true,
+      };
+    case LeadSource.OFFICE:
+      return {
+        key: 'office_qr',
+        activityType: LeadActivityType.MEETING,
+        // The visit itself is the fact worth keeping, so it heads the entry
+        // even when the visitor typed a question underneath.
+        body: (note, repeat) => {
+          const head = repeat ? 'Оффис дээр ирж, QR кодоор дахин бүртгүүлсэн' : 'Оффис дээр ирж, QR кодоор бүртгүүлсэн';
+          return note ? `${head}\n\n${note}` : head;
+        },
+        isAdConversion: false,
+      };
+    default:
+      return {
+        key: 'website_form',
+        activityType: LeadActivityType.NOTE,
+        body: (note, repeat) => note ?? (repeat ? 'Вебсайтаас давтан хүсэлт илгээсэн' : 'Вебсайтын зөвлөгөөний хүсэлт'),
+        isAdConversion: true,
+      };
+  }
+}
+
 export interface PublicLeadResult {
   id: string;
   /** True when the submission merged into a lead the visitor had already created. */
@@ -97,7 +142,8 @@ export class LeadsService {
     }
 
     const phone = normalizePhone(dto.phone);
-    const fromChat = (origin.source ?? LeadSource.WEBSITE) === LeadSource.AI_CHAT;
+    const source = origin.source ?? LeadSource.WEBSITE;
+    const channel = channelOf(source);
     const universityIds = await this.resolveUniversityIds(dto.interestedUniversitySlugs);
 
     const recent = await this.prisma.lead.findFirst({
@@ -110,19 +156,17 @@ export class LeadsService {
       await this.prisma.leadActivity.create({
         data: {
           leadId: recent.id,
-          type: fromChat ? LeadActivityType.CHAT : LeadActivityType.NOTE,
-          body: dto.note ?? (fromChat ? 'AI туслахтай яриа' : 'Вебсайтаас давтан хүсэлт илгээсэн'),
-          meta: {
-            channel: fromChat ? 'ai_chat' : 'website_form',
-            repeat: true,
-          } satisfies Prisma.InputJsonObject,
+          type: channel.activityType,
+          body: channel.body(dto.note, true),
+          meta: { channel: channel.key, repeat: true } satisfies Prisma.InputJsonObject,
         },
       });
       // A second form inside the dedupe window means the visitor is still
-      // waiting for a call — worth saying out loud, not just filing.
+      // waiting for a call — worth saying out loud, not just filing. From the
+      // office it means they are sitting in the waiting area right now.
       await this.slack.notify({
-        emoji: '🔁',
-        title: 'Давтан зөвлөгөөний хүсэлт',
+        emoji: channel.key === 'office_qr' ? '🏢' : '🔁',
+        title: channel.key === 'office_qr' ? 'Оффис дээр зөвлөгөө хүлээж байна' : 'Давтан зөвлөгөөний хүсэлт',
         fields: [
           { label: 'Нэр', value: `${dto.lastName ?? ''} ${dto.firstName ?? ''}`.trim() },
           { label: 'Утас', value: phone },
@@ -135,7 +179,7 @@ export class LeadsService {
       // lead's id as the event id makes Meta collapse the repeat into the event
       // the first submission already reported, instead of counting a nervous
       // visitor twice and teaching the campaign to look for more of them.
-      await this.reportLeadToMeta(dto, phone, recent.id, request, { deduped: true });
+      if (channel.isAdConversion) await this.reportLeadToMeta(dto, phone, recent.id, request, { deduped: true });
       return { id: recent.id, merged: true };
     }
 
@@ -147,6 +191,7 @@ export class LeadsService {
         email: dto.email?.trim().toLowerCase(),
         age: dto.age,
         educationLevel: dto.educationLevel,
+        schoolName: dto.schoolName?.trim() || undefined,
         gpa: dto.gpa,
         gpaScale: dto.gpaScale,
         koreanLevel: dto.koreanLevel,
@@ -155,21 +200,15 @@ export class LeadsService {
         interestedUniversityIds: universityIds,
         interestedMajor: dto.interestedMajor,
         note: dto.note,
-        source: origin.source ?? LeadSource.WEBSITE,
+        source,
         ...(origin.userId ? { userId: origin.userId } : {}),
         utm: dto.utm ? (dto.utm as Prisma.InputJsonObject) : Prisma.JsonNull,
         activities: {
-          create: fromChat
-            ? {
-                type: LeadActivityType.CHAT,
-                body: dto.note ?? 'AI туслахтай ярианаас үүссэн хүсэлт',
-                meta: { channel: 'ai_chat' } satisfies Prisma.InputJsonObject,
-              }
-            : {
-                type: LeadActivityType.NOTE,
-                body: dto.note ?? 'Вебсайтын зөвлөгөөний хүсэлт',
-                meta: { channel: 'website_form' } satisfies Prisma.InputJsonObject,
-              },
+          create: {
+            type: channel.activityType,
+            body: channel.body(dto.note, false),
+            meta: { channel: channel.key } satisfies Prisma.InputJsonObject,
+          },
         },
       },
       select: {
@@ -184,8 +223,13 @@ export class LeadsService {
     });
 
     await this.notifyStaffOfNewLead(lead);
-    await this.acknowledgeLead(lead);
-    await this.reportLeadToMeta(dto, phone, lead.id, request);
+    // Someone registering in the waiting area is about to be advised in person;
+    // a "we will call you within a day" receipt would be wrong on both counts,
+    // and an office visit is not an ad conversion (see `reportLeadToMeta`).
+    if (channel.isAdConversion) {
+      await this.acknowledgeLead(lead);
+      await this.reportLeadToMeta(dto, phone, lead.id, request);
+    }
     return { id: lead.id, merged: false };
   }
 
@@ -252,9 +296,10 @@ export class LeadsService {
     source: LeadSource;
     interestedServices: ServiceType[];
   }): Promise<void> {
+    const atOffice = lead.source === LeadSource.OFFICE;
     await this.slack.notify({
-      emoji: '🔔',
-      title: 'Шинэ зөвлөгөөний хүсэлт',
+      emoji: atOffice ? '🏢' : '🔔',
+      title: atOffice ? 'Оффис дээр зөвлөгөө хүлээж байна' : 'Шинэ зөвлөгөөний хүсэлт',
       fields: [
         { label: 'Нэр', value: `${lead.lastName} ${lead.firstName}`.trim() },
         { label: 'Утас', value: lead.phone },
