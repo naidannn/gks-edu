@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import type { ClientStats, IntakeRiskReport, LeadStats, PaymentStats, ReviewQueueItem } from '@gks/shared';
+import {
+  CLIENT_PHASES,
+  type ClientStats,
+  type IntakeRiskReport,
+  type LeadStats,
+  type PaymentStats,
+  type ReviewQueueItem,
+} from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 
 /**
@@ -10,6 +17,9 @@ import { useAuthStore } from '~/stores/auth';
  * list that clears it — never a statistic with nowhere to go. It composes the
  * counters the modules already publish (`/leads/stats`, `/clients/stats`,
  * `/payments/stats`, the document reminder feed); nothing new is computed here.
+ *
+ * Under the queues sits the client book by business phase (1B-22): how many are
+ * actually under way, how many are still at the contract, how many are done.
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
@@ -134,6 +144,16 @@ const queues = computed(() => [
   },
 ]);
 
+/** The client book by phase — each count opens the list filtered to it. */
+const phases = computed(() =>
+  CLIENT_PHASES.map((phase) => ({
+    phase,
+    label: CLIENT_PHASE_LABELS[phase],
+    hint: CLIENT_PHASE_HINTS[phase],
+    value: clients.value?.byPhase[phase] ?? 0,
+  })),
+);
+
 function isLate(value: string | null): boolean {
   return Boolean(value) && new Date(value!) < new Date();
 }
@@ -185,6 +205,28 @@ useHead({ title: 'Хяналтын самбар · CRM' });
           <span class="gks-queue__hint">{{ queue.hint }}</span>
         </button>
       </div>
+
+      <DsCard title="Үйлчлүүлэгчийн тойм">
+        <template #action>
+          <NuxtLink to="/admin/clients" class="gks-dash__link">Жагсаалт →</NuxtLink>
+        </template>
+        <div class="gks-dash__phases">
+          <NuxtLink
+            v-for="entry in phases"
+            :key="entry.phase"
+            :to="`/admin/clients?phase=${entry.phase}`"
+            class="gks-phase"
+            :class="`gks-phase--${entry.phase.toLowerCase()}`"
+          >
+            <span class="gks-phase__value gks-tnum">
+              <template v-if="pending && !clients">—</template>
+              <template v-else>{{ entry.value }}</template>
+            </span>
+            <span class="gks-phase__label">{{ entry.label }}</span>
+            <span class="gks-phase__hint">{{ entry.hint }}</span>
+          </NuxtLink>
+        </div>
+      </DsCard>
 
       <div class="gks-dash__grid">
         <DsCard title="Сүүлд ирсэн хүсэлт">
@@ -260,6 +302,24 @@ useHead({ title: 'Хяналтын самбар · CRM' });
 .gks-queue__value { font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: 1.1; color: var(--text-strong); }
 .gks-queue__label { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .gks-queue__hint { font-size: var(--fs-caption); color: var(--text-subtle); }
+
+.gks-dash__phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); }
+.gks-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-4);
+  border-left: var(--border-rail) solid var(--line-soft);
+  text-decoration: none;
+}
+.gks-phase:hover { background: var(--surface-hover); }
+.gks-phase--active { border-left-color: var(--green-700); }
+.gks-phase--preparing { border-left-color: var(--amber-700); }
+.gks-phase--completed { border-left-color: var(--brand-400); }
+.gks-phase--cancelled { border-left-color: var(--red-700); }
+.gks-phase__value { font-size: var(--fs-h3); font-weight: var(--fw-bold); line-height: 1.1; color: var(--text-strong); }
+.gks-phase__label { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.gks-phase__hint { font-size: var(--fs-caption); color: var(--text-subtle); }
 
 .gks-dash__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--sp-4); align-items: start; }
 .gks-dash__link { font-size: var(--fs-caption); color: var(--brand-700); text-decoration: none; }

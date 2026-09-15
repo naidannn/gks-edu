@@ -101,3 +101,13 @@ export const AI_INGEST_QUEUE = 'ai-ingest';
 export const AI_INGEST_JOB = 'ingest-document';
 /** Three attempts, then the failure stays on the row for staff to see. */
 export const AI_INGEST_ATTEMPTS = 3;
+
+/**
+ * Unpaid-case cancellation (1C-43) — a case still waiting on its prepayment
+ * after `AdmissionConfig.unpaidCaseCancelDays` without movement is cancelled.
+ * Hourly, so "three days" means three days and not "three days and up to one
+ * more"; the query is one indexed read of the few pre-prepayment cases.
+ */
+export const UNPAID_CASE_SWEEP_QUEUE = 'unpaid-case-sweep';
+export const UNPAID_CASE_SWEEP_JOB = 'cancel-unpaid-cases';
+export const UNPAID_CASE_SWEEP_INTERVAL_MS = 60 * 60 * 1000;

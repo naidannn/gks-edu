@@ -102,6 +102,8 @@ export interface AdmissionConfig {
   clientReminderOffsets: number[];
   staffReminderOffsets: number[];
   riskReadinessThreshold: number;
+  /** Days without movement before an unpaid case is cancelled (1C-43); 0 = off. */
+  unpaidCaseCancelDays: number;
   /** The intake-calendar search's model — Gemini, because that search is grounded. */
   researchModel: string;
   /**

@@ -442,6 +442,36 @@ export class PaymentsService {
   }
 
   /**
+   * 1C-43 — the last look before a case is cancelled for not paying.
+   *
+   * An open invoice is asked about first, because the client may have scanned
+   * the QR a minute ago and the callback simply has not arrived: money in means
+   * the case is not cancelled (`true`), including a short payment, which is a
+   * conversation for the office rather than a cancellation. Anything still
+   * unpaid is retired — our row and QPay's copy — so nothing can be paid into a
+   * case that no longer exists. A QPay error propagates, and the case waits for
+   * the next pass rather than being cancelled on a guess.
+   */
+  async settleBeforeCancel(caseId: string): Promise<boolean> {
+    const open = await this.prisma.payment.findMany({
+      where: { caseId, status: PaymentStatus.PENDING },
+      select: { id: true, caseId: true, amountMnt: true, qpayInvoiceId: true },
+    });
+
+    for (const payment of open) {
+      if (!payment.qpayInvoiceId) continue;
+      const result = await this.qpay.checkPayment(payment.qpayInvoiceId);
+      if (result.paid) {
+        await this.creditIfFullyPaid(payment, result);
+        return true;
+      }
+    }
+
+    for (const payment of open) await this.expireInvoice(payment);
+    return false;
+  }
+
+  /**
    * QPay says the invoice is paid — but not always for the full amount (1N-10).
    * A short payment is reported and left PENDING rather than clearing a debt it
    * does not cover; `confirmPayment` handles the other direction, a second QPay

@@ -15,6 +15,19 @@ export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type ClientStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
 
 /**
+ * Where a client stands as a business, derived from their cases (1B-22) —
+ * never the manual `status` flag, which every new row starts `ACTIVE`.
+ *
+ * `ACTIVE`     — prepayment confirmed, not yet departed
+ * `ON_HOLD`    — a case paused by staff
+ * `PREPARING`  — a contract drafted or signed, prepayment still owed (or no case yet)
+ * `COMPLETED`  — departed or marked completed
+ * `CANCELLED`  — every case cancelled or refused
+ */
+export const CLIENT_PHASES = ['ACTIVE', 'ON_HOLD', 'PREPARING', 'COMPLETED', 'CANCELLED'] as const;
+export type ClientPhase = (typeof CLIENT_PHASES)[number];
+
+/**
  * How a school is named wherever it appears inside another record.
  *
  * Both names travel together: the office works from paperwork, which is in
@@ -59,6 +72,7 @@ export interface ClientListItem {
   targetUniversity: UniversityRef | null;
   assignedConsultant: ConsultantRef | null;
   activeCase: ClientActiveCase | null;
+  phase: ClientPhase;
   contractStatus: ContractStatus | null;
   /** Signature date once signed, the draft date before that, null with no contract. */
   contractDate: string | null;
@@ -147,6 +161,7 @@ export interface ClientDetail extends ClientListItem {
 export interface ClientStats {
   total: number;
   byStatus: Partial<Record<ClientStatus, number>>;
+  byPhase: Record<ClientPhase, number>;
   withContract: number;
   unassigned: number;
 }

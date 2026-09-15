@@ -395,6 +395,30 @@ export class CasesService {
   }
 
   /**
+   * The system cancelling a case (1C-43) — today only a prepayment that never
+   * came. `CANCELLED` is a staff edge, so neither {@link applySystemTransition}
+   * (system-only targets) nor {@link transition} (an actor's role) fits; the edge
+   * itself is still required. Throws a conflict when the case has moved off
+   * `fromStage` since it was read — a payment landing mid-sweep wins.
+   */
+  async cancelBySystem(db: Db, caseId: string, fromStage: CaseStage, reason: string): Promise<void> {
+    const found = await db.case.findUnique({ where: { id: caseId }, select: { serviceType: true } });
+    if (!found) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
+
+    const rule = await db.caseFlowDefinition.findUnique({
+      where: {
+        serviceType_fromStage_toStage: { serviceType: found.serviceType, fromStage, toStage: CaseStage.CANCELLED },
+      },
+      select: { id: true },
+    });
+    if (!rule) {
+      throw new BadRequestException(`${CASE_STAGE_LABELS[fromStage]} төлөвөөс цуцлах шилжилт тодорхойлогдоогүй байна`);
+    }
+
+    await this.writeTransition(db, caseId, fromStage, CaseStage.CANCELLED, null, reason);
+  }
+
+  /**
    * Moves the case as a *consequence* of a downstream aggregate's own event —
    * an application submitted, an invitation received, a visa approved (1E/1F).
    *

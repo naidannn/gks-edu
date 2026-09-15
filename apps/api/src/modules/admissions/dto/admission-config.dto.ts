@@ -48,6 +48,18 @@ export class UpdateAdmissionConfigDto {
   @IsOptional()
   riskReadinessThreshold?: number;
 
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 60,
+    description: 'Days without movement before an unpaid case is cancelled (1C-43). 0 turns it off.',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(60)
+  @IsOptional()
+  unpaidCaseCancelDays?: number;
+
   @ApiPropertyOptional({ description: 'Model the intake-calendar search runs against (Gemini)' })
   @IsString()
   @MaxLength(80)

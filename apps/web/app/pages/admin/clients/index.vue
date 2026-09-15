@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type {
-  CaseStage,
-  ClientAttentionFilter,
-  ClientListItem,
-  ClientStats,
-  ClientStatus,
-  LeadSource,
-  PaginatedResult,
-  ServiceType,
+import {
+  CLIENT_PHASES,
+  type CaseStage,
+  type ClientAttentionFilter,
+  type ClientListItem,
+  type ClientPhase,
+  type ClientStats,
+  type ClientStatus,
+  type LeadSource,
+  type PaginatedResult,
+  type ServiceType,
 } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
 
@@ -18,6 +20,9 @@ import { useAuthStore } from '~/stores/auth';
  * One row answers "where is this person, and does anything need me": the stage
  * of their live case, how far along it is, and the flags for missing paperwork,
  * unpaid invoices and overdue work. Clicking it opens their workspace.
+ *
+ * The header counts clients by business phase (1B-22) — "идэвхтэй" means the
+ * prepayment is in, not that somebody once drafted a contract.
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
@@ -46,6 +51,7 @@ const q = ref('');
 const serviceType = ref<ServiceType | ''>('');
 const stage = ref<CaseStage | ''>('');
 const status = ref<ClientStatus | ''>('');
+const phase = ref<ClientPhase | ''>('');
 const source = ref<LeadSource | ''>('');
 const contractFilter = ref<'all' | 'with' | 'without'>('all');
 /* Seeding from the URL — so a dashboard tile opens the queue it counted — is
@@ -64,6 +70,7 @@ const query = computed(() => ({
   ...(serviceType.value ? { serviceType: serviceType.value } : {}),
   ...(stage.value ? { stage: stage.value } : {}),
   ...(status.value ? { status: status.value } : {}),
+  ...(phase.value ? { phase: phase.value } : {}),
   ...(source.value ? { source: source.value } : {}),
   ...(contractFilter.value === 'all' ? {} : { hasContract: contractFilter.value === 'with' }),
   ...(attention.value ? { attention: attention.value } : {}),
@@ -98,13 +105,14 @@ function clearFilters() {
   serviceType.value = '';
   stage.value = '';
   status.value = '';
+  phase.value = '';
   source.value = '';
   contractFilter.value = 'all';
   assignedFilter.value = 'all';
   attention.value = '';
 }
 
-watch([serviceType, stage, status, source, contractFilter, assignedFilter, attention, sort], () => {
+watch([serviceType, stage, status, phase, source, contractFilter, assignedFilter, attention, sort], () => {
   page.value = 1;
   load();
 });
@@ -133,7 +141,7 @@ function attentionChips(client: ClientListItem) {
 
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 const hasFilters = computed(() =>
-  Boolean(q.value || serviceType.value || stage.value || status.value || source.value || attention.value)
+  Boolean(q.value || serviceType.value || stage.value || status.value || phase.value || source.value || attention.value)
   || contractFilter.value !== 'all'
   || assignedFilter.value !== 'all',
 );
@@ -145,6 +153,7 @@ useUrlFilters({
   serviceType: [serviceType, SERVICE_OPTIONS.map((o) => o.value)],
   stage: [stage, STAGE_OPTIONS.map((o) => o.value)],
   status: [status, STATUS_OPTIONS.map((o) => o.value)],
+  phase: [phase, ['', ...CLIENT_PHASES]],
   source: [source, SOURCE_OPTIONS.map((o) => o.value)],
   contract: [contractFilter, ['all', 'with', 'without']],
   assigned: [assignedFilter, ['all', 'mine', 'unassigned']],
@@ -175,20 +184,15 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
         <span>Нийт</span><strong class="gks-tnum">{{ stats.total }}</strong>
       </button>
       <button
+        v-for="entry in CLIENT_PHASES"
+        :key="entry"
         type="button"
         class="gks-stat"
-        :class="{ 'gks-stat--active': status === 'ACTIVE' }"
-        @click="status = status === 'ACTIVE' ? '' : 'ACTIVE'"
+        :class="{ 'gks-stat--active': phase === entry }"
+        :title="CLIENT_PHASE_HINTS[entry]"
+        @click="phase = phase === entry ? '' : entry"
       >
-        <span>Идэвхтэй</span><strong class="gks-tnum">{{ stats.byStatus.ACTIVE ?? 0 }}</strong>
-      </button>
-      <button
-        type="button"
-        class="gks-stat"
-        :class="{ 'gks-stat--active': contractFilter === 'with' }"
-        @click="contractFilter = contractFilter === 'with' ? 'all' : 'with'"
-      >
-        <span>Гэрээтэй</span><strong class="gks-tnum">{{ stats.withContract }}</strong>
+        <span>{{ CLIENT_PHASE_LABELS[entry] }}</span><strong class="gks-tnum">{{ stats.byPhase[entry] ?? 0 }}</strong>
       </button>
       <button
         type="button"
@@ -295,10 +299,13 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
                 </span>
               </td>
               <td data-label="Үе шат">
-                <DsBadge v-if="c.activeCase" :tone="CASE_STAGE_TONE[c.activeCase.stage]">
-                  {{ CASE_STAGE_LABELS[c.activeCase.stage] }}
-                </DsBadge>
-                <span v-else class="gks-muted">Үйлчилгээ эхлээгүй</span>
+                <span>
+                  <DsBadge v-if="c.activeCase" :tone="CASE_STAGE_TONE[c.activeCase.stage]">
+                    {{ CASE_STAGE_LABELS[c.activeCase.stage] }}
+                  </DsBadge>
+                  <span v-else class="gks-muted">Үйлчилгээ эхлээгүй</span>
+                  <span class="gks-cell-sub">{{ CLIENT_PHASE_LABELS[c.phase] }}</span>
+                </span>
               </td>
               <td data-label="Явц">
                 <div class="gks-progress">

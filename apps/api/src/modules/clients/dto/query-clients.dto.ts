@@ -4,6 +4,7 @@ import { IsBoolean, IsDateString, IsEnum, IsIn, IsOptional, IsString, Matches, M
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { UUID_OR_UNASSIGNED } from '../../../common/validation/transforms.js';
 import { CaseStage, ClientStatus, LeadSource, ServiceType } from '../../../prisma/client.js';
+import { CLIENT_PHASES, type ClientPhase } from '../client-phase.js';
 
 export const CLIENT_SORTS = ['createdAt', 'updatedAt', 'lastName'] as const;
 export type ClientSort = (typeof CLIENT_SORTS)[number];
@@ -37,6 +38,14 @@ export class QueryClientsDto extends PaginationQueryDto {
   @IsEnum(ClientStatus)
   @IsOptional()
   status?: ClientStatus;
+
+  @ApiPropertyOptional({
+    enum: CLIENT_PHASES,
+    description: 'Бизнесийн төлөв: идэвхтэй (урьдчилгаа төлсөн), гэрээ бэлтгэж буй, түр зогссон, дууссан, цуцлагдсан',
+  })
+  @IsIn(CLIENT_PHASES)
+  @IsOptional()
+  phase?: ClientPhase;
 
   @ApiPropertyOptional({ enum: LeadSource })
   @IsEnum(LeadSource)

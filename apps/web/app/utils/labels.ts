@@ -16,6 +16,7 @@ import type {
   AppointmentStatus,
   BalanceTrigger,
   CaseStage,
+  ClientPhase,
   ClientStatus,
   ContractStatus,
   ContractType,
@@ -425,6 +426,32 @@ export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
   ACTIVE: 'Идэвхтэй',
   INACTIVE: 'Идэвхгүй',
   ARCHIVED: 'Архивласан',
+};
+
+/** The business phase (1B-22) — derived from cases, unlike the manual status above. */
+export const CLIENT_PHASE_LABELS: Record<ClientPhase, string> = {
+  ACTIVE: 'Идэвхтэй',
+  PREPARING: 'Гэрээ бэлтгэж буй',
+  ON_HOLD: 'Түр зогссон',
+  COMPLETED: 'Үйлчилгээ дууссан',
+  CANCELLED: 'Цуцлагдсан',
+};
+
+/** One line on what each phase counts, for the tile's tooltip and the dashboard hint. */
+export const CLIENT_PHASE_HINTS: Record<ClientPhase, string> = {
+  ACTIVE: 'Урьдчилгаа төлсөн, явахаас өмнө',
+  PREPARING: 'Гэрээ үүссэн, урьдчилгаа төлөөгүй',
+  ON_HOLD: 'Ажилтан түр зогсоосон',
+  COMPLETED: 'Солонгос руу явсан',
+  CANCELLED: 'Цуцалсан эсвэл татгалзсан',
+};
+
+export const CLIENT_PHASE_TONE: Record<ClientPhase, BadgeTone> = {
+  ACTIVE: 'success',
+  PREPARING: 'warning',
+  ON_HOLD: 'neutral',
+  COMPLETED: 'info',
+  CANCELLED: 'danger',
 };
 
 export const GENDER_LABELS: Record<Gender, string> = {

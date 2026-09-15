@@ -24,6 +24,7 @@ const leadDays = ref('7');
 const clientOffsets = ref('');
 const staffOffsets = ref('');
 const riskThreshold = ref('80');
+const cancelDays = ref('3');
 const researchModel = ref('');
 const programResearchModel = ref('');
 
@@ -32,6 +33,7 @@ function fill(value: AdmissionConfig) {
   clientOffsets.value = value.clientReminderOffsets.join(', ');
   staffOffsets.value = value.staffReminderOffsets.join(', ');
   riskThreshold.value = String(value.riskReadinessThreshold);
+  cancelDays.value = String(value.unpaidCaseCancelDays);
   researchModel.value = value.researchModel;
   programResearchModel.value = value.programResearchModel;
 }
@@ -84,6 +86,7 @@ async function save() {
       clientReminderOffsets: parsedClientOffsets.value,
       staffReminderOffsets: parsedStaffOffsets.value,
       riskReadinessThreshold: Number.parseInt(riskThreshold.value, 10),
+      unpaidCaseCancelDays: Number.parseInt(cancelDays.value, 10),
       researchModel: researchModel.value.trim(),
       programResearchModel: programResearchModel.value.trim(),
     });
@@ -156,6 +159,19 @@ async function save() {
         <p class="gks-adm-config__note">
           Материалын бүрдэлт энэ хувиас доогуур байхад хариуцсан зөвлөх, материалын ажилтанд
           "элсэлтээ алдаж болзошгүй" сануулга очно.
+        </p>
+      </DsCard>
+
+      <DsCard title="Төлбөргүй үйлчилгээг цуцлах">
+        <p class="gks-adm-config__note">
+          Гэрээ үүсгэсэн эсвэл гарын үсэг зурсан ч урьдчилгаа төлбөрөө төлөөгүй үйлчилгээ энэ хэдэн
+          хоног ямар ч хөдөлгөөнгүй (гэрээ илгээх, гарын үсэг зурах, нэхэмжлэх үүсгэх) байвал автоматаар
+          цуцлагдана. Цуцлахын өмнө QPay-ээс төлбөр орсон эсэхийг дахин шалгана.
+        </p>
+        <DsInput v-model="cancelDays" label="Хоног" type="number" min="0" max="60" hint="0 бол автомат цуцлалт унтарна." />
+        <p class="gks-adm-config__warn">
+          <DsIcon name="triangle-alert" :size="15" />
+          Цуцлагдсан үйлчилгээг сэргээх боломжгүй — үйлчлүүлэгч дахин ирвэл шинэ үйлчилгээ нээнэ.
         </p>
       </DsCard>
 

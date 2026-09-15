@@ -28,6 +28,7 @@ import { AccountClaimService } from '../users/account-claim.service.js';
 import { activeStaffWhere, STAFF_ROLES } from '../../common/constants/roles.js';
 import { officeDateRange } from '../reports/report-period.js';
 import { DEADLINE_WARNING_MS, TERMINAL_STAGES, liveCase } from './client-cases.js';
+import { CLIENT_PHASES, type ClientPhase, clientPhaseOf, clientPhaseWhere } from './client-phase.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
 import type { ConvertLeadDto } from './dto/convert-lead.dto.js';
 import type { CreateClientDto } from './dto/create-client.dto.js';
@@ -469,19 +470,28 @@ export class ClientsService {
     return result;
   }
 
-  /** Counters for the list header: total, by status, and how many are already under contract. */
+  /**
+   * Counters for the list header and the dashboard. `byPhase` is what the office
+   * means by active / preparing / finished (1B-22); `byStatus` is the manual flag
+   * and stays only for the filter that still reads it.
+   */
   async stats() {
-    const [total, byStatusRows, withContract, unassigned] = await Promise.all([
+    const [total, byStatusRows, withContract, unassigned, phaseCounts] = await Promise.all([
       this.prisma.client.count(),
       this.prisma.client.groupBy({ by: ['status'], _count: { _all: true } }),
       this.prisma.client.count({ where: { user: { cases: { some: { contract: { isNot: null } } } } } }),
       this.prisma.client.count({ where: { assignedConsultantId: null, status: ClientStatus.ACTIVE } }),
+      Promise.all(CLIENT_PHASES.map((phase) => this.prisma.client.count({ where: clientPhaseWhere(phase) }))),
     ]);
 
     return {
       total,
       byStatus: Object.fromEntries(byStatusRows.map((row) => [row.status, row._count._all])) as Record<
         ClientStatus,
+        number
+      >,
+      byPhase: Object.fromEntries(CLIENT_PHASES.map((phase, index) => [phase, phaseCounts[index]])) as Record<
+        ClientPhase,
         number
       >,
       withContract,
@@ -977,6 +987,9 @@ export class ClientsService {
     // 08:00 Ulaanbaatar time and dropped everything after it (1N-38).
     const createdAt = officeDateRange(query.createdFrom, query.createdTo);
     if (createdAt) where.createdAt = createdAt;
+    // The phase is its own clause over the same `user.cases` relation, so it is
+    // ANDed beside the stage/contract filter above rather than merged into it.
+    if (query.phase) where.AND = [clientPhaseWhere(query.phase)];
 
     return where;
   }
@@ -1030,6 +1043,7 @@ export class ClientsService {
             university: active.university,
           }
         : null,
+      phase: clientPhaseOf(cases),
       contractStatus: contract?.status ?? null,
       /** What staff mean by "гэрээ хийсэн огноо": the signature, or the draft date until then. */
       contractDate: contract ? (contract.signedAt ?? contract.createdAt) : null,

@@ -818,6 +818,11 @@ model AdmissionConfig {
   /// Below this document-readiness percentage a case counts as at risk.
   riskReadinessThreshold Int   @default(80)
 
+  /// 1C-43 — a case still waiting on its prepayment is cancelled after this many
+  /// days without any movement (registration, contract sent or signed, invoice
+  /// raised). The office's rule is 3; 0 switches the sweep off.
+  unpaidCaseCancelDays Int @default(3)
+
   /// The model the intake-calendar search runs against. Gemini only: that
   /// search is worth grounding, and grounding is Google's.
   researchModel String @default("gemini-3.1-flash-lite")

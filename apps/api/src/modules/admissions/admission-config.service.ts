@@ -12,6 +12,7 @@ const SELECT = {
   clientReminderOffsets: true,
   staffReminderOffsets: true,
   riskReadinessThreshold: true,
+  unpaidCaseCancelDays: true,
   researchModel: true,
   programResearchModel: true,
   updatedAt: true,
