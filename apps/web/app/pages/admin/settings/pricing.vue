@@ -34,7 +34,9 @@ function historyFor(serviceType: ServiceType): ServicePricing[] {
   return rows.value.filter((r) => r.serviceType === serviceType && r.effectiveTo).sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom));
 }
 
-const DEFAULT_PAYMENT_DUE_DAYS = '7';
+/** The office's current windows (1C-35) — the API applies the same defaults. */
+const DEFAULT_PREPAYMENT_DUE_DAYS = '3';
+const DEFAULT_BALANCE_DUE_DAYS = '14';
 
 const form = reactive({
   serviceType: 'LANGUAGE_PREP' as ServiceType,
@@ -42,7 +44,8 @@ const form = reactive({
   prepaymentMode: 'FIXED' as PrepaymentMode,
   prepaymentValue: '',
   balanceTrigger: 'AFTER_VISA_APPROVED' as BalanceTrigger,
-  paymentDueDays: DEFAULT_PAYMENT_DUE_DAYS,
+  prepaymentDueDays: DEFAULT_PREPAYMENT_DUE_DAYS,
+  balanceDueDays: DEFAULT_BALANCE_DUE_DAYS,
 });
 const submitting = ref(false);
 
@@ -60,7 +63,8 @@ const edit = reactive({
   prepaymentMode: 'FIXED' as PrepaymentMode,
   prepaymentValue: '',
   balanceTrigger: 'AFTER_VISA_APPROVED' as BalanceTrigger,
-  paymentDueDays: DEFAULT_PAYMENT_DUE_DAYS,
+  prepaymentDueDays: DEFAULT_PREPAYMENT_DUE_DAYS,
+  balanceDueDays: DEFAULT_BALANCE_DUE_DAYS,
 });
 
 function startEdit(row: ServicePricing) {
@@ -70,7 +74,8 @@ function startEdit(row: ServicePricing) {
   edit.prepaymentMode = row.prepaymentMode;
   edit.prepaymentValue = String(Number(row.prepaymentValue));
   edit.balanceTrigger = row.balanceTrigger;
-  edit.paymentDueDays = String(row.paymentDueDays);
+  edit.prepaymentDueDays = String(row.prepaymentDueDays);
+  edit.balanceDueDays = String(row.balanceDueDays);
 }
 
 function cancelEdit() {
@@ -88,7 +93,8 @@ async function saveEdit() {
       prepaymentMode: edit.prepaymentMode,
       prepaymentValue: Number(edit.prepaymentValue),
       balanceTrigger: edit.balanceTrigger,
-      paymentDueDays: Number(edit.paymentDueDays),
+      prepaymentDueDays: Number(edit.prepaymentDueDays),
+      balanceDueDays: Number(edit.balanceDueDays),
     });
     editingId.value = null;
     await load();
@@ -109,11 +115,13 @@ async function submit() {
       prepaymentMode: form.prepaymentMode,
       prepaymentValue: Number(form.prepaymentValue),
       balanceTrigger: form.balanceTrigger,
-      paymentDueDays: Number(form.paymentDueDays),
+      prepaymentDueDays: Number(form.prepaymentDueDays),
+      balanceDueDays: Number(form.balanceDueDays),
     });
     form.totalAmount = '';
     form.prepaymentValue = '';
-    form.paymentDueDays = DEFAULT_PAYMENT_DUE_DAYS;
+    form.prepaymentDueDays = DEFAULT_PREPAYMENT_DUE_DAYS;
+    form.balanceDueDays = DEFAULT_BALANCE_DUE_DAYS;
     await load();
   } catch (err) {
     errorMsg.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
@@ -144,7 +152,8 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
         <DsSelect v-model="form.prepaymentMode" :options="PREPAYMENT_MODES.map((m) => ({ value: m, label: PREPAYMENT_MODE_LABELS[m] }))" label="Урьдчилгааны хэлбэр" />
         <DsInput v-model="form.prepaymentValue" type="number" :label="form.prepaymentMode === 'PERCENT' ? 'Урьдчилгаа (%)' : 'Урьдчилгаа (₮)'" />
         <DsSelect v-model="form.balanceTrigger" :options="BALANCE_TRIGGERS.map((t) => ({ value: t, label: BALANCE_TRIGGER_LABELS[t] }))" label="Үлдэгдэл төлөгдөх нөхцөл" />
-        <DsInput v-model="form.paymentDueDays" type="number" min="1" max="90" label="Төлбөрийн хугацаа (хоног)" hint="Нэхэмжлэл үүсгэснээс хойш хэдэн хоногийн дотор төлөх вэ — сануулга, авлагын тайлан үүн дээр ажиллана" />
+        <DsInput v-model="form.prepaymentDueDays" type="number" min="1" max="90" label="Урьдчилгаа төлөх хугацаа (хоног)" hint="Нэхэмжлэл үүсгэснээс хойш — сануулга, авлагын тайлан үүн дээр ажиллана" />
+        <DsInput v-model="form.balanceDueDays" type="number" min="1" max="90" label="Үлдэгдэл төлөх хугацаа (хоног)" />
         <DsButton :disabled="!form.totalAmount || !form.prepaymentValue" :loading="submitting" @click="submit">Хадгалах</DsButton>
       </div>
       <p class="gks-settings__hint">Шинэ хувилбар идэвхжихэд одоо идэвхтэй үнэ хаагдаж, дараагийн шинэ гэрээнд л нөлөөлнэ — хуучин гэрээ өөрчлөгдөхгүй.</p>
@@ -163,7 +172,8 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
           <DsSelect v-model="edit.prepaymentMode" :options="PREPAYMENT_MODES.map((m) => ({ value: m, label: PREPAYMENT_MODE_LABELS[m] }))" label="Урьдчилгааны хэлбэр" />
           <DsInput v-model="edit.prepaymentValue" type="number" :label="edit.prepaymentMode === 'PERCENT' ? 'Урьдчилгаа (%)' : 'Урьдчилгаа (₮)'" />
           <DsSelect v-model="edit.balanceTrigger" :options="BALANCE_TRIGGERS.map((t) => ({ value: t, label: BALANCE_TRIGGER_LABELS[t] }))" label="Үлдэгдэл төлөгдөх нөхцөл" />
-          <DsInput v-model="edit.paymentDueDays" type="number" min="1" max="90" label="Төлбөрийн хугацаа (хоног)" />
+          <DsInput v-model="edit.prepaymentDueDays" type="number" min="1" max="90" label="Урьдчилгаа төлөх хугацаа (хоног)" />
+          <DsInput v-model="edit.balanceDueDays" type="number" min="1" max="90" label="Үлдэгдэл төлөх хугацаа (хоног)" />
         </div>
         <p v-if="editError" class="gks-settings__error">{{ editError }}</p>
         <div class="gks-form-actions">
@@ -178,7 +188,8 @@ useHead({ title: 'Үнийн тохиргоо · CRM' });
           <CommonDataValue label="Нийт төлбөр" :value="formatMntOrDash(activeByService.get(s)!.totalAmount)" />
           <CommonDataValue label="Урьдчилгаа" :value="activeByService.get(s)!.prepaymentMode === 'PERCENT' ? `${activeByService.get(s)!.prepaymentValue}%` : formatMntOrDash(activeByService.get(s)!.prepaymentValue)" />
           <CommonDataValue label="Үлдэгдэл нөхцөл" :value="BALANCE_TRIGGER_LABELS[activeByService.get(s)!.balanceTrigger]" />
-          <CommonDataValue label="Төлбөрийн хугацаа" :value="`${activeByService.get(s)!.paymentDueDays} хоног`" />
+          <CommonDataValue label="Урьдчилгаа төлөх хугацаа" :value="`${activeByService.get(s)!.prepaymentDueDays} хоног`" />
+          <CommonDataValue label="Үлдэгдэл төлөх хугацаа" :value="`${activeByService.get(s)!.balanceDueDays} хоног`" />
         </dl>
         <details v-if="historyFor(s).length" class="gks-settings__history">
           <summary>Түүх ({{ historyFor(s).length }})</summary>

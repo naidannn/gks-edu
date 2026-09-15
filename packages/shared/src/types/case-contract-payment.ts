@@ -46,8 +46,10 @@ export interface ServicePricing {
   prepaymentMode: PrepaymentMode;
   prepaymentValue: string;
   balanceTrigger: BalanceTrigger;
-  /** Days a client is given to pay an invoice raised under this pricing (drives `PaymentItem.dueAt`). */
-  paymentDueDays: number;
+  /** Days a client is given to pay the prepayment invoice (drives `PaymentItem.dueAt`, 1C-35). */
+  prepaymentDueDays: number;
+  /** Days a client is given to pay the balance invoice. */
+  balanceDueDays: number;
   effectiveFrom: string;
   effectiveTo: string | null;
 }
@@ -126,7 +128,7 @@ export interface PaymentItem {
   qrText: string | null;
   qrImage: string | null;
   paidAt: string | null;
-  /** When this invoice falls due — set from `ServicePricing.paymentDueDays` when it is raised. */
+  /** When this invoice falls due — set from `ServicePricing.prepaymentDueDays` / `balanceDueDays` when it is raised. */
   dueAt: string | null;
   /**
    * When the QR itself stops working (1C-38) — a different clock from `dueAt`,

@@ -10,7 +10,7 @@ import type { CasesService } from '../cases/cases.service.js';
 import { DocStage } from '../../prisma/client.js';
 import type { RequirementsService } from '../documents/requirements.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
-import { DEFAULT_PAYMENT_DUE_DAYS } from '../pricing/payment-terms.js';
+import { DEFAULT_PREPAYMENT_DUE_DAYS } from '../pricing/payment-terms.js';
 import type { PricingService } from '../pricing/pricing.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
 import type { MetaEventsService } from '../meta/meta-events.service.js';
@@ -41,7 +41,8 @@ function buildHarness(options: {
   gksCase?: Record<string, unknown>;
   existingPayment?: Record<string, unknown> | null;
   flowRule?: Record<string, unknown> | null;
-  paymentDueDays?: number;
+  prepaymentDueDays?: number;
+  balanceDueDays?: number;
 } = {}) {
   const gksCase = options.gksCase ?? makeCase();
 
@@ -102,7 +103,10 @@ function buildHarness(options: {
   } as unknown as StorageService;
 
   const pricing = {
-    getActive: vi.fn().mockResolvedValue({ paymentDueDays: options.paymentDueDays ?? 7 }),
+    getActive: vi.fn().mockResolvedValue({
+      prepaymentDueDays: options.prepaymentDueDays ?? 3,
+      balanceDueDays: options.balanceDueDays ?? 14,
+    }),
   } as unknown as PricingService;
 
   const meta = { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService;
@@ -266,13 +270,22 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     // The regression this guards: `Payment.dueAt` had four readers — the
     // "Төлбөрийн хугацаа болсон" sweep, the receivables count, mv_finance and
     // the portal's overdue badge — and no writer, so all four reported zero.
-    const { service, prisma, pricing } = buildHarness({ paymentDueDays: 10 });
+    const { service, prisma, pricing } = buildHarness({ prepaymentDueDays: 10, balanceDueDays: 20 });
 
     await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
 
     expect(pricing.getActive).toHaveBeenCalledWith(ServiceType.LANGUAGE_PREP);
     const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
     expect(dueAt.getTime()).toBe(endOfDayInDays(10));
+  });
+
+  it('gives the balance its own, longer window (1C-35)', async () => {
+    const { service, prisma } = buildHarness({ prepaymentDueDays: 3, balanceDueDays: 14 });
+
+    await service.createForCase('case-1', { kind: PaymentKind.BALANCE }, student);
+
+    const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
+    expect(dueAt.getTime()).toBe(endOfDayInDays(14));
   });
 
   it('still raises the invoice when the service has no active price, on the default window', async () => {
@@ -284,7 +297,7 @@ describe('PaymentsService.createForCase (1C-12, self-service per gksedu.md §5.5
     await service.createForCase('case-1', { kind: PaymentKind.PREPAYMENT }, student);
 
     const { dueAt } = prisma.payment.create.mock.calls[0]![0].data as { dueAt: Date };
-    expect(dueAt.getTime()).toBe(endOfDayInDays(DEFAULT_PAYMENT_DUE_DAYS));
+    expect(dueAt.getTime()).toBe(endOfDayInDays(DEFAULT_PREPAYMENT_DUE_DAYS));
   });
 
   it('refuses a second prepayment once one is already PAID', async () => {

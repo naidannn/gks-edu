@@ -91,7 +91,8 @@ export class PricingTools implements AiToolProvider {
             урьдчилгаа_төгрөг: prepaymentAmount,
             үлдэгдэл_төгрөг: balanceAmount,
             үлдэгдлийг_хэзээ: BALANCE_TRIGGER_MN[row.balanceTrigger],
-            төлбөрийн_хугацаа_хоног: row.paymentDueDays,
+            урьдчилгаа_төлөх_хоног: row.prepaymentDueDays,
+            үлдэгдэл_төлөх_хоног: row.balanceDueDays,
           },
           card: {
             type: 'pricing',

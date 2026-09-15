@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PAYMENT_DUE_DAYS, MAX_PAYMENT_DUE_DAYS, paymentDueAt } from './payment-terms.js';
+import { DEFAULT_BALANCE_DUE_DAYS, DEFAULT_PREPAYMENT_DUE_DAYS, MAX_PAYMENT_DUE_DAYS, paymentDueAt } from './payment-terms.js';
 
 describe('paymentDueAt', () => {
   it('lands `days` later, at the end of that day', () => {
@@ -21,8 +21,9 @@ describe('paymentDueAt', () => {
     expect(paymentDueAt(new Date('2026-09-28T10:00:00.000Z'), 7).toISOString()).toBe('2026-10-05T23:59:59.999Z');
   });
 
-  it('keeps the office`s current window and its sanity ceiling in one place', () => {
-    expect(DEFAULT_PAYMENT_DUE_DAYS).toBe(7);
-    expect(MAX_PAYMENT_DUE_DAYS).toBeGreaterThan(DEFAULT_PAYMENT_DUE_DAYS);
+  it('keeps the office`s current windows and their sanity ceiling in one place', () => {
+    expect(DEFAULT_PREPAYMENT_DUE_DAYS).toBe(3);
+    expect(DEFAULT_BALANCE_DUE_DAYS).toBe(14);
+    expect(MAX_PAYMENT_DUE_DAYS).toBeGreaterThan(DEFAULT_BALANCE_DUE_DAYS);
   });
 });

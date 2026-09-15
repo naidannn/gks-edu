@@ -36,7 +36,7 @@ import { SlackService } from '../notifications/slack.service.js';
 import type { MetaActionSource, MetaStandardEvent } from '../meta/meta-capi.types.js';
 import { MetaEventsService } from '../meta/meta-events.service.js';
 import type { MetaUserIdentity } from '../meta/meta-user-data.js';
-import { DEFAULT_PAYMENT_DUE_DAYS, paymentDueAt } from '../pricing/payment-terms.js';
+import { DEFAULT_BALANCE_DUE_DAYS, DEFAULT_PREPAYMENT_DUE_DAYS, paymentDueAt } from '../pricing/payment-terms.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreatePaymentDto } from './dto/create-payment.dto.js';
 import type { QueryPaymentsDto } from './dto/query-payments.dto.js';
@@ -123,7 +123,7 @@ export class PaymentsService {
             kind: dto.kind,
             amountMnt,
             status: PaymentStatus.PENDING,
-            dueAt: keepDueAt ?? (await this.dueAtFor(gksCase.serviceType)),
+            dueAt: keepDueAt ?? (await this.dueAtFor(gksCase.serviceType, dto.kind)),
           },
         });
       } catch (error) {
@@ -926,13 +926,17 @@ export class PaymentsService {
    * office raising an invoice on a contract that is already signed — so it
    * falls back to the default loudly rather than throwing.
    */
-  private async dueAtFor(serviceType: ServiceType): Promise<Date> {
-    let days = DEFAULT_PAYMENT_DUE_DAYS;
+  private async dueAtFor(serviceType: ServiceType, kind: PaymentKind): Promise<Date> {
+    // Only the two contract debts are raised here (`resolveAmount`); anything
+    // that is not the prepayment is the balance (1C-35).
+    const isPrepayment = kind === PaymentKind.PREPAYMENT;
+    let days = isPrepayment ? DEFAULT_PREPAYMENT_DUE_DAYS : DEFAULT_BALANCE_DUE_DAYS;
     try {
-      days = (await this.pricing.getActive(serviceType)).paymentDueDays;
+      const pricing = await this.pricing.getActive(serviceType);
+      days = isPrepayment ? pricing.prepaymentDueDays : pricing.balanceDueDays;
     } catch {
       this.logger.warn(
-        `${serviceType} үйлчилгээнд идэвхтэй үнэ алга — төлбөрийн хугацааг ${DEFAULT_PAYMENT_DUE_DAYS} хоногоор тооцлоо`,
+        `${serviceType} үйлчилгээнд идэвхтэй үнэ алга — төлбөрийн хугацааг ${days} хоногоор тооцлоо`,
       );
     }
     return paymentDueAt(new Date(), days);

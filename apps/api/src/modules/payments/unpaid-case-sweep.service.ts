@@ -19,7 +19,7 @@ const CANDIDATE_SELECT = {
   createdAt: true,
   contract: { select: { createdAt: true, sentAt: true, acceptedAt: true, otpVerifiedAt: true, signedAt: true } },
   transitions: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
-  payments: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+  payments: { select: { createdAt: true, dueAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
   user: { select: { name: true, client: { select: { lastName: true, firstName: true } } } },
 } as const;
 
@@ -103,6 +103,10 @@ export class UnpaidCaseSweepService {
     for (const row of candidates) {
       const lastMovement = lastMovementAt(row);
       if (lastMovement >= cutoff) continue;
+      // An invoice's `dueAt` runs to the end of its last day, so it can outlive
+      // the window by some hours. A date the client was shown is kept (1C-35).
+      const promisedUntil = row.payments[0]?.dueAt;
+      if (promisedUntil && promisedUntil > now) continue;
 
       try {
         if (await this.payments.settleBeforeCancel(row.id)) {

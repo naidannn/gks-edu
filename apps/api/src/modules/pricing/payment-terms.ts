@@ -6,16 +6,22 @@
  * client portal's overdue badge all run on. All four read one date, so one
  * place computes it.
  *
- * The window itself is `ServicePricing.paymentDueDays`: a payment term, so it
- * is versioned with the price the way the prepayment is (`gksedu.md` §5.4),
+ * The window itself is `ServicePricing.prepaymentDueDays` / `balanceDueDays`
+ * (1C-35): payment terms, so they are versioned with the price the way the prepayment is (`gksedu.md` §5.4),
  * not a constant. It deliberately is *not* snapshotted onto the contract the
  * way the amounts are — the amounts are what the client agreed to owe and must
  * never move under them, while this only decides when we chase, and the office
  * retuning that should apply to invoices it raises from then on.
  */
 
-/** The office's current practice. `ARCHITECTURE.md` §18 asks them to confirm it. */
-export const DEFAULT_PAYMENT_DUE_DAYS = 7;
+/**
+ * The office's current windows (1C-35). The prepayment's matches the three days
+ * after which an unpaid case is cancelled (1C-43) — a client is never shown a
+ * due date the office will not wait for. The balance is a much larger sum, so
+ * it gets longer (`ARCHITECTURE.md` §18-23).
+ */
+export const DEFAULT_PREPAYMENT_DUE_DAYS = 3;
+export const DEFAULT_BALANCE_DUE_DAYS = 14;
 
 /** A term longer than a quarter is a typo, not a policy. */
 export const MAX_PAYMENT_DUE_DAYS = 90;

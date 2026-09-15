@@ -36,10 +36,17 @@ export class UpdateServicePricingDto {
   @IsOptional()
   balanceTrigger?: BalanceTrigger;
 
-  @ApiPropertyOptional({ description: 'Days a client is given to pay an invoice raised under this pricing' })
+  @ApiPropertyOptional({ description: 'Days a client is given to pay the prepayment invoice' })
   @IsInt()
   @Min(1)
   @Max(MAX_PAYMENT_DUE_DAYS)
   @IsOptional()
-  paymentDueDays?: number;
+  prepaymentDueDays?: number;
+
+  @ApiPropertyOptional({ description: 'Days a client is given to pay the balance invoice' })
+  @IsInt()
+  @Min(1)
+  @Max(MAX_PAYMENT_DUE_DAYS)
+  @IsOptional()
+  balanceDueDays?: number;
 }

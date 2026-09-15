@@ -94,6 +94,16 @@ describe('UnpaidCaseSweepService (1C-43)', () => {
     expect(cases.cancelBySystem).not.toHaveBeenCalled();
   });
 
+  it('waits out an invoice due date the client was already shown', async () => {
+    const row = caseRow({ payments: [{ createdAt: daysAgo(4), dueAt: new Date(NOW.getTime() + 6 * 60 * 60 * 1000) }] });
+    const { service, cases } = setup({ rows: [row] });
+
+    const result = await service.sweep(NOW);
+
+    expect(result.cancelled).toEqual([]);
+    expect(cases.cancelBySystem).not.toHaveBeenCalled();
+  });
+
   it('does not cancel when QPay says the money is in after all', async () => {
     const { service, cases } = setup({ rows: [caseRow()], paid: true });
 

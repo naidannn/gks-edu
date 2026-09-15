@@ -4,7 +4,7 @@ import { PrepaymentMode, type ServiceType } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
 import { activePricingWhere } from './active-pricing.js';
-import { DEFAULT_PAYMENT_DUE_DAYS } from './payment-terms.js';
+import { DEFAULT_BALANCE_DUE_DAYS, DEFAULT_PREPAYMENT_DUE_DAYS } from './payment-terms.js';
 import type { CreateServicePricingDto } from './dto/create-service-pricing.dto.js';
 import type { UpdateServicePricingDto } from './dto/update-service-pricing.dto.js';
 
@@ -107,7 +107,8 @@ export class PricingService {
           prepaymentMode: dto.prepaymentMode,
           prepaymentValue: dto.prepaymentValue,
           balanceTrigger: dto.balanceTrigger,
-          paymentDueDays: dto.paymentDueDays ?? DEFAULT_PAYMENT_DUE_DAYS,
+          prepaymentDueDays: dto.prepaymentDueDays ?? DEFAULT_PREPAYMENT_DUE_DAYS,
+          balanceDueDays: dto.balanceDueDays ?? DEFAULT_BALANCE_DUE_DAYS,
           effectiveFrom,
         },
       });
@@ -140,7 +141,8 @@ export class PricingService {
       prepaymentMode: dto.prepaymentMode ?? current.prepaymentMode,
       prepaymentValue: dto.prepaymentValue ?? toNumber(current.prepaymentValue as DecimalLike),
       balanceTrigger: dto.balanceTrigger ?? current.balanceTrigger,
-      paymentDueDays: dto.paymentDueDays ?? current.paymentDueDays,
+      prepaymentDueDays: dto.prepaymentDueDays ?? current.prepaymentDueDays,
+      balanceDueDays: dto.balanceDueDays ?? current.balanceDueDays,
     };
     PricingService.assertCoherent(merged);
 
