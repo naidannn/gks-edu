@@ -167,6 +167,17 @@ useSeoMeta({
         </article>
       </div>
 
+      <!-- The round that is actually open. The page above it is deliberately
+           evergreen, so this is the only place on it that goes stale — and it
+           is one link rather than a section of numbers to re-check each year. -->
+      <NuxtLink to="/gks-2027" class="scholarship-schedule__current">
+        <span>
+          <strong>2027 оны бакалаврын элсэлт зарлагдлаа</strong>
+          10 их сургуулийн 16 мэргэжил, бүрэн тэтгэлгээр — жагсаалтыг харах
+        </span>
+        <DsIcon name="arrow-right" :size="18" />
+      </NuxtLink>
+
       <p class="scholarship-schedule__note">
         Тов жил бүр, сонгон шалгаруулах сувгаас хамаарч өөрчлөгдөнө.
         <a
@@ -400,6 +411,23 @@ useSeoMeta({
 .scholarship-schedule__card dl div:first-child { padding-left: 0; border-left: 0; }
 .scholarship-schedule__card dt { font-size: var(--fs-micro); line-height: 1.35; color: var(--text-subtle); }
 .scholarship-schedule__card dd { margin: var(--sp-2) 0 0; font-family: var(--font-mono); font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--brand-700); }
+.scholarship-schedule__current {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-3);
+  background: var(--brand-050);
+  color: var(--text-body);
+  text-decoration: none;
+}
+.scholarship-schedule__current:hover { border-color: var(--brand-600); }
+.scholarship-schedule__current span { font-size: var(--fs-body-sm); line-height: 1.5; }
+.scholarship-schedule__current strong { display: block; font-size: var(--fs-body); color: var(--text-strong); }
+.scholarship-schedule__current :deep(.gks-icon) { margin-left: auto; flex: none; color: var(--brand-700); }
+
 .scholarship-schedule__note { margin-top: var(--sp-4); font-size: var(--fs-caption); color: var(--text-muted); }
 .scholarship-schedule__note a { color: var(--brand-700); }
 

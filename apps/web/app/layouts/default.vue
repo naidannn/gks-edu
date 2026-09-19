@@ -36,6 +36,7 @@ const SERVICES: NavLink[] = [
  */
 const SCHOLARSHIP: NavLink[] = [
   { to: '/gks-scholarship', label: 'Тэтгэлгийн тухай' },
+  { to: '/gks-2027', label: '2027 бакалавр — мэргэжлүүд' },
   { to: '/gks-check', label: 'Боломжоо шалгах' },
 ];
 
@@ -97,6 +98,7 @@ const FOOTER_SERVICES = [
   { to: '/services/bachelor', label: 'Бакалавр' },
   { to: '/services/graduate', label: 'Магистр, доктор' },
   { to: '/gks-scholarship', label: 'Засгийн газрын тэтгэлэг' },
+  { to: '/gks-2027', label: '2027 бакалаврын мэргэжлүүд' },
   { to: '/gks-check', label: 'Тэтгэлгийн боломжоо шалгах' },
 ];
 
