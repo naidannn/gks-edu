@@ -30,6 +30,13 @@ const SCHEDULES = [
   },
 ];
 
+// The hero's live line — the same clock the board below it runs on.
+const now = useNow('gks-round-board-clock');
+const heroRound = computed(() => {
+  const round = featuredGksRound(GKS_ROUNDS, now.value);
+  return round && getGksRoundPhase(round, now.value) === 'OPEN' ? round : null;
+});
+
 const PROCESS = [
   { number: '01', title: 'Боломжоо үнэлнэ', note: 'Голч · нас · чиглэл' },
   { number: '02', title: 'Материалаа хүчтэй болгоно', note: 'Эсээ · төлөвлөгөө · сонголт' },
@@ -57,6 +64,13 @@ useSeoMeta({
   <div class="scholarship-page">
     <section class="scholarship-hero">
       <div class="scholarship-hero__content">
+        <a v-if="heroRound" href="#open-rounds" class="scholarship-hero__live">
+          <i aria-hidden="true" />
+          {{ gksRoundHeadline(heroRound, now) }}
+          <template v-if="heroRound.countdown">
+            · <strong class="gks-tnum">{{ gksDaysUntil(heroRound.closesAt, now) }} хоног</strong> үлдлээ
+          </template>
+        </a>
         <p class="scholarship-hero__eyebrow">GLOBAL KOREA SCHOLARSHIP</p>
         <h1>
           Санхүүгээс үл хамааран
@@ -99,6 +113,10 @@ useSeoMeta({
         </div>
       </div>
     </section>
+
+    <div id="open-rounds" class="scholarship-rounds">
+      <GksRoundBoard />
+    </div>
 
     <section aria-labelledby="benefit-title" class="scholarship-section scholarship-benefits-section">
       <div class="scholarship-section__intro">
@@ -264,6 +282,25 @@ useSeoMeta({
   color: var(--brand-600);
 }
 .scholarship-hero__eyebrow { color: var(--brand-300); }
+.scholarship-hero__live {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--sp-5);
+  padding: 7px 14px;
+  border: 1px solid rgba(74, 222, 128, .35);
+  border-radius: var(--radius-pill);
+  background: rgba(22, 163, 74, .16);
+  color: var(--n-000);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.scholarship-hero__live:hover { background: rgba(22, 163, 74, .26); }
+.scholarship-hero__live i { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 4px rgba(74, 222, 128, .2); animation: scholarship-live 1.8s ease-in-out infinite; }
+@keyframes scholarship-live { 50% { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); } }
+.scholarship-rounds { scroll-margin-top: 96px; }
 .scholarship-hero h1 {
   max-width: 720px;
   margin-top: var(--sp-5);
@@ -448,6 +485,10 @@ useSeoMeta({
   background: var(--ink-900);
 }
 .scholarship-cta h2 { color: var(--n-000); }
+
+@media (prefers-reduced-motion: reduce) {
+  .scholarship-hero__live i { animation: none; }
+}
 
 @media (max-width: 980px) {
   .scholarship-hero { grid-template-columns: 1fr; }
