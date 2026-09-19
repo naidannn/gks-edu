@@ -39,6 +39,7 @@ function conversationRow(overrides: Record<string, unknown> = {}) {
       email: 'client@test.mn',
       phone: '99112233',
       client: { code: 'KH-2026-0007' },
+      cases: [{ stage: 'DOCUMENTS' }],
     },
     ...overrides,
   };
@@ -234,6 +235,24 @@ describe('MessengerService', () => {
     // Staff see them, because those are what they act on.
     const staffView = await service.messages(STAFF, 'conv-1', { limit: 40 });
     expect(staffView.conversation.client.phone).toBe('99112233');
+  });
+
+  it('tells staff whether the person writing has paid for a service', async () => {
+    const { service, prisma } = makeService();
+    const visitor = conversationRow({
+      clientUser: { ...conversationRow().clientUser, client: null, cases: [] },
+    });
+    const unpaid = conversationRow({
+      clientUser: { ...conversationRow().clientUser, cases: [{ stage: 'CONTRACT_SIGNED' }] },
+    });
+    vi.mocked(prisma.conversation.findMany).mockResolvedValue([conversationRow(), unpaid, visitor] as never);
+
+    const inbox = await service.inbox(STAFF, { page: 1, limit: 25, scope: 'OPEN' as never });
+    expect(inbox.items.map((item) => item.client.phase)).toEqual(['ACTIVE', 'PREPARING', null]);
+
+    // The client is not shown their own standing.
+    const own = await service.messages(CLIENT, 'conv-1', { limit: 40 });
+    expect(own.conversation.client.phase).toBeNull();
   });
 
   it('shows each side its own unread count from the same row', async () => {

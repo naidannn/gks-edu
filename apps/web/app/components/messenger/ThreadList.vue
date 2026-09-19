@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ConversationDetail, ConversationListItem } from '@gks/shared';
+import type { ClientPhase, ConversationDetail, ConversationListItem } from '@gks/shared';
 
 /**
  * The list of threads (1K) — the client's own on the left of `/messages`, the
@@ -30,6 +30,8 @@ const rows = computed(() =>
     item,
     client: clientOf(item),
     unclaimed: props.staff === true && !item.assignee && item.status === 'OPEN',
+    // Staff answer a paying client and a visitor differently, so every row says which.
+    standing: props.staff === true ? ((clientOf(item)?.phase ?? 'NONE') as ClientPhase | 'NONE') : null,
   })),
 );
 </script>
@@ -77,6 +79,13 @@ const rows = computed(() =>
           </span>
 
           <span class="gks-threads__tags">
+            <span
+              v-if="row.standing"
+              class="gks-threads__tag"
+              :class="`gks-threads__tag--${CHAT_STANDING_TONE[row.standing]}`"
+            >
+              {{ CHAT_STANDING_LABELS[row.standing] }}
+            </span>
             <span v-if="row.unclaimed" class="gks-threads__tag gks-threads__tag--new">Хариуцаагүй</span>
             <span v-else-if="staff && row.item.assignee" class="gks-threads__tag">
               {{ row.item.assignee.name ?? 'Ажилтан' }}
@@ -185,6 +194,10 @@ const rows = computed(() =>
   color: var(--red-800);
   font-weight: var(--fw-semibold);
 }
+.gks-threads__tag--success { background: var(--success-bg); border-color: var(--success-line); color: var(--success-fg); font-weight: var(--fw-semibold); }
+.gks-threads__tag--warning { background: var(--warning-bg); border-color: var(--warning-line); color: var(--warning-fg); }
+.gks-threads__tag--info { background: var(--info-bg); border-color: var(--info-line); color: var(--info-fg); }
+.gks-threads__tag--danger { background: var(--danger-bg); border-color: var(--danger-line); color: var(--danger-fg); }
 .gks-threads__tag--done { background: var(--success-bg); border-color: var(--success-line); color: var(--success-fg); }
 
 .gks-threads__badge {

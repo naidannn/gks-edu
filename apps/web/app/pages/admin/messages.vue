@@ -240,7 +240,12 @@ const responseNote = computed(() => {
             </button>
 
             <div class="gks-inbox__who">
-              <p class="gks-inbox__name">{{ active?.client.name ?? 'Нэргүй хэрэглэгч' }}</p>
+              <p class="gks-inbox__name">
+                {{ active?.client.name ?? 'Нэргүй хэрэглэгч' }}
+                <DsBadge v-if="active" :tone="CHAT_STANDING_TONE[active.client.phase ?? 'NONE']">
+                  {{ CHAT_STANDING_LABELS[active.client.phase ?? 'NONE'] }}
+                </DsBadge>
+              </p>
               <p class="gks-inbox__meta">
                 <span class="gks-tnum">{{ active?.code }}</span>
                 <template v-if="active?.client.clientCode">
@@ -386,6 +391,7 @@ const responseNote = computed(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.gks-inbox__name .gks-badge { margin-left: var(--sp-2); vertical-align: 1px; }
 .gks-inbox__meta { font-size: var(--fs-micro); color: var(--text-subtle); }
 .gks-inbox__meta a { color: var(--text-subtle); text-decoration: none; }
 .gks-inbox__meta a:hover { color: var(--brand-600); text-decoration: underline; }

@@ -1,4 +1,5 @@
 import type { UserRole } from '../schemas/user';
+import type { ClientPhase } from './client';
 
 /**
  * Messenger payloads — 1K.
@@ -65,6 +66,12 @@ export interface ConversationDetail extends ConversationListItem {
   client: MessengerParticipant & {
     /** `KH-2026-0042` when the user is a registered client, null before that. */
     clientCode: string | null;
+    /**
+     * Staff only: where the person writing stands with the office, on the
+     * client list's ladder (1B-22). Null means they never became a client —
+     * no CRM row and no case — and is also what a client gets about themself.
+     */
+    phase: ClientPhase | null;
     email: string | null;
     phone: string | null;
   };

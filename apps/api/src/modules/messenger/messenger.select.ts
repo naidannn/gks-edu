@@ -48,6 +48,9 @@ export const CONVERSATION_DETAIL_SELECT = {
       email: true,
       phone: true,
       client: { select: { code: true } },
+      // Stages only — enough for `clientPhaseOf` to say whether the person
+      // writing has paid for anything, which the inbox row shows staff.
+      cases: { select: { stage: true } },
     },
   },
 } satisfies Prisma.ConversationSelect;

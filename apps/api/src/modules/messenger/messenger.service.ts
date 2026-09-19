@@ -12,6 +12,7 @@ import {
   Role,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { type ClientPhase, clientPhaseOf } from '../clients/client-phase.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
 import {
@@ -651,6 +652,7 @@ export class MessengerService {
           value: conversation.clientUser.name ?? conversation.clientUser.email ?? '—',
         },
         { label: 'Харилцагчийн код', value: conversation.clientUser.client?.code },
+        { label: 'Төлөв', value: PHASE_SLACK_LABELS[phaseOf(conversation.clientUser) ?? 'NONE'] },
         { label: 'Сэдэв', value: conversation.subject },
         { label: 'Мессеж', value: truncate(body, 300) },
         { label: 'Хариуцагч', value: conversation.assignee?.name ?? 'Хараахан хуваарилагдаагүй' },
@@ -701,6 +703,9 @@ export class MessengerService {
         name: row.clientUser.name,
         role: row.clientUser.role,
         clientCode: row.clientUser.client?.code ?? null,
+        // Whether the person writing is a paying client or still a visitor —
+        // staff answer the two differently. A client does not need their own.
+        phase: staffView ? phaseOf(row.clientUser) : null,
         // A client reading their own thread has no use for their own contact
         // details, and the CRM's are the ones staff act on.
         email: staffView ? row.clientUser.email : null,
@@ -711,6 +716,26 @@ export class MessengerService {
     };
   }
 }
+
+/**
+ * Where the person writing stands with the office, on the same ladder the
+ * client list uses (1B-22). Null means they never became a client: no CRM row
+ * and no case — an account that signed up and asked a question.
+ */
+function phaseOf(user: ConversationDetailRow['clientUser']): ClientPhase | null {
+  if (!user.client && user.cases.length === 0) return null;
+  return clientPhaseOf(user.cases);
+}
+
+/** Slack has no frontend label table to borrow, so the office's words live here. */
+const PHASE_SLACK_LABELS: Record<ClientPhase | 'NONE', string> = {
+  NONE: 'Үйлчилгээ аваагүй',
+  PREPARING: 'Гэрээ бэлтгэж буй (төлбөр төлөөгүй)',
+  ACTIVE: 'Үйлчилгээ авч буй',
+  ON_HOLD: 'Түр зогссон',
+  COMPLETED: 'Үйлчилгээ дууссан',
+  CANCELLED: 'Цуцлагдсан',
+};
 
 /** `Б.Наран` if we know the name, a neutral noun if we do not. */
 function staffLabel(name: string | null | undefined): string {

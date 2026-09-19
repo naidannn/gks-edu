@@ -454,6 +454,25 @@ export const CLIENT_PHASE_TONE: Record<ClientPhase, BadgeTone> = {
   CANCELLED: 'danger',
 };
 
+/**
+ * Who is writing in the messenger (1K): the client phase, or `NONE` for an
+ * account that never became a client. Says "service" rather than "contract"
+ * because that is the question the person answering actually has.
+ */
+export const CHAT_STANDING_LABELS: Record<ClientPhase | 'NONE', string> = {
+  NONE: 'Үйлчилгээ аваагүй',
+  PREPARING: 'Төлбөр төлөөгүй',
+  ACTIVE: 'Үйлчилгээ авч буй',
+  ON_HOLD: 'Түр зогссон',
+  COMPLETED: 'Үйлчилгээ авсан',
+  CANCELLED: 'Цуцлагдсан',
+};
+
+export const CHAT_STANDING_TONE: Record<ClientPhase | 'NONE', BadgeTone> = {
+  NONE: 'neutral',
+  ...CLIENT_PHASE_TONE,
+};
+
 export const GENDER_LABELS: Record<Gender, string> = {
   MALE: 'Эрэгтэй',
   FEMALE: 'Эмэгтэй',
