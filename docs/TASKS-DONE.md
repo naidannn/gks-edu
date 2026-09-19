@@ -70,6 +70,7 @@
 | `1A-40` | Магадлан итгэмжлэл: `University.accreditation` (`EXCELLENT`/`CERTIFIED`/`NONE`), оффисын хоёр жагсаалтаас 35 + 100 = 135/135 сургууль, `pnpm accreditation:import`. Каталогийн карт дээр тэмдэг, дэлгэрэнгүйд мөр, шүүлтүүрт сонголт, админаас гараар засах. Визийн дохио — чанарын эрэмбэ БИШ (§3.1.1) | done | M | 1A-02 |
 | `1A-38` | Meta pixel + Conversions API: хөтчийн pixel, манай домэйнээр дамжсан relay (`POST /meta/events`), сервер талын `Lead`/`CompleteRegistration`/`InitiateCheckout`/`Purchase`, `event_id`-аар давхардал арилгах, SHA-256 танилт, `_fbp`/`_fbc` cookie-г pixel блоклогдсон үед өөрсдөө бичих | done | M | 1A-21 |
 | `1A-41` | 2027 GKS бакалаврын UIC хөтөлбөрийн landing page (`/gks-2027`): тэтгэлэг юу даах, 10 сургуулийн 16 мэргэжил, чиглэлээр шүүх, шалгуур, хоёр шугамын харьцуулалт, хугацаа. Суудлын квотыг зориудаар харуулахгүй. Тоо бүр NIIED-ийн «2027 GKS Application Guidelines for Undergraduate Degrees»-ээс. Цэс, футер, sitemap, `/gks-scholarship`-аас холбов | done | M | 1A-33 |
+| `1A-42` | Нүүр хуудсанд GKS тэтгэлгийн хэсэг (зэргээр таб, 2 гулсуураар нас/голчийн шуурхай шалгуур) ба `/gks-scholarship` дээр «Одоо бакалаврын элсэлт авч байна» самбар, секунд тоолох countdown. Тойргуудын огноо нэг файлд — `apps/web/app/utils/gks-rounds.ts` (NIIED 2027 заавар, KST), төлөв нь цагаас тооцогдоно | done | M | 1A-41 |
 
 ---
 
