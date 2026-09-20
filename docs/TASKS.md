@@ -186,7 +186,6 @@
 
 | ID | Таск | Төлөв | Хэмжээ | Хамаарал |
 | --- | --- | --- | --- | --- |
-| `1O-07` | Brevo бүртгэл нээж `BREVO_API_KEY`, илгээгчийн хаяг (`mail@gksedu.mn`) баталгаажуулах, `BREVO_LIST_ID` үүсгээд `deploy/.env.production`-д тавих. Түлхүүргүй үед кампанит ажил лог руу бичигддэг тул production дээр илгээлт **хийгдэхгүй** | blocked | S | 1O-01 |
 | `1O-08` | Brevo webhook: `hard_bounce`, `spam`, `unsubscribed` → `EmailSubscriber.status` (`BOUNCED`/`UNSUBSCRIBED`) + `EmailCampaignRecipient`. Одоо bounce-ыг зөвхөн Brevo мэддэг, манай хориглох жагсаалт мэдэхгүй | todo | M | 1O-07 |
 | `1O-09` | Товлосон илгээлт (`scheduledAt`) — одоо "Илгээх" дарсан даруйд эхэлдэг. Хүснэгтэд багана байхгүй тул migration шаардана | todo | S | 1O-03 |
 | `1O-10` | Нээлт/даралтын тоолол: Brevo-гийн `opened`/`click` webhook → кампанит ажлын хураангуй. Pixel өөрсдөө тавихгүй | todo | M | 1O-08 |

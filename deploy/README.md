@@ -167,8 +167,6 @@ failing:
 | `QPAY_USERNAME` / `QPAY_PASSWORD` / `QPAY_INVOICE_CODE` | `QPAY_MOCK=true` — invoices are faked, no real payment is taken |
 | `GOOGLE_CLIENT_ID` / `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | the "Google-ээр нэвтрэх" button does not render; `POST /auth/google` returns 503 |
 | `RESEND_API_KEY` | emails are written to the log instead of sent |
-| `BREVO_API_KEY` | marketing campaigns are written to the log instead of sent (1O); the transactional mail above is unaffected |
-| `BREVO_LIST_ID` | subscribers are not pushed into a Brevo contact list; campaigns sent from the admin still work |
 | `META_CAPI_ACCESS_TOKEN` | the pixel still fires in the browser; server-side conversions are logged, not sent |
 | SMS gateway | not chosen yet (`ARCHITECTURE.md` §18 q.10) — messages are logged |
 
@@ -183,6 +181,20 @@ of deduplicated on `event_id`. Put `META_CAPI_ACCESS_TOKEN` in
 `deploy/.env.production` only; it is a long-lived system-user token and the
 only secret in this feature. Rotating it is a one-line edit plus
 `./deploy/restart.sh api`.
+
+`BREVO_API_KEY`, `BREVO_SENDER_EMAIL` and `BREVO_LIST_ID` **are** set (2026-09-21) —
+the marketing rail (1O), on the `gksedugroup@gmail.com` Brevo account, sending as the
+verified `info@gksedu.mn` into contact list 3. The key is **IP-restricted on Brevo's
+side**: every call from an address that is not on
+`app.brevo.com/security/authorised_ips` comes back 401 `"unrecognised IP address"`,
+which reads like a bad key and is not. This server's outbound address, **13.214.22.1**,
+is on that list — if the box is ever rebuilt or moved, add the new address there before
+wondering why campaigns stopped. Check it from the server, not from a laptop:
+
+```bash
+ssh … 'K=$(grep ^BREVO_API_KEY= /var/www/gks-edu/.env | cut -d= -f2-); \
+  curl -s -o /dev/null -w "%{http_code}\n" -H "api-key: $K" https://api.brevo.com/v3/account'
+```
 
 `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` **are** set (2026-09-06): a consultation
 request, a new account, a signed contract and a received payment post to the
