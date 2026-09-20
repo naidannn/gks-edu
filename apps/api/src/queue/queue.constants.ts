@@ -111,3 +111,19 @@ export const AI_INGEST_ATTEMPTS = 3;
 export const UNPAID_CASE_SWEEP_QUEUE = 'unpaid-case-sweep';
 export const UNPAID_CASE_SWEEP_JOB = 'cancel-unpaid-cases';
 export const UNPAID_CASE_SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+
+/**
+ * Marketing campaign delivery (1O). One job per campaign, not per recipient:
+ * the recipient rows are written before the job is queued, so the worker's
+ * whole state is "what is still PENDING" — it resumes after a crash, a deploy
+ * or a cancel without mailing anybody twice, and a thousand-address campaign
+ * costs one job instead of a thousand.
+ *
+ * The job re-queues itself after each batch rather than looping to the end:
+ * that is what keeps one big campaign from holding the worker (and Brevo's
+ * rate budget) for minutes while a second campaign waits behind it.
+ */
+export const MARKETING_QUEUE = 'marketing';
+export const MARKETING_SEND_JOB = 'send-campaign';
+/** Between batches — well inside Brevo's transactional rate limit. */
+export const MARKETING_BATCH_DELAY_MS = 2_000;

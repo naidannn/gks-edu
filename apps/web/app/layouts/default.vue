@@ -389,6 +389,7 @@ async function onLogout() {
             decoding="async"
           >
           <p class="gks-footer__tagline">{{ COMPANY.tagline }}</p>
+          <CommonSubscribeForm class="gks-footer__subscribe" />
         </div>
 
         <nav class="gks-footer__col" aria-label="Үйлчилгээ">
@@ -709,6 +710,7 @@ async function onLogout() {
   gap: var(--sp-8);
 }
 .gks-footer__logo { height: 26px; width: auto; display: block; }
+.gks-footer__subscribe { margin-top: var(--sp-6); max-width: 340px; }
 .gks-footer__tagline {
   margin-top: var(--sp-4);
   font-size: var(--fs-body-sm);

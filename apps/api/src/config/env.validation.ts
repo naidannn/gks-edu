@@ -151,6 +151,36 @@ class EnvironmentVariables {
   @IsOptional()
   NOTIFICATION_REPLY_TO?: string;
 
+  /** 1O — Brevo, the marketing rail. Empty logs the campaign instead of sending. */
+  @IsString()
+  @IsOptional()
+  BREVO_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  BREVO_BASE_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  BREVO_SENDER_EMAIL?: string;
+
+  @IsString()
+  @IsOptional()
+  BREVO_SENDER_NAME?: string;
+
+  @IsString()
+  @IsOptional()
+  BREVO_REPLY_TO?: string;
+
+  /** The Brevo contact list subscribers are synced into; unset disables the sync. */
+  @IsString()
+  @IsOptional()
+  BREVO_LIST_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  BREVO_BATCH_SIZE?: string;
+
   @IsString()
   @IsOptional()
   APP_PUBLIC_URL?: string;

@@ -88,6 +88,30 @@ export interface AppConfig {
       channelId: string;
     };
   };
+  /**
+   * 1O — the marketing rail. Deliberately a different provider from the
+   * transactional one: a campaign into a stale list costs the sending domain
+   * its reputation, and the mail that must never land in spam is the login
+   * link, not the newsletter.
+   */
+  brevo: {
+    /** Empty means "log the campaign instead of sending", as with Resend. */
+    apiKey: string;
+    baseUrl: string;
+    /** Brevo verifies the sender separately from Resend — this is its own address. */
+    senderEmail: string;
+    senderName: string;
+    /** `Reply-To` on campaign mail; falls back to the notification one. */
+    replyToEmail?: string;
+    /**
+     * The contact list every subscriber is pushed into, so the office can also
+     * build campaigns inside Brevo. 0 disables the contact sync — sending
+     * still works without it.
+     */
+    listId: number;
+    /** How many recipients one queue pass mails before it yields (rate control). */
+    batchSize: number;
+  };
   deepseek: {
     /**
      * 1I-07 — the "research this school's programmes" button. A different
@@ -241,6 +265,15 @@ export const configuration = (): AppConfig => ({
       botToken: process.env.SLACK_BOT_TOKEN ?? '',
       channelId: process.env.SLACK_CHANNEL_ID ?? '',
     },
+  },
+  brevo: {
+    apiKey: process.env.BREVO_API_KEY ?? '',
+    baseUrl: process.env.BREVO_BASE_URL ?? 'https://api.brevo.com/v3',
+    senderEmail: process.env.BREVO_SENDER_EMAIL ?? 'mail@gksedu.mn',
+    senderName: process.env.BREVO_SENDER_NAME ?? 'GKS EDU GROUP',
+    replyToEmail: process.env.BREVO_REPLY_TO ?? process.env.NOTIFICATION_REPLY_TO,
+    listId: Number.parseInt(process.env.BREVO_LIST_ID ?? '0', 10) || 0,
+    batchSize: Number.parseInt(process.env.BREVO_BATCH_SIZE ?? '50', 10),
   },
   meta: {
     pixelId: process.env.META_PIXEL_ID ?? '',

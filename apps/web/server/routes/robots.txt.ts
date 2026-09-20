@@ -24,6 +24,9 @@ export default defineEventHandler((event) => {
     '/visit',
     // A teacher's recommendation questionnaire (1D-27) — each URL is one private link.
     '/recommend/',
+    // The unsubscribe confirmation (1O) — one private link per address, and a
+    // crawler following it is exactly what must not happen.
+    '/unsubscribe',
     // Auth screens: no content, and a search result landing on one is a dead end.
     '/login',
     '/register',

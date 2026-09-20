@@ -48,6 +48,13 @@ export interface EmailMessage {
   code?: EmailCode;
   /** One line under the divider — why this email arrived, what to do next. */
   footerNote?: string;
+  /**
+   * Marketing mail only (1O). Present means "this went to a list", so the
+   * footer says so and carries the way out. Transactional mail leaves it unset
+   * — there is no unsubscribing from a password reset, and offering it would
+   * teach people that the link is how you stop hearing from us.
+   */
+  unsubscribeUrl?: string;
   /** Inbox preview line. Defaults to the first sentence of the body. */
   preheader?: string;
 }
@@ -91,7 +98,7 @@ export function renderEmail(message: EmailMessage, appUrl: string): RenderedEmai
     cta ? button(cta) : '',
     cta ? fallbackLink(cta.url) : '',
     '</td></tr>',
-    footer(base, message.footerNote),
+    footer(base, message.footerNote, message.unsubscribeUrl),
     '</table>',
     '</td></tr></table>',
     '</body></html>',
@@ -149,7 +156,7 @@ function header(base: string): string {
 </table></td></tr>`;
 }
 
-function footer(base: string, note?: string): string {
+function footer(base: string, note?: string, unsubscribeUrl?: string): string {
   const link = (href: string, label: string) =>
     `<a href="${escapeHtml(href)}" style="color:${C.textMuted};text-decoration:underline" class="gks-muted">${escapeHtml(label)}</a>`;
 
@@ -159,7 +166,11 @@ ${note ? `<p class="gks-muted" style="margin:0 0 14px;font-family:${EMAIL_FONT};
 <p class="gks-muted" style="margin:0 0 10px;font-family:${EMAIL_FONT};font-size:12px;line-height:1.6;color:${C.textMuted}">${escapeHtml(EMAIL_BRAND.address)}<br>
 <a href="${EMAIL_BRAND.phoneHref}" style="color:${C.textMuted};text-decoration:none;font-family:${EMAIL_FONT_MONO}" class="gks-muted">${EMAIL_BRAND.phone}</a> · ${link(base, 'gksedu.mn')}</p>
 <p class="gks-muted" style="margin:0;font-family:${EMAIL_FONT};font-size:11px;line-height:1.6;color:${C.textMuted}">
-Энэ мэдэгдлийг GKSedu.mn системээс автоматаар илгээв. ${link(`${base}/app/profile`, 'Мэдэгдлийн тохиргоо')}
+${
+  unsubscribeUrl
+    ? `Та GKSedu.mn-ий мэдээллийн жагсаалтад бүртгэлтэй тул энэ захидлыг хүлээн авлаа. ${link(unsubscribeUrl, 'Захиалгаас гарах')}`
+    : `Энэ мэдэгдлийг GKSedu.mn системээс автоматаар илгээв. ${link(`${base}/app/profile`, 'Мэдэгдлийн тохиргоо')}`
+}
 </p></td></tr>`;
 }
 
@@ -256,7 +267,10 @@ function plainText(message: EmailMessage, bodyUrl: string | null, cta: EmailCta 
   // The footer note is where "do not pass this code on" lives, so it belongs
   // in the part a text-only client shows too.
   const note = message.footerNote ? ['', message.footerNote] : [];
-  return [body, ...note, '', '—', EMAIL_BRAND.legalName, `${EMAIL_BRAND.phone} · gksedu.mn`].join('\n');
+  const unsubscribe = message.unsubscribeUrl
+    ? ['', `Захиалгаас гарах: ${message.unsubscribeUrl}`]
+    : [];
+  return [body, ...note, '', '—', EMAIL_BRAND.legalName, `${EMAIL_BRAND.phone} · gksedu.mn`, ...unsubscribe].join('\n');
 }
 
 function firstSentence(blocks: EmailBlock[]): string | null {

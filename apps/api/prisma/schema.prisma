@@ -113,6 +113,9 @@ model User {
   assignedGaps       KnowledgeGap[]
   aiAssistantConfigs AiAssistantConfig[]
 
+  marketingTemplates MarketingTemplate[] @relation("MarketingTemplateAuthor")
+  emailCampaigns     EmailCampaign[]     @relation("EmailCampaignAuthor")
+
   @@index([createdAt])
   @@map("users")
 }
@@ -982,12 +985,13 @@ model Lead {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  activities    LeadActivity[]
-  workTasks     WorkTask[]
-  notifications Notification[]
-  chatSessions  ChatSession[]
+  activities         LeadActivity[]
+  workTasks          WorkTask[]
+  notifications      Notification[]
+  chatSessions       ChatSession[]
+  campaignRecipients EmailCampaignRecipient[]
   /// Set once staff convert this lead into a client (1B-10) — the lead row stays as history.
-  client        Client?
+  client             Client?
 
   /// 1B-09 — set when this row was merged into another lead; kept as history.
   mergedIntoId String?   @db.Uuid
@@ -1117,6 +1121,8 @@ model Client {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  campaignRecipients EmailCampaignRecipient[]
 
   @@index([status])
   @@index([assignedConsultantId])
@@ -2942,4 +2948,212 @@ model RecommendationRequest {
 
   @@index([caseId])
   @@map("recommendation_requests")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Marketing mail (1O) — Brevo.
+//
+// The platform sends on two rails, and they are deliberately different
+// providers: Resend carries the transactional mail a person is waiting for (a
+// login link, an OTP, "төлбөр баталгаажлаа"), Brevo carries the mail nobody
+// asked for today (newsletter, GKS campaign, university news, expo). Mixing
+// them costs the transactional stream its reputation — one campaign into a
+// stale list and password-reset mail starts landing in spam — so they share
+// only the HTML layout.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Where a campaign's recipients are read from. Each one is a query over rows
+/// we already hold, narrowed by `EmailCampaign.filters`.
+enum MarketingAudience {
+  /// Гэрээтэй хэрэглэгч — a client with at least one SIGNED/ACTIVE/COMPLETED contract.
+  CONTRACT_CLIENTS
+  /// Every registered client, contract or not.
+  CLIENTS
+  /// Pre-contract enquiries.
+  LEADS
+  /// The public newsletter list.
+  SUBSCRIBERS
+  /// Addresses typed in by hand — a one-off list from the office.
+  CUSTOM
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  /// Recipients are frozen and the job is queued; nothing has left yet.
+  QUEUED
+  SENDING
+  SENT
+  /// Every recipient failed — a bad API key, a rejected sender.
+  FAILED
+  CANCELLED
+}
+
+enum CampaignRecipientStatus {
+  PENDING
+  SENT
+  FAILED
+  /// Unsubscribed, or the address was rejected before the send.
+  SKIPPED
+}
+
+enum SubscriberStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+  /// Brevo reported a hard bounce; never mailed again.
+  BOUNCED
+}
+
+/// The newsletter list *and* the suppression list.
+///
+/// One table for both because the question a send asks is the same either way:
+/// "may this address be mailed?". An unsubscribe from a client who never
+/// signed up for the newsletter writes a row here with `UNSUBSCRIBED`, and from
+/// then on every audience — clients, leads, subscribers — skips that address.
+model EmailSubscriber {
+  id    String  @id @default(uuid()) @db.Uuid
+  /// Lower-cased at write time; the unique index is what dedupes the list.
+  email String  @unique
+  name  String?
+
+  status SubscriberStatus @default(SUBSCRIBED)
+  /// Which form or import this address arrived from — `website_footer`, `import`, `office`.
+  source String           @default("website") @db.VarChar(40)
+  /// Free-form grouping the office can filter a campaign by: "gks2027", "expo".
+  tags   String[]         @default([])
+
+  /// Marketing attribution of the page the form was on.
+  utm Json?
+
+  /// Last successful push into the Brevo contact list. Null means "never synced".
+  brevoSyncedAt  DateTime?
+  unsubscribedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipients EmailCampaignRecipient[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_subscribers")
+}
+
+/// A reusable campaign body, written in the same plain text as
+/// `NotificationTemplate.bodyMn` and rendered through the same `renderEmail`
+/// layout — so a newsletter and a payment receipt are recognisably the same
+/// company. `{{firstName}}` and friends are interpolated per recipient.
+model MarketingTemplate {
+  id   String  @id @default(uuid()) @db.Uuid
+  name String  @db.VarChar(120)
+  /// Stable handle for the ones shipped with the code, so a redeploy can top
+  /// up what is missing without duplicating what an admin has edited.
+  key  String? @unique @db.VarChar(60)
+
+  subject    String  @db.VarChar(200)
+  eyebrow    String? @db.VarChar(40)
+  heading    String? @db.VarChar(200)
+  bodyMn     String
+  ctaLabel   String? @db.VarChar(60)
+  ctaUrl     String? @db.VarChar(300)
+  footerNote String? @db.VarChar(300)
+  /// `info` | `success` | `warning` | `critical` — the accent stripe.
+  tone       String  @default("info") @db.VarChar(16)
+
+  isActive Boolean @default(true)
+
+  createdById String? @db.Uuid
+  createdBy   User?   @relation("MarketingTemplateAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaigns EmailCampaign[]
+
+  @@index([isActive])
+  @@map("marketing_templates")
+}
+
+/// One mass mail: who it goes to, what it says, and what happened.
+///
+/// The content is copied off the template at creation time rather than read
+/// through the relation. A template edited next month must not rewrite what
+/// went out last month — the same reason `Notification` stores rendered text.
+model EmailCampaign {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @db.VarChar(120)
+
+  templateId String?            @db.Uuid
+  template   MarketingTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  subject    String  @db.VarChar(200)
+  eyebrow    String? @db.VarChar(40)
+  heading    String? @db.VarChar(200)
+  bodyMn     String
+  ctaLabel   String? @db.VarChar(60)
+  ctaUrl     String? @db.VarChar(300)
+  footerNote String? @db.VarChar(300)
+  tone       String  @default("info") @db.VarChar(16)
+
+  audience MarketingAudience
+  /// The audience's narrowing, shape per audience — lead stages and sources,
+  /// client statuses and services, subscriber tags, the typed-in address list.
+  filters  Json              @default("{}")
+
+  status EmailCampaignStatus @default(DRAFT)
+
+  /// Frozen the moment the campaign is queued; the recipient rows are the
+  /// authority afterwards, and this is what the list screen shows.
+  totalCount   Int @default(0)
+  sentCount    Int @default(0)
+  failedCount  Int @default(0)
+  skippedCount Int @default(0)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+  /// Why the whole run stopped — a rejected API key, not a per-address bounce.
+  failReason String?
+
+  createdById String? @db.Uuid
+  createdBy   User?   @relation("EmailCampaignAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipients EmailCampaignRecipient[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("email_campaigns")
+}
+
+/// One address in one campaign. The row exists before the send, so a crashed
+/// worker resumes on exactly what is still `PENDING` and nobody is mailed twice.
+model EmailCampaignRecipient {
+  id         String        @id @default(uuid()) @db.Uuid
+  campaignId String        @db.Uuid
+  campaign   EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  email String  @db.VarChar(200)
+  name  String?
+
+  /// Where the address came from — kept so a bounce can be traced back to the
+  /// record that carries it. Nullable all round: a CUSTOM list has none.
+  clientId     String?          @db.Uuid
+  client       Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  leadId       String?          @db.Uuid
+  lead         Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  subscriberId String?          @db.Uuid
+  subscriber   EmailSubscriber? @relation(fields: [subscriberId], references: [id], onDelete: SetNull)
+
+  status            CampaignRecipientStatus @default(PENDING)
+  /// Brevo's `messageId`, for matching a bounce report back to this row.
+  providerMessageId String?                 @db.VarChar(200)
+  error             String?
+  sentAt            DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status])
+  @@map("email_campaign_recipients")
 }

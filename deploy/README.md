@@ -167,6 +167,8 @@ failing:
 | `QPAY_USERNAME` / `QPAY_PASSWORD` / `QPAY_INVOICE_CODE` | `QPAY_MOCK=true` — invoices are faked, no real payment is taken |
 | `GOOGLE_CLIENT_ID` / `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | the "Google-ээр нэвтрэх" button does not render; `POST /auth/google` returns 503 |
 | `RESEND_API_KEY` | emails are written to the log instead of sent |
+| `BREVO_API_KEY` | marketing campaigns are written to the log instead of sent (1O); the transactional mail above is unaffected |
+| `BREVO_LIST_ID` | subscribers are not pushed into a Brevo contact list; campaigns sent from the admin still work |
 | `META_CAPI_ACCESS_TOKEN` | the pixel still fires in the browser; server-side conversions are logged, not sent |
 | SMS gateway | not chosen yet (`ARCHITECTURE.md` §18 q.10) — messages are logged |
 

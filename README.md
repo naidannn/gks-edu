@@ -264,6 +264,32 @@ must still be able to get back into their account.
 `pnpm email:preview` renders all of them, plus a contact sheet, into `tmp/email-preview`.
 The from-address's domain has to be verified in Resend before anything sends.
 
+### Marketing mail (Brevo)
+
+Campaign mail rides a **second provider**. Resend carries what a person is waiting for —
+a login link, an OTP, a payment receipt; Brevo (`modules/marketing`) carries what nobody
+asked for today — newsletter, GKS campaign, university news, expo. The split is about
+reputation, not features: one campaign into a stale list, and password-reset mail starts
+landing in spam. They share `renderEmail` and nothing else, so the two still look like the
+same company.
+
+An admin picks an **audience** — гэрээтэй хэрэглэгч, all clients, leads, newsletter
+subscribers, or a pasted list — narrows it, and sees the recipient count from the same
+query the send will run. Pressing send freezes the audience into
+`email_campaign_recipients` rows *before* anything leaves, so a crash, a deploy or a
+cancel resumes on whatever is still `PENDING`, and the unique `(campaignId, email)` index
+means nobody is mailed twice.
+
+`email_subscribers` is the newsletter list **and** the suppression list: every audience
+checks it, so one unsubscribe silences that address whether it turns up as a client, a
+lead or a subscriber. The unsubscribe link is an HMAC of the address (`JWT_SECRET`) rather
+than a stored token — most of those rows have no column to keep one in — and it goes into
+the `List-Unsubscribe` header as well as the footer.
+
+With `BREVO_API_KEY` unset the campaign is logged instead of sent, so a whole run can be
+exercised locally without mailing anybody. `BREVO_LIST_ID` additionally syncs subscribers
+into a Brevo contact list, for campaigns the office builds in Brevo's own designer.
+
 Errors always come back in one shape (`AllExceptionsFilter`), including a `requestId`
 that matches the `x-request-id` response header:
 

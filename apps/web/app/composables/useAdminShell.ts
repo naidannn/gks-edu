@@ -71,6 +71,31 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
+    title: 'Маркетинг',
+    collapsible: true,
+    items: [
+      {
+        to: '/admin/marketing',
+        label: 'Имэйл кампанит ажил',
+        icon: 'send',
+        exact: true,
+        keywords: 'marketing campaign имэйл масс илгээх brevo newsletter мэдээлэл',
+      },
+      {
+        to: '/admin/marketing/templates',
+        label: 'Имэйлийн загвар',
+        icon: 'mail',
+        keywords: 'template загвар имэйл marketing',
+      },
+      {
+        to: '/admin/marketing/subscribers',
+        label: 'Захиалагч',
+        icon: 'user-check',
+        keywords: 'subscriber захиалагч newsletter имэйл жагсаалт',
+      },
+    ],
+  },
+  {
     title: 'Тайлан',
     collapsible: true,
     items: [{ to: '/admin/reports', label: 'Удирдлагын тайлан', icon: 'chart-column', keywords: 'report analytics' }],
@@ -109,6 +134,7 @@ export const ADMIN_QUICK_ACTIONS: AdminNavItem[] = [
   { to: '/admin/admissions/new', label: 'Шинэ элсэлт нэмэх', icon: 'calendar-plus', keywords: 'new intake add' },
   { to: '/admin/programs/new', label: 'Шинэ хөтөлбөр нэмэх', icon: 'book-plus', keywords: 'new program add анги төлбөр' },
   { to: '/admin/universities/ranking', label: 'GKS рэйтинг тооцоолол', icon: 'trending-up', keywords: 'ranking score' },
+  { to: '/admin/marketing/new', label: 'Шинэ имэйл кампанит ажил', icon: 'send', keywords: 'new campaign масс имэйл илгээх' },
 ];
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = ADMIN_NAV.flatMap((group) => group.items);

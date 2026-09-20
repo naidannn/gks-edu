@@ -26,6 +26,8 @@ import {
   passwordResetEmail,
   passwordResetGoogleEmail,
 } from '../src/modules/notifications/email/transactional.js';
+import { MARKETING_TEMPLATES } from '../src/modules/marketing/marketing-templates.data.js';
+import { campaignMessage, varsFor } from '../src/modules/marketing/marketing-email.js';
 import { NOTIFICATION_TEMPLATES } from '../src/modules/notifications/notification-templates.data.js';
 import { render } from '../src/modules/notifications/notifications.service.js';
 
@@ -152,11 +154,33 @@ function transactionalPreviews(): Preview[] {
   }));
 }
 
+/**
+ * The campaign templates (1O). Rendered through the same layout as everything
+ * else, and with the unsubscribe footer a real campaign carries — which is the
+ * one part of the design that only marketing mail ever shows.
+ */
+function marketingPreviews(): Preview[] {
+  const vars = varsFor({ email: 'temuulen@example.mn', name: 'Батбаярын Тэмүүлэн' });
+
+  return MARKETING_TEMPLATES.map((template) => ({
+    slug: `marketing-${template.key}`,
+    group: 'Маркетинг',
+    label: template.name,
+    message: campaignMessage(
+      { ...template, eyebrow: template.eyebrow ?? null, heading: template.heading ?? null,
+        ctaLabel: template.ctaLabel ?? null, ctaUrl: template.ctaUrl ?? null,
+        footerNote: template.footerNote ?? null, tone: template.tone ?? 'info' },
+      vars,
+      `${APP_URL}/unsubscribe?token=sample-token`,
+    ),
+  }));
+}
+
 async function main(): Promise<void> {
   const outDir = resolve(process.argv[2] ?? 'tmp/email-preview');
   await mkdir(outDir, { recursive: true });
 
-  const previews = [...transactionalPreviews(), ...notificationPreviews()];
+  const previews = [...transactionalPreviews(), ...marketingPreviews(), ...notificationPreviews()];
 
   // The logo is hosted by the web app, which is not running here — point the
   // preview copies at a local file so the header renders. Nothing else in the
