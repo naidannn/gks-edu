@@ -321,6 +321,81 @@ describe('MessengerService unread bookkeeping (1N-42)', () => {
     expect(vi.mocked(prisma.conversation.findUnique)).toHaveBeenCalledTimes(1);
     expect(prisma.conversation.update).toHaveBeenCalled();
   });
+
+  // ── The office writing first (1K-13) ──────────────────────────────────────
+
+  it('opens a staff-started thread claimed, read, and waiting on the client', async () => {
+    const { service, prisma, tx } = makeService();
+    vi.mocked(prisma.user.findFirst).mockResolvedValue({ id: CLIENT.id } as never);
+
+    await service.startForClient(STAFF, {
+      clientUserId: CLIENT.id,
+      body: 'Сайн байна уу. Паспортын хуулбар дутуу байна.',
+    });
+
+    const data = tx.conversation.create.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data.lastMessageFromStaff).toBe(true);
+    // Never in the unclaimed queue: the office knows whose thread this is.
+    expect(data.assigneeId).toBe(STAFF.id);
+    expect(data.firstResponseAt).toBeInstanceOf(Date);
+    expect(data.clientUnread).toBe(1);
+    expect(data.staffUnread).toBeUndefined();
+
+    const message = tx.message.create.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(message.fromStaff).toBe(true);
+    expect(message.senderId).toBe(STAFF.id);
+  });
+
+  it('will not let the office write to somebody who never signed a contract', async () => {
+    const { service, prisma, tx } = makeService();
+    vi.mocked(prisma.user.findFirst).mockResolvedValue(null as never);
+
+    await expect(service.startForClient(STAFF, { clientUserId: CLIENT.id, body: 'Сайн уу' })).rejects.toThrow(
+      'Гэрээтэй хэрэглэгч олдсонгүй',
+    );
+    expect(tx.conversation.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps a client out of the staff-side start route', async () => {
+    const { service } = makeService();
+    await expect(service.startForClient(CLIENT, { clientUserId: 'user-2', body: 'Сайн уу' })).rejects.toThrow(
+      'Зөвхөн ажилтан чат эхлүүлнэ',
+    );
+  });
+
+  it('bells the client about a thread the office started, and spares Slack', async () => {
+    const { service, prisma, notifications, slack } = makeService();
+    vi.mocked(prisma.user.findFirst).mockResolvedValue({ id: CLIENT.id } as never);
+
+    await service.startForClient(STAFF, { clientUserId: CLIENT.id, body: 'Танд мэдэгдэх зүйл байна' });
+
+    expect(notifications.dispatch).toHaveBeenCalledTimes(1);
+    // The office started it; telling the office about it is noise.
+    expect(slack.notify).not.toHaveBeenCalled();
+  });
+
+  it('hands the recipient picker the open thread that person already has', async () => {
+    const { service, prisma } = makeService();
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      {
+        id: CLIENT.id,
+        name: null,
+        email: 'client@test.mn',
+        phone: '99112233',
+        client: { code: 'KH-2026-0007', lastName: 'Дорж', firstName: 'Батболд' },
+        cases: [{ id: 'case-1', code: 'KH-2026-0007-1', serviceType: 'BACHELOR', stage: 'DOCUMENTS' }],
+        conversations: [{ id: 'conv-1', code: 'CH-2026-0001' }],
+      },
+    ] as never);
+
+    const [row] = await service.recipients({});
+
+    // No account name, but the contract always has one.
+    expect(row?.name).toBe('Дорж Батболд');
+    expect(row?.phase).toBe('ACTIVE');
+    expect(row?.openConversationCode).toBe('CH-2026-0001');
+    expect(row?.cases).toEqual([{ id: 'case-1', code: 'KH-2026-0007-1', serviceType: 'BACHELOR' }]);
+  });
 });
 
 describe('MessengerEventsService', () => {

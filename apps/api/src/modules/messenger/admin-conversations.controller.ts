@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -6,7 +6,12 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { ConversationStatus } from '../../prisma/client.js';
-import { AssignConversationDto, QueryInboxDto } from './dto/messenger.dto.js';
+import {
+  AssignConversationDto,
+  QueryInboxDto,
+  QueryRecipientsDto,
+  StartConversationForClientDto,
+} from './dto/messenger.dto.js';
 import { MessengerService } from './messenger.service.js';
 
 /**
@@ -34,6 +39,18 @@ export class AdminConversationsController {
   @ApiOperation({ summary: 'Inbox-ийн шүүлтүүрийн тоонууд' })
   counts(@CurrentUser() user: AuthenticatedUser) {
     return this.messenger.inboxCounts(user);
+  }
+
+  @Get('recipients')
+  @ApiOperation({ summary: 'Шинэ чат эхлүүлж болох гэрээтэй хэрэглэгчид' })
+  recipients(@Query() query: QueryRecipientsDto) {
+    return this.messenger.recipients(query);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Ажилтан хэрэглэгч рүү шинэ чат эхлүүлэх — эхний мессежтэйгээ хамт' })
+  start(@CurrentUser() user: AuthenticatedUser, @Body() dto: StartConversationForClientDto) {
+    return this.messenger.startForClient(user, dto);
   }
 
   @Get('staff')

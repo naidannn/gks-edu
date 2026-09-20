@@ -49,6 +49,20 @@ export class StartConversationDto {
   clientToken?: string;
 }
 
+/**
+ * Staff opening a thread with a client (1K-13).
+ *
+ * Same body as a client's own `StartConversationDto` plus the one thing a
+ * client never has to say: who it is for. The recipient is named by their
+ * **user** id, not their `Client` code — a conversation hangs off the account
+ * that can read it, and a client row without a claimed login cannot.
+ */
+export class StartConversationForClientDto extends StartConversationDto {
+  @ApiProperty({ description: 'Хүлээн авах хэрэглэгчийн ID (гэрээтэй байх ёстой)' })
+  @IsUUID()
+  clientUserId!: string;
+}
+
 export class SendMessageDto {
   @ApiProperty({ maxLength: 4000 })
   @IsString()
@@ -160,4 +174,14 @@ export class SetTypingDto {
   @ApiProperty()
   @IsBoolean()
   typing!: boolean;
+}
+
+/** The "хэнд бичих вэ" picker's filter. */
+export class QueryRecipientsDto {
+  @ApiPropertyOptional({ description: 'Нэр, имэйл, утас, харилцагчийн код' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(120)
+  @Transform(trimBody)
+  search?: string;
 }

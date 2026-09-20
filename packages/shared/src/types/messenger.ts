@@ -1,3 +1,4 @@
+import type { ServiceType } from '../schemas/lead';
 import type { UserRole } from '../schemas/user';
 import type { ClientPhase } from './client';
 
@@ -110,6 +111,32 @@ export interface InboxCounts {
   /** Open threads where the client spoke last — the queue that owes a reply. */
   waiting: number;
   open: number;
+}
+
+/**
+ * Somebody the office may open a thread with — a client who signed a contract
+ * (1K-13). `openConversationId` is the thread they already have, so the
+ * composer can offer to continue it instead of splitting the shared inbox in
+ * two.
+ */
+export interface ConversationRecipient {
+  /** The *user* id, which is what a conversation hangs off. */
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  clientCode: string | null;
+  phase: ClientPhase;
+  openConversationId: string | null;
+  openConversationCode: string | null;
+  /** Their service cycles, so the thread can be attached to one. */
+  cases: { id: string; code: string; serviceType: ServiceType }[];
+}
+
+/** What `POST /admin/conversations` and `POST /me/conversations` both answer. */
+export interface StartedConversation {
+  conversation: ConversationDetail;
+  message: MessageItem;
 }
 
 // ── Live stream (SSE) ───────────────────────────────────────────────────────

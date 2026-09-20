@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import type { ConversationDetail, ConversationListResponse, InboxCounts } from '@gks/shared';
+import type {
+  ConversationDetail,
+  ConversationListResponse,
+  ConversationRecipient,
+  ConversationTopic,
+  InboxCounts,
+  StartedConversation,
+} from '@gks/shared';
 
 /**
  * `/admin/messages` — the shared chat inbox (1K).
@@ -12,6 +19,11 @@ import type { ConversationDetail, ConversationListResponse, InboxCounts } from '
  * Answering claims the thread server-side, so the "Би хариуцъя" button is a
  * convenience for taking one you have not replied to yet, not a step somebody
  * has to remember.
+ *
+ * The office can also write first (1K-13). That thread arrives claimed by
+ * whoever wrote it and with the client owing the answer, so it lands under
+ * "Миний" rather than in the unclaimed queue this screen is built to shout
+ * about.
  */
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 useHead({ title: 'Чат — CRM' });
@@ -30,6 +42,11 @@ const counts = ref<InboxCounts>({ unassigned: 0, mine: 0, waiting: 0, open: 0 })
 const staff = ref<StaffMember[]>([]);
 
 const scope = ref<Scope>('UNASSIGNED');
+const composing = ref(false);
+const recipients = ref<ConversationRecipient[]>([]);
+const recipientsPending = ref(false);
+const composeError = ref<string | null>(null);
+const composeSending = ref(false);
 const search = ref('');
 const listPending = ref(true);
 const acting = ref(false);
@@ -71,6 +88,7 @@ async function loadList(): Promise<void> {
 }
 
 async function select(id: string): Promise<void> {
+  composing.value = false;
   mobilePane.value = 'thread';
   await thread.open(id);
   if (route.query.conversation !== id) {
@@ -109,6 +127,54 @@ function toggleResolved(): void {
   if (!conversation) return;
   const path = conversation.status === 'RESOLVED' ? 'reopen' : 'resolve';
   void act(api.patch(`/admin/conversations/${conversation.id}/${path}`));
+}
+
+/**
+ * Opening the composer is also when the recipient list is fetched — it is one
+ * query of contracted clients and nobody needs it until they press the button.
+ * It is re-read each time so a contract signed five minutes ago is offerable.
+ */
+async function compose(): Promise<void> {
+  composing.value = true;
+  composeError.value = null;
+  mobilePane.value = 'thread';
+  thread.close();
+
+  recipientsPending.value = true;
+  try {
+    recipients.value = await api.get<ConversationRecipient[]>('/admin/conversations/recipients');
+  } catch (e) {
+    composeError.value = apiErrorMessage(e, 'Хэрэглэгчдийн жагсаалтыг ачаалж чадсангүй');
+  } finally {
+    recipientsPending.value = false;
+  }
+}
+
+async function startThread(payload: {
+  clientUserId: string;
+  topic: ConversationTopic;
+  subject?: string;
+  caseId?: string;
+  body: string;
+}): Promise<void> {
+  composeSending.value = true;
+  composeError.value = null;
+  try {
+    const started = await api.post<StartedConversation>('/admin/conversations', payload);
+    // The new thread is this person's own, so drop them into it rather than
+    // back onto a queue they then have to find it in. `select` closes the
+    // composer on the way.
+    await select(started.conversation.id);
+    // It is claimed by its author, so it lives under "Миний". Leaving the
+    // queue on "Хариуцаагүй" would show an empty list beside a thread that
+    // was just created, which reads as a failure.
+    if (scope.value === 'MINE') await loadList();
+    else scope.value = 'MINE';
+  } catch (e) {
+    composeError.value = apiErrorMessage(e, 'Чат эхлүүлж чадсангүй');
+  } finally {
+    composeSending.value = false;
+  }
 }
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -166,6 +232,16 @@ const responseNote = computed(() => {
     <!-- ── Queue ───────────────────────────────────────────────────────── -->
     <aside class="gks-inbox__list">
       <div class="gks-inbox__filters">
+        <DsButton
+          variant="accent"
+          size="sm"
+          icon-left="pencil"
+          class="gks-inbox__new"
+          :disabled="composing"
+          @click="compose"
+        >
+          Шинэ чат
+        </DsButton>
         <DsInput
           v-model="search"
           type="search"
@@ -214,8 +290,19 @@ const responseNote = computed(() => {
 
     <!-- ── Thread ──────────────────────────────────────────────────────── -->
     <div class="gks-inbox__pane">
+      <MessengerStaffCompose
+        v-if="composing"
+        :recipients="recipients"
+        :loading="recipientsPending"
+        :sending="composeSending"
+        :error="composeError"
+        @submit="startThread"
+        @open-existing="select"
+        @cancel="composing = false"
+      />
+
       <MessengerThread
-        v-if="active || thread.pending.value"
+        v-else-if="active || thread.pending.value"
         :conversation="active"
         :messages="thread.messages.value"
         viewer-is-staff
@@ -303,6 +390,9 @@ const responseNote = computed(() => {
         <p class="gks-inbox__blank-sub">
           Хариуцагчгүй {{ counts.unassigned }} чат хүлээгдэж байна.
         </p>
+        <DsButton variant="secondary" size="sm" icon-left="pencil" @click="compose">
+          Эсвэл шинэ чат эхлүүлэх
+        </DsButton>
       </div>
     </div>
   </div>
@@ -335,6 +425,8 @@ const responseNote = computed(() => {
   padding: var(--sp-4);
   border-bottom: var(--border-hair) solid var(--line-hairline);
 }
+
+.gks-inbox__new { align-self: stretch; justify-content: center; }
 
 .gks-inbox__tabs { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
 .gks-inbox__tab {

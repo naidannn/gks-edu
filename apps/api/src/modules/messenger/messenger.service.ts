@@ -21,8 +21,10 @@ import {
   QueryInboxDto,
   QueryMessagesDto,
   QueryMyConversationsDto,
+  QueryRecipientsDto,
   SendMessageDto,
   StartConversationDto,
+  StartConversationForClientDto,
 } from './dto/messenger.dto.js';
 import { MessengerEventsService } from './messenger-events.service.js';
 import {
@@ -49,6 +51,20 @@ const STAFF_UNREAD_WHERE: Prisma.ConversationWhereInput = {
   staffUnread: { gt: 0 },
   status: { not: ConversationStatus.RESOLVED },
 };
+
+/**
+ * Who the office may open a thread with (1K-13): a live client account that
+ * has signed at least one contract. `Contract` rather than `Client` on purpose
+ * — a CRM row is a person we registered, a contract is a person we owe.
+ */
+const CONTRACTED_CLIENT_WHERE: Prisma.UserWhereInput = {
+  isActive: true,
+  role: Role.USER,
+  contracts: { some: {} },
+};
+
+/** The recipient picker ships one list; this is the guard on its size. */
+const RECIPIENT_LIMIT = 500;
 
 /** Fallback subject when the client just started typing without naming it. */
 const SUBJECT_FALLBACK_LENGTH = 60;
@@ -127,42 +143,11 @@ export class MessengerService {
       if (!owned) throw new NotFoundException('Үйлчилгээ олдсонгүй');
     }
 
-    const subject = dto.subject?.trim() || truncate(dto.body, SUBJECT_FALLBACK_LENGTH);
-
-    const { conversation, message } = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.conversation.create({
-        data: {
-          code: await this.generateCode(tx),
-          clientUserId: user.id,
-          caseId: dto.caseId ?? null,
-          subject,
-          topic: dto.topic ?? ConversationTopic.GENERAL,
-          lastMessageAt: new Date(),
-          lastMessagePreview: preview(dto.body),
-          lastMessageFromStaff: false,
-          staffUnread: 1,
-          clientReadAt: new Date(),
-        },
-        select: { id: true },
-      });
-
-      const first = await tx.message.create({
-        data: {
-          conversationId: created.id,
-          senderId: user.id,
-          fromStaff: false,
-          body: dto.body,
-          clientToken: dto.clientToken ?? null,
-        },
-        select: MESSAGE_SELECT,
-      });
-
-      const detail = await tx.conversation.findUniqueOrThrow({
-        where: { id: created.id },
-        select: CONVERSATION_DETAIL_SELECT,
-      });
-
-      return { conversation: detail, message: first };
+    const { conversation, message } = await this.createThread({
+      clientUserId: user.id,
+      senderId: user.id,
+      fromStaff: false,
+      dto,
     });
 
     this.fanOut(conversation, message, { toStaff: true, toUserIds: [user.id] });
@@ -381,6 +366,129 @@ export class MessengerService {
 
   // ── Staff side ────────────────────────────────────────────────────────────
 
+  /**
+   * The office writing first (1K-13).
+   *
+   * Until now a thread could only begin with the client, so anything the desk
+   * needed to raise — a missing document, a deadline, a decision that arrived
+   * — went out as an email nobody answers, or waited for the client to happen
+   * to write in. The recipient is limited to people who signed a contract:
+   * that is the relationship the messenger exists to serve, and an unsolicited
+   * chat to a visitor who merely left a phone number is marketing, which has
+   * its own rail (CLAUDE.md §8).
+   *
+   * The thread arrives claimed by whoever wrote it. That is not a convenience:
+   * an unassigned thread that nobody in the office recognises is exactly the
+   * row the inbox is built to shout about.
+   */
+  async startForClient(user: AuthenticatedUser, dto: StartConversationForClientDto) {
+    if (!isStaff(user.role)) throw new ForbiddenException('Зөвхөн ажилтан чат эхлүүлнэ');
+
+    const recipient = await this.prisma.user.findFirst({
+      where: { id: dto.clientUserId, ...CONTRACTED_CLIENT_WHERE },
+      select: { id: true },
+    });
+    if (!recipient) {
+      throw new NotFoundException('Гэрээтэй хэрэглэгч олдсонгүй');
+    }
+
+    if (dto.caseId) {
+      // The case has to be the recipient's own, or the thread would show them
+      // a service code belonging to somebody else.
+      const owned = await this.prisma.case.findFirst({
+        where: { id: dto.caseId, userId: recipient.id },
+        select: { id: true },
+      });
+      if (!owned) throw new NotFoundException('Үйлчилгээ олдсонгүй');
+    }
+
+    const { conversation, message } = await this.createThread({
+      clientUserId: recipient.id,
+      senderId: user.id,
+      fromStaff: true,
+      dto,
+    });
+
+    this.fanOut(conversation, message, { toStaff: true, toUserIds: [recipient.id] });
+    await this.notifyClient(conversation, dto.body);
+
+    return { conversation: this.toDetail(conversation, true), message: this.toMessage(message) };
+  }
+
+  /**
+   * Who the office may write to first, for the recipient picker.
+   *
+   * Each row carries the open thread the person already has, if any, so the
+   * composer can offer to continue it. A shared inbox punishes duplicates: two
+   * threads with the same client are two queues, and the second consultant
+   * answers without the first one's context.
+   */
+  async recipients(query: QueryRecipientsDto) {
+    const search = query.search?.trim();
+    const term: Prisma.UserWhereInput = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+            { phone: { contains: search } },
+            { client: { code: { contains: search, mode: 'insensitive' } } },
+            { client: { lastName: { contains: search, mode: 'insensitive' } } },
+            { client: { firstName: { contains: search, mode: 'insensitive' } } },
+          ],
+        }
+      : {};
+
+    const rows = await this.prisma.user.findMany({
+      where: { ...CONTRACTED_CLIENT_WHERE, ...term },
+      orderBy: [{ name: 'asc' }, { createdAt: 'desc' }],
+      // The picker filters in the browser, so the whole list is shipped. The
+      // cap is a guard, not a page: the office signs contracts in the hundreds
+      // per year, and a picker that silently truncates is worse than a slow
+      // one — revisit with a server-side search when it is ever reached.
+      take: RECIPIENT_LIMIT,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        client: { select: { code: true, lastName: true, firstName: true } },
+        // The stage answers "where do they stand"; the rest lets the composer
+        // attach the thread to one service without a second request.
+        cases: {
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, code: true, serviceType: true, stage: true },
+        },
+        conversations: {
+          where: { status: ConversationStatus.OPEN },
+          orderBy: { lastMessageAt: 'desc' },
+          take: 1,
+          select: { id: true, code: true },
+        },
+      },
+    });
+
+    return rows.map((row) => {
+      const open = row.conversations[0] ?? null;
+      return {
+        id: row.id,
+        // A staff-created client may never have set an account name, but the
+        // contract always has one.
+        name: row.name?.trim() || fullName(row.client) || row.email || 'Нэргүй хэрэглэгч',
+        email: row.email,
+        phone: row.phone,
+        clientCode: row.client?.code ?? null,
+        phase: clientPhaseOf(row.cases),
+        openConversationId: open?.id ?? null,
+        openConversationCode: open?.code ?? null,
+        cases: row.cases.map((item) => ({
+          id: item.id,
+          code: item.code,
+          serviceType: item.serviceType,
+        })),
+      };
+    });
+  }
+
   async inbox(user: AuthenticatedUser, query: QueryInboxDto) {
     const where = this.inboxWhere(user, query);
 
@@ -569,6 +677,73 @@ export class MessengerService {
     });
   }
 
+  /**
+   * Opens a thread and posts its first line, in one transaction.
+   *
+   * Both sides start threads now, and the only real difference is which way
+   * the head faces: who owes an answer, whose unread counter moves, and
+   * whether the thread arrives claimed. Writing that once keeps a
+   * staff-started thread from drifting into a shape the inbox cannot sort.
+   */
+  private async createThread(params: {
+    clientUserId: string;
+    senderId: string;
+    fromStaff: boolean;
+    dto: StartConversationDto;
+  }): Promise<{ conversation: ConversationDetailRow; message: MessageRow }> {
+    const { clientUserId, senderId, fromStaff, dto } = params;
+    const subject = dto.subject?.trim() || truncate(dto.body, SUBJECT_FALLBACK_LENGTH);
+    const now = new Date();
+
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.conversation.create({
+        data: {
+          code: await this.generateCode(tx),
+          clientUserId,
+          caseId: dto.caseId ?? null,
+          subject,
+          topic: dto.topic ?? ConversationTopic.GENERAL,
+          lastMessageAt: now,
+          lastMessagePreview: preview(dto.body),
+          lastMessageFromStaff: fromStaff,
+          // The side that opened the thread has read it by definition, and the
+          // other side owes the answer.
+          ...(fromStaff
+            ? {
+                clientUnread: 1,
+                staffReadAt: now,
+                // A thread the office started is already somebody's: it never
+                // belongs in the unclaimed queue, and the office has, by
+                // writing it, given its first response.
+                assigneeId: senderId,
+                assignedAt: now,
+                firstResponseAt: now,
+              }
+            : { staffUnread: 1, clientReadAt: now }),
+        },
+        select: { id: true },
+      });
+
+      const first = await tx.message.create({
+        data: {
+          conversationId: created.id,
+          senderId,
+          fromStaff,
+          body: dto.body,
+          clientToken: dto.clientToken ?? null,
+        },
+        select: MESSAGE_SELECT,
+      });
+
+      const detail = await tx.conversation.findUniqueOrThrow({
+        where: { id: created.id },
+        select: CONVERSATION_DETAIL_SELECT,
+      });
+
+      return { conversation: detail, message: first };
+    });
+  }
+
   /** `CH-2026-0007` — "чат". */
   private generateCode(db: Db): Promise<string> {
     return nextYearlyCode('CH', async (stem) =>
@@ -736,6 +911,11 @@ const PHASE_SLACK_LABELS: Record<ClientPhase | 'NONE', string> = {
   COMPLETED: 'Үйлчилгээ дууссан',
   CANCELLED: 'Цуцлагдсан',
 };
+
+/** `Дорж Батболд` from the contract's two fields, when the account has no name. */
+function fullName(client: { lastName: string; firstName: string } | null | undefined): string {
+  return client ? `${client.lastName} ${client.firstName}`.trim() : '';
+}
 
 /** `Б.Наран` if we know the name, a neutral noun if we do not. */
 function staffLabel(name: string | null | undefined): string {
