@@ -25,3 +25,4 @@ export * from './types/reports';
 export * from './types/ai-chat';
 export * from './types/ai-knowledge';
 export * from './tuition';
+export * from './types/questionnaires';

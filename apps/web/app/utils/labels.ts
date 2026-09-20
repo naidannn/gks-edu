@@ -18,6 +18,9 @@ import type {
   CaseStage,
   ClientPhase,
   ClientStatus,
+  QuestionnaireLevel,
+  QuestionnaireStatus,
+  RecommendationStatus,
   ContractStatus,
   ContractType,
   DocStage,
@@ -1000,4 +1003,40 @@ export const AI_FEEDBACK_REASON_LABELS: Record<AiFeedbackReason, string> = {
   INCOMPLETE: 'Дутуу хариулсан',
   IRRELEVANT: 'Асуултад хамаагүй',
   OTHER: 'Бусад',
+};
+
+// ── 1D-27 — GKS essay and recommendation questionnaires ─────────────────────
+
+export const QUESTIONNAIRE_LEVEL_LABELS: Record<QuestionnaireLevel, string> = {
+  BACHELOR: 'Бакалавр',
+  MASTER: 'Магистр',
+  PHD: 'Доктор',
+};
+
+export const ESSAY_STATUS_LABELS: Record<QuestionnaireStatus, string> = {
+  DRAFT: 'Бөглөж байна',
+  SUBMITTED: 'Мэргэжилтэнд илгээсэн',
+};
+
+/** Worded for the client: what is happening, not which column changed. */
+export const RECOMMENDATION_STATUS_LABELS: Record<RecommendationStatus, string> = {
+  INVITED: 'Багшийн хариултыг хүлээж байна',
+  ANSWERED: 'Англи хувилбарыг бэлтгэж байна',
+  LETTER_READY: 'Гарын үсэг зуруулахад бэлэн',
+  RECEIVED: 'Оффист хүлээн авсан',
+};
+
+/** The staff wording of the same four steps — shorter, for a list. */
+export const RECOMMENDATION_STATUS_STAFF_LABELS: Record<RecommendationStatus, string> = {
+  INVITED: 'Хариулт хүлээж буй',
+  ANSWERED: 'Хариулт ирсэн',
+  LETTER_READY: 'Англи хувилбар илгээсэн',
+  RECEIVED: 'Эх хувь ирсэн',
+};
+
+export const RECOMMENDATION_STATUS_TONES: Record<RecommendationStatus, BadgeTone> = {
+  INVITED: 'neutral',
+  ANSWERED: 'info',
+  LETTER_READY: 'warning',
+  RECEIVED: 'success',
 };

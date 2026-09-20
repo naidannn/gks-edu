@@ -22,6 +22,8 @@ export default defineEventHandler((event) => {
     '/chat',
     // The office QR self-registration form (1B-21) — only for people in the waiting area.
     '/visit',
+    // A teacher's recommendation questionnaire (1D-27) — each URL is one private link.
+    '/recommend/',
     // Auth screens: no content, and a search result landing on one is a dead end.
     '/login',
     '/register',

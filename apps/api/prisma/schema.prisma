@@ -1299,12 +1299,12 @@ enum PaymentMethod {
 
 /// Versioned service pricing (gksedu.md §5.4) — admin-configurable, never a constant.
 model ServicePricing {
-  id              String         @id @default(uuid()) @db.Uuid
-  serviceType     ServiceType
-  totalAmount     Decimal        @db.Decimal(14, 2)
-  prepaymentMode  PrepaymentMode
-  prepaymentValue Decimal        @db.Decimal(14, 2)
-  balanceTrigger  BalanceTrigger
+  id                String         @id @default(uuid()) @db.Uuid
+  serviceType       ServiceType
+  totalAmount       Decimal        @db.Decimal(14, 2)
+  prepaymentMode    PrepaymentMode
+  prepaymentValue   Decimal        @db.Decimal(14, 2)
+  balanceTrigger    BalanceTrigger
   /// How many days a client is given to pay an invoice once it is raised —
   /// what `Payment.dueAt` is computed from, and therefore what the "Төлбөрийн
   /// хугацаа болсон" reminder (§16) and the receivables report run on. Payment
@@ -1312,12 +1312,12 @@ model ServicePricing {
   /// Two, because the debts differ (1C-35): the prepayment is due in 3 days —
   /// the same window after which an unpaid case is cancelled (1C-43) — and the
   /// larger balance in 14.
-  prepaymentDueDays Int          @default(3)
-  balanceDueDays    Int          @default(14)
-  effectiveFrom   DateTime
+  prepaymentDueDays Int            @default(3)
+  balanceDueDays    Int            @default(14)
+  effectiveFrom     DateTime
   /// Null = currently active.
-  effectiveTo     DateTime?
-  createdAt       DateTime       @default(now())
+  effectiveTo       DateTime?
+  createdAt         DateTime       @default(now())
 
   @@index([serviceType, effectiveFrom])
   @@map("service_pricing")
@@ -1366,6 +1366,9 @@ model Case {
   departurePlan  DeparturePlan?
   notifications  Notification[]
   conversations  Conversation[]
+
+  essayQuestionnaire EssayQuestionnaire?
+  recommendations    RecommendationRequest[]
 
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -2845,4 +2848,98 @@ model AiAssistantConfig {
   updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@map("ai_assistant_config")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1D-27 — GKS essay and recommendation questionnaires (ARCHITECTURE.md §7.6).
+// The questions themselves are code (`src/modules/questionnaires/definitions`);
+// these rows hold only the answers, keyed by the question's stable id.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Where a questionnaire is in its hand-over to the writer.
+enum QuestionnaireStatus {
+  /// Still being filled in; autosaved as the client types.
+  DRAFT
+  /// Handed to the writer — read-only for the client until staff reopen it.
+  SUBMITTED
+}
+
+/// The client's answers that the office writes the Personal Statement and
+/// Study Plan from — one per GKS case.
+model EssayQuestionnaire {
+  id     String @id @default(uuid()) @db.Uuid
+  caseId String @unique @db.Uuid
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  /// Which level's question set; BACHELOR, MASTER or PHD.
+  level   ProgramLevel
+  /// `{ [questionId]: string }` — every answer is text, even a yes/no.
+  answers Json                @default("{}")
+  status  QuestionnaireStatus @default(DRAFT)
+
+  submittedAt DateTime?
+  /// Why staff sent it back — shown to the client above the form.
+  reopenNote  String?
+  reopenedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("essay_questionnaires")
+}
+
+/// How far one recommendation letter has come — the five steps of the office's
+/// "БАГШИЙН ТОДОРХОЙЛОЛТ БЭЛТГЭХ ЗААВАР".
+enum RecommendationStatus {
+  /// The link exists; nobody has answered yet.
+  INVITED
+  /// The teacher (or the client on their behalf) sent the answers.
+  ANSWERED
+  /// Staff attached the English letter for the teacher to sign.
+  LETTER_READY
+  /// The signed letter arrived at the office in its unsealed envelope.
+  RECEIVED
+}
+
+/// One teacher asked for one recommendation letter.
+model RecommendationRequest {
+  id     String @id @default(uuid()) @db.Uuid
+  caseId String @db.Uuid
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  level ProgramLevel
+  /// The capability in the teacher's link. Stored in the clear on purpose: the
+  /// client copies the link again whenever they need to resend it, and all it
+  /// opens is this one questionnaire.
+  token String       @unique
+
+  /// What the client called the teacher — the teacher corrects it in `recommender`.
+  recommenderName   String
+  relation          String?
+  /// Answers to the questionnaire, `{ [questionId]: string }`.
+  answers           Json    @default("{}")
+  /// Section V of the office's form: name, title, school, e-mail, phone …
+  recommender       Json    @default("{}")
+  /// True when the client typed the answers in themselves instead of sending
+  /// the link. The client may read answers only in that case — a teacher's
+  /// candid evaluation is for the office.
+  filledByApplicant Boolean @default(false)
+
+  status        RecommendationStatus @default(INVITED)
+  openedAt      DateTime?
+  answeredAt    DateTime?
+  letterReadyAt DateTime?
+  receivedAt    DateTime?
+  /// The English letter staff prepared, for the client to print and have signed.
+  letterPath    String?
+  letterName    String?
+  /// Staff note visible to the client, e.g. "Хэвлээд 10-р сарын 5-наас өмнө авчраарай".
+  staffNote     String?
+  deletedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([caseId])
+  @@map("recommendation_requests")
 }

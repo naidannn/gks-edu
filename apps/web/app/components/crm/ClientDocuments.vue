@@ -158,6 +158,8 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
   <div class="gks-cdocs">
     <DsCard v-if="errorMsg" accent><p class="gks-cdocs__error">{{ errorMsg }}</p></DsCard>
 
+    <QuestionnaireStaffSummary v-if="workspaceCase.serviceType === 'GKS_SCHOLARSHIP'" :case-id="workspaceCase.id" />
+
     <DsCard>
       <div class="gks-cdocs__head">
         <div class="gks-cdocs__stages">

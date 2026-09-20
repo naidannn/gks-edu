@@ -19,8 +19,10 @@ const bookingError = ref<string | null>(null);
 const printing = ref(false);
 
 /** The case shell resolves `/me/cases/:id`; the code names the printed file. */
-const caseDetail = inject<{ gksCase: Ref<{ code: string } | null> } | null>('caseDetail', null);
+const caseDetail = inject<{ gksCase: Ref<{ code: string; serviceType: string } | null> } | null>('caseDetail', null);
 const caseCode = computed(() => caseDetail?.gksCase.value?.code);
+/** A GKS case also writes an essay and collects teachers' letters (1D-27). */
+const isGks = computed(() => caseDetail?.gksCase.value?.serviceType === 'GKS_SCHOLARSHIP');
 
 async function loadAppointments() {
   appointmentView.value = await docs.appointments();
@@ -108,6 +110,8 @@ const originals = computed(() => appointmentView.value?.physicalOriginals ?? [])
         <span class="gks-docs__print-hint">A4 хуудсаар хэвлээд гар дээрээ тэмдэглэж явж болно.</span>
       </div>
     </DsCard>
+
+    <QuestionnaireGksCards v-if="isGks" :case-id="caseId" />
 
     <DocumentsConditionsForm :conditions="docs.conditions.value" :saving="saving" @save="onSaveConditions" />
 
