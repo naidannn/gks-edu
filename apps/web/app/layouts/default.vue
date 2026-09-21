@@ -170,6 +170,13 @@ function isTabActive(tab: { to: string; match: string | null }): boolean {
  * pointer landing outside the bar, the panel and the tab bar.
  */
 const openGroup = ref<string | null>(null);
+/**
+ * Signed in, the bar used to carry the address, "Миний булан", "CRM" and
+ * "Гарах" beside the five public links — wider than the 1180px bar, so the
+ * whole page scrolled sideways on a desktop. Only the cabinet stays out; the
+ * rest sits behind one icon, on the same open/close rules as the dropdowns.
+ */
+const ACCOUNT_MENU = 'account';
 const menuOpen = ref(false);
 
 function closeMenus() {
@@ -289,25 +296,32 @@ async function onLogout() {
               {{ item.label }}
             </NuxtLink>
           </template>
-          <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__link">CRM</NuxtLink>
         </div>
 
         <div class="gks-appbar__actions">
           <template v-if="auth.isAuthenticated">
-            <span class="gks-appbar__user gks-tnum">{{ auth.user?.email }}</span>
             <NuxtLink to="/app" class="gks-appbar__account">
               <DsIcon name="folder-open" :size="16" />
               <span>Миний булан</span>
             </NuxtLink>
-            <DsButton
-              variant="secondary"
-              size="sm"
-              icon-left="log-out"
-              class="gks-appbar__logout"
-              @click="onLogout"
-            >
-              Гарах
-            </DsButton>
+            <div class="gks-appbar__group gks-appbar__me">
+              <button
+                type="button"
+                class="gks-appbar__me-trigger"
+                :aria-expanded="openGroup === ACCOUNT_MENU"
+                aria-label="Бүртгэлийн цэс"
+                @click="openGroup = openGroup === ACCOUNT_MENU ? null : ACCOUNT_MENU"
+              >
+                <DsIcon name="user-round" :size="18" />
+              </button>
+              <div v-show="openGroup === ACCOUNT_MENU" class="gks-appbar__menu gks-appbar__menu--end">
+                <p class="gks-appbar__menu-email gks-tnum">{{ auth.user?.email }}</p>
+                <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__menu-link">CRM</NuxtLink>
+                <button type="button" class="gks-appbar__menu-link gks-appbar__menu-logout" @click="onLogout">
+                  <DsIcon name="log-out" :size="16" /> Гарах
+                </button>
+              </div>
+            </div>
           </template>
           <template v-else>
             <NuxtLink to="/login" class="gks-appbar__login">Нэвтрэх</NuxtLink>
@@ -633,14 +647,44 @@ async function onLogout() {
 .gks-appbar__handle { display: none; }
 
 .gks-appbar__actions { display: flex; align-items: center; gap: var(--sp-3); flex: none; }
-.gks-appbar__user { font-size: var(--fs-caption); color: var(--text-subtle); }
-/* The lockup claims 200px of the 1180px bar, and a signed-in staff account
-   adds "Миний булан", "CRM" and this address chip on top of the five public
-   links. The chip is the only one of them that says nothing "Гарах" does not
-   already imply, so it is the first to go whenever the bar is not at its
-   widest. */
-@media (max-width: 1440px) {
-  .gks-appbar__user { display: none; }
+.gks-appbar__me-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-2);
+  background: var(--n-000);
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-appbar__me-trigger:hover,
+.gks-appbar__me-trigger[aria-expanded="true"] { border-color: var(--brand-300); color: var(--brand-700); }
+/* Anchored to the bar's right edge: centred like the nav dropdowns, it would
+   hang off the side of the screen. */
+.gks-appbar__menu--end { left: auto; right: 0; transform: none; }
+.gks-appbar__menu-email {
+  max-width: 260px;
+  padding: var(--sp-2) var(--sp-3);
+  overflow: hidden;
+  border-bottom: var(--border-hair) solid var(--line-soft);
+  margin-bottom: var(--sp-1);
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gks-appbar__menu-logout {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 .gks-appbar__login {
   display: inline-flex;
@@ -875,7 +919,7 @@ async function onLogout() {
 
 @media (max-width: 640px) {
   .gks-appbar__nav { padding: var(--sp-3) var(--gutter-mobile); }
-  .gks-appbar__logout { display: none; }
+  .gks-appbar__me { display: none; }
   .gks-appbar__panel-logout { display: block; }
   .gks-main { padding: var(--sp-6) var(--gutter-mobile) var(--sp-9); }
   .gks-footer__inner { grid-template-columns: 1fr; padding: var(--sp-8) var(--gutter-mobile) var(--sp-6); }

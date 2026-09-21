@@ -9,30 +9,28 @@ import {
 } from '../app/utils/gks-rounds';
 
 const at = (iso: string) => new Date(iso).getTime();
-const embassy = GKS_ROUNDS.find((round) => round.id === 'bachelor-embassy-2027')!;
+const bachelor = GKS_ROUNDS.find((round) => round.id === 'bachelor-uic-2027')!;
 const graduate = GKS_ROUNDS.find((round) => round.id === 'graduate-2027')!;
 
 describe('GKS rounds', () => {
-  it('closes the embassy track at 18:00 KST — 17:00 in Ulaanbaatar, not midnight', () => {
-    expect(getGksRoundPhase(embassy, at('2026-09-30T16:59:59+08:00'))).toBe('OPEN');
-    expect(getGksRoundPhase(embassy, at('2026-09-30T17:00:00+08:00'))).toBe('CLOSED');
+  it('closes the bachelor intake on our deadline, 18:00 KST — 17:00 in Ulaanbaatar, not midnight', () => {
+    expect(getGksRoundPhase(bachelor, at('2026-10-15T16:59:59+08:00'))).toBe('OPEN');
+    expect(getGksRoundPhase(bachelor, at('2026-10-15T17:00:00+08:00'))).toBe('CLOSED');
   });
 
-  it('is upcoming before 11:00 KST on the opening day', () => {
-    expect(getGksRoundPhase(embassy, at('2026-09-15T09:59:00+08:00'))).toBe('UPCOMING');
+  it('never calls a round a "шугам" — that is office vocabulary', () => {
+    for (const round of GKS_ROUNDS) expect(`${round.track} ${round.window} ${round.summary}`).not.toMatch(/шугам/i);
   });
 
   it('leads with the open round that has a real countdown', () => {
-    expect(featuredGksRound(GKS_ROUNDS, at('2026-09-19T12:00:00+08:00'))?.id).toBe('bachelor-embassy-2027');
-    // Once the embassy track has closed, the school track (still open) leads.
-    expect(featuredGksRound(GKS_ROUNDS, at('2026-10-05T12:00:00+08:00'))?.id).toBe('bachelor-uic-2027');
-    // After every bachelor round, the graduate round that opens next leads.
-    expect(featuredGksRound(GKS_ROUNDS, at('2026-12-15T12:00:00+08:00'))?.id).toBe('graduate-2027');
+    expect(featuredGksRound(GKS_ROUNDS, at('2026-09-21T12:00:00+08:00'))?.id).toBe('bachelor-uic-2027');
+    // After the bachelor deadline, the graduate round that opens next leads.
+    expect(featuredGksRound(GKS_ROUNDS, at('2026-10-16T12:00:00+08:00'))?.id).toBe('graduate-2027');
   });
 
   it('says "now accepting" while open and marks an estimated opening as approximate', () => {
-    expect(gksRoundHeadline(embassy, at('2026-09-19T12:00:00+08:00'))).toBe('Одоо бакалаврын элсэлт авч байна');
-    expect(gksRoundHeadline(graduate, at('2026-09-19T12:00:00+08:00'))).toMatch(/^Магистр · Доктор — ~\d+ хоногийн дараа/);
+    expect(gksRoundHeadline(bachelor, at('2026-09-21T12:00:00+08:00'))).toBe('Одоо бакалаврын элсэлт авч байна');
+    expect(gksRoundHeadline(graduate, at('2026-09-21T12:00:00+08:00'))).toMatch(/^Магистр · Доктор — ~\d+ хоногийн дараа/);
   });
 
   it('rounds the days left down, like the clock beside it', () => {

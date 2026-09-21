@@ -28,19 +28,30 @@ const DEGREES: { value: GksRoundDegree; label: string }[] = [
 // Opens on whichever degree is live, so the first thing seen is a running clock.
 const degree = ref<GksRoundDegree>(featuredGksRound(GKS_ROUNDS, now.value)?.degree ?? 'BACHELOR');
 
-const rounds = computed(() =>
-  sortGksRounds(
-    GKS_ROUNDS.filter((round) => round.degree === degree.value),
-    now.value,
-  ),
+// One round per degree today; sorted anyway, so a second one lands in the right
+// place the year NIIED splits a level into rounds again.
+const lead = computed<GksRound | null>(
+  () =>
+    sortGksRounds(
+      GKS_ROUNDS.filter((round) => round.degree === degree.value),
+      now.value,
+    )[0] ?? null,
 );
-const lead = computed<GksRound | null>(() => rounds.value[0] ?? null);
 const leadPhase = computed(() => (lead.value ? getGksRoundPhase(lead.value, now.value) : null));
 const liveCount = computed(() => GKS_ROUNDS.filter((round) => getGksRoundPhase(round, now.value) === 'OPEN').length);
 
+/**
+ * The stipend is paid in won, but a visitor weighs it against a salary in
+ * tögrög — so the card shows tögrög. The rate is a rounded snapshot, not a
+ * feed: move it when the won drifts far enough to change the first digit.
+ */
+const STIPEND_KRW = 1_200_000;
+const MNT_PER_KRW = 2.45;
+const stipendMnt = `≈${(Math.round((STIPEND_KRW * MNT_PER_KRW) / 100_000) / 10).toString()} сая ₮`;
+
 const BENEFITS = [
   { icon: 'graduation-cap', value: '100%', label: 'сургалтын төлбөр' },
-  { icon: 'wallet-cards', value: '1.2 сая ₩', label: 'сар бүрийн тэтгэмж' },
+  { icon: 'wallet-cards', value: stipendMnt, label: 'сар бүрийн тэтгэмж' },
   { icon: 'plane', value: '2 талдаа', label: 'онгоцны тийз' },
   { icon: 'languages', value: '1 жил', label: 'хэлний бэлтгэл' },
 ];
@@ -144,19 +155,6 @@ const VERDICT_COPY = computed(() => {
             хоногийн дараа нээгдэнэ — бэлтгэл нь одоо эхэлдэг.
           </p>
           <p v-else class="home-gks__note">{{ lead.afterClose }}</p>
-
-          <ul v-if="rounds.length > 1" class="home-gks__more">
-            <li v-for="round in rounds.slice(1)" :key="round.id">
-              <NuxtLink :to="round.to">
-                <span class="home-gks__dot" :class="`is-${getGksRoundPhase(round, now).toLowerCase()}`" />
-                <span>
-                  <strong>{{ round.track }}</strong>
-                  {{ gksRoundHeadline(round, now) }} · {{ round.window }}
-                </span>
-                <DsIcon name="arrow-right" :size="16" />
-              </NuxtLink>
-            </li>
-          </ul>
 
           <div class="home-gks__actions">
             <DsButton variant="accent" icon-right="arrow-right" @click="navigateTo('/gks-scholarship#open-rounds')">
@@ -269,15 +267,6 @@ const VERDICT_COPY = computed(() => {
 .home-gks__big strong { display: block; font-size: 56px; font-weight: var(--fw-black); line-height: 1; color: var(--n-000); }
 .home-gks__note { margin-top: var(--sp-4); font-size: var(--fs-body-sm); color: var(--n-200); }
 .home-gks__note strong { color: #fbbf24; }
-
-.home-gks__more { display: grid; gap: var(--sp-2); margin: var(--sp-5) 0 0; padding: 0; list-style: none; }
-.home-gks__more a { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-2); background: rgba(255, 255, 255, .05); color: var(--n-300); font-size: var(--fs-caption); text-decoration: none; }
-.home-gks__more a:hover { background: rgba(255, 255, 255, .1); color: var(--n-000); }
-.home-gks__more strong { display: block; color: var(--n-000); font-size: var(--fs-body-sm); }
-.home-gks__more :deep(.gks-icon) { margin-left: auto; flex: none; }
-.home-gks__dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--n-400); }
-.home-gks__dot.is-open { background: #4ade80; }
-.home-gks__dot.is-upcoming { background: var(--brand-300); }
 
 .home-gks__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-5); margin-top: var(--sp-6); }
 .home-gks__link { color: var(--n-300); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); text-decoration: underline; text-underline-offset: 4px; }
