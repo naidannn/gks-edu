@@ -11,7 +11,6 @@
  * person who forgot they had subscribed sees the same thank-you.
  */
 const api = useApi();
-const route = useRoute();
 
 const email = ref('');
 const pending = ref(false);
@@ -29,15 +28,9 @@ async function submit() {
   try {
     await api.post('/marketing/subscribe', {
       email: email.value.trim(),
-      // Where they were standing when they signed up — the same attribution
-      // the lead form carries, so a campaign can be traced to the page that
-      // earned it.
-      utm: {
-        ...(route.query.utm_source ? { utm_source: String(route.query.utm_source) } : {}),
-        ...(route.query.utm_medium ? { utm_medium: String(route.query.utm_medium) } : {}),
-        ...(route.query.utm_campaign ? { utm_campaign: String(route.query.utm_campaign) } : {}),
-        landing: route.path,
-      },
+      // The same attribution the lead form carries: the campaign they arrived
+      // with, and the page they were standing on when they signed up.
+      utm: attributionPayload(),
     });
     done.value = true;
     email.value = '';

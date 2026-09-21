@@ -45,9 +45,33 @@ export class LeadUtmDto {
 
   @ApiPropertyOptional()
   @IsString()
+  @MaxLength(120)
+  @IsOptional()
+  content?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @MaxLength(120)
+  @IsOptional()
+  term?: string;
+
+  @ApiPropertyOptional({ description: 'Ad click id the arrival URL carried: fbclid | gclid' })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  click?: string;
+
+  @ApiPropertyOptional({ description: 'The page the visitor arrived on — not the form page' })
+  @IsString()
   @MaxLength(500)
   @IsOptional()
   landingPage?: string;
+
+  @ApiPropertyOptional({ description: 'The page the form was submitted from' })
+  @IsString()
+  @MaxLength(500)
+  @IsOptional()
+  formPage?: string;
 
   @ApiPropertyOptional()
   @IsString()

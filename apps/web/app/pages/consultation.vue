@@ -132,13 +132,9 @@ function buildPayload() {
     interestedMajor: form.interestedMajor || undefined,
     note: form.note || undefined,
     website: form.website || undefined,
-    utm: {
-      source: typeof route.query.utm_source === 'string' ? route.query.utm_source : undefined,
-      medium: typeof route.query.utm_medium === 'string' ? route.query.utm_medium : undefined,
-      campaign: typeof route.query.utm_campaign === 'string' ? route.query.utm_campaign : undefined,
-      landingPage: route.fullPath,
-      referrer: import.meta.client ? document.referrer || undefined : undefined,
-    },
+    // The campaign the visitor arrived with, captured on their first page —
+    // this page's own query only ever holds the form's `?service=`.
+    utm: attributionPayload(),
   };
 }
 

@@ -9,6 +9,7 @@ import type {
   AiSource,
   AiStreamEvent,
 } from '@gks/shared';
+import { attributionPayload } from '~/utils/attribution';
 import { createSseParser } from '~/utils/sse';
 import { useAuthStore } from '~/stores/auth';
 
@@ -165,12 +166,13 @@ export function useAiChat() {
       return existing;
     }
 
-    const utm = trackingUtm();
     const started = await api.post<AiSessionStart>('/ai/chat/sessions', {
       channel: channel.value,
       anonymousId: anonymousId(),
       landingPage: window.location.pathname,
-      ...(utm ? { utm } : {}),
+      // Same shape as the lead form's `utm`: a lead the assistant captures
+      // copies this block onto the lead as-is.
+      utm: attributionPayload(),
     });
 
     remember(TOKEN_KEY, started.token);
@@ -434,40 +436,4 @@ export function useAiChat() {
     rate,
     reset,
   };
-}
-
-const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
-const UTM_STORE = 'gks:utm';
-
-/**
- * The campaign that brought this visitor.
- *
- * Captured the first time it is seen and kept for the tab, because the query
- * string is gone long before the chat is opened: somebody arrives on
- * `/?utm_source=facebook`, reads two pages, and only then asks a question. Read
- * live from the URL each call as well, so a second ad click inside the same tab
- * overwrites the first rather than being attributed to it.
- */
-function trackingUtm(): Record<string, string> | null {
-  if (import.meta.server) return null;
-
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const fresh: Record<string, string> = {};
-    for (const key of UTM_KEYS) {
-      const value = params.get(key);
-      if (value) fresh[key] = value.slice(0, 200);
-    }
-
-    if (Object.keys(fresh).length > 0) {
-      if (document.referrer) fresh.referrer = document.referrer.slice(0, 300);
-      window.sessionStorage.setItem(UTM_STORE, JSON.stringify(fresh));
-      return fresh;
-    }
-
-    const stored = window.sessionStorage.getItem(UTM_STORE);
-    return stored ? (JSON.parse(stored) as Record<string, string>) : null;
-  } catch {
-    return null;
-  }
 }

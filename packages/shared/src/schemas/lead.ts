@@ -52,8 +52,14 @@ export const publicLeadSchema = z.object({
       source: z.string().max(120).optional(),
       medium: z.string().max(120).optional(),
       campaign: z.string().max(120).optional(),
+      content: z.string().max(120).optional(),
+      term: z.string().max(120).optional(),
+      /** Ad click id the arrival URL carried — `fbclid` / `gclid`. */
+      click: z.string().max(20).optional(),
+      /** The page the visitor arrived on, which is rarely the form page. */
       landingPage: z.string().max(500).optional(),
       referrer: z.string().max(500).optional(),
+      formPage: z.string().max(500).optional(),
     })
     .optional(),
   /** Meta ad-click context, so the server-side `Lead` event dedups with the pixel's (1A-38). */
