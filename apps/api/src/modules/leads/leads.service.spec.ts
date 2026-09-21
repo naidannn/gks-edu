@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { LeadActivityType, LeadSource } from '../../prisma/client.js';
+import { LeadActivityType, LeadSource, LeadStage } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { EmailService } from '../notifications/email.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
@@ -24,6 +24,7 @@ function prismaStub(overrides: { recentLead?: { id: string } | null } = {}) {
         source: LeadSource.WEBSITE,
         interestedServices: [],
       }),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     leadActivity: { create: vi.fn().mockResolvedValue({ id: 'activity' }) },
     university: { findMany: vi.fn().mockResolvedValue([{ id: 'uni-1' }]) },
@@ -87,6 +88,7 @@ describe('LeadsService.createFromPublicForm', () => {
     expect(data.phone).toBe('99112233');
     expect(data.email).toBe('test@example.com');
     expect(data.source).toBe(LeadSource.WEBSITE);
+    expect(data.stage).toBe(LeadStage.NEW);
     expect(data.interestedUniversityIds).toEqual(['uni-1']);
     expect(data.activities.create.type).toBe(LeadActivityType.NOTE);
   });
@@ -162,6 +164,8 @@ describe('LeadsService.createFromPublicForm', () => {
 
     const data = prisma.lead.create.mock.calls[0]![0].data;
     expect(data.source).toBe(LeadSource.OFFICE);
+    // The visit is the contact — it does not wait in NEW for a call.
+    expect(data.stage).toBe(LeadStage.CONTACTED);
     expect(data.schoolName).toBe('1-р сургууль');
     expect(data.activities.create).toMatchObject({
       type: LeadActivityType.MEETING,
@@ -186,6 +190,10 @@ describe('LeadsService.createFromPublicForm', () => {
         type: LeadActivityType.MEETING,
         body: 'Оффис дээр ирж, QR кодоор дахин бүртгүүлсэн',
       }),
+    });
+    expect(prisma.lead.updateMany).toHaveBeenCalledWith({
+      where: { id: 'existing-lead', stage: LeadStage.NEW },
+      data: { stage: LeadStage.CONTACTED },
     });
     expect(meta.track).not.toHaveBeenCalled();
   });

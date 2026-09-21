@@ -34,6 +34,12 @@ interface IntakeChannel {
   body: (note: string | undefined, repeat: boolean) => string;
   /** Only the website form is an ad funnel: Meta conversion + emailed receipt. */
   isAdConversion: boolean;
+  /**
+   * Where the new lead starts. Someone who walked into the office has already
+   * been spoken to — nobody on the desk has to call them first — so an office
+   * registration opens at CONTACTED instead of waiting in NEW.
+   */
+  initialStage: LeadStage;
 }
 
 function channelOf(source: LeadSource): IntakeChannel {
@@ -44,6 +50,7 @@ function channelOf(source: LeadSource): IntakeChannel {
         activityType: LeadActivityType.CHAT,
         body: (note, repeat) => note ?? (repeat ? 'AI туслахтай яриа' : 'AI туслахтай ярианаас үүссэн хүсэлт'),
         isAdConversion: true,
+        initialStage: LeadStage.NEW,
       };
     case LeadSource.OFFICE:
       return {
@@ -56,6 +63,7 @@ function channelOf(source: LeadSource): IntakeChannel {
           return note ? `${head}\n\n${note}` : head;
         },
         isAdConversion: false,
+        initialStage: LeadStage.CONTACTED,
       };
     default:
       return {
@@ -63,6 +71,7 @@ function channelOf(source: LeadSource): IntakeChannel {
         activityType: LeadActivityType.NOTE,
         body: (note, repeat) => note ?? (repeat ? 'Вебсайтаас давтан хүсэлт илгээсэн' : 'Вебсайтын зөвлөгөөний хүсэлт'),
         isAdConversion: true,
+        initialStage: LeadStage.NEW,
       };
   }
 }
@@ -161,6 +170,15 @@ export class LeadsService {
           meta: { channel: channel.key, repeat: true } satisfies Prisma.InputJsonObject,
         },
       });
+      // A website enquiry still sitting in NEW whose owner now walks in has
+      // been contacted by the visit itself. Only NEW moves: a lead further
+      // along keeps the stage the consultant gave it.
+      if (channel.initialStage !== LeadStage.NEW) {
+        await this.prisma.lead.updateMany({
+          where: { id: recent.id, stage: LeadStage.NEW },
+          data: { stage: channel.initialStage },
+        });
+      }
       // A second form inside the dedupe window means the visitor is still
       // waiting for a call — worth saying out loud, not just filing. From the
       // office it means they are sitting in the waiting area right now.
@@ -201,6 +219,7 @@ export class LeadsService {
         interestedMajor: dto.interestedMajor,
         note: dto.note,
         source,
+        stage: channel.initialStage,
         ...(origin.userId ? { userId: origin.userId } : {}),
         utm: dto.utm ? (dto.utm as Prisma.InputJsonObject) : Prisma.JsonNull,
         activities: {
