@@ -65,7 +65,8 @@ const contractNotice = ref<{ text: string; warn: boolean } | null>(null);
 /**
  * Registration linked the client to the login they had already opened on the
  * site, rather than making a second one (1B-20). Staff need to know once: no
- * invitation went out, because the client can already sign in.
+ * invitation went out, because the client can already sign in. An edit that
+ * corrects the address onto such a login merges the two the same way.
  */
 const accountNotice = ref(route.query.linked === '1');
 
@@ -111,11 +112,14 @@ async function save() {
   }
   saving.value = true;
   try {
-    const saved = await api.patch<{ contractSync?: { refreshed: number; locked: number } }>(
+    const saved = await api.patch<{ contractSync?: { refreshed: number; locked: number }; accountLinked?: boolean }>(
       `/clients/${id.value}`,
       { ...clientPayload(form), status: status.value },
     );
     contractNotice.value = contractSyncNotice(saved?.contractSync);
+    // A corrected address that turned out to be the client's own site login:
+    // the two accounts were merged, so the same notice as at registration.
+    if (saved?.accountLinked) accountNotice.value = true;
     editing.value = false;
     await workspace.refresh();
   } catch (err) {

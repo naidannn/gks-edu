@@ -27,6 +27,7 @@ import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { AccountClaimService } from '../users/account-claim.service.js';
 import { activeStaffWhere, STAFF_ROLES } from '../../common/constants/roles.js';
 import { officeDateRange } from '../reports/report-period.js';
+import { absorbLogin, findLoginToAbsorb } from './absorb-login.js';
 import { DEADLINE_WARNING_MS, TERMINAL_STAGES, liveCase } from './client-cases.js';
 import { CLIENT_PHASES, type ClientPhase, clientPhaseOf, clientPhaseWhere } from './client-phase.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
@@ -621,7 +622,11 @@ export class ClientsService {
     if (dto.registerNumber && dto.registerNumber !== existing.registerNumber) {
       await this.assertRegisterFree(dto.registerNumber);
     }
-    if (dto.email && dto.email !== existing.email) await this.assertEmailFree(dto.email, existing.userId);
+    // A corrected address may already be the client's own site login — the
+    // invitation bounced off the wrong one and they signed up themselves. That
+    // login is folded into this account rather than refused (see absorb-login).
+    const emailChanged = Boolean(dto.email && dto.email.trim().toLowerCase() !== existing.email);
+    const absorbed = emailChanged ? await this.loginToAbsorb(dto.email!, existing.userId) : null;
     if (dto.assignedConsultantId) await this.assertStaff(dto.assignedConsultantId);
 
     // The school list belongs to the live case, not to the client row, so it is
@@ -632,6 +637,8 @@ export class ClientsService {
       : null;
 
     await this.prisma.$transaction(async (tx) => {
+      if (absorbed) await absorbLogin(tx, existing.userId, absorbed, dto.email!.trim().toLowerCase());
+
       await tx.client.update({
         where: { id },
         data: {
@@ -661,7 +668,7 @@ export class ClientsService {
     // An address typed in later is the same moment as registering with one:
     // it is the first time the invitation can go anywhere (1B-19). A client who
     // already has a login is left alone — `inviteQuietly` refuses those.
-    if (dto.email && dto.email !== existing.email) {
+    if (emailChanged && !absorbed) {
       await this.invitePortal(existing.userId, {
         email: dto.email,
         assignedConsultantId: dto.assignedConsultantId ?? existing.assignedConsultantId ?? undefined,
@@ -673,7 +680,15 @@ export class ClientsService {
     // the hard way (1C-30). Signed contracts are counted, never rewritten.
     const contractSync = await this.contracts.refreshUnsignedForUser(existing.userId);
 
-    return { ...(await this.findOne(id)), contractSync };
+    return { ...(await this.findOne(id)), contractSync, accountLinked: Boolean(absorbed) };
+  }
+
+  private async loginToAbsorb(email: string, userId: string) {
+    const own = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { id: true, password: true, googleId: true },
+    });
+    return findLoginToAbsorb(this.prisma, email, own);
   }
 
   // ─── Internals ────────────────────────────────────────────────────────────
