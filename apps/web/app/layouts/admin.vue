@@ -33,10 +33,13 @@ const unreadFor = (to: string): number => (to === '/admin/messages' ? messenger.
 const sidebarOpen = ref(false);
 watch(() => route.fullPath, () => { sidebarOpen.value = false; });
 
-function isActive(to: string, exact = false): boolean {
-  // '/admin' itself must not light up for every '/admin/*' sub-route.
-  if (exact || to === '/admin') return route.path === to;
-  return route.path === to || route.path.startsWith(`${to}/`);
+/**
+ * One item lights up per page: the one `findAdminNavItem` picks, i.e. an exact
+ * match or else the longest prefix. A plain prefix test lit up both
+ * "Сургууль" and "Мэдээлэл бэлтгэлийн явц" on `/admin/universities/progress`.
+ */
+function isActive(to: string): boolean {
+  return findAdminNavItem(route.path)?.to === to;
 }
 
 const currentSection = computed(() => findAdminNavItem(route.path)?.label ?? 'CRM');
@@ -55,7 +58,7 @@ watch(
   () => route.path,
   () => {
     for (const group of ADMIN_NAV) {
-      if (group.title && group.items.some((item) => isActive(item.to, item.exact))) openGroups.value.add(group.title);
+      if (group.title && group.items.some((item) => isActive(item.to))) openGroups.value.add(group.title);
     }
   },
   { immediate: true },
@@ -169,7 +172,7 @@ async function onLogout() {
               :key="item.to"
               :to="item.to"
               class="gks-admin__nav-link"
-              :class="{ 'gks-admin__nav-link--active': isActive(item.to, item.exact) }"
+              :class="{ 'gks-admin__nav-link--active': isActive(item.to) }"
               :title="rail ? item.label : undefined"
             >
               <DsIcon :name="item.icon" :size="18" />

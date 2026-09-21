@@ -16,6 +16,8 @@ import type {
   AppointmentStatus,
   BalanceTrigger,
   CaseStage,
+  CatalogueCheck,
+  CatalogueProgressStatus,
   ClientPhase,
   ClientStatus,
   QuestionnaireLevel,
@@ -146,6 +148,53 @@ export const INSTRUCTION_LANGUAGE_TONE: Record<InstructionLanguage, BadgeTone> =
   KOREAN: 'neutral',
   ENGLISH: 'info',
   KOREAN_ENGLISH: 'accent',
+};
+
+/** The level as a table column header — four of them side by side on 1A-43. */
+export const PROGRAM_LEVEL_SHORT_LABELS: Record<ProgramLevel, string> = {
+  LANGUAGE_PREP: 'Хэл',
+  BACHELOR: 'Бак',
+  MASTER: 'Маг',
+  PHD: 'Док',
+};
+
+/** 1A-43 — the five things a school needs before a consultant can quote it. */
+export const CATALOGUE_CHECK_LABELS: Record<CatalogueCheck, string> = {
+  intakes: 'Элсэлт',
+  programs: 'Анги',
+  faculties: 'Танхим',
+  tuition: 'Төлбөр',
+  scholarship: 'Тэтгэлэг',
+};
+
+export const CATALOGUE_PROGRESS_STATUS_LABELS: Record<CatalogueProgressStatus, string> = {
+  NOT_STARTED: 'Эхлээгүй',
+  IN_PROGRESS: 'Хийгдэж байна',
+  DONE: 'Бүрэн',
+};
+
+export const CATALOGUE_PROGRESS_STATUS_TONES: Record<CatalogueProgressStatus, BadgeTone> = {
+  NOT_STARTED: 'danger',
+  IN_PROGRESS: 'warning',
+  DONE: 'success',
+};
+
+/** Audit actions the catalogue-progress feed shows, as a sentence fragment. */
+export const CATALOGUE_ACTION_LABELS: Record<string, string> = {
+  'university.update': 'сургуулийн мэдээлэл зассан',
+  'program.create': 'анги нэмсэн',
+  'program.bulk-create': 'анги нэмсэн',
+  'program.update': 'анги зассан',
+  'program.delete': 'анги устгасан',
+  'faculty.create': 'танхим нэмсэн',
+  'faculty.update': 'танхим зассан',
+  'faculty.delete': 'танхим устгасан',
+  'admission.intake.create': 'элсэлт нэмсэн',
+  'admission.intake.bulk-create': 'элсэлт нэмсэн',
+  'admission.intake.update': 'элсэлт зассан',
+  'admission.intake.delete': 'элсэлт устгасан',
+  'admission.intake.override': 'ангийн тусгай хугацаа тавьсан',
+  'admission.intake.override.delete': 'ангийн тусгай хугацаа устгасан',
 };
 
 export const PROGRAM_SOURCE_LABELS: Record<ProgramSource, string> = {

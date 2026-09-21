@@ -157,6 +157,9 @@ useHead({ title: 'Сургууль · CRM' });
         <NuxtLink to="/universities" target="_blank" class="gks-uni__site-link">
           <DsIcon name="external-link" :size="16" /> Нийтийн каталог
         </NuxtLink>
+        <DsButton variant="secondary" icon-left="clipboard-check" @click="navigateTo('/admin/universities/progress')">
+          Бэлтгэлийн явц
+        </DsButton>
         <DsButton
           v-if="auth.isAdmin"
           variant="secondary"

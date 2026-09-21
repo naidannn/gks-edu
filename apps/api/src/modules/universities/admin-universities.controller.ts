@@ -33,6 +33,8 @@ import { AdmissionsService } from '../admissions/admissions.service.js';
 import { CreateUniversityDto } from './dto/create-university.dto.js';
 import { QueryAdminUniversitiesDto } from './dto/query-admin-universities.dto.js';
 import { UpdateUniversityDto } from './dto/update-university.dto.js';
+import { QueryCatalogueProgressDto } from './dto/query-catalogue-progress.dto.js';
+import { CatalogueProgressService } from './progress/catalogue-progress.service.js';
 import { AdminProgramsService } from '../programs/admin-programs.service.js';
 import {
   CreateUniversityProgramDto,
@@ -55,6 +57,7 @@ export class AdminUniversitiesController {
     private readonly ranking: GksRankingService,
     private readonly admissions: AdmissionsService,
     private readonly programs: AdminProgramsService,
+    private readonly progress: CatalogueProgressService,
   ) {}
 
   @Get()
@@ -73,6 +76,12 @@ export class AdminUniversitiesController {
   @ApiOperation({ summary: 'Regions across every school, for the filter panel' })
   regions() {
     return this.universities.regions();
+  }
+
+  @Get('progress')
+  @ApiOperation({ summary: 'How complete each school is, and who on the team filled it in (1A-43)' })
+  catalogueProgress(@Query() query: QueryCatalogueProgressDto) {
+    return this.progress.build(query.days ?? 30);
   }
 
   // --- GKS ranking (1A-29 … 1A-31) ---
@@ -159,6 +168,7 @@ export class AdminUniversitiesController {
   }
 
   @Patch(':id')
+  @Audit({ action: 'university.update', entity: 'University' })
   @ApiOperation({ summary: 'Edit a university (1A-26)' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUniversityDto) {
     return this.universities.update(id, dto);
@@ -181,6 +191,7 @@ export class AdminUniversitiesController {
   // The same arrangement as the intake routes below.
 
   @Post(':id/programs')
+  @Audit({ action: 'program.create', entity: 'UniversityProgram', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Add a programme (1A-27)' })
   createProgram(
     @Param('id', ParseUUIDPipe) id: string,
@@ -195,6 +206,7 @@ export class AdminUniversitiesController {
   // programme, and the response would look like it worked.
 
   @Patch(':id/programs/:programId')
+  @Audit({ action: 'program.update', entity: 'UniversityProgram', idFrom: 'params.programId' })
   @ApiOperation({ summary: 'Edit a programme (1A-27)' })
   updateProgram(
     @Param('id', ParseUUIDPipe) id: string,
@@ -207,6 +219,7 @@ export class AdminUniversitiesController {
 
   @Delete(':id/programs/:programId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Audit({ action: 'program.delete', entity: 'UniversityProgram', idFrom: 'params.programId' })
   @ApiOperation({ summary: 'Delete a programme no case or application uses' })
   async removeProgram(
     @Param('id', ParseUUIDPipe) id: string,
@@ -223,6 +236,7 @@ export class AdminUniversitiesController {
   // duplicating them would be how the two drift apart.
 
   @Post(':id/intakes')
+  @Audit({ action: 'admission.intake.create', entity: 'IntakeTerm', idFrom: 'response.id' })
   @ApiOperation({ summary: 'Add an intake term (1A-27, 1H-05)' })
   createIntake(
     @Param('id', ParseUUIDPipe) id: string,
@@ -233,6 +247,7 @@ export class AdminUniversitiesController {
   }
 
   @Patch(':id/intakes/:intakeId')
+  @Audit({ action: 'admission.intake.update', entity: 'IntakeTerm', idFrom: 'params.intakeId' })
   @ApiOperation({ summary: 'Edit an intake term (1A-27, 1H-05)' })
   updateIntake(
     @Param('id', ParseUUIDPipe) id: string,
@@ -245,6 +260,7 @@ export class AdminUniversitiesController {
 
   @Delete(':id/intakes/:intakeId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Audit({ action: 'admission.intake.delete', entity: 'IntakeTerm', idFrom: 'params.intakeId' })
   @ApiOperation({ summary: 'Delete an intake term no case or application uses' })
   async removeIntake(
     @Param('id', ParseUUIDPipe) id: string,

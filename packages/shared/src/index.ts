@@ -7,6 +7,7 @@ export * from './schemas/ai-tools';
 export * from './types/university';
 export * from './types/admissions';
 export * from './types/programs';
+export * from './types/catalogue-progress';
 export * from './types/api';
 export * from './types/content';
 export * from './types/lead-crm';

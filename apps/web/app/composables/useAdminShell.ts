@@ -53,6 +53,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: 'Лавлах',
     items: [
       { to: '/admin/universities', label: 'Сургууль', icon: 'school', keywords: 'university их сургууль' },
+      {
+        to: '/admin/universities/progress',
+        label: 'Мэдээлэл бэлтгэлийн явц',
+        icon: 'clipboard-check',
+        keywords: 'progress явц бүрэн дутуу бөглөсөн ажилтан элсэлт анги танхим тэтгэлэг completeness',
+      },
       { to: '/admin/programs', label: 'Хөтөлбөр, төлбөр', icon: 'book-open', exact: true, keywords: 'program tuition анги мэргэжил төлбөр сургалтын' },
       { to: '/admin/admissions', label: 'Элсэлт', icon: 'calendar-days', exact: true, keywords: 'intake admission хугацаа' },
       { to: '/admin/admissions/board', label: 'Элсэлтийн самбар', icon: 'calendar-clock', keywords: 'intake board' },

@@ -7,6 +7,7 @@ import { AdminUniversitiesController } from './admin-universities.controller.js'
 import { AdminUniversitiesService } from './admin-universities.service.js';
 import { GksRankingProcessor } from './ranking/gks-ranking.processor.js';
 import { GksRankingService } from './ranking/gks-ranking.service.js';
+import { CatalogueProgressService } from './progress/catalogue-progress.service.js';
 import { UniversitiesController } from './universities.controller.js';
 import { UniversitiesService } from './universities.service.js';
 
@@ -17,7 +18,13 @@ import { UniversitiesService } from './universities.service.js';
   // both of those modules are leaves, so neither can import this one back.
   imports: [BullModule.registerQueue({ name: GKS_RANKING_QUEUE }), AdmissionsModule, ProgramsModule],
   controllers: [UniversitiesController, AdminUniversitiesController],
-  providers: [UniversitiesService, AdminUniversitiesService, GksRankingService, GksRankingProcessor],
+  providers: [
+    UniversitiesService,
+    AdminUniversitiesService,
+    GksRankingService,
+    GksRankingProcessor,
+    CatalogueProgressService,
+  ],
   exports: [UniversitiesService, GksRankingService],
 })
 export class UniversitiesModule {}
