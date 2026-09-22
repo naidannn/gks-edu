@@ -9,9 +9,11 @@
 const props = defineProps<{
   rows: { key: string; label: string; value: number; note?: string; tone?: 'brand' | 'danger' | 'warning' }[];
   emptyText?: string;
+  /** Scale against this instead of the largest row — for "n of a known total". */
+  max?: number;
 }>();
 
-const max = computed(() => barMax(props.rows.map((row) => row.value)));
+const max = computed(() => (props.max && props.max > 0 ? props.max : barMax(props.rows.map((row) => row.value))));
 </script>
 
 <template>

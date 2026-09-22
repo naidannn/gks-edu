@@ -144,7 +144,8 @@ const staffTotal = (member: CatalogueProgress['staff'][number]) =>
         <p class="gks-page__hint">
           Сургууль бүрийн элсэлт, анги, танхим, төлбөр, тэтгэлгийн мэдээлэл хэр бөглөгдсөн, хэн юу
           хийсэн. Бакалавр, магистрт бүх сургуулиас, хэлний бэлтгэлд зөвхөн хэлний бэлтгэлтэй
-          сургуулиас шаардана; докторыг тоолно, харин шаардахгүй.
+          сургуулиас (эсвэл хэлний бэлтгэлийн элсэлт/анги бүртгэгдсэн) шаардана; докторыг тоолно, харин
+          шаардахгүй. Төлбөр, тэтгэлгийг шаардлагатай түвшин бүрээр тооцно — ангигүй түвшин 0%.
         </p>
       </div>
       <div class="gks-page__actions">
@@ -179,7 +180,7 @@ const staffTotal = (member: CatalogueProgress['staff'][number]) =>
 
       <div class="gks-progress__grid">
         <DsCard title="Шалгуур тус бүрээр бүрэн болсон сургууль">
-          <ReportsBarList :rows="checkBars" />
+          <ReportsBarList :rows="checkBars" :max="summary.schools" />
           <p class="gks-progress__foot gks-tnum">
             Нийт {{ summary.programs.total }} анги — төлбөртэй
             {{ share(summary.programs.withTuition, summary.programs.total) }}, тэтгэлгийн мэдээлэлтэй
@@ -400,6 +401,7 @@ const staffTotal = (member: CatalogueProgress['staff'][number]) =>
                 class="gks-table__num gks-tnum gks-progress__frac"
                 :class="`gks-progress__frac--${checkTone(row.checks.tuition)}`"
                 data-label="Төлбөр"
+                :title="`${row.programsWithTuition}/${row.programs} анги төлбөртэй; шаардлагатай түвшнээр ${Math.round(row.checks.tuition * 100)}%`"
               >
                 {{ row.programs ? `${row.programsWithTuition}/${row.programs}` : '—' }}
               </td>
@@ -407,6 +409,7 @@ const staffTotal = (member: CatalogueProgress['staff'][number]) =>
                 class="gks-table__num gks-tnum gks-progress__frac"
                 :class="`gks-progress__frac--${checkTone(row.checks.scholarship)}`"
                 data-label="Тэтгэлэг"
+                :title="`${row.programsWithScholarship}/${row.degreePrograms} анги тэтгэлэгтэй; бакалавр, магистраар ${Math.round(row.checks.scholarship * 100)}%`"
               >
                 {{ row.degreePrograms ? `${row.programsWithScholarship}/${row.degreePrograms}` : '—' }}
               </td>

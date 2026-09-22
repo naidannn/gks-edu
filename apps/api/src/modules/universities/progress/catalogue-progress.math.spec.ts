@@ -48,6 +48,12 @@ describe('expectedLevels', () => {
     expect(expectedLevels({ acceptsLanguagePrep: false })).toEqual(['BACHELOR', 'MASTER']);
     expect(expectedLevels({ acceptsLanguagePrep: true })).toEqual(['LANGUAGE_PREP', 'BACHELOR', 'MASTER']);
   });
+
+  it('asks for language prep where one is already on file, even if the flag is off', () => {
+    expect(
+      expectedLevels({ acceptsLanguagePrep: false, intakes: [intake('LANGUAGE_PREP', 0)] }),
+    ).toEqual(['LANGUAGE_PREP', 'BACHELOR', 'MASTER']);
+  });
 });
 
 describe('scoreSchool', () => {
@@ -105,9 +111,24 @@ describe('scoreSchool', () => {
         intakes: [intake('BACHELOR')],
       }),
     );
-    // intakes ½, programmes ½, colleges ½, tuition ½, scholarship ½
-    expect(row.percent).toBe(50);
+    // intakes ½, programmes ½, colleges ½; tuition and scholarship ½ at
+    // bachelor, 0 at master (no programmes) → ¼ each
+    expect(row.checks.tuition).toBe(0.25);
+    expect(row.percent).toBe(40);
     expect(row.status).toBe('IN_PROGRESS');
+  });
+
+  it('does not call tuition complete when only a language-prep course is priced', () => {
+    const row = scoreSchool(
+      school({ acceptsLanguagePrep: true, programs: [programs('LANGUAGE_PREP', 1)] }),
+    );
+    expect(row.checks.tuition).toBeCloseTo(1 / 3);
+    expect(row.checks.scholarship).toBe(0);
+  });
+
+  it('keeps a school with language-prep intakes but no flag within 100% per level', () => {
+    const rows = [scoreSchool(school({ intakes: [intake('LANGUAGE_PREP')] }))];
+    expect(summarise(rows).levels.LANGUAGE_PREP).toEqual({ expected: 1, withIntake: 1, withPrograms: 0 });
   });
 });
 

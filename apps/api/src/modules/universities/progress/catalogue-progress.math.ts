@@ -28,12 +28,24 @@ export const CATALOGUE_CHECKS: readonly CatalogueCheck[] = [
  * The levels a school is expected to have intakes and programmes for.
  *
  * Bachelor and master are the office's core brokerage at every school. Language
- * prep only where the school runs it (`acceptsLanguagePrep`, from the office's
- * own sheet). PhD is counted and shown but never demanded — a handful of
- * clients a year, and asking for it would keep all 135 schools below 100%.
+ * prep only where the school runs it — `acceptsLanguagePrep` from the office's
+ * own sheet, or any language-prep programme or intake already on file (the
+ * flag lags the data; without this a school could have a language-prep intake
+ * that no check asks for, and the per-level table read over 100%). PhD is
+ * counted and shown but never demanded — a handful of clients a year, and
+ * asking for it would keep all 135 schools below 100%.
  */
-export function expectedLevels(school: { acceptsLanguagePrep: boolean }): ProgramLevel[] {
-  return school.acceptsLanguagePrep ? ['LANGUAGE_PREP', 'BACHELOR', 'MASTER'] : ['BACHELOR', 'MASTER'];
+export function expectedLevels(school: {
+  acceptsLanguagePrep: boolean;
+  programs?: { level: ProgramLevel; total: number }[];
+  intakes?: { level: ProgramLevel; total: number }[];
+}): ProgramLevel[] {
+  const hasLanguagePrep = [...(school.programs ?? []), ...(school.intakes ?? [])].some(
+    (row) => row.level === 'LANGUAGE_PREP' && row.total > 0,
+  );
+  return school.acceptsLanguagePrep || hasLanguagePrep
+    ? ['LANGUAGE_PREP', 'BACHELOR', 'MASTER']
+    : ['BACHELOR', 'MASTER'];
 }
 
 /** Programme counts per school and level, straight off one GROUP BY. */
@@ -98,12 +110,25 @@ export function scoreSchool(school: SchoolInput): CatalogueProgressRow {
   const bachelorPrograms = bachelor?.total ?? 0;
   const bachelorWithFaculty = bachelor?.withFaculty ?? 0;
 
+  // Tuition and scholarship are scored per expected level and averaged, a
+  // level with no programmes scoring 0. Over the programmes on file alone, a
+  // school with one priced language-prep course and no degree programmes read
+  // as "tuition complete".
+  const perLevel = (levels: ProgramLevel[], pick: (row: ProgramAggregate) => number) =>
+    levels.length
+      ? sum(levels, (level) => {
+          const row = school.programs.find((entry) => entry.level === level);
+          return row ? ratio(pick(row), row.total) : 0;
+        }) / levels.length
+      : 0;
+  const degreeLevels = expected.filter((level) => level !== 'LANGUAGE_PREP');
+
   const checks: Record<CatalogueCheck, number> = {
     intakes: ratio(expectedCells.filter((cell) => cell.upcomingIntakes > 0).length, expectedCells.length),
     programs: ratio(expectedCells.filter((cell) => cell.programs > 0).length, expectedCells.length),
     faculties: ratio(bachelorWithFaculty, bachelorPrograms),
-    tuition: ratio(programsWithTuition, programs),
-    scholarship: ratio(programsWithScholarship, degreePrograms),
+    tuition: perLevel(expected, (row) => row.withTuition),
+    scholarship: perLevel(degreeLevels, (row) => row.withScholarship),
   };
 
   const mean = sum([...CATALOGUE_CHECKS], (check) => checks[check]) / CATALOGUE_CHECKS.length;
