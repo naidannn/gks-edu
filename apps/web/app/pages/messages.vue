@@ -198,6 +198,28 @@ const assigneeLine = computed(() => {
 
         <div class="gks-messages__new-body">
           <DsCard v-if="startError" accent><p>{{ startError }}</p></DsCard>
+          <!--
+            A first visit — usually straight from a consultation request or a
+            fresh sign-up — gets told what this screen is before being asked
+            to type into it. Once there is a thread, it has explained itself.
+          -->
+          <section v-if="!hasThreads && !listPending && !listError" class="gks-messages__intro">
+            <h2 class="gks-messages__intro-title">Мэргэжилтэнтэйгээ шууд чатлаарай</h2>
+            <ul class="gks-messages__intro-list">
+              <li>
+                <DsIcon name="message-circle" :size="18" />
+                <span>Сургууль, хөтөлбөр, тэтгэлэг, визийн талаар асуух зүйлээ бичээрэй — жинхэнэ зөвлөх хариулна.</span>
+              </li>
+              <li>
+                <DsIcon name="clock" :size="18" />
+                <span>Ажлын өдрүүдэд ихэвчлэн нэг цагийн дотор хариу ирнэ. Хариу ирэхэд и-мэйлээр мэдэгдэнэ.</span>
+              </li>
+              <li>
+                <DsIcon name="history" :size="18" />
+                <span>Бүх яриа энд хадгалагдана — дараа нь буцаж орж үргэлжлүүлэх боломжтой.</span>
+              </li>
+            </ul>
+          </section>
           <MessengerStartForm
             :cases="overview?.cases ?? []"
             :sending="starting"
@@ -368,6 +390,23 @@ const assigneeLine = computed(() => {
 .gks-messages__new { display: flex; flex-direction: column; min-height: 0; height: 100%; }
 .gks-messages__new .gks-messages__pane-head { border-bottom: var(--border-hair) solid var(--line-hairline); }
 .gks-messages__new-body { flex: 1; min-height: 0; overflow-y: auto; background: var(--surface-page); }
+
+.gks-messages__intro {
+  max-width: 640px;
+  margin: var(--sp-6) auto 0;
+  padding: var(--sp-5);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-3);
+  background: var(--surface-card);
+}
+.gks-messages__intro-title { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.gks-messages__intro-list { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-3); padding: 0; list-style: none; }
+.gks-messages__intro-list li { display: flex; gap: var(--sp-3); font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--text-muted); }
+.gks-messages__intro-list :deep(svg) { flex: none; margin-top: 2px; color: var(--brand-600); }
+
+@media (max-width: 900px) {
+  .gks-messages__intro { margin: var(--sp-4) var(--gutter-mobile) 0; }
+}
 
 .gks-messages__blank {
   flex: 1;

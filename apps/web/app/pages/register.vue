@@ -18,8 +18,11 @@ const meta = useMetaTracking();
 /** Without a client id there is no Google column at all — divider included. */
 const googleEnabled = Boolean(useRuntimeConfig().public.googleClientId);
 
-const name = ref('');
-const email = ref('');
+// Arriving from a just-sent consultation request: its name and address are
+// already known, so the visitor is left with only a password to choose.
+const prefill = useRegisterPrefill();
+const name = ref(prefill.value?.name ?? '');
+const email = ref(prefill.value?.email ?? '');
 const password = ref('');
 const passwordRepeat = ref('');
 const error = ref<string | null>(null);

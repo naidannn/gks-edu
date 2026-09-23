@@ -6,11 +6,14 @@ import type {
   ServiceType,
   UniversityCard,
 } from '@gks/shared';
+import { useAuthStore } from '~/stores/auth';
 
 /** Multi-step consultation request: contact → education → interest (1A-16). */
 const route = useRoute();
 const config = useRuntimeConfig();
 const meta = useMetaTracking();
+const auth = useAuthStore();
+const registerPrefill = useRegisterPrefill();
 
 const STEPS = ['Холбоо барих', 'Боловсрол', 'Сонирхол'] as const;
 const step = ref(0);
@@ -166,6 +169,10 @@ async function submit() {
       body: { ...parsed.data, tracking: trackingPayload(eventId) } satisfies PublicLeadPayload,
     });
     submitted.value = true;
+    registerPrefill.value = {
+      name: [form.lastName, form.firstName].map((part) => part.trim()).filter(Boolean).join(' '),
+      email: form.email.trim(),
+    };
     meta.trackPaired('Lead', eventId, {
       content_category: 'consultation',
       content_name: form.interestedServices.join(', ') || 'Зөвлөгөө',
@@ -202,9 +209,46 @@ useSeoMeta({
           Манай зөвлөх ажлын 1 өдрийн дотор танай утсаар холбогдоно. Түргэн шаардлагатай бол
           <strong class="gks-tnum">{{ COMPANY.phoneLabel }}</strong> дугаарт залгаарай.
         </p>
+
+        <!--
+          The call is a day away; the chat is open now. Asking for an account
+          here, while the visitor is still on the page, is the one moment it
+          reads as help rather than as a gate.
+        -->
+        <div class="gks-lead__chat">
+          <DsIcon name="message-circle" :size="24" />
+          <div class="gks-lead__chat-body">
+            <h2 class="gks-lead__chat-title">Хүлээлгүйгээр зөвлөхтэй чатлаарай</h2>
+            <p v-if="auth.isAuthenticated" class="gks-lead__chat-text">
+              Асуух зүйл байвал манай мэргэжилтэнд вэбээр шууд бичээрэй — ажлын цагт хариу шуурхай ирнэ.
+            </p>
+            <p v-else class="gks-lead__chat-text">
+              Бүртгүүлсний дараа та манай мэргэжилтэнтэй вэбээр шууд чатлаж, асуултаа асууж,
+              баримт бичиг, мэдүүлгийнхээ явцыг нэг дороос харах боломжтой. Бүртгэл 1 минут ч
+              болохгүй.
+            </p>
+            <div class="gks-lead__chat-actions">
+              <DsButton v-if="auth.isAuthenticated" variant="accent" icon-left="message-circle" @click="navigateTo('/messages')">
+                Зөвлөхтэй чатлах
+              </DsButton>
+              <template v-else>
+                <DsButton
+                  variant="accent"
+                  @click="navigateTo({ path: '/register', query: { redirect: '/messages' } })"
+                >
+                  Бүртгүүлээд чатлах
+                </DsButton>
+                <NuxtLink :to="{ path: '/login', query: { redirect: '/messages' } }" class="gks-lead__chat-login">
+                  Бүртгэлтэй юу? Нэвтрэх
+                </NuxtLink>
+              </template>
+            </div>
+          </div>
+        </div>
+
         <div class="gks-lead__done-actions">
           <DsButton variant="secondary" @click="navigateTo('/universities')">Сургууль үзэх</DsButton>
-          <DsButton variant="primary" @click="navigateTo('/')">Нүүр хуудас</DsButton>
+          <DsButton variant="ghost" @click="navigateTo('/')">Нүүр хуудас</DsButton>
         </div>
       </div>
     </DsCard>
@@ -431,6 +475,24 @@ useSeoMeta({
 .gks-lead__done-title { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .gks-lead__done-text { color: var(--text-muted); line-height: var(--lh-body); max-width: 52ch; }
 .gks-lead__done-actions { display: flex; gap: var(--sp-3); }
+
+.gks-lead__chat {
+  display: flex;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 560px;
+  padding: var(--sp-5);
+  border: var(--border-hair) solid var(--line-hairline);
+  border-radius: var(--radius-3);
+  background: var(--surface-page);
+  text-align: left;
+}
+.gks-lead__chat > svg { flex: none; color: var(--brand-600); }
+.gks-lead__chat-body { display: flex; flex-direction: column; gap: var(--sp-2); }
+.gks-lead__chat-title { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.gks-lead__chat-text { font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--text-muted); }
+.gks-lead__chat-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4); margin-top: var(--sp-2); }
+.gks-lead__chat-login { font-size: var(--fs-body-sm); color: var(--brand-600); text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 720px) {
   .gks-lead__fields { grid-template-columns: minmax(0, 1fr); }
