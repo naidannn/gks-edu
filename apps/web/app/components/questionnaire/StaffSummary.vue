@@ -1,25 +1,32 @@
 <script setup lang="ts">
-import type { EssayQuestionnaireView, RecommendationListView } from '@gks/shared';
+import type { EssayDocumentListView, EssayQuestionnaireView, RecommendationListView } from '@gks/shared';
 
 /**
  * One line each for the essay and the teachers' letters, on the client
  * workspace's documents tab (1D-27) — enough for staff to see whether there is
  * anything to read, with the reading itself on `/admin/questionnaires/:caseId`.
+ * The essays written from it (1D-28) get a line too, with the client's
+ * unresolved comments — the thing staff most need to notice.
  */
 const props = defineProps<{ caseId: string }>();
 
 const api = useApi();
 const essay = ref<EssayQuestionnaireView | null>(null);
 const recs = ref<RecommendationListView | null>(null);
+const documents = ref<EssayDocumentListView | null>(null);
 
 async function load() {
-  const [essayView, recView] = await Promise.allSettled([
+  const [essayView, recView, docView] = await Promise.allSettled([
     api.get<EssayQuestionnaireView>(`/cases/${props.caseId}/essay`),
     api.get<RecommendationListView>(`/cases/${props.caseId}/recommendations`),
+    api.get<EssayDocumentListView>(`/cases/${props.caseId}/essay/documents`),
   ]);
   essay.value = essayView.status === 'fulfilled' ? essayView.value : null;
   recs.value = recView.status === 'fulfilled' ? recView.value : null;
+  documents.value = docView.status === 'fulfilled' ? docView.value : null;
 }
+
+const openComments = (doc: EssayDocumentListView['documents'][number]) => doc.comments.filter((comment) => !comment.resolvedAt).length;
 onMounted(load);
 watch(() => props.caseId, load);
 
@@ -45,6 +52,19 @@ const essayLine = computed(() => {
         <DsBadge :tone="essay?.questionnaire?.status === 'SUBMITTED' ? 'success' : essay?.questionnaire ? 'info' : 'neutral'">
           {{ essayLine }}
         </DsBadge>
+      </div>
+      <div v-if="documents" class="gks-qsum__row">
+        <DsIcon name="file-pen-line" :size="18" />
+        <span class="gks-qsum__label">Personal Statement · Study Plan</span>
+        <span class="gks-qsum__badges">
+          <DsBadge v-for="doc in documents.documents" :key="doc.kind" :tone="ESSAY_DOCUMENT_STATUS_TONES[doc.status]">
+            {{ ESSAY_DOCUMENT_KIND_TITLES[doc.kind] }}: {{ doc.version ? ESSAY_DOCUMENT_STATUS_STAFF_LABELS[doc.status] : 'Эхлээгүй' }}
+          </DsBadge>
+          <DsBadge v-for="doc in documents.documents.filter(openComments)" :key="`${doc.kind}:c`" tone="warning" icon="message-square">
+            {{ ESSAY_DOCUMENT_KIND_TITLES[doc.kind] }}: {{ openComments(doc) }} шийдээгүй сэтгэгдэл
+          </DsBadge>
+        </span>
+        <NuxtLink :to="`/admin/questionnaires/${caseId}?tab=write`" class="gks-qsum__open">Бичих →</NuxtLink>
       </div>
       <div class="gks-qsum__row">
         <DsIcon name="signature" :size="18" />

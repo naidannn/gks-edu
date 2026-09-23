@@ -134,3 +134,38 @@ export interface PublicRecommendationView {
   progress: QuestionnaireProgress;
   answeredAt: string | null;
 }
+
+/** 1D-28 — the two essays the office writes from the questionnaire. */
+export type EssayDocumentKind = 'PERSONAL_STATEMENT' | 'STUDY_PLAN';
+export type EssayDocumentStatus = 'DRAFT' | 'SHARED' | 'APPROVED';
+
+export interface EssayDocumentComment {
+  id: string;
+  body: string;
+  /** The passage the comment is about, as it read when the comment was written. */
+  quote: string | null;
+  authorName: string | null;
+  fromStaff: boolean;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface EssayDocumentView {
+  kind: EssayDocumentKind;
+  status: EssayDocumentStatus;
+  /** Editor HTML — empty for the client while the essay is a draft. */
+  html: string;
+  version: number;
+  sharedAt: string | null;
+  approvedAt: string | null;
+  updatedAt: string | null;
+  /** Staff only. */
+  editedByName: string | null;
+  comments: EssayDocumentComment[];
+}
+
+/** `GET /cases/:id/essay/documents` */
+export interface EssayDocumentListView {
+  applicantName: string;
+  documents: EssayDocumentView[];
+}

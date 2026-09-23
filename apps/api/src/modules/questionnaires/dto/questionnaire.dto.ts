@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
-import { RecommendationStatus } from '../../../prisma/client.js';
+import { IsBoolean, IsIn, IsInt, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { EssayDocumentStatus, RecommendationStatus } from '../../../prisma/client.js';
 import { QUESTIONNAIRE_LEVELS, type QuestionnaireLevel } from '../definitions/index.js';
 
 /**
@@ -84,4 +84,46 @@ export class SetRecommendationStatusDto {
   @MaxLength(1000)
   @IsOptional()
   staffNote?: string;
+}
+
+/**
+ * The writer's autosave of one essay (1D-28): the whole editor HTML, and the
+ * version it was loaded at. A two-page essay is ~10 KB of HTML, well inside
+ * Express's 100 KB body limit; the cap keeps a pasted-in Word document with
+ * its styling from getting close.
+ */
+export class SaveEssayDocumentDto {
+  @ApiProperty({ description: 'Засварлагчийн HTML' })
+  @IsString()
+  @MaxLength(80_000)
+  html!: string;
+
+  @ApiProperty({ description: 'Засварлагч ачаалсан хувилбар — өөр хүн хадгалсан бол 409' })
+  @IsInt()
+  @Min(0)
+  baseVersion!: number;
+}
+
+export class SetEssayDocumentStatusDto {
+  @ApiProperty({ enum: EssayDocumentStatus, description: 'Ажилтан: DRAFT | SHARED, үйлчлүүлэгч: APPROVED' })
+  @IsIn(Object.values(EssayDocumentStatus))
+  status!: EssayDocumentStatus;
+}
+
+export class AddEssayCommentDto {
+  @ApiProperty({ example: 'Энэ хэсэгт 2023 оны олимпиадыг нэмэх үү?' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
+  body!: string;
+
+  @ApiPropertyOptional({ description: 'Сэтгэгдэл аль хэсгийн тухай вэ — сонгосон текст' })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  quote?: string;
+}
+
+export class ResolveEssayCommentDto {
+  @ApiProperty() @IsBoolean() resolved!: boolean;
 }

@@ -116,6 +116,9 @@ model User {
   marketingTemplates MarketingTemplate[] @relation("MarketingTemplateAuthor")
   emailCampaigns     EmailCampaign[]     @relation("EmailCampaignAuthor")
 
+  essayDocumentsEdited  EssayDocument[]        @relation("EssayDocumentEditor")
+  essayDocumentComments EssayDocumentComment[] @relation("EssayDocumentCommentAuthor")
+
   @@index([createdAt])
   @@map("users")
 }
@@ -1375,6 +1378,7 @@ model Case {
 
   essayQuestionnaire EssayQuestionnaire?
   recommendations    RecommendationRequest[]
+  essayDocuments     EssayDocument[]
 
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -2948,6 +2952,72 @@ model RecommendationRequest {
 
   @@index([caseId])
   @@map("recommendation_requests")
+}
+
+/// The two essays the office writes from the questionnaire (1D-28).
+enum EssayDocumentKind {
+  PERSONAL_STATEMENT
+  STUDY_PLAN
+}
+
+enum EssayDocumentStatus {
+  /// Staff are still writing — the client cannot see it.
+  DRAFT
+  /// Shown to the client, who reads it and leaves comments.
+  SHARED
+  /// The client said "this is right". Any later edit sends it back to SHARED.
+  APPROVED
+}
+
+/// One essay, written in the system instead of in Word (1D-28). The body is
+/// the editor's HTML; it is only ever rendered back through the same editor
+/// schema, never with `v-html`, so a tag the editor does not know is dropped.
+model EssayDocument {
+  id     String            @id @default(uuid()) @db.Uuid
+  caseId String            @db.Uuid
+  case   Case              @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  kind   EssayDocumentKind
+
+  html    String              @default("")
+  status  EssayDocumentStatus @default(DRAFT)
+  /// Bumped on every save. A save names the version it was based on, so two
+  /// writers on one essay get a conflict instead of silently overwriting.
+  version Int                 @default(0)
+
+  editedById String?   @db.Uuid
+  editedBy   User?     @relation("EssayDocumentEditor", fields: [editedById], references: [id], onDelete: SetNull)
+  sharedAt   DateTime?
+  approvedAt DateTime?
+
+  comments EssayDocumentComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([caseId, kind])
+  @@map("essay_documents")
+}
+
+/// A remark on an essay — from the client reading it, or from staff answering.
+model EssayDocumentComment {
+  id         String        @id @default(uuid()) @db.Uuid
+  documentId String        @db.Uuid
+  document   EssayDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  authorId   String?       @db.Uuid
+  author     User?         @relation("EssayDocumentCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  body  String
+  /// The passage the comment is about, copied when it was written. A copy, not
+  /// an anchor: the text keeps changing under it.
+  quote String?
+
+  resolvedAt   DateTime?
+  resolvedById String?   @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  @@index([documentId, createdAt])
+  @@map("essay_document_comments")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

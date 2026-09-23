@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import type { EssayQuestionnaireView, RecommendationListView } from '@gks/shared';
+import type { EssayDocumentListView, EssayQuestionnaireView, RecommendationListView } from '@gks/shared';
 
 /**
  * The way into the two GKS questionnaires from the case's "Материал" tab
  * (1D-27). Each card says where that questionnaire stands and the one thing to
- * do next — the questionnaires themselves open on their own pages.
+ * do next — the questionnaires themselves open on their own pages. Once the
+ * questionnaire is sent, a third card leads to the essays written from it (1D-28).
  */
 const props = defineProps<{ caseId: string }>();
 
 const api = useApi();
 const essay = ref<EssayQuestionnaireView | null>(null);
 const recs = ref<RecommendationListView | null>(null);
+const documents = ref<EssayDocumentListView | null>(null);
 
 onMounted(async () => {
-  const [essayView, recView] = await Promise.allSettled([
+  const [essayView, recView, docView] = await Promise.allSettled([
     api.get<EssayQuestionnaireView>(`/cases/${props.caseId}/essay`),
     api.get<RecommendationListView>(`/cases/${props.caseId}/recommendations`),
+    api.get<EssayDocumentListView>(`/cases/${props.caseId}/essay/documents`),
   ]);
   if (essayView.status === 'fulfilled') essay.value = essayView.value;
   if (recView.status === 'fulfilled') recs.value = recView.value;
+  if (docView.status === 'fulfilled') documents.value = docView.value;
 });
 
 const essayPercent = computed(() => {
@@ -30,6 +34,10 @@ const essayReopened = computed(() => Boolean(essay.value?.questionnaire?.reopenN
 
 const recsAnswered = computed(() => recs.value?.items.filter((item) => item.status !== 'INVITED').length ?? 0);
 const recsNeeded = computed(() => recs.value?.lettersNeeded ?? null);
+const essaysToRead = computed(() => documents.value?.documents.filter((doc) => doc.status === 'SHARED').length ?? 0);
+const essaysApproved = computed(() => documents.value?.documents.filter((doc) => doc.status === 'APPROVED').length ?? 0);
+const showEssays = computed(() => essaySubmitted.value || essaysToRead.value + essaysApproved.value > 0);
+
 const lettersToSign = computed(() => recs.value?.items.filter((item) => item.status === 'LETTER_READY').length ?? 0);
 </script>
 
@@ -78,6 +86,27 @@ const lettersToSign = computed(() => recs.value?.items.filter((item) => item.sta
         <DsIcon name="arrow-right" :size="16" />
       </span>
     </NuxtLink>
+
+    <NuxtLink
+      v-if="showEssays && documents"
+      :to="`/app/essays/${caseId}`"
+      class="gks-gksq__card gks-gksq__card--wide"
+      :class="{ 'gks-gksq__card--attn': essaysToRead }"
+    >
+      <span class="gks-gksq__icon"><DsIcon name="file-text" :size="22" /></span>
+      <span class="gks-gksq__text">
+        <span class="gks-gksq__title">Personal Statement ба Study Plan</span>
+        <span class="gks-gksq__sub">Таны хариултаар мэргэжилтний бичсэн эссэ — уншаад сэтгэгдлээ үлдээнэ</span>
+        <span v-if="essaysToRead" class="gks-gksq__state gks-gksq__state--warn">
+          <DsIcon name="eye" :size="14" /> {{ essaysToRead }} эссэ таныг уншихыг хүлээж байна
+        </span>
+        <span v-else-if="essaysApproved === documents.documents.length" class="gks-gksq__state gks-gksq__state--ok">
+          <DsIcon name="circle-check" :size="14" /> Хоёуланг нь баталгаажуулсан
+        </span>
+        <span v-else class="gks-gksq__state">Мэргэжилтэн бичиж байна</span>
+      </span>
+      <span class="gks-gksq__cta">Нээх <DsIcon name="arrow-right" :size="16" /></span>
+    </NuxtLink>
   </section>
 </template>
 
@@ -97,6 +126,7 @@ const lettersToSign = computed(() => recs.value?.items.filter((item) => item.sta
   transition: var(--transition-control);
 }
 .gks-gksq__card:hover { border-color: var(--brand-400); box-shadow: var(--shadow-card); }
+.gks-gksq__card--wide { grid-column: 1 / -1; }
 .gks-gksq__card--attn { border-color: var(--amber-600); box-shadow: 0 0 0 3px var(--amber-050); }
 .gks-gksq__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-2); background: var(--brand-050); color: var(--brand-700); grid-row: 1 / span 2; }
 .gks-gksq__text { display: flex; flex-direction: column; gap: var(--sp-1); }

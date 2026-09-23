@@ -20,6 +20,8 @@ import type {
   CatalogueProgressStatus,
   ClientPhase,
   ClientStatus,
+  EssayDocumentKind,
+  EssayDocumentStatus,
   QuestionnaireLevel,
   QuestionnaireStatus,
   RecommendationStatus,
@@ -1065,6 +1067,36 @@ export const QUESTIONNAIRE_LEVEL_LABELS: Record<QuestionnaireLevel, string> = {
 export const ESSAY_STATUS_LABELS: Record<QuestionnaireStatus, string> = {
   DRAFT: 'Бөглөж байна',
   SUBMITTED: 'Мэргэжилтэнд илгээсэн',
+};
+
+// 1D-28 — the essays written from the questionnaire.
+export const ESSAY_DOCUMENT_KIND_LABELS: Record<EssayDocumentKind, string> = {
+  PERSONAL_STATEMENT: 'Өөрийн танилцуулга',
+  STUDY_PLAN: 'Суралцах төлөвлөгөө',
+};
+
+/** The name the school's form uses — the heading of the exported file. */
+export const ESSAY_DOCUMENT_KIND_TITLES: Record<EssayDocumentKind, string> = {
+  PERSONAL_STATEMENT: 'Personal Statement',
+  STUDY_PLAN: 'Study Plan',
+};
+
+export const ESSAY_DOCUMENT_STATUS_STAFF_LABELS: Record<EssayDocumentStatus, string> = {
+  DRAFT: 'Ноорог — үйлчлүүлэгчид харагдахгүй',
+  SHARED: 'Үйлчлүүлэгч хянаж байна',
+  APPROVED: 'Үйлчлүүлэгч баталгаажуулсан',
+};
+
+export const ESSAY_DOCUMENT_STATUS_LABELS: Record<EssayDocumentStatus, string> = {
+  DRAFT: 'Мэргэжилтэн бичиж байна',
+  SHARED: 'Уншиж, санал өгөхөд бэлэн',
+  APPROVED: 'Та баталгаажуулсан',
+};
+
+export const ESSAY_DOCUMENT_STATUS_TONES: Record<EssayDocumentStatus, BadgeTone> = {
+  DRAFT: 'neutral',
+  SHARED: 'warning',
+  APPROVED: 'success',
 };
 
 /** Worded for the client: what is happening, not which column changed. */

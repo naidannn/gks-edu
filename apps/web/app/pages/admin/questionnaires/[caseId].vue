@@ -5,7 +5,9 @@ import type { EssayQuestionnaireView, RecommendationItem, RecommendationListView
  * The writer's desk for one GKS case (1D-27): the client's essay answers and
  * every teacher's answers, laid out to be read, copied into a draft, printed —
  * and the few moves staff make on them: send the essay back with a note,
- * attach the English letter, mark the signed envelope received.
+ * attach the English letter, mark the signed envelope received. The
+ * Personal Statement and Study Plan themselves are written on the third tab
+ * (1D-28).
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
@@ -15,8 +17,8 @@ const api = useApi();
 const config = useRuntimeConfig();
 const caseId = computed(() => String(route.params.caseId));
 
-type Tab = 'essay' | 'letters';
-const tab = computed<Tab>(() => (route.query.tab === 'letters' ? 'letters' : 'essay'));
+type Tab = 'essay' | 'write' | 'letters';
+const tab = computed<Tab>(() => (route.query.tab === 'letters' || route.query.tab === 'write' ? route.query.tab : 'essay'));
 const openTab = (next: Tab) => router.replace({ query: { ...route.query, tab: next === 'essay' ? undefined : next } });
 
 const essay = ref<EssayQuestionnaireView | null>(null);
@@ -131,7 +133,7 @@ useHead({ title: 'GKS асуулга · CRM' });
 </script>
 
 <template>
-  <div class="gks-page gks-qadmin">
+  <div class="gks-page gks-qadmin" :class="{ 'gks-qadmin--wide': tab === 'write' }">
     <NuxtLink :to="`/admin/cases/${caseId}`" class="gks-qadmin__back gks-no-print">
       <DsIcon name="arrow-left" :size="16" /> Үйлчлүүлэгчийн ажлын талбар
     </NuxtLink>
@@ -150,6 +152,9 @@ useHead({ title: 'GKS асуулга · CRM' });
       <nav class="gks-tabs gks-no-print" aria-label="Асуулга">
         <button type="button" class="gks-tab" :class="{ 'gks-tab--active': tab === 'essay' }" @click="openTab('essay')">
           <DsIcon name="notebook-pen" :size="16" /><span>Эссэ</span>
+        </button>
+        <button type="button" class="gks-tab" :class="{ 'gks-tab--active': tab === 'write' }" @click="openTab('write')">
+          <DsIcon name="file-pen-line" :size="16" /><span>Personal Statement · Study Plan</span>
         </button>
         <button type="button" class="gks-tab" :class="{ 'gks-tab--active': tab === 'letters' }" @click="openTab('letters')">
           <DsIcon name="signature" :size="16" /><span>Багшийн тодорхойлолт</span>
@@ -216,6 +221,9 @@ useHead({ title: 'GKS асуулга · CRM' });
           </DsCard>
         </template>
       </template>
+
+      <!-- ── Writing the essays (1D-28) ────────────────────────────── -->
+      <EssayWriterDesk v-else-if="tab === 'write'" :case-id="caseId" :essay="essay" />
 
       <!-- ── Letters ───────────────────────────────────────────── -->
       <template v-else>
@@ -317,6 +325,7 @@ useHead({ title: 'GKS асуулга · CRM' });
 
 <style scoped>
 .gks-qadmin { display: flex; flex-direction: column; gap: var(--sp-4); max-width: 1100px; }
+.gks-qadmin--wide { max-width: 1480px; }
 .gks-qadmin__back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-muted); text-decoration: none; align-self: flex-start; }
 .gks-qadmin__h1 { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: var(--fw-bold); color: var(--text-strong); }
 .gks-qadmin__error { color: var(--danger-fg); font-size: var(--fs-body-sm); }

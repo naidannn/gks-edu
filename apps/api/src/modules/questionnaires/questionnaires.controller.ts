@@ -5,9 +5,11 @@ import {
   Get,
   Header,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -21,14 +23,20 @@ import { Public } from '../../common/decorators/public.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { EssayDocumentKind } from '../../prisma/client.js';
 import {
+  AddEssayCommentDto,
   CreateRecommendationDto,
   ReopenEssayDto,
+  ResolveEssayCommentDto,
+  SaveEssayDocumentDto,
   SaveEssayDto,
   SaveRecommendationAnswersDto,
+  SetEssayDocumentStatusDto,
   SetRecommendationStatusDto,
   UpdateRecommendationDto,
 } from './dto/questionnaire.dto.js';
+import { EssayDocumentsService } from './essay-documents.service.js';
 import { EssayQuestionnaireService } from './essay-questionnaire.service.js';
 import { RecommendationsService } from './recommendations.service.js';
 
@@ -46,6 +54,7 @@ const MAX_LETTER_BYTES = 20 * 1024 * 1024;
 export class QuestionnairesController {
   constructor(
     private readonly essay: EssayQuestionnaireService,
+    private readonly documents: EssayDocumentsService,
     private readonly recommendations: RecommendationsService,
   ) {}
 
@@ -88,6 +97,59 @@ export class QuestionnairesController {
   @ApiOperation({ summary: 'Every question and answer as plain text, for the writer (staff)' })
   essayText(@Param('caseId', ParseUUIDPipe) caseId: string, @CurrentUser() user: AuthenticatedUser) {
     return this.essay.asText(caseId, user);
+  }
+
+  @Get('essay/documents')
+  @ApiOperation({ summary: 'The Personal Statement and Study Plan — a client sees them once shared (1D-28)' })
+  listDocuments(@Param('caseId', ParseUUIDPipe) caseId: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.documents.list(caseId, user);
+  }
+
+  @Put('essay/documents/:kind')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Autosave the writer’s editor; 409 if somebody saved in between (staff)' })
+  saveDocument(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Param('kind', new ParseEnumPipe(EssayDocumentKind)) kind: EssayDocumentKind,
+    @Body() dto: SaveEssayDocumentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.documents.save(caseId, kind, dto, user);
+  }
+
+  @Post('essay/documents/:kind/status')
+  @ApiOperation({ summary: 'Staff share or hide the essay; the client approves it' })
+  setDocumentStatus(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Param('kind', new ParseEnumPipe(EssayDocumentKind)) kind: EssayDocumentKind,
+    @Body() dto: SetEssayDocumentStatusDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.documents.setStatus(caseId, kind, dto, user);
+  }
+
+  @Post('essay/documents/:kind/comments')
+  @ApiOperation({ summary: 'Leave a comment on the essay, optionally quoting a passage' })
+  addDocumentComment(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Param('kind', new ParseEnumPipe(EssayDocumentKind)) kind: EssayDocumentKind,
+    @Body() dto: AddEssayCommentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.documents.addComment(caseId, kind, dto, user);
+  }
+
+  @Post('essay/documents/:kind/comments/:commentId/resolve')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Mark a comment dealt with, or open it again (staff)' })
+  resolveDocumentComment(
+    @Param('caseId', ParseUUIDPipe) caseId: string,
+    @Param('kind', new ParseEnumPipe(EssayDocumentKind)) kind: EssayDocumentKind,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+    @Body() dto: ResolveEssayCommentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.documents.resolveComment(caseId, kind, commentId, dto, user);
   }
 
   @Get('recommendations')
