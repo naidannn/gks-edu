@@ -1,0 +1,96 @@
+{
+  "slug": "university-of-seoul",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-03-08",
+      "applicationDeadline": "2027-03-25",
+      "resultAnnouncedAt": "2027-05-14",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Энэ бол 2027 оны намрын (후기) элсэлт. TOPIK 3-аас дээш (эсвэл сургуулийн хэлний төвийн 3-аас дээш түвшин). Онлайн бүртгэл 2027.03.25-нд хаагдах ба бичиг баримтыг 2027.04.02-ны 17:00 цагаас өмнө ирүүлнэ.",
+      "sourceUrl": "https://oia.uos.ac.kr/koia/web/file/download/uu/1357394c22134489b38acabc744d8eb9",
+      "evidence": "2) 2027학년도 후기 학부 외국인특별전형 일정: 온라인 원서접수 2027. 3. 8.(월) ~ 3. 25.(목) 17:00까지 / 서류제출 2027. 3. 8(월) ~ 4. 2.(금) 17:00까지 / 합격자 발표 2027. 5. 14.(금) 17:00 예정 / 전형료 80,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-03-08",
+      "applicationDeadline": "2027-04-01",
+      "resultAnnouncedAt": "2027-05-28",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Энэ бол 2027 оны намрын (후기) элсэлт. TOPIK 3-аас дээш эсвэл сургуулийн хэлний төвийн 3-аас дээш түвшин. Бичиг баримтыг 2027.04.09-ны 17:00 цагаас өмнө ирүүлнэ. Баримт бичгийн шалгаруулалтад тэнцсэн хүмүүс 2027.05.18-нд ярилцлагад (구술심사) орно.",
+      "sourceUrl": "https://oia.uos.ac.kr/koia/web/file/download/uu/eb1e666d7b1a40ddbc32d2c4d34113b2",
+      "evidence": "2) 2027학년도 후기 일반대학원 외국인특별전형 일정: 온라인 원서접수 2027. 3. 8.(월) ~ 4. 1.(목) 17:00까지 / 서류제출 2027. 3. 8(월) ~ 4. 9.(금) 17:00까지 / (구술심사 대상자) 발표 2027. 5. 14.(금) / 구술심사 2027. 5. 18.(화) / 합격자 발표 2027. 5. 28.(금) 17:00 예정 / 전형료 80,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-03-08",
+      "applicationDeadline": "2027-04-01",
+      "resultAnnouncedAt": "2027-05-28",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "MASTER-тэй ижил хуанли, нэг 일반대학원 외국인특별전형 (магистр, доктор хамтдаа).",
+      "sourceUrl": "https://oia.uos.ac.kr/koia/web/file/download/uu/eb1e666d7b1a40ddbc32d2c4d34113b2",
+      "evidence": "Same 2027학년도 후기 일반대학원 외국인특별전형 schedule covers both master's and doctoral applicants.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "KLCP өвлийн улирал (2026.11.26–2027.02.05) Монгол улс зэрэг Хууль зүйн яамнаас заасан орнуудын (MOJ-Designated: Монгол, Вьетнам, Узбекистан, Балба, Хятад тив) бүртгэл 2026.09.08–10.06 хооронд, өөр орнуудын 2026.09.08–10.20 хооронд байсан — хоёулаа манай 2026-10-09-ний босгоос өмнө хаагдсан.",
+      "checkUrl": "https://file.uos.ac.kr/upload/klcp/2026%20UOS%20KLCP%20Brochure_%EC%98%81%EC%96%B4%28English%29.pdf"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хичээлийн жилийн KLCP хуанли (хавар/зун/намар) хараахан нийтлэгдээгүй — 2026 оны хуанли зөвхөн 2027.02.05 хүртэлх өвлийн улирлыг хамарна.",
+      "checkUrl": "https://file.uos.ac.kr/upload/klcp/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://file.uos.ac.kr/upload/klcp/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://file.uos.ac.kr/upload/klcp/"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027/3 (전기) элсэлтийн онлайн бүртгэл 2026.09.07–09.23 хугацаанд байсан бөгөөд хаагдсан.",
+      "checkUrl": "https://oia.uos.ac.kr/koia/web/file/download/uu/1357394c22134489b38acabc744d8eb9"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027/3 (전기) элсэлтийн онлайн бүртгэл 2026.09.07–09.23 хугацаанд байсан бөгөөд хаагдсан.",
+      "checkUrl": "https://oia.uos.ac.kr/koia/web/file/download/uu/eb1e666d7b1a40ddbc32d2c4d34113b2"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "MASTER-тэй ижил, хаагдсан.",
+      "checkUrl": "https://oia.uos.ac.kr/koia/web/file/download/uu/eb1e666d7b1a40ddbc32d2c4d34113b2"
+    }
+  ]
+}

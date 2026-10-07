@@ -1,0 +1,82 @@
+{
+  "slug": "kongju-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-13",
+      "resultAnnouncedAt": "2026-12-31",
+      "admissionFeeKrw": 60000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (Олон улсын сургууль: англи хэлний замд TOPIK 2 + англи хэлний оноо). Онлайн бүртгэл 11-р сарын 13-ны 18:00 хүртэл; баримт бичгийг 11-р сарын 19-ний 18:00 гэхэд шуудан/биечлэн хүргүүлнэ. 12-р сарын 8–11-нд ярилцлага.",
+      "sourceUrl": "https://oia.kongju.ac.kr/admboard/4849",
+      "evidence": "원서접수 2026. 10. 19.(월) 09:00 ~ 11. 13.(금) 18:00 / 구비서류 제출 2026. 10. 19.(월) 09:00 ~ 11. 19.(목) 18:00 / 면접 고사 2026. 12. 8(화) ~ 12. 11(금) / 합격자 발표 2026. 12. 31.(목) / 전형료: 60,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-13",
+      "resultAnnouncedAt": "2026-12-31",
+      "admissionFeeKrw": 30000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5). Зарим анги өндөр шаардлагатай (Хувцас загвар, Дүрслэх урлаг: TOPIK 4). Баримт бичгийг 11-р сарын 19-ний 18:00 гэхэд хүргүүлнэ. 12-р сарын 8–11-нд ярилцлага.",
+      "sourceUrl": "https://oia.kongju.ac.kr/admboard/4860",
+      "evidence": "원서접수 2026. 10. 19.(월) 09:00 ~ 11. 13.(금) 18:00 / 합격자 발표 2026. 12. 31.(목) / 전형료: 30,000원 / 의류상품학과, 조형디자인학과(석사): TOPIK 4급 이상",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-13",
+      "resultAnnouncedAt": "2026-12-31",
+      "admissionFeeKrw": 30000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5). Дүрслэх урлагийн докторт TOPIK 5. Магистрын зэрэгтэй (2027 оны 2-р сарын сүүл хүртэл авах хүн орно). Баримт бичиг 11-р сарын 19-ний 18:00 гэхэд.",
+      "sourceUrl": "https://oia.kongju.ac.kr/admboard/4860",
+      "evidence": "원서접수 2026. 10. 19.(월) 09:00 ~ 11. 13.(금) 18:00 / 박사과정: 국내ㆍ외 정규 대학원에서 석사학위를 취득한 자 / 조형디자인학과(박사): TOPIK 5급 이상 / 전형료: 30,000원",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Олон улсын хэлний сургалтын газар (iile.kongju.ac.kr)-ын элсэлтийн хуанли олдсонгүй.",
+      "checkUrl": "https://iile.kongju.ac.kr/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын хэлний сургалтын газрын 2027 оны хаврын элсэлт нийтлэгдээгүй/олдсонгүй.",
+      "checkUrl": "https://iile.kongju.ac.kr/"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын гадаад оюутны элсэлт зарлагдаагүй (өмнөх жилийн хоцрогдсон элсэлт 3-р сард зарлагдсан).",
+      "checkUrl": "https://oia.kongju.ac.kr/admboard"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://oia.kongju.ac.kr/admboard"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://oia.kongju.ac.kr/admboard"
+    }
+  ]
+}

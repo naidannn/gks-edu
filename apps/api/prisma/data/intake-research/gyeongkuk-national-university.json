@@ -1,0 +1,42 @@
+{
+  "slug": "gyeongkuk-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн сайтад зөвхөн 2026 оны журам (2025.11.3–11.14 / 2026.5.4–5.15) байна; 2027 оны журам гараагүй.",
+      "checkUrl": "https://ic.gknu.ac.kr/bbs/admission.php"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Зөвхөн 2026 оны хойшлогдсон журам (2026.4.30–5.19) байна; 2027 оны хаврын журам гараагүй.",
+      "checkUrl": "https://ic.gknu.ac.kr/bbs/admission.php"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил (нэг журам).",
+      "checkUrl": "https://ic.gknu.ac.kr/bbs/admission.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний институтын 2026 оны өвлийн улирал (2026.11.16 эхлэх) визтэй хүмүүст 10.16 хаагдсан; 2027 оны журам гараагүй.",
+      "checkUrl": "https://ic.gknu.ac.kr/bbs/korean.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын хуанли гараагүй (2026 оных 2025.11.3-аас нээгдсэн).",
+      "checkUrl": "https://ic.gknu.ac.kr/bbs/korean.php"
+    }
+  ]
+}

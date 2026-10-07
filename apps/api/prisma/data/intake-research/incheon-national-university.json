@@ -1,0 +1,84 @@
+{
+  "slug": "incheon-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-07",
+      "applicationDeadline": "2026-10-16",
+      "resultAnnouncedAt": "2026-12-10",
+      "requirementNote": "Энэ бол 1-р шат. Ярилцлага 2026 оны 11-р сарын дунд үе. 1-р шат бөглөж амжаагүй бол 2-р шат 2026.10.26–11.20 (ярилцлага 12-р сарын дунд, дүн мэдээ 2027.01.07) нээлттэй байна.",
+      "sourceUrl": "https://isc.inu.ac.kr/bbs/isc/3184/429961/artclView.do",
+      "evidence": "27.3 Undergraduate Admissions Information: Online Application & Submission of Documents 1차: 2026.9.7 ~ 10.16 / 2차: 10.26 ~ 11.20 - Interview 1차: 2026.11.(Mid. of Nov.), 2차: 2026.12.(Mid. of Dec.) - Admission Announcement 1차: 2026.12.10 / 2차: 2027.1.7 - Entrance: 2027.3",
+      "confidence": "HIGH",
+      "laterRounds": "2차: online application & document submission 2026.10.26–11.20, interview mid-Dec 2026, result 2027-01-07."
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "INUKLI өвлийн улирал (2026.12.07–2027.02.17) D-4 бүртгэл 2026.08.31–10.02 хооронд байсан бөгөөд хаагдсан.",
+      "checkUrl": "https://ese.inu.ac.kr/inukli/6854/subview"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хичээлийн хуанли (хавар/зун/намар) хараахан нийтлэгдээгүй — одоогийн хүснэгт зөвхөн 2026 оны өвлийн улирал (дуусах 2027.02.17) хүртэл хамаарна.",
+      "checkUrl": "https://ese.inu.ac.kr/inukli/6854/subview"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://ese.inu.ac.kr/inukli/6854/subview"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://ese.inu.ac.kr/inukli/6854/subview"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дээд сургуулийн (일반대학원) гадаад оюутны 2027 оны хаврын элсэлтийн журам Олон улсын оюутны албаны мэдэгдлийн самбарт хараахан гараагүй (сүүлд нийтлэгдсэн нь 2026 оны хавар/намрын элсэлт).",
+      "checkUrl": "https://isc.inu.ac.kr/bbs/isc/3184/artclList.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "MASTER-тэй ижил — журам хараахан гараагүй.",
+      "checkUrl": "https://isc.inu.ac.kr/bbs/isc/3184/artclList.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын элсэлтийн журам одоогоор зарлагдаагүй.",
+      "checkUrl": "https://isc.inu.ac.kr/bbs/isc/3184/artclList.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "MASTER-тэй ижил — журам одоогоор зарлагдаагүй.",
+      "checkUrl": "https://isc.inu.ac.kr/bbs/isc/3184/artclList.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын (후기) бакалаврын гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://isc.inu.ac.kr/bbs/isc/3184/artclList.do"
+    }
+  ]
+}

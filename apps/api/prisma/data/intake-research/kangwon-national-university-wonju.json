@@ -1,0 +1,77 @@
+{
+  "slug": "kangwon-national-university-wonju",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "applicationDeadline": "2026-10-15",
+      "classStartDate": "2026-12-01",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ. Вонжу кампус нь Гангнын кампустай нэг нэгдсэн олон улсын харилцааны алба, нэг элсэлтийн хуанлитай ажилладаг (강릉·원주캠퍼스 нэгдсэн).",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2026 Winter: Dates Dec 1 - Feb 10('27) / Application Deadline Oct 15, 2026 (강릉·원주캠퍼스 нэгдсэн хуанли — Гангнын кампусын судалгаатай адил)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "applicationDeadline": "2027-01-30",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2027 Spring: Dates Mar 2 - May 12 / Application Deadline Jan 30, 2027 (강릉·원주캠퍼스 нэгдсэн хуанли)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "applicationDeadline": "2027-04-15",
+      "classStartDate": "2027-06-01",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2027 Summer: Dates Jun 1 - Aug 11 / Application Deadline Apr 15, 2027 (강릉·원주캠퍼스 нэгдсэн хуанли)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "applicationDeadline": "2027-07-30",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2027 Fall: Dates Aug 30 - Nov 10 / Application Deadline Jul 30, 2027 (강릉·원주캠퍼스 нэгдсэн хуанли)",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "강릉·원주캠퍼스 (Гангнын, Вонжу хоёр кампус нэгдсэн) гадаад оюутны бакалаврын 2027 оны хаврын (전기) элсэлтийн журам хараахан нийтлэгдээгүй — зөвхөн 2025 оны намрын журам нийтлэгдсэн байна. Вонжу кампус тусдаа элсэлтийн алба, тусдаа хуанлигүй — Гангнын кампустай нэг нэгдсэн 입학관리본부-гаар дамжин бүртгэнэ (adgraduate.kangwon.ac.kr-ийн холбогдох хуудас нь зөвхөн 강릉·원주캠퍼스 нэгдсэн нэрээр жагсдаг).",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "강릉·원주캠퍼스 нэгдсэн 일반대학원 гадаад оюутны 2027 оны хаврын журам хараахан нийтлэгдээгүй (adgraduate.kangwon.ac.kr/adgraduate/admission/guideline03.do хуудсанд зөвхөн нийтлэг мэдээлэл, тодорхой огноогүй жилийн хуанли харагдана). Вонжу, Гангнын хоёр кампус ижил процедур, тусдаа квот ялгаа тогтоогдсонгүй.",
+      "checkUrl": "https://adgraduate.kangwon.ac.kr/adgraduate/admission/guideline03.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай адил — 2027 оны хаврын журам хараахан нийтлэгдээгүй, Вонжу/Гангнын хооронд ялгаа тогтоогдсонгүй.",
+      "checkUrl": "https://adgraduate.kangwon.ac.kr/adgraduate/admission/guideline03.do"
+    }
+  ]
+}

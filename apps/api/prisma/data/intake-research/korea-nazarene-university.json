@@ -1,0 +1,25 @@
+{
+  "slug": "korea-nazarene-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "notOffered": [
+    "MASTER",
+    "PHD"
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны элсэлтийн журам (\"2027 Undergraduate Admission Guidelines\") яг 2026.10.02-нд нийтлэгдсэн, гэвч PDF нь зураг хэлбэртэй тул текст гарган авах боломжгүй (OCR шаардлагатай). Огноог тодорхойлж чадсангүй.",
+      "checkUrl": "https://cms.kornu.ac.kr/bbs/io/135/110877/download.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хэлний бэлтгэл хөтөлбөрийн журам (\"2027 Korean Language Course Admission Guidelines\") яг 2026.10.02-нд нийтлэгдсэн, гэвч PDF нь зураг хэлбэртэй тул текст гарган авах боломжгүй.",
+      "checkUrl": "https://cms.kornu.ac.kr/bbs/io/135/110878/download.do"
+    }
+  ]
+}

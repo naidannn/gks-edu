@@ -1,0 +1,75 @@
+{
+  "slug": "pukyong-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-13",
+      "resultAnnouncedAt": "2026-12-24",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (PBT, IBT хоёул хүчинтэй); зарим анги (Бизнесийн удирдлага, Олон улсын худалдаа-ложистик, Нийгмийн ажил, Усны амьтан-биоанагаах, Хүүхдийн боловсрол, Солонгос хэл-уран зохиол гэх мэт) TOPIK 4 эсвэл 5-р түвшин шаардана. TOPIK оноогүй горилогч бол шалгалт өгөх товыг баталгаажуулсан бичигтэй нөхцөлтэйгөөр бүртгүүлж болно.",
+      "sourceUrl": "http://admission.pknu.ac.kr/pdf/Admissions_Guide_for_International_Students_for_Spring_2027.pdf",
+      "evidence": "2027학년도 1학기 국립부경대학교 학부 및 대학원 외국인 신·편입생 모집요강 — 2027-1학기(3월입학): 온라인 입학신청 2026. 10. 12.(월) 9:00 ~ 11. 13.(금) 18:00 / 「지원자격」심사 결과발표 2026. 11. 18.(수) 18:00(예정) / 학과평가 및 면접고사 2026. 11. 23.(월) ~ 12. 4.(금) / 최종합격자발표 2026. 12. 24.(목)(예정) / 원본서류제출 2027. 1. 15.(금) 18:00까지(예정) / 등록금납부 2027. 1월 중순(예정) / 전형료 (학부 및 대학원) 100,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-13",
+      "resultAnnouncedAt": "2026-12-24",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (эсвэл адил зэрэглэлийн бусад гэрчилгээ); зарим анги TOPIK 4-5-р түвшин шаардана.",
+      "sourceUrl": "http://admission.pknu.ac.kr/pdf/Admissions_Guide_for_International_Students_for_Spring_2027.pdf",
+      "evidence": "학부 및 대학원 외국인 신·편입생 모집요강 — one shared 2027-1학기(3월입학) schedule for undergraduate and graduate applicants: online application 2026.10.12~11.13, final admission results 2026.12.24, application fee (학부 및 대학원) 100,000원.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-13",
+      "resultAnnouncedAt": "2026-12-24",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (эсвэл адил зэрэглэлийн бусад гэрчилгээ); зарим анги TOPIK 4-5-р түвшин шаардана.",
+      "sourceUrl": "http://admission.pknu.ac.kr/pdf/Admissions_Guide_for_International_Students_for_Spring_2027.pdf",
+      "evidence": "Same single 학부 및 대학원 외국인 신·편입생 모집요강 schedule as MASTER — 대학원 (일반대학원) covers both master's and doctoral applicants under one 2027-1학기 admission track.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Гадаадаас виз хийж ирэх горилогчийн (A유형) бүртгэл 2026.09.18-нд хаагдсан (судалгааны огноо 2026-10-09-ээс өмнө). БНСУ-д байгаа бусад визтэй горилогчид (B/C유형) 2026.10.23 хүртэл бүртгүүлж болно, гэвч энэ ангилал Монголоос шууд ирэх горилогчдод хамаарахгүй.",
+      "checkUrl": "http://admission.pknu.ac.kr/pdf/Admission_Guidebook_for_the_PKNU_Korean_Language_Program_2026.pdf"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Одоогийн нийтлэгдсэн хуанли зөвхөн 2026 оны урхдалсан улирал (хавар/зун/намар/өвөл)-ыг хамардаг; 2027 оны хаврын улирлын бүртгэлийн хуанли хараахан гараагүй.",
+      "checkUrl": "http://admission.pknu.ac.kr"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын бүртгэлийн хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "http://admission.pknu.ac.kr"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын бүртгэлийн хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "http://admission.pknu.ac.kr"
+    }
+  ]
+}

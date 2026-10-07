@@ -1,0 +1,117 @@
+{
+  "slug": "chungnam-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-16",
+      "applicationDeadline": "2026-12-11",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ эцсийн хугацаа Хятадаас бусад орны (Монгол зэрэг) элсэгчдэд хамаарна — Хятадын иргэдэд арай хожуу хугацаа үйлчилнэ. Материалыг зөвхөн шуудангаар эсвэл биечлэн хүргэнэ (имэйлээр хүлээж авахгүй). Нотариатжуулсан диплом/дүнгийн хуулбар, 8,000,000 вонтой тэнцэх хадгаламжийн тодорхойлолт, эцэг эхийн орлогын тодорхойлолт, гэр бүлийн гэрчилгээ, сүрьеэгийн шинжилгээний хариу шаардлагатай.",
+      "sourceUrl": "http://dream.cnu.ac.kr/contents/kor_01.php",
+      "evidence": "봄학기 2027: 서류접수 기간(그외국가) 2026. 11. 16. ~ 2026. 12. 11. / (중어권국가) 2026. 11. 30. ~ 2027. 1. 1. / 수업기간 2027. 3. 2. ~ 2027. 5. 7. / 입학전형료 70,000원",
+      "confidence": "HIGH",
+      "laterRounds": "중어권국가(Хятад): 2026.11.30–2027.01.01"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-02-15",
+      "applicationDeadline": "2027-03-12",
+      "classStartDate": "2027-05-31",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ эцсийн хугацаа Хятадаас бусад орны (Монгол зэрэг) элсэгчдэд хамаарна — Хятадын иргэдэд арай хожуу хугацаа үйлчилнэ. Материалыг зөвхөн шуудангаар эсвэл биечлэн хүргэнэ (имэйлээр хүлээж авахгүй). Нотариатжуулсан диплом/дүнгийн хуулбар, 8,000,000 вонтой тэнцэх хадгаламжийн тодорхойлолт, эцэг эхийн орлогын тодорхойлолт, гэр бүлийн гэрчилгээ, сүрьеэгийн шинжилгээний хариу шаардлагатай.",
+      "sourceUrl": "http://dream.cnu.ac.kr/contents/kor_01.php",
+      "evidence": "여름학기 2027: 서류접수 기간(그외국가) 2027. 2. 15. ~ 2027. 3. 12. / (중어권국가) 2027. 3. 1. ~ 2027. 4. 2. / 수업기간 2027. 5. 31. ~ 2027. 8. 6.",
+      "confidence": "HIGH",
+      "laterRounds": "중어권국가(Хятад): 2027.03.01–2027.04.02"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-05-17",
+      "applicationDeadline": "2027-06-11",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ эцсийн хугацаа Хятадаас бусад орны (Монгол зэрэг) элсэгчдэд хамаарна — Хятадын иргэдэд арай хожуу хугацаа үйлчилнэ. Материалыг зөвхөн шуудангаар эсвэл биечлэн хүргэнэ (имэйлээр хүлээж авахгүй). Нотариатжуулсан диплом/дүнгийн хуулбар, 8,000,000 вонтой тэнцэх хадгаламжийн тодорхойлолт, эцэг эхийн орлогын тодорхойлолт, гэр бүлийн гэрчилгээ, сүрьеэгийн шинжилгээний хариу шаардлагатай.",
+      "sourceUrl": "http://dream.cnu.ac.kr/contents/kor_01.php",
+      "evidence": "가을학기 2027: 서류접수 기간(그외국가) 2027. 5. 17. ~ 2027. 6. 11. / (중어권국가) 2027. 5. 31. ~ 2027. 7. 2. / 수업기간 2027. 8. 30. ~ 2027. 11. 5.",
+      "confidence": "HIGH",
+      "laterRounds": "중어권국가(Хятад): 2027.05.31–2027.07.02"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-20",
+      "resultAnnouncedAt": "2026-12-30",
+      "admissionFeeKrw": 60000,
+      "requirementNote": "Ихэнх ангид TOPIK 3-4-р түвшин буюу TOEIC 700 / TOEFL iBT 71 / IELTS 5.5 шаардагдана (ангиас хамаарч өөр байж болно).",
+      "sourceUrl": "https://ipsi.cnu.ac.kr/_prog/_board/?mode=V&no=2027519&code=notice_intl&site_dvs_cd=uadm&menu_dvs_cd=080201",
+      "evidence": "1. 온라인 원서접수 2026. 10. 12.(월) 10:00 ~ 11. 20.(금) 18:00 / 2. 지원서류 제출 2026. 10. 12.(월) 10:00 ~ 11. 20.(금) 18:00 / 3. 전공수학능력평가 2026. 12. 7.(월) ~ 12. 14.(월) / 4. 합격자 발표 2026. 12. 30.(수) 15:00~ / 전형료: 60,000원 또는 50USD(인터넷 접수 수수료 포함)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-22",
+      "applicationDeadline": "2026-11-20",
+      "resultAnnouncedAt": "2026-12-30",
+      "admissionFeeKrw": 60000,
+      "requirementNote": "Ихэнх ангид TOPIK 4-р түвшин буюу TOEFL iBT 71 / IELTS 5.5, эсвэл сургуулийн хэлний чадварын гэрчилгээ (Form 4) шаардагдана.",
+      "sourceUrl": "https://ipsi.cnu.ac.kr/_prog/_board/?mode=V&no=2026490&code=notice_intl_gadm&site_dvs_cd=gadm&menu_dvs_cd=040201",
+      "evidence": "대학원(Graduate) 접수기간: 2026. 9. 22.(화) 10:00 ~ 11. 20.(금) 18:00(현지시간) / 전형료: 60,000원 또는 50 USD(온라인 접수 수수료 포함) / 합격자 발표 2026. 12. 30.(수) 15:00(예정)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-22",
+      "applicationDeadline": "2026-11-20",
+      "resultAnnouncedAt": "2026-12-30",
+      "admissionFeeKrw": 60000,
+      "requirementNote": "Ихэнх ангид TOPIK 4-р түвшин буюу TOEFL iBT 71 / IELTS 5.5, эсвэл сургуулийн хэлний чадварын гэрчилгээ (Form 4) шаардагдана.",
+      "sourceUrl": "https://ipsi.cnu.ac.kr/_prog/_board/?mode=V&no=2026490&code=notice_intl_gadm&site_dvs_cd=gadm&menu_dvs_cd=040201",
+      "evidence": "Same 일반대학원 외국인전형 schedule as MASTER (one combined graduate-school round for 석사/박사/석박사통합).",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан — 2026 оны өвлийн улирлын бүртгэл (Хятадаас бусад орнууд 2026.06.12, Хятад 2026.10.02-нд дуусгавар болсон).",
+      "checkUrl": "http://dream.cnu.ac.kr/contents/kor_01.php"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://ipsi.cnu.ac.kr/html/uadm/"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) их сургуулийн гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://ipsi.cnu.ac.kr/html/gadm/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуанлитай ижил — 2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://ipsi.cnu.ac.kr/html/gadm/"
+    }
+  ]
+}

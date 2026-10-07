@@ -1,0 +1,35 @@
+{
+  "slug": "semyung-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн сайт (semyung.ac.kr) уншигдсангүй; 2027 оны гадаад оюутны бакалаврын журам баталгаажаагүй.",
+      "checkUrl": "https://ipsi.semyung.ac.kr/"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын харилцааны газар (smel.semyung.ac.kr) уншигдсангүй; 2027 оны журам баталгаажаагүй.",
+      "checkUrl": "https://smel.semyung.ac.kr/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил; баталгаажаагүй.",
+      "checkUrl": "https://smel.semyung.ac.kr/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын боловсролын газар (smiie) уншигдсангүй; хуанли баталгаажаагүй.",
+      "checkUrl": "https://semyung.ac.kr/smiie.do"
+    }
+  ]
+}

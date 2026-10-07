@@ -1,0 +1,92 @@
+{
+  "slug": "chonnam-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-01",
+      "applicationDeadline": "2026-10-14",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-16",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (эсвэл сургуулийн хэлний төвийн 3-р шат) эсвэл англи хэлний босго оноо (TOEFL iBT 4.0 / IELTS 5.5 / TOEIC 700 гэх мэт) шаардагдана. TOPIK 4-өөс доош авсан элсэгчид элссэнийхээ дараа 1 жилийн хугацаанд Йосу кампусад заавал 36 кредитын хэлний төвлөрсөн хөтөлбөр үзнэ.",
+      "sourceUrl": "https://international.jnu.ac.kr/Data/tmpfiles/download/2027/260911-ad-kr.pdf",
+      "evidence": "2027학년도 전기 입학일정 1차: 인터넷 원서접수/지원서류 제출기한 2026.10.1(목)~10.14.(수), 합격자 발표 2026.11.16.(월) / 전형료: 70,000원 / 언어능력(한국어): TOPIK 3급 이상 또는 언어교육원 한국어 정규강좌 3단계 이상 / 한국어능력시험(TOPIK) 4급 이상 미제출 합격자는 입학 후 첫 1년간 여수캠퍼스 한국어집중강좌(36학점) 이수 필수",
+      "laterRounds": "2차: 원서접수/서류제출 2026.10.15(목)~11.13(금), 합격자 발표 2026.12.21(월)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-30",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-23",
+      "sourceUrl": "https://international.jnu.ac.kr/Admission/Graduate",
+      "evidence": "2027학년도 전기 입학일정(Graduate) Round 2: Online Application Mon, Oct.12, 2026, 9:00 – Fri, Oct.30, 2026, 18:00(KST); Announcement of Acceptance Wed, Dec.23, 2026. Class start (university-wide 2027학년도 개강 전기 1학기): 2027.3.2.(화)_예정, per the undergraduate admission guide's shared academic schedule.",
+      "laterRounds": "1차 (Round 1): online application Mon, Sep.28 2026 9:00 – Thu, Oct.8 2026 18:00; already closed before the research cut-off (2026-10-09).",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-30",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-23",
+      "sourceUrl": "https://international.jnu.ac.kr/Admission/Graduate",
+      "evidence": "Same single 일반대학원 외국인 및 재외국민 전형 schedule as MASTER — one admission track covers both master's and doctoral applicants.",
+      "laterRounds": "1차 (Round 1): Sep.28–Oct.8, 2026; already closed before the research cut-off.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "applicationDeadline": "2026-12-18",
+      "classStartDate": "2027-03-04",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Гадаадаас ирж суралцах, суралцахын визтэй (D-4) оюутан 2026.12.18-ны дотор бүртгүүлнэ (визийн бэлтгэлд цаг хэрэгтэй тул эрт хаагддаг); БНСУ-д байгаа бусад визтэй иргэд 2027.02.12 хүртэл бүртгүүлж болно. Банкны үлдэгдлийн баталгаа 8 сая вонoos дээш (6 сарын хугацаанд царцаасан) шаардагдана.",
+      "sourceUrl": "https://leckor.jnu.ac.kr/kr/SubPage.aspx?PageCode=020104",
+      "evidence": "지원일정 2027년 봄: 기간(10주) 2027.03.04.~2027.05.14. / 접수마감(언어연수비자 신청자 D-4) 2026.12.18. / 분반고사 2027.02.12. / 기타비자 2027.02.12. / 전형료: 50,000원(합격자에 한함, 환불불가) / 은행잔고증명서 8백만원 이상, 6개월 동결 예치",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "applicationDeadline": "2027-03-19",
+      "classStartDate": "2027-05-31",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Гадаадаас ирж суралцах D-4 визтэй оюутан 2027.03.19-ний дотор бүртгүүлнэ; БНСУ-д байгаа бусад визтэй иргэд 2027.05.18 хүртэл бүртгүүлж болно.",
+      "sourceUrl": "https://leckor.jnu.ac.kr/kr/SubPage.aspx?PageCode=020104",
+      "evidence": "지원일정 2027년 여름: 기간(10주) 2027.05.31.~2027.08.06. / 접수마감(언어연수비자 신청자 D-4) 2027.03.19. / 분반고사 2027.05.14. / 기타비자 2027.05.18.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "applicationDeadline": "2027-06-25",
+      "classStartDate": "2027-09-01",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Гадаадаас ирж суралцах D-4 визтэй оюутан 2027.06.25-ны дотор бүртгүүлнэ; БНСУ-д байгаа бусад визтэй иргэд 2027.08.18 хүртэл бүртгүүлж болно.",
+      "sourceUrl": "https://leckor.jnu.ac.kr/kr/SubPage.aspx?PageCode=020104",
+      "evidence": "지원일정 2027년 가을: 기간(10주) 2027.09.01.~2027.11.16. / 접수마감(언어연수비자 신청자 D-4) 2027.06.25. / 분반고사 2027.08.13. / 기타비자 2027.08.18.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "2026 оны өвлийн ангийн (D-4 визтэй) бүртгэл 2026.09.11-нд хаагдсан (судалгааны огноо 2026-10-08-аас өмнө).",
+      "checkUrl": "https://leckor.jnu.ac.kr/kr/SubPage.aspx?PageCode=020104"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "slug": "jungwon-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний сургуулийн (한국어학당) сайтад зөвхөн 2026 оны намрын улирлын журам (2026.3.24) байна; өвлийн/2027 оны журам гараагүй.",
+      "checkUrl": "http://jwukorean.jwu.ac.kr/site/deptSiteView.jwu?categoryId=D2_870&depth=2&taskType=0"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Бакалаврын гадаад оюутны журам сургуулийн албан сайтаас олдсонгүй.",
+      "checkUrl": "https://ipsi.jwu.ac.kr/boards/admission-guidelines"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын гадаад оюутны журам албан сайтаас олдсонгүй.",
+      "checkUrl": "https://ipsi.jwu.ac.kr/boards/admission-guidelines"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Докторын гадаад оюутны журам албан сайтаас олдсонгүй.",
+      "checkUrl": "https://ipsi.jwu.ac.kr/boards/admission-guidelines"
+    }
+  ]
+}

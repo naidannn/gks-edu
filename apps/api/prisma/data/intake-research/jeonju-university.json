@@ -1,0 +1,69 @@
+{
+  "slug": "jeonju-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-08-24",
+      "applicationDeadline": "2026-10-09",
+      "classStartDate": "2026-11-23",
+      "resultAnnouncedAt": "2026-10-19",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Өвлийн семестр (2026.11.23-д эхэлнэ). Баримтын эцсийн хугацаа мөн 2026.10.09. Дипломын болон дүнгийн баримтад Монголын хувьд апостиль эсвэл консулын баталгаа шаардлагатай. Өөрийн нэр дээрх 8 сая воноос дээш банкны үлдэгдлийн тодорхойлолт хэрэгтэй. Явцын шалгалт: бичиг баримт, ярилцлага.",
+      "sourceUrl": "https://oia.jj.ac.kr/oia/kec/entrance.do",
+      "evidence": "2026학년도 겨울학기 온라인 원서접수 2026. 8. 24.(월) ~ 2026. 10. 9.(금) / 서류 제출마감 2026. 10. 9.(금) / 합격자 발표 2026. 10. 19.(월) / 개강일 2026. 11. 23.(월) / 금100,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-21",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-11",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "Эцэг эх, өргөдөл гаргагч хоёулаа гадаад иргэн байх шаардлагагүй, гадаад иргэн бүр өргөдөл өгч болно. Солонгос хэлний шугамд TOPIK 2-оос дээш (эсвэл Сежон 초급2, IELTS 5.5 гэх мэт) шаардлагатай; англи хэлний шугамд IELTS 5.5. Бичлэгт ярилцлагын видео оруулна. Дипломын баримтад апостиль (Монгол апостилийн гишүүн) эсвэл консулын баталгаа хэрэгтэй. Бичиг баримтыг 2026.10.23 хүртэл Жонжү их сургуулийн Олон улсын албанд ирүүлнэ. Төгсөхөөс өмнө TOPIK 4 авах ёстой.",
+      "sourceUrl": "https://iphak.jj.ac.kr/iphak/international/korean.do?mode=download&articleNo=532934&attachNo=264089",
+      "evidence": "전형 일정 원서 접수 1차 2026. 10. 12.(월) ~ 10. 21.(수) / 2차 2026. 12. 1.(화) ~ 12. 11.(금) / 3차 2027. 1. 4.(월) ~ 1. 13.(수) 전형료: 120,000원 / 서류 제출기한 1차 2026. 10. 23.(금) / 합격자 발표 2026. 11. 11.(수) / 개강 2027. 3. 2.(화)",
+      "confidence": "HIGH",
+      "laterRounds": "2-р шат: өргөдөл 2026-12-01 ~ 12-11, бичиг баримт 12-18, үр дүн 2027-01-06. 3-р шат: 2027-01-04 ~ 01-13, бичиг баримт 01-15, үр дүн 2027-01-20."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-21",
+      "requirementNote": "Зөвхөн хос хэлний (англи хэлээр заадаг) хөтөлбөрүүд: Бизнесийн удирдлага, Боловсрол, Хиймэл оюун, Урлагийн сэтгэл засал, Дизайн (зөвхөн магистр), Биеийн тамир. Ерөнхий (Солонгос хэлээр) хөтөлбөрийн элсэлт зөвхөн Узбекистан, Мьянмар, Бангладеш, Вьетнамын иргэдэд нээлттэй тул Монгол иргэд хос хэлний хөтөлбөрөөр өргөдөл өгнө.",
+      "sourceUrl": "https://oia.jj.ac.kr/oia/admissions/announcements.do?mode=view&articleNo=533616",
+      "evidence": "Spring 2027 Jeonju University Graduate School (International Students) Departments (Bilingual Programs): Business Administration, Education, Artificial Intelligence, Art Psychotherapy, Design (Master's Only), Physical Education / Application Schedule 1st Round Oct 12, 2026 (Mon) ~ Oct 21, 2026 (Wed); 2nd Dec 1 ~ Dec 11, 2026; 3rd Jan 4 ~ Jan 13, 2027",
+      "confidence": "MEDIUM",
+      "laterRounds": "2-р шат 2026-12-01 ~ 12-11; 3-р шат 2027-01-04 ~ 01-13."
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаад оюутны бакалаврын журам хараахан нийтлэгдээгүй; өмнөх жил 2026 намрын 3 шат явагдсан.",
+      "checkUrl": "https://oia.jj.ac.kr/oia/admissions/announcements.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын Солонгос хэлний курсийн (한국어학당) хуваарь хараахан нийтлэгдээгүй; 2026 онд өргөдөл 11-р сараас 12-р сар хүртэл авсан.",
+      "checkUrl": "https://oia.jj.ac.kr/oia/kec/entrance.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Зөвхөн зурган зарлалаас олдсон тул баталгаажаагүй; албан ёсны текст зарлалыг дахин шалгана."
+    }
+  ]
+}

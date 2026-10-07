@@ -1,0 +1,35 @@
+{
+  "slug": "sunchon-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Эцэг эх хоёулаа гадаад иргэн (순수외국인) 2027 оны хаврын элсэлтийн журам хараахан нийтлэгдээгүй; сүүлийн нийтлэл нь 2026 оны намрын. 재외국민/외국인 2027 оны тусгай элсэлтийн хүлээн авалт 2026-09-11-нд хаагдсан.",
+      "checkUrl": "https://www.scnu.ac.kr/iphak/na/ntt/selectNttList.do?mi=4980&bbsId=2488"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) дээд сургуулийн элсэлтийн хуваарь хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.scnu.ac.kr/ggs/cm/cntnts/cntntsView.do?mi=4491&cntntsId=2546"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) дээд сургуулийн элсэлтийн хуваарь хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.scnu.ac.kr/ggs/cm/cntnts/cntntsView.do?mi=4491&cntntsId=2546"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Солонгос хэлний сургалт (한국어학당) 3-р сарын ангийн тодорхой хугацаа нийтлэгдээгүй; ерөнхий танилцуулгад бүртгэл 11-12-р сард гэж бичсэн ч 2027 оны албан ёсны зарлал алга.",
+      "checkUrl": "https://www.scnu.ac.kr/ials/cm/cntnts/cntntsView.do?mi=1844&cntntsId=1583"
+    }
+  ]
+}

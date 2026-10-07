@@ -1,0 +1,77 @@
+{
+  "slug": "kangwon-national-university-samcheok",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "applicationDeadline": "2026-10-15",
+      "classStartDate": "2026-12-01",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд сүүлийн 3 сарын дансны хуулга (гүйлгээний түүх) нэмж өгнө; $6,000-аас дээш хадгаламжийн тодорхойлолт (сүүлийн 1 сард авсан) шаардлагатай. Дипломын болон дүнгийн баримтад апостиль эсвэл консулын баталгаа хэрэгтэй. Бичиг баримтын эх хувийг өргөдлийн эцсийн хугацаанаас өмнө олон улсын шуудангаар ирүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1378/web.do",
+      "evidence": "Winter Dec 1 - Feb 10('27) / Application Deadline Oct 15, 2026 / Application fee 70,000KRW (Non-refundable)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "applicationDeadline": "2027-01-30",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд сүүлийн 3 сарын дансны хуулга (гүйлгээний түүх) нэмж өгнө; $6,000-аас дээш хадгаламжийн тодорхойлолт (сүүлийн 1 сард авсан) шаардлагатай. Дипломын болон дүнгийн баримтад апостиль эсвэл консулын баталгаа хэрэгтэй. Бичиг баримтын эх хувийг өргөдлийн эцсийн хугацаанаас өмнө олон улсын шуудангаар ирүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1378/web.do",
+      "evidence": "2027 Spring Mar 2 - May 12 / Application Deadline Jan 30, 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "applicationDeadline": "2027-04-15",
+      "classStartDate": "2027-06-01",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд сүүлийн 3 сарын дансны хуулга (гүйлгээний түүх) нэмж өгнө; $6,000-аас дээш хадгаламжийн тодорхойлолт (сүүлийн 1 сард авсан) шаардлагатай. Дипломын болон дүнгийн баримтад апостиль эсвэл консулын баталгаа хэрэгтэй. Бичиг баримтын эх хувийг өргөдлийн эцсийн хугацаанаас өмнө олон улсын шуудангаар ирүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1378/web.do",
+      "evidence": "2027 Summer Jun 1 - Aug 11 / Application Deadline Apr 15, 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "applicationDeadline": "2027-07-30",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд сүүлийн 3 сарын дансны хуулга (гүйлгээний түүх) нэмж өгнө; $6,000-аас дээш хадгаламжийн тодорхойлолт (сүүлийн 1 сард авсан) шаардлагатай. Дипломын болон дүнгийн баримтад апостиль эсвэл консулын баталгаа хэрэгтэй. Бичиг баримтын эх хувийг өргөдлийн эцсийн хугацаанаас өмнө олон улсын шуудангаар ирүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1378/web.do",
+      "evidence": "2027 Fall Aug 30 - Nov 10 / Application Deadline Jul 30, 2027",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Самчок кампусын 2027 оны хаврын гадаад оюутны бакалаврын журам хараахан нийтлэгдээгүй (2026 оны намрын журам л байна). Хуанлиар өргөдлийг 10-р сараас авдаг.",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1331/web.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын магистрын журам хараахан нийтлэгдээгүй (2026 оны намрын журам л байна).",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1331/web.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил.",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1331/web.do"
+    }
+  ]
+}

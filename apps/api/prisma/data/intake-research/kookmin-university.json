@@ -1,0 +1,65 @@
+{
+  "slug": "kookmin-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-06",
+      "applicationDeadline": "2026-10-22",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-24",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "Солонгос хэлний мэдлэгт тодорхой доод түвшин заагаагүй (TOPIK, сургуулийн хэлний төвийн гэрчилгээ, Sejong шалгалт зэргийн аль нэгийг нь материалдаа хавсаргана; International College-ээс бусад бүх ангид хамаарна). Англи хэлээр ордог International College-ийн ангид IELTS 5.5 эсвэл TOEFL iBT 80 буюу түүнтэй адил нөхцөл шаардана. Нэмэлт онлайн бүртгэлийн хураамж 4,500₩ нэмж төлнө.",
+      "sourceUrl": "https://wfile.kookmin.ac.kr/files-v2/%5B%EC%8B%A0%EC%9E%85%ED%95%99%5D+%5BEN%5D+2027-1+%EB%B6%80%EB%AA%A8%ED%95%99%EC%83%9D%EC%99%B8%EA%B5%AD%EC%9D%B8+%EC%8B%A0%EC%9E%85%ED%95%99+%ED%8A%B9%EB%B3%84%EC%A0%84%ED%98%95+%EB%AA%A8%EC%A7%91%EC%9A%94%EA%B0%95.pdf?id=12c78ed9f43e0804e3915ee237ceec28",
+      "evidence": "SPRING SEMESTER 2027 (MARCH INTAKE) FRESHMAN ADMISSION GUIDELINES — APPLICATION SCHEDULE: 1st Online Application & Document Submission 06 OCT ~ 22 OCT 2026 / Result Announcement 24 NOV 2026 / Tuition Payment 11 JAN ~ 13 JAN 2027 / Visa Document Issuance 22 JAN 2027 / Semester Start Date 02 MAR 2027. Application Fee: 120,000 KRW (All Units except Colleges of Design & Arts / College of Physical Education: 150,000 KRW), plus 4,500 KRW online application charge.",
+      "laterRounds": "2nd: 09 NOV ~ 26 NOV 2026 (Interview Test 19 DEC 2026), Result 05 JAN 2027, Tuition 03~05 FEB 2027 — Colleges of Design & Arts and College of Physical Education (Sport-Specific) may only apply in this round. 3rd: 07 DEC ~ 29 DEC 2026, Result 26 JAN 2027.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Нэг удаагийн нэгдсэн горилгооны хуудас (석사·박사·석박사통합과정) 2027 оны хаврын (전기, 3-р сарын) элсэлтийн зар хараахан нийтлэгдээгүй; сайтад одоогоор зөвхөн 2026 оны намрын (후기) элсэлтийн мэдээлэл байна.",
+      "checkUrl": "https://iat.kookmin.ac.kr/admission/community/notice/?sc=432"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Нэг удаагийн нэгдсэн горилгооны хуудас (석사·박사·석박사통합과정) 2027 оны хаврын элсэлтийн зар хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://iat.kookmin.ac.kr/admission/community/notice/?sc=432"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "2026-겨울학기 (개강 2026.12.14) — Хятад бус харьяалалтай горилогчийн (Монгол үүнд хамаарна) бүртгэл 2026.09.01–09.14-нд хаагдсан (судалгааны огноо 2026-10-09-ээс өмнө).",
+      "checkUrl": "https://iie.kookmin.ac.kr/ko/regular/academic"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Одоогийн хуанли зөвхөн 2026 оны мөчлөгийг (хавар/зун/намар/өвөл) хамардаг; 2027 оны хаврын улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://iie.kookmin.ac.kr/ko/regular/academic"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://iie.kookmin.ac.kr/ko/regular/academic"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://iie.kookmin.ac.kr/ko/regular/academic"
+    }
+  ]
+}

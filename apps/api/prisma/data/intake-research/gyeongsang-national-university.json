@@ -1,0 +1,88 @@
+{
+  "slug": "gyeongsang-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-20",
+      "applicationDeadline": "2026-11-11",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Бичиг баримтаа шуудангаар Экспресс мэйлээр илгээнэ (хүлээн авагч:経상국립대학교 нэгдсэн дээд сургуулийн захиргааны алба, 409 тоот).",
+      "sourceUrl": "http://www.gnu.ac.kr/graduate/na/ntt/selectNttInfo.do?nttSn=8796824&mi=19062",
+      "evidence": "2027학년도 전기 대학원 특별전형(외국인&재외국민) 모집 안내: [Step 1] 온라인원서접수 기간: 2026. 10. 20.(화) ~ 11. 11.(수) / 전형료(Application Fee) 70,000 KRW",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-20",
+      "applicationDeadline": "2026-11-11",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "MASTER-тэй ижил нэг 특별전형(외국인&재외국민) журам, магистр, доктор хамтдаа.",
+      "sourceUrl": "http://www.gnu.ac.kr/graduate/na/ntt/selectNttInfo.do?nttSn=8796824&mi=19062",
+      "evidence": "Same 2027학년도 전기 대학원 특별전형(외국인&재외국민) notice covers both master's and doctoral applicants.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн 'Admission Guide' хуудас одоогоор 2026 оны намрын (추가, нэмэлт шат) журмыг л харуулж байна; 2027 оны хаврын (전기) бакалаврын гадаад оюутны журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.gnu.ac.kr/international/cm/cntnts/cntntsView.do?mi=8327&cntntsId=4367"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) бакалаврын гадаад оюутны журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.gnu.ac.kr/international/cm/cntnts/cntntsView.do?mi=8327&cntntsId=4367"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) ерөнхий дээд сургуулийн гадаад оюутны журам одоогоор зарлагдаагүй (өмнөх жилийн жишгээр ойролцоогоор 2027 оны 4-р сард гарна).",
+      "checkUrl": "https://www.gnu.ac.kr/graduate/na/ntt/selectNttList.do?mi=19062&bbsId=1990"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "MASTER-тэй ижил, одоогоор зарлагдаагүй.",
+      "checkUrl": "https://www.gnu.ac.kr/graduate/na/ntt/selectNttList.do?mi=19062&bbsId=1990"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний бэлтгэл (한국어 연수 정규과정) хугацааны тодорхой огноотой хуанли албан сайтаас тодорхой олдсонгүй — зөвхөн ерөнхий тойм танилцуулга байна.",
+      "checkUrl": "https://www.gnu.ac.kr/international/cm/cntnts/cntntsView.do?mi=8162&cntntsId=8701"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээрхтэй ижил — тодорхой хуанли олдсонгүй.",
+      "checkUrl": "https://www.gnu.ac.kr/international/cm/cntnts/cntntsView.do?mi=8162&cntntsId=8701"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Дээрхтэй ижил — тодорхой хуанли олдсонгүй.",
+      "checkUrl": "https://www.gnu.ac.kr/international/cm/cntnts/cntntsView.do?mi=8162&cntntsId=8701"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "Дээрхтэй ижил — тодорхой хуанли олдсонгүй.",
+      "checkUrl": "https://www.gnu.ac.kr/international/cm/cntnts/cntntsView.do?mi=8162&cntntsId=8701"
+    }
+  ]
+}

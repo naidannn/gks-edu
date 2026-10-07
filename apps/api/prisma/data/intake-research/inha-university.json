@@ -1,0 +1,42 @@
+{
+  "slug": "inha-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хуанлийн дагуу (өмнөх жилийн адил хугацаанд) 2027/1 (хавар)-ийн 학부 외국인 신·편입학 журам хараахан нийтлэгдээгүй — мэдэгдлийн самбарт сүүлийн тэмдэглэгдсэн нь 2026/2 (намрын, хаагдсан) элсэлт болон 2028 оны төлөвлөгөө байна.",
+      "checkUrl": "https://internationalcenter.inha.ac.kr/bbs/internationalcenter/2492/artclList.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Нийтлэг (일반대학원) гадаад оюутны 2027/1 (хавар)-ийн журам хараахан нийтлэгдээгүй — мэдэгдлийн самбарт сүүлийн тэмдэглэгдсэн нь 2026/2 (намрын, хаагдсан) элсэлт байна.",
+      "checkUrl": "https://internationalcenter.inha.ac.kr/bbs/internationalcenter/2499/artclList.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын нэгэн адил — 2027/1-ийн журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://internationalcenter.inha.ac.kr/bbs/internationalcenter/2499/artclList.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний боловсролын төвийн (언어교육원) 2026 оны өвлийн улирлын бүртгэлийн нарийн хугацаа олдсонгүй — самбарт зөвхөн өмнөх улирлуудын анги хуваарилалт (분반) мэдэгдэл байна, элсэлтийн зар тусдаа олдсонгүй.",
+      "checkUrl": "https://ltc.inha.ac.kr/bbs/ltc/2786/artclList.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын бүртгэлийн хугацаа олдсонгүй.",
+      "checkUrl": "https://ltc.inha.ac.kr/bbs/ltc/2786/artclList.do"
+    }
+  ]
+}

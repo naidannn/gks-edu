@@ -1,0 +1,49 @@
+{
+  "slug": "koreatech",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-06",
+      "resultAnnouncedAt": "2026-12-07",
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (эсвэл англи хэлний шалгуур: TOEFL iBT 71 / IELTS 5.5 / CEFR B2). Материал 11-р сарын 9-ний 18:00 цагийн дотор сургуульд биечлэн ирсэн байх ёстой. Монгол зэрэг 21 орноос элсэгчид дипломын Апостиль баталгаажуулалт эсвэл консулын баталгаажуулалт зэрэг нэмэлт бичиг баримт шаардагдана.",
+      "sourceUrl": "https://www.koreatech.ac.kr/boardDownload.es?bid=ATT&list_no=53644&seq=1",
+      "evidence": "[Spring 2027 Graduate School] Online Application: October 12th 10:00 ~ November 6th 17:00, 2026 / Submission of Documents: ~ November 9th 18:00, 2026 / Announcement of Successful Applicants: December 7th 14:00, 2026. Korean Track: TOPIK level 3 or higher. English Track: TOEFL 530(iBT71)/IELTS5.5/CEFR B2. Countries incl. Mongolia must submit Apostille or consular-certified proof of academic achievement.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-06",
+      "resultAnnouncedAt": "2026-12-07",
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (эсвэл англи хэлний шалгуур: TOEFL iBT 71 / IELTS 5.5 / CEFR B2). Материал 11-р сарын 9-ний 18:00 цагийн дотор сургуульд биечлэн ирсэн байх ёстой. Магистр, Магистр-докторын нэгдсэн болон докторын хөтөлбөрүүд ижил хугацаатай нэг журмаар элсэлт авдаг.",
+      "sourceUrl": "https://www.koreatech.ac.kr/boardDownload.es?bid=ATT&list_no=53644&seq=1",
+      "evidence": "Same single [Spring 2027 Graduate School] admission schedule covers Master's, Integrated M&D, and Doctoral courses (3 Programs Offered for Admissions table lists all three course types together).",
+      "confidence": "HIGH"
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (3-р сарын) гадаад оюутны тусгай бүртгэлийн журам хараахан зарлагдаагүй; нийтлэгдсэн хамгийн сүүлийн журам 2026 оны намрын (9-р сарын) элсэлтийнх (2026.05.15 зарлагдсан).",
+      "checkUrl": "https://www.koreatech.ac.kr/board.es?act=list&bid=0036&mid=a40601000000"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (9-р сарын) гадаад оюутны тусгай бүртгэлийн журам хараахан зарлагдаагүй.",
+      "checkUrl": "https://www.koreatech.ac.kr/board.es?act=list&bid=0036&mid=a40601000000"
+    }
+  ]
+}

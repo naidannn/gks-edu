@@ -1,0 +1,77 @@
+{
+  "slug": "woosong-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн нүүр хуудсанд 'Spring 2027 Admissions is Open!' гэж байгаа ч яг нарийн эцсийн хугацаа (원서접수) агуулсан албан ёсны модигод шинэ хувилбар (2026.후기 брошурыг орлох 2027 전기 хувилбар) олдсонгүй — зөвхөн хуучин Fall 2026 брошур байсан.",
+      "checkUrl": "https://english.wsu.ac.kr/site/main_eng/images/Application%20Guide%20Booklets_en_2026.pdf"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2026학년도 후기 (Fall 2026) брошур л олдсон бөгөөд хаагдсан (бүртгэл 2026.03.02–07.31). 2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://english.wsu.ac.kr/site/main_eng/images/Application%20Guide%20Booklets_en_2026_v2.pdf"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олдсон эрдэм шинжилгээний брошур зөвхөн Fall 2026-д хамаарна (бүртгэл 2026.05.06–08.03, хаагдсан); 2027 оны хаврын мэдээлэл олдсонгүй.",
+      "checkUrl": "https://english.wsu.ac.kr/site/main_eng/images/Application%20Guide%20Booklets_gen_2026.pdf"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "MASTER-тэй ижил — Fall 2026 брошур л байгаа.",
+      "checkUrl": "https://english.wsu.ac.kr/site/main_eng/images/Application%20Guide%20Booklets_gen_2026.pdf"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистрын элсэлтийн журам одоогоор зарлагдаагүй.",
+      "checkUrl": "https://apply.wsu.ac.kr/apply/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "MASTER-тэй ижил — зарлагдаагүй.",
+      "checkUrl": "https://apply.wsu.ac.kr/apply/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Woosong Korean Language Institute (WKLI)-ийн 2026 оны өвлийн улирал 2026.12.01–2027.02.12 гэж хичээлийн хуанли дээр заасан ч бүртгэлийн эцсийн хугацаа олдсонгүй.",
+      "checkUrl": "https://wkli.wsu.ac.kr/site/wkli/image/img0202_e_2026.pdf"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "WKLI-ийн 2027 оны хаврын улирлын хуанли (анги эхлэх огноо, бүртгэлийн эцсийн хугацаа) олдсонгүй — 2026 оны хуанли зөвхөн 2027.02.12 хүртэл хамаарна.",
+      "checkUrl": "https://wkli.wsu.ac.kr/site/wkli/image/img0202_e_2026.pdf"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "WKLI-ийн 2027 оны зуны улирлын хуанли олдсонгүй.",
+      "checkUrl": "https://wkli.wsu.ac.kr/site/wkli/image/img0202_e_2026.pdf"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "WKLI-ийн 2027 оны намрын улирлын хуанли олдсонгүй.",
+      "checkUrl": "https://wkli.wsu.ac.kr/site/wkli/image/img0202_e_2026.pdf"
+    }
+  ]
+}

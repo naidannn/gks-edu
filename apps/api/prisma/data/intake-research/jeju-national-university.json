@@ -1,0 +1,138 @@
+{
+  "slug": "jeju-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-27",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ бол 1-р шат. Бичиг баримтыг 2026.10.26-ны дотор ирүүлнэ. Ангиудын ярилцлага 2026.11.12–11.13. Дүн 2026.11.27-нд зарлагдана.",
+      "sourceUrl": "https://jejunu.ac.kr/cs/download.htm?act=download&seq=249845&no=2",
+      "evidence": "전기(2027년 3월 입학) 1차: 원서접수(인터넷 접수) 2026.10.12.(월) ~ 10.23.(금) / 서류제출 마감 2026.10.26.(월) / 모집단위 심사(면접) 2026.11.12.(목)~11.13.(금) / 합격자 발표 2026.11.27.(금) / 전형료 70,000원 / 개강 2027.3.2.(화)",
+      "confidence": "HIGH",
+      "laterRounds": "2차: online 2026.11.09–11.27, doc deadline 11.30, interview 12.16–18, result 2027.01.04. 3차 (국제교류학부 нэмэлт элсэлт): online 2027.01.04–01.12, doc deadline 01.14, interview 01.27–29, result 02.12."
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-04-05",
+      "applicationDeadline": "2027-04-16",
+      "classStartDate": "2027-09-01",
+      "resultAnnouncedAt": "2027-05-28",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ бол 1-р шат. Бичиг баримтыг 2027.04.19-ний дотор ирүүлнэ. Ярилцлага 2027.05.06–05.07.",
+      "sourceUrl": "https://jejunu.ac.kr/cs/download.htm?act=download&seq=249845&no=2",
+      "evidence": "후기(2027년 9월 입학) 1차: 원서접수 2027.4.5.(월) ~ 4.16.(금) / 서류제출 마감 2027.4.19.(월) / 모집단위 심사 2027.5.6.(목)~5.7.(금) / 합격자 발표 2027.5.28.(금) / 개강 2027.9.1.(수)",
+      "confidence": "HIGH",
+      "laterRounds": "2차: online 2027.05.03–05.21, doc deadline 05.24, interview 06.09–11, result 07.02. 3차 (국제교류학부): online 2027.07.01–07.09, doc deadline 07.12, interview 07.28–30, result 08.13."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-27",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ бол 1-р шат. TOPIK 3-аас дээш (зарим тэнхим 4-5 шат шаардана). Бичиг баримтыг 2026.10.26-ны дотор ирүүлнэ. Ярилцлага 2026.11.12–11.13.",
+      "sourceUrl": "https://intl.jejunu.ac.kr/intl/admission/graduateschool/graduate.htm",
+      "evidence": "전기 모집(2027년 3월 입학) 1차 모집: 인터넷 원서접수 2026.10.12.(월)~10.23.(금) 18:00 / 서류 제출 마감 2026.10.26.(월) / 면접 2026.11.12.(목)~11.13.(금) / 합격자 발표 2026.11.27.(금) / 개강 2027.3.2.(화)",
+      "confidence": "HIGH",
+      "laterRounds": "2차 모집: online 2026.11.23–12.04, doc deadline 12.07, interview 12.21–22, result 2027.01.05."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-27",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "MASTER-тэй ижил нэг 재외국인 및 외국인 특별전형 журам, магистр, доктор хамтдаа.",
+      "sourceUrl": "https://intl.jejunu.ac.kr/intl/admission/graduateschool/graduate.htm",
+      "evidence": "Same 2027학년도 대학원 재외국인 및 외국인 특별전형 schedule covers both master's and doctoral applicants.",
+      "confidence": "HIGH",
+      "laterRounds": "2차 모집: online 2026.11.23–12.04, doc deadline 12.07, interview 12.21–22, result 2027.01.05."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-04-05",
+      "applicationDeadline": "2027-04-16",
+      "classStartDate": "2027-09-01",
+      "resultAnnouncedAt": "2027-05-28",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Энэ бол 1-р шат. Бичиг баримтыг 2027.04.19-ний дотор ирүүлнэ. Ярилцлага 2027.05.06–05.07.",
+      "sourceUrl": "https://intl.jejunu.ac.kr/intl/admission/graduateschool/graduate.htm",
+      "evidence": "후기 모집(2027년 9월 입학) 1차 모집: 인터넷 원서접수 2027.4.5.(월)~4.16.(금) 18:00 / 서류 제출 마감 2027.4.19.(월) / 면접 2027.5.6.(목)~5.7.(금) / 합격자 발표 2027.5.28.(금) / 개강 2027.9.1.(수)",
+      "confidence": "HIGH",
+      "laterRounds": "2차 모집: online 2027.05.14–05.28, doc deadline 06.01, interview 06.22–23, result 07.06."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-04-05",
+      "applicationDeadline": "2027-04-16",
+      "classStartDate": "2027-09-01",
+      "resultAnnouncedAt": "2027-05-28",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "MASTER-тэй ижил журам.",
+      "sourceUrl": "https://intl.jejunu.ac.kr/intl/admission/graduateschool/graduate.htm",
+      "evidence": "Same 2027학년도 후기 대학원 재외국인 및 외국인 특별전형 schedule covers both master's and doctoral applicants.",
+      "confidence": "HIGH",
+      "laterRounds": "2차 모집: online 2027.05.14–05.28, doc deadline 06.01, interview 06.22–23, result 07.06."
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-30",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Монгол улс 'бусад орны' ангилалд багтдаг тул бүртгэлийн хугацаа 2026.10.12–11.30 (OECD гишүүн орон, Хятадаас өөр бүх орон). ЕХБ-ийн гишүүн орон, Хятадын иргэд 2026.12.1–12.31 хүртэл бүртгүүлж болно. Түвшин тогтоох шалгалт 2027.02.26.",
+      "sourceUrl": "https://jejunu.ac.kr/cs/download.htm?act=download&seq=250770&no=1",
+      "evidence": "2027. 봄학기: 입학원서 접수 (OECD 회원국·중국) 2026. 12. 1. ~ 12. 31. / 기타국가 2026. 10. 12. ~ 11. 30. / 개강 2027. 3. 2. (레벨테스트: 2027. 2. 26.) / 전형료 50,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-05-10",
+      "applicationDeadline": "2027-06-21",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Монгол улс 'бусад орны' ангилалд багтдаг тул бүртгэлийн хугацаа 2027.05.10–06.21. ЕХБ-ийн гишүүн орон, Хятадын иргэд 2027.06.07–07.23 хүртэл бүртгүүлж болно. Түвшин тогтоох шалгалт 2027.08.27.",
+      "sourceUrl": "https://jejunu.ac.kr/cs/download.htm?act=download&seq=250770&no=1",
+      "evidence": "2027. 가을학기: 입학원서 접수 (OECD 회원국·중국) 2027. 6. 7. ~ 7. 23. / 기타국가 2027. 5. 10. ~ 6. 21. / 개강 2027. 8. 30. (레벨테스트: 2027. 8. 27.) / 전형료 50,000원",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Энэ сургууль зөвхөн хавар (3-р сар) болон намар (8/9-р сар) гэсэн 2 улиралтай хэлний бэлтгэл хөтөлбөртэй тул 12-р сарын элсэлт байхгүй.",
+      "checkUrl": "https://intl.jejunu.ac.kr/intl/koreanlanguage/koradmissions/schedule.htm"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Энэ сургууль зөвхөн хавар (3-р сар) болон намар (8/9-р сар) гэсэн 2 улиралтай хэлний бэлтгэл хөтөлбөртэй тул 6-р сарын элсэлт байхгүй.",
+      "checkUrl": "https://intl.jejunu.ac.kr/intl/koreanlanguage/koradmissions/schedule.htm"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "slug": "catholic-university-of-korea",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "Гадаад оюутны тусгай бүрдлийн (외국인특별전형) 2027/9-ийн журам хараахан олдсонгүй; сургуулийн англи хуудас зөвхөн 2024 оны жишиг хуваарь үзүүлж байна (1-р шат 3-сар~4-сар, 2-р шат 4-сар~6-сар — өнгөрсөн жилийн загвар).",
+      "checkUrl": "https://www.catholic.ac.kr/en/academics/adm_foreigner.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Нийтлэг (일반전형) 2027 оны хаврын 1-р шатны бүртгэл 2026.9.30–10.16 нээгдсэн нь батлагдсан, гэвч энэ нь гадаад оюутны тусгай бүрдэл (외국인전형) мөн эсэхийг тусад нь баталсан хуудас олдсонгүй — зөвхөн 2025 оны (хаагдсан) гадаад оюутны журам олдсон.",
+      "checkUrl": "https://gs.catholic.ac.kr"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын нэгэн адил — 2027/3-ны гадаад оюутны тусгай бүрдлийн тусдаа хуудас/огноо олдсонгүй.",
+      "checkUrl": "https://gs.catholic.ac.kr"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний бэлтгэл сургалтын (한국어교육원) 2026 оны өвлийн ангийн бүртгэлийн хугацаа олдсонгүй.",
+      "checkUrl": "https://www.catholic.ac.kr/en/academics/adm_foreigner.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний бэлтгэл сургалтын 2027 оны хаврын ангийн бүртгэлийн хугацаа олдсонгүй.",
+      "checkUrl": "https://www.catholic.ac.kr/en/academics/adm_foreigner.do"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "slug": "yonsei-university-mirae",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-09",
+      "applicationDeadline": "2026-11-20",
+      "resultAnnouncedAt": "2026-12-18",
+      "requirementNote": "Хоёр дахь шат. Бичиг баримтыг 2026.11.20-ны шуудангийн тамга хүртэл илгээнэ. TOPIK 3-аас дээш (эсвэл Йонсей Сөүлийн Корейн хэлний сургууль / Мирэ кампусын Солонгос хэлний курсийн 3-аас дээш түвшний гэрчилгээ) заавал; TOPIK-ийг 2027.01.08 хүртэл нөхөж өгч болно. Эмнэлгийн факультет, сувилахуйд зөвхөн 1-р шатанд (хаагдсан) өргөдөл өгдөг байсан. Зарим сургалтын хөтөлбөрт (Зүүн Азийн олон улсын, Глобал элит) Солонгос хэлний шаардлага байхгүй.",
+      "sourceUrl": "https://admission.yonsei.ac.kr/mirae/upload/guide/20260721162712CKUQKF.PDF",
+      "evidence": "입학원서 인터넷 접수 [1차] 2026. 7. 27.(화) 10:00 ~ 8. 14.(금) 17:00 [2차] 2026. 11. 9.(월) 10:00 ~ 11. 20.(금) 17:00 / 합격자 발표 [2차] 2026. 12. 18.(금) 17:00",
+      "confidence": "HIGH",
+      "laterRounds": "1-р шат (2026-07-27 ~ 08-14) хаагдсан."
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (9-р сар) гадаад оюутны элсэлтийн журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://admission.yonsei.ac.kr/mirae/admission/html/international/guide.asp"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Мирэ кампусын олон улсын харилцааны албаны Солонгос хэлний курсийн элсэлтийн хуваарь албан ёсны сайтаас олдсонгүй.",
+      "checkUrl": "https://mirae.yonsei.ac.kr"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Мирэ кампусын ерөнхий магистрын гадаад оюутны 2027 хаврын хуваарь хараахан олдсонгүй (магистрын албаны хуудас шаардлагатай).",
+      "checkUrl": "https://graduate.yonsei.ac.kr/graduate/admission/schedule.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил.",
+      "checkUrl": "https://graduate.yonsei.ac.kr/graduate/admission/schedule.do"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "slug": "sookmyung-womens-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-07",
+      "applicationDeadline": "2026-10-16",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-27",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "TOPIK 3-р түвшин буюу түүнээс дээш (Korean Track ангид TOPIK 4-р түвшин, зарим урлагийн ангид TOPIK 3-р түвшин), эсвэл адил зэрэглэлийн англи хэлний босго оноо. Монгол хэлээр бичигдсэн 모집요강 (Mongolian guide) бас гаргасан байдаг.",
+      "sourceUrl": "https://e.sookmyung.ac.kr/_res/sookmyung//etc/2027%20Spring%20Admission_Undergraduate_EN.pdf",
+      "evidence": "Application Submission 2027 Spring admission Undergraduate — 1ST ROUND: October 7, 2026 (Wed. 10 a.m. KST) ~ October 16, 2026 (Fri. 5 p.m. KST) / Required Documents Submission Deadline: Oct. 30 (Fri.) 17:00, 2026 / Notice on Interview: Nov. 9 (Mon.), 2026 / Announcement of Results: Nov. 27 (Fri.), 2026 / Registration: January 2027 / Classes begin Mar. 2, 2027 (Tue.).",
+      "laterRounds": "2nd Round: Nov. 6, 2026 (Fri. 10:00) ~ Nov. 20, 2026 (Fri. 17:00), results Jan. 6, 2027. 3rd Round: Dec. 3, 2026 (Thu. 10:00) ~ Dec. 18, 2026 (Fri. 17:00), results Jan. 15, 2027.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-03",
+      "applicationDeadline": "2026-11-16",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "Ерөнхийдөө TOPIK 3-р түвшин буюу түүнээс дээш шаардагддаг (Korean Track-д илүү өндөр түвшин шаардах анги байж болно); нарийвчилсан шаардлагыг тухайн ангийн 모집요강-аас шалгах шаардлагатай.",
+      "sourceUrl": "https://e.sookmyung.ac.kr/en/admission/graduate-school.do",
+      "evidence": "Graduate School Admissions Guide — 2027 Spring Semester for International Students: 2nd round: Nov. 3, 2026 (Tue. 10:00 a.m.) ~ Nov. 16, 2026 (Mon. 5:00 p.m.). Submit payment of KRW 120,000 with the application (Jinhakapply.com). University-wide Spring 2027 semester begins Mar. 2, 2027 (per undergraduate admissions guide; Graduate School follows the same academic calendar).",
+      "laterRounds": "1st round: Sep. 22, 2026 (Tue. 10:00) ~ Oct. 6, 2026 (Tue. 17:00) — судалгааны огноо (2026-10-09)-ээс өмнө хаагдсан. 3rd round: Dec. 1, 2026 (Tue. 10:00) ~ Dec. 8, 2026 (Tue. 17:00).",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-03",
+      "applicationDeadline": "2026-11-16",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "Ерөнхийдөө TOPIK 3-р түвшин буюу түүнээс дээш шаардагддаг; нарийвчилсан шаардлагыг тухайн ангийн 모집요강-аас шалгах шаардлагатай.",
+      "sourceUrl": "https://e.sookmyung.ac.kr/en/admission/graduate-school.do",
+      "evidence": "Same single Graduate School (일반대학원) admission track as MASTER covers both master's and doctoral applicants — 2nd round: Nov. 3, 2026 ~ Nov. 16, 2026.",
+      "laterRounds": "1st round: Sep. 22 ~ Oct. 6, 2026 — хаагдсан. 3rd round: Dec. 1 ~ Dec. 8, 2026.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Sookmyung Global Language Academy-ийн өвлийн курс 2026.12.01–2027.02.12 хугацаатай зарлагдсан (전형료 60,000₩; D-4 визтэй горилогч багадаа 2 улирал, зарим орны иргэн (Монгол орсон 21+5 улсын жагсаалт) 4 улирал бүртгүүлэх шаардлагатай), гэвч онлайн өргөдлийн тодорхой эцсийн хугацаа (огноо) нийтэлсэн хуудсаас олдсонгүй.",
+      "checkUrl": "https://lingua.sookmyung.ac.kr/?url=/dep_03/3100.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Одоогийн нийтлэгдсэн хуанли зөвхөн 2026 оны мөчлөгийг (хавар/зун/намар/өвөл) хамардаг; 2027 оны хаврын улирлын хуанли хараахан гараагүй.",
+      "checkUrl": "https://lingua.sookmyung.ac.kr"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://lingua.sookmyung.ac.kr"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://lingua.sookmyung.ac.kr"
+    }
+  ]
+}

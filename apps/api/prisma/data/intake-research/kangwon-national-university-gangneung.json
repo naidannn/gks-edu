@@ -1,0 +1,77 @@
+{
+  "slug": "kangwon-national-university-gangneung",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "applicationDeadline": "2026-10-15",
+      "classStartDate": "2026-12-01",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2026 Winter: Dates Dec 1 - Feb 10('27) / Application Deadline Oct 15, 2026",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "applicationDeadline": "2027-01-30",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2027 Spring: Dates Mar 2 - May 12 / Application Deadline Jan 30, 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "applicationDeadline": "2027-04-15",
+      "classStartDate": "2027-06-01",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2027 Summer: Dates Jun 1 - Aug 11 / Application Deadline Apr 15, 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "applicationDeadline": "2027-07-30",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Монгол, Вьетнам, Узбекистаны иргэд $6,000-аас дээш хадгаламжийн тодорхойлолтын сүүлийн 3 сарын хуулга нэмж бүрдүүлнэ.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1279/web.do",
+      "evidence": "2027 Fall: Dates Aug 30 - Nov 10 / Application Deadline Jul 30, 2027",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) гадаад оюутны суралцагчийн элсэлтийн журам хараахан нийтлэгдээгүй — зөвхөн 2026 оны намрын (강릉·원주 캠퍼스) журам нийтлэгдсэн байна.",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) гадаад оюутны их сургуулийн элсэлтийн журам хараахан нийтлэгдээгүй — зөвхөн 2026 оны намрын журам нийтлэгдсэн байна.",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил — 2027 оны хаврын журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    }
+  ]
+}

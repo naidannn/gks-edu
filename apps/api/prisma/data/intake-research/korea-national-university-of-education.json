@@ -1,0 +1,60 @@
+{
+  "slug": "korea-national-university-of-education",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-01",
+      "applicationDeadline": "2027-06-03",
+      "classStartDate": "2027-09-01",
+      "resultAnnouncedAt": "2027-06-30",
+      "quota": 17,
+      "requirementNote": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэншилтэй, TOPIK 4 буюу түүнээс дээш байх ёстой. Зөвхөн бичиг баримтын үнэлгээ (дунд сургуулийн дүн, TOPIK, танилцуулга, суралцах төлөвлөгөө). Багшийн мэргэжлийн их сургууль тул 13 ангид нийт 17 хүн авна.",
+      "sourceUrl": "https://www.knue.ac.kr/ipsi/downloadBbsFile.do?atchmnflNo=74168",
+      "evidence": "2027학년도 대학 입학 외국인 특별전형 시행계획: 원서 접수 2027. 6. 1.(화) 10:00 ~ 6. 3.(목) 17:00 / 합격자 발표 2027. 6. 30.(수) 10:00 / 입학예정일 2027. 9. 1.(수) / 총 13개 모집단위 17명 / TOPIK 4급 이상",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын (3-р сар) элсэлтгүй: гадаад оюутны бакалаврын элсэлт зөвхөн 9-р сард, хүсэлт 2027.6.1–6.3.",
+      "checkUrl": "https://www.knue.ac.kr/ipsi/index.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын тусгай гадаад оюутны элсэлт зарлагдаагүй (2027 оны ерөнхий элсэлт 2026.8.25–9.2-нд хаагдсан; өмнөх жил гадаад оюутны журам 12-р сарын эхээр гарсан).",
+      "checkUrl": "https://www.knue.ac.kr/grad/selectBbsNttList.do?key=619&bbsNo=52"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил: гадаад оюутны журам одоогоор зарлагдаагүй.",
+      "checkUrl": "https://www.knue.ac.kr/grad/selectBbsNttList.do?key=619&bbsNo=52"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын гадаад оюутны журам зарлагдаагүй (өмнөх жил 4-р сарын дундуур гарсан).",
+      "checkUrl": "https://www.knue.ac.kr/grad/selectBbsNttList.do?key=619&bbsNo=52"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуанлитай ижил.",
+      "checkUrl": "https://www.knue.ac.kr/grad/selectBbsNttList.do?key=619&bbsNo=52"
+    }
+  ]
+}

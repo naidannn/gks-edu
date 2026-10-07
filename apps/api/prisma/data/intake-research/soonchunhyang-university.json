@@ -1,0 +1,56 @@
+{
+  "slug": "soonchunhyang-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан — 2026 оны өвлийн улирлын (개강 11.16) гадаадад амьдардаг элсэгчдийн (Монгол зэрэг) материал хүлээн авах эцсийн хугацаа 2026.09.18-нд дууссан (дотоодод амьдардаг элсэгчдэд 10.23 хүртэл байсан).",
+      "checkUrl": "http://sgee.sch.ac.kr/guide/guide03.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургууль жил бүрийн 모집요강-ыг тухайн хичээлийн жилээрээ (2026학년도 = 2026.3–2027.2) нэгтгэж нийтэлдэг тул 2027 оны хаврын улирлын (2027학년도) журам хараахан гараагүй.",
+      "checkUrl": "http://sgee.sch.ac.kr/guide/guide03.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын (2027학년도) журам хараахан гараагүй.",
+      "checkUrl": "http://sgee.sch.ac.kr/guide/guide03.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын (2027학년도) журам хараахан гараагүй.",
+      "checkUrl": "http://sgee.sch.ac.kr/guide/guide03.php"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (2학기 бус, 1학기) гадаад оюутны шинэ/дамжин элсэлтийн журам хараахан нийтлэгдээгүй — зөвхөн 2026 оны намрын (2학기) журам нийтлэгдсэн байна.",
+      "checkUrl": "http://sgee.sch.ac.kr/guide/guide01.php"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны их сургуулийн элсэлтийн журам хараахан нийтлэгдээгүй — зөвхөн 2026 оны намрын нэмэлт элсэлт (2-р шат) нийтлэгдсэн байна.",
+      "checkUrl": "https://gradu.sch.ac.kr/boards/lists/sub03_04"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил (нэг 외국인전형) — 2027 оны хаврын журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://gradu.sch.ac.kr/boards/lists/sub03_04"
+    }
+  ]
+}
