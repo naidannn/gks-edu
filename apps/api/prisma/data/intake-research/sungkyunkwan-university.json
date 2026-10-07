@@ -1,0 +1,118 @@
+{
+  "slug": "sungkyunkwan-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-07",
+      "applicationDeadline": "2026-12-31",
+      "classStartDate": "2027-03-08",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Монгол улсын иргэдэд виз удаан гардаг тул бүртгэл бусад улсынхаас эрт хаагддаг. 3-р сарын 4-нд чиглүүлэх уулзалт, түвшин тогтоох шалгалт. Суудал дүүрвэл бүртгэл эрт хаагдаж болно.",
+      "sourceUrl": "https://sli.skku.edu/ksli_eng/application/regular_g.do",
+      "evidence": "2027 Session 1: Application Period Dec 7, 2026 ~ Jan 22, 2027 / Application Period for countries taking additional time to issue VISA (Nepal, Mongolia, Myanmar, Bangladesh, Vietnam) Dec 7 ~ Dec 31, 2026 / Orientation/Placement test Mar 4, 2027 / Session Begins Mar 8, 2027 / Ends May 17, 2027. Application fee (2026) KRW80,000. Deadline stored = the Mongolia deadline.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-15",
+      "applicationDeadline": "2027-04-09",
+      "classStartDate": "2027-06-07",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Монгол улсын иргэдэд виз удаан гардаг тул бүртгэл бусад улсынхаас эрт хаагддаг. 6-р сарын 3-нд чиглүүлэх уулзалт, түвшин тогтоох шалгалт.",
+      "sourceUrl": "https://sli.skku.edu/ksli_eng/application/regular_g.do",
+      "evidence": "2027 Session 2: Mar 15 ~ Apr 30, 2027 / (Nepal, Mongolia, Myanmar, Bangladesh, Vietnam) Mar 15 ~ Apr 9, 2027 / Orientation Jun 3, 2027 / Session Begins Jun 7, 2027 / Ends Aug 12, 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-14",
+      "applicationDeadline": "2027-07-09",
+      "classStartDate": "2027-09-06",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Монгол улсын иргэдэд виз удаан гардаг тул бүртгэл бусад улсынхаас эрт хаагддаг. 9-р сарын 2-нд чиглүүлэх уулзалт, түвшин тогтоох шалгалт.",
+      "sourceUrl": "https://sli.skku.edu/ksli_eng/application/regular_g.do",
+      "evidence": "2027 Session 3: Jun 14 ~ Jul 30, 2027 / (Nepal, Mongolia, Myanmar, Bangladesh, Vietnam) Jun 14 ~ Jul 9, 2027 / Orientation Sep 2, 2027 / Session Begins Sep 6, 2027 / Ends Nov 22, 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-04",
+      "applicationDeadline": "2026-11-13",
+      "classStartDate": "2027-03-01",
+      "resultAnnouncedAt": "2027-01-08",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "Солонгос хэлний хөтөлбөр: TOPIK 4 буюу түүнээс дээш. Онлайн бүртгэлийн дараа материалын эх хувийг 11-р сарын 27-ны 17:00 цагаас өмнө сургуульд хүргэнэ.",
+      "sourceUrl": "https://admission-global.skku.edu/bbs/filedown.php?bbsid=global_notice_re_eng&file_seq=11460",
+      "evidence": "5. Admission Schedule — 2nd Round: Application (Online) 10:00, Nov. 4 (Wed) ~ 17:00, Nov. 13 (Fri), 2026 / Document Submission Nov. 4 (Wed) ~ 17:00, Nov. 27 (Fri), 2026 / Admission Announcement Jan. 8 (Fri), 2027 / Beginning of Semester Mar. 1 (Mon), 2027. 전형료 외국인 특별전형 150,000원 (KR guide). Guide posted at https://admission-global.skku.edu/eng/etc/bbs_list.html?bbsid=global_notice_re_eng&mode=view&bltn_seq=53774",
+      "confidence": "HIGH",
+      "laterRounds": "1st round (Aug 12–21, 2026, result Oct 23) already closed; stored row is the 2nd round."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-11",
+      "applicationDeadline": "2026-10-09",
+      "resultAnnouncedAt": "2026-11-13",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Ангиас хамаарч TOPIK (ихэнхдээ 4–5) эсвэл TOEFL iBT 71 / IELTS 5.5 / TOEIC 700. 10-р сарын 24-нд ярилцлага эсвэл бичгийн шалгалт (ангиас хамаарна). Байгалийн шинжлэх ухааны кампусын ангид удирдагч профессортой урьдчилан холбогдох шаардлагатай.",
+      "sourceUrl": "https://admission-global.skku.edu/bbs/filedown.php?bbsid=global_notice_re_eng&file_seq=11587",
+      "evidence": "성균관대_2027 전기 1차 대학원 모집요강: 원서접수 및 서류제출 2026. 9. 11.(금) 10:00 ~ 2026. 10. 9.(금) 17:00 / 면접 또는 필기시험 2026. 10. 24.(토) 예정 / 합격자 발표 2026. 11. 13.(금) / 전형료 100,000원 / 영어: TOEFL IBT 71, IELTS 5.5, TOEIC 700. Notice: https://admission-global.skku.edu/eng/etc/bbs_list.html?bbsid=global_notice_re_eng&mode=view&bltn_seq=53803",
+      "confidence": "HIGH",
+      "laterRounds": "2nd round: application Nov 16–26, 2026, interview Dec 12, result Dec 24. 3rd round: Dec 21–28, 2026, interview Jan 9, 2027, result Jan 20, 2027 (fewer departments). Source: schedule image on bltn_seq=53808."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-11",
+      "applicationDeadline": "2026-10-09",
+      "resultAnnouncedAt": "2026-11-13",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Ангиас хамаарч TOPIK (зарим ангид докторт TOPIK 6) эсвэл TOEFL iBT 71 / IELTS 5.5 / TOEIC 700. 10-р сарын 24-нд ярилцлага эсвэл бичгийн шалгалт (ангиас хамаарна). Байгалийн шинжлэх ухааны кампусын ангид удирдагч профессортой урьдчилан холбогдох шаардлагатай.",
+      "sourceUrl": "https://admission-global.skku.edu/bbs/filedown.php?bbsid=global_notice_re_eng&file_seq=11587",
+      "evidence": "Same 1차 schedule as MASTER (one graduate-school round for 석사/박사/석박통합).",
+      "confidence": "HIGH",
+      "laterRounds": "2nd round: Nov 16–26, 2026 (result Dec 24); 3rd round: Dec 21–28, 2026 (result Jan 20, 2027)."
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Монгол улсын иргэдийн бүртгэл хаагдсан (2026.09.07–10.01; бусад улсынх 10.23 хүртэл). Хичээл 2026-12-02-нд эхэлнэ.",
+      "checkUrl": "https://sli.skku.edu/ksli_eng/application/regular_g.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://admission-global.skku.edu/eng/etc/bbs_list.html?ctg_cd=Undergraduate"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) магистрын элсэлтийн хуваарь хараахан зарлагдаагүй.",
+      "checkUrl": "https://admission-global.skku.edu/eng/etc/bbs_list.html?ctg_cd=Graduate"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын элсэлтийн хуваарь хараахан зарлагдаагүй.",
+      "checkUrl": "https://admission-global.skku.edu/eng/etc/bbs_list.html?ctg_cd=Graduate"
+    }
+  ]
+}

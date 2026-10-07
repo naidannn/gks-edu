@@ -306,9 +306,10 @@ export const INTAKE_PHASE_TONE: Record<IntakePhase, BadgeTone> = {
   CLOSED: 'neutral',
 };
 
+/** Staff-only: `sourceType` never reaches a public payload. */
 export const INTAKE_SOURCE_LABELS: Record<IntakeSource, string> = {
   MANUAL: 'Гараар',
-  AI_ASSISTED: 'LLM-ээс хянагдсан',
+  AI_ASSISTED: 'AI судалсан',
   IMPORTED: 'Импортлосон',
 };
 

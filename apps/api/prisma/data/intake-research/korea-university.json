@@ -1,0 +1,102 @@
+{
+  "slug": "korea-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-09-07",
+      "applicationDeadline": "2026-10-28",
+      "classStartDate": "2026-12-11",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "D-4 виз авах бол материалын эх хувь 10-р сарын 14-ний дотор Солонгос хэлний төвд хүрсэн байх ёстой. Сургалтын төлбөр 10-р сарын 28-ны дотор. Өргөдөл олон бол хугацаанаас өмнө хаагдаж болно.",
+      "sourceUrl": "https://klc.korea.ac.kr/klckor/course/regular_intro.do",
+      "evidence": "2026 Winter: Application Period 2026/09/07 ~ 2026/10/28 / Payment Deadline 2026/10/28 / Entrance Ceremony 2026/12/10 / Program Period 2026/12/11 ~ 2027/02/25. ※ D-4비자 신청자는 입학 신청 원본 서류가 마감일 최소 2주 전까지 한국어센터 사무실에 도착해야 심사가 가능합니다. 전형료: 120,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-07",
+      "applicationDeadline": "2027-01-22",
+      "classStartDate": "2027-03-18",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "D-4 виз авах бол материалын эх хувь 1-р сарын 8-ны дотор Солонгос хэлний төвд хүрсэн байх ёстой. Сургалтын төлбөр 1-р сарын 22-ны дотор. Өргөдөл олон бол хугацаанаас өмнө хаагдаж болно.",
+      "sourceUrl": "https://klc.korea.ac.kr/klckor/course/regular_intro.do",
+      "evidence": "2027 Spring: 2026/12/07 ~ 2027/01/22 / Payment 2027/01/22 / Entrance Ceremony 2027/03/17 / Program 2027/03/18 ~ 2027/05/31",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-08",
+      "applicationDeadline": "2027-04-23",
+      "classStartDate": "2027-06-16",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "D-4 виз авах бол материалын эх хувь 4-р сарын 9-ний дотор Солонгос хэлний төвд хүрсэн байх ёстой. Сургалтын төлбөр 4-р сарын 23-ны дотор. Өргөдөл олон бол хугацаанаас өмнө хаагдаж болно.",
+      "sourceUrl": "https://klc.korea.ac.kr/klckor/course/regular_intro.do",
+      "evidence": "2027 Summer: 2027/03/08 ~ 2027/04/23 / Payment 2027/04/23 / Entrance Ceremony 2027/06/15 / Program 2027/06/16 ~ 2027/08/26",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-07",
+      "applicationDeadline": "2027-07-23",
+      "classStartDate": "2027-09-10",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "D-4 виз авах бол материалын эх хувь 7-р сарын 9-ний дотор Солонгос хэлний төвд хүрсэн байх ёстой. Сургалтын төлбөр 7-р сарын 23-ны дотор. Өргөдөл олон бол хугацаанаас өмнө хаагдаж болно.",
+      "sourceUrl": "https://klc.korea.ac.kr/klckor/course/regular_intro.do",
+      "evidence": "2027 Fall: 2027/06/07 ~ 2027/07/23 / Payment 2027/07/23 / Entrance Ceremony 2027/09/09 / Program 2027/09/10 ~ 2027/11/26",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 хаврын гадаад иргэний бакалаврын онлайн бүртгэл 2026.08.03–08.31 (материал 09.07 хүртэл, хариу 11.27).",
+      "checkUrl": "https://oia.korea.ac.kr/oia2026/Admission-Guide.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын бүртгэл \"2027 оны 3-р сар (TBA)\" гэж бичигдсэн; яг хугацаа зарлагдаагүй.",
+      "checkUrl": "https://oia.korea.ac.kr/oia2026/Admission-Guide.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: магистрантурын гадаад иргэний онлайн бүртгэл 2026.09.01–09.10 (хариу 12.10).",
+      "checkUrl": "https://graduate2.korea.ac.kr/admission/schedule.html"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: магистрын хуваарьтай ижил (2026.09.01–09.10).",
+      "checkUrl": "https://graduate2.korea.ac.kr/admission/schedule.html"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын магистрантурын гадаад иргэний бүртгэлийн хугацаа зарлагдаагүй.",
+      "checkUrl": "https://graduate2.korea.ac.kr/admission/schedule.html"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын докторантурын гадаад иргэний бүртгэлийн хугацаа зарлагдаагүй.",
+      "checkUrl": "https://graduate2.korea.ac.kr/admission/schedule.html"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "slug": "seoul-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-02",
+      "applicationDeadline": "2026-12-24",
+      "classStartDate": "2027-03-08",
+      "resultAnnouncedAt": "2027-01-11",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Бүрдүүлэлт зөвхөн онлайнаар. Сүүлд төгссөн сургуулийн диплом, дүнгийн хуудсыг апостиль хийлгэсэн байна; D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолт.",
+      "sourceUrl": "https://lei.snu.ac.kr/mobile/en/klec/regular/regular.jsp",
+      "evidence": "2027 Spring / Mar 8 - May 14 / Nov 2(Mon) - Dec 24(Thu) / Jan 11(Mon) 17:00 / in Feb. Brochure (language.snu.ac.kr/mobile/brochure/2026_KR.pdf): 봄 3.8 – 5.14 11.2(월) - 12.24(목) 1.11(월) 17시; 지원료 정규과정 100,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-02-01",
+      "applicationDeadline": "2027-03-29",
+      "classStartDate": "2027-06-07",
+      "resultAnnouncedAt": "2027-04-12",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Бүрдүүлэлт зөвхөн онлайнаар. Сүүлд төгссөн сургуулийн диплом, дүнгийн хуудсыг апостиль хийлгэсэн байна; D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолт.",
+      "sourceUrl": "https://lei.snu.ac.kr/mobile/en/klec/regular/regular.jsp",
+      "evidence": "2027 Summer / Jun 7 - Aug 13 / Feb 1(Mon) - Mar 29(Mon) / Apr 12(Mon) 17:00 / in May",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-05-03",
+      "applicationDeadline": "2027-06-28",
+      "classStartDate": "2027-09-06",
+      "resultAnnouncedAt": "2027-07-12",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Бүрдүүлэлт зөвхөн онлайнаар. Сүүлд төгссөн сургуулийн диплом, дүнгийн хуудсыг апостиль хийлгэсэн байна; D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолт.",
+      "sourceUrl": "https://lei.snu.ac.kr/mobile/en/klec/regular/regular.jsp",
+      "evidence": "2027 Fall / Sep 6 - Nov 12 / May 3(Mon) - Jun 28(Mon) / Jul 12(Mon) 17:00 / in Aug",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан: 2026 өвлийн улирлын бүртгэл 2026.08.03–09.22 (хичээл 12.07-нд эхэлнэ).",
+      "checkUrl": "https://lei.snu.ac.kr/mobile/en/klec/regular/regular.jsp"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 хаврын гадаад иргэний бакалаврын онлайн бүртгэл 2026.07.06–07.09.",
+      "checkUrl": "https://en.snu.ac.kr/admission/undergraduate/application"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://en.snu.ac.kr/admission/undergraduate/application"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 хаврын магистр/докторын онлайн бүртгэл 2026.07.06–07.09.",
+      "checkUrl": "https://en.snu.ac.kr/admission/graduate/application"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: магистрын хуваарьтай ижил (2026.07.06–07.09).",
+      "checkUrl": "https://en.snu.ac.kr/admission/graduate/application"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын магистрын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://en.snu.ac.kr/admission/graduate/application"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын докторын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://en.snu.ac.kr/admission/graduate/application"
+    }
+  ]
+}

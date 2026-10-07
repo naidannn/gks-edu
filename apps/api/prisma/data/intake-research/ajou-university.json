@@ -1,0 +1,95 @@
+{
+  "slug": "ajou-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-28",
+      "applicationDeadline": "2026-11-20",
+      "resultAnnouncedAt": "2026-12-31",
+      "requirementNote": "Солонгос хэлний хөтөлбөр: TOPIK 3 буюу түүнээс дээш (эсвэл их сургуулийн хэлний төвийн 3-р түвшин, Сэжон хаклан 3B, Ажу их сургуулийн өөрийн хэлний шалгалт). Материалыг онлайн бүртгэлтэй ижил хугацаанд сургуульд хүргэнэ; төгсөлтийн гэрчилгээ, банкны үлдэгдлийн тодорхойлолтын эх хувийг 2027 оны 1-р сарын 22-ны дотор шуудангаар илгээнэ.",
+      "sourceUrl": "https://www.ajou.ac.kr/iadmissions/undergraduate/schedule.do",
+      "evidence": "2027학년도 1학기 (3월 입학) 순수외국인특별전형(한국어트랙 / 영어트랙) 일정: 원서접수 2026.09.28.(월) 9:00 ~ 2026.11.20.(금) 17:00 / 서류제출 마감 2026.09.28.(월) 9:00 ~ 2026.11.20.(금) 17:00 / 합격자 발표 2026.12.31.(목) 18:00 / 최종 학력서류·은행잔고증명서 제출 2027년 1월 22일(금)까지. 언어요건(지원자격 page): TOPIK 3급 이상 등. 전형료 not stated in HTML; the KR 모집요강 PDF is image-only.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-07",
+      "applicationDeadline": "2026-11-25",
+      "resultAnnouncedAt": "2027-01-07",
+      "admissionFeeKrw": 0,
+      "requirementNote": "TOPIK 4 буюу түүнээс дээш, эсвэл TOEFL iBT 71 / IELTS 5.5 / TEPS 600 (ангиас хамаарч өөр байж болно). Зарим анги бүртгэлээс өмнө профессортой урьдчилан ярилцахыг шаардана. Материалын эх хувийг бүртгэлийн хугацаанд сургуульд хүргэнэ. Ярилцлага 12-р сарын 14–18 (гадаадаас онлайн/утсаар). Бүртгэлийн хураамжгүй.",
+      "sourceUrl": "https://ajou.ac.kr/gs/admission/foreigner01.do",
+      "evidence": "2027학년도 전기 일반대학원 모집요강 — 아주대학교(석사) 2026.10.07.(Wed) 09:00 ~ 2026.11.25.(Wed) 17:00 / 전형료 면제. Guideline PDF (linked from the page): Interview 2026.12.14.(Mon) – 2026.12.18.(Fri) / Announcement of Admission Acceptance 2027.01.07.(Thu) / Tuition Payment 2027.01.18.(Mon) - 2027.01.20(Wed). A형: TOPIK 4급 이상 또는 TOEFL IBT 71, IELTS 5.5, TEPS 600",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-07",
+      "applicationDeadline": "2026-11-25",
+      "resultAnnouncedAt": "2027-01-07",
+      "admissionFeeKrw": 0,
+      "requirementNote": "TOPIK 4 буюу түүнээс дээш, эсвэл TOEFL iBT 71 / IELTS 5.5 / TEPS 600 (ангиас хамаарч өөр байж болно). Зарим анги бүртгэлээс өмнө профессортой урьдчилан ярилцахыг шаардана. Материалын эх хувийг бүртгэлийн хугацаанд сургуульд хүргэнэ. Ярилцлага 12-р сарын 14–18 (гадаадаас онлайн/утсаар). Бүртгэлийн хураамжгүй.",
+      "sourceUrl": "https://ajou.ac.kr/gs/admission/foreigner01.do",
+      "evidence": "아주대학교(박사) 2026.10.07.(Wed) 09:00 ~ 2026.11.25.(Wed) 17:00 — same schedule as MASTER.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хаагдсан: 26-өвлийн улирлын бүртгэл 2026.08.10–09.23 (хичээл 2026.12.04-нд эхэлнэ).",
+      "checkUrl": "https://www.ajou.ac.kr/cie/admission/admission.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын боловсролын төв (국제교육센터) 2027 оны хуанлиа хараахан нийтлээгүй (өмнөх жил хаврын бүртгэл 11-р сарын 10-нд нээгдсэн). Бүртгэлийн хураамж 100,000₩, сургалтын төлбөр 1,500,000₩/10 долоо хоног.",
+      "checkUrl": "https://www.ajou.ac.kr/cie/admission/admission.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.ajou.ac.kr/cie/admission/admission.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.ajou.ac.kr/cie/admission/admission.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (9-р сарын) гадаад оюутны элсэлтийн журам хараахан гараагүй (2026 оны намрынх 6-р сард бүртгэсэн).",
+      "checkUrl": "https://www.ajou.ac.kr/iadmissions/undergraduate/schedule.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) магистрын элсэлт хараахан зарлагдаагүй.",
+      "checkUrl": "https://ajou.ac.kr/gs/admission/foreigner01.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын элсэлт хараахан зарлагдаагүй.",
+      "checkUrl": "https://ajou.ac.kr/gs/admission/foreigner01.do"
+    }
+  ]
+}

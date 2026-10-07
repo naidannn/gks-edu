@@ -422,7 +422,12 @@ function candidateDate(value: string | null): string {
           :rows="3"
           placeholder="Стандарт материалаас гадна энэ элсэлт юу нэхэж байна вэ"
         />
-        <DsTextarea v-model="form.note" label="Дотоод тэмдэглэл" :rows="2" />
+        <DsTextarea
+          v-model="form.note"
+          label="Нийтэд харагдах тэмдэглэл"
+          :rows="2"
+          placeholder="Сургуулийн хуудсанд зочинд харагдана — дотоод тайлбар бичихгүй"
+        />
 
         <label class="gks-intake-form__verify">
           <DsCheckbox v-model="form.verified" />

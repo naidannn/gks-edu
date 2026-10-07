@@ -1,0 +1,64 @@
+{
+  "slug": "konkuk-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-13",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-23",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "TOPIK 4 буюу түүнээс дээш (Компьютер программ хангамжийн анги: TOEFL iBT 71 эсвэл IELTS 5.5). Онлайн бүртгэлийн дараа материалыг шуудангаар 11-р сарын 20-ны дотор хүргэнэ.",
+      "sourceUrl": "https://www.konkuk.ac.kr/sites/ciss/%EA%B1%B4%EA%B5%AD%EB%8C%80_2027%EC%A0%84%EA%B8%B0%EB%AA%A8%EC%A7%91%EC%9A%94%EA%B0%95_%EA%B5%AD%EB%AC%B8.pdf",
+      "evidence": "원서접수 2026. 10. 19.(월) ~ 11. 13.(금) / 서류제출 2026. 10. 19.(월) ~ 11. 20.(금) / 합격자 발표 2026. 12. 23.(수) / 개강 2027. 3. 2.(화) / 전형료 그 외 모집단위 150,000원 (예술디자인대학·음악교육과 180,000원)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-30",
+      "applicationDeadline": "2026-10-20",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-08",
+      "admissionFeeKrw": 155500,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш, эсвэл TOEFL iBT 71 / IELTS 5.5. Зарим анги (жишээ нь эдийн засаг, хэл бичиг) TOPIK 5 шаардана.",
+      "sourceUrl": "https://www.konkuk.ac.kr/bbs/ciss/1483/1205997/artclView.do",
+      "evidence": "온라인 지원서 작성 및 지원서류 온라인 업로드 2026. 9. 30.(수) ~ 10. 20.(화) / 합격자 발표 2026. 12. 8.(화) 16:00 예정 / 개강 2027. 3. 2.(화) / 전형료 전 계열 ₩150,000 + ₩5,500 = ₩155,500 (모집요강 PDF)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-30",
+      "applicationDeadline": "2026-10-20",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-08",
+      "admissionFeeKrw": 155500,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш, эсвэл TOEFL iBT 71 / IELTS 5.5. Тухайн анги дахь удирдагч профессорын зөвлөмж (수학허용추천서) заавал шаардлагатай.",
+      "sourceUrl": "https://www.konkuk.ac.kr/bbs/ciss/1483/1205997/artclView.do",
+      "evidence": "Same schedule as MASTER. 박사과정 신청자는 반드시 해당 학과 지도교수 추천서를 제출해야 지원이 가능함.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "언어교육원 зөвхөн хичээлийн хуанли нийтэлсэн (хаврын улирал 2027-03-03, түвшин тогтоох шалгалт 2027-02-10, сургалтын төлбөр 1,800,000₩, бүртгэлийн хураамж 150,000₩); материал илгээснээс виз гарах хүртэл ~1 сар гэж заасан, хүсэлт авах эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://kli.konkuk.ac.kr/kli/18967/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) элсэлтийн журам хараахан гараагүй (2027 оны эхээр гарна).",
+      "checkUrl": "https://ciss.konkuk.ac.kr"
+    }
+  ]
+}

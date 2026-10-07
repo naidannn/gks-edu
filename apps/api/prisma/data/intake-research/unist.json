@@ -1,0 +1,76 @@
+{
+  "slug": "unist",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2026-12-02",
+      "applicationDeadline": "2027-01-22",
+      "resultAnnouncedAt": "2027-05-07",
+      "quota": 50,
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Англи хэлний албан ёсны оноо (TOEFL, IELTS, TEPS, TOEIC) заавал. Бүх материалыг онлайнаар хавсаргана. Материалын шалгаруулалтад тэнцсэн хүмүүстэй 3-р сарын 29 – 4-р сарын 9-ний хооронд онлайн ярилцлага хийнэ.",
+      "sourceUrl": "https://admu-intl.unist.ac.kr/admission-eng/admissions/admissions.do?mode=download&articleNo=306812&attachNo=591437",
+      "evidence": "Fall 2027 Undergraduate Admission Guideline for International Applicants: Online application Dec. 2, 2026 (Wed) 9:00 - Jan. 22, 2027 (Fri) 16:00 (KST) / Evaluation Mar. 8 - Apr. 9, 2027; Interview may be scheduled between Mar. 29 - Apr. 9, 2027 / Announcement May 7, 2027 (Fri) Expected / Admission Quota Approximately 50 students / Application fee: 50,000 KRW",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-06",
+      "applicationDeadline": "2026-10-15",
+      "classStartDate": "2027-03-01",
+      "resultAnnouncedAt": "2026-12-22",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Англи хэлний албан ёсны оноо (TOEFL, IELTS, TEPS, TOEIC г.м.) заавал; англи хэлээр суралцсан бол чөлөөлөгдөж болно. Материалыг 10-р сарын 16-ны 18:00 цагаас өмнө онлайнаар илгээнэ. 1-р шатанд тэнцсэн хүмүүстэй 11-р сарын 27 – 12-р сарын 8-ны хооронд ярилцлага хийнэ.",
+      "sourceUrl": "https://admg-intl.unist.ac.kr/admg-eng/admission/secondary-electric.do",
+      "evidence": "Important Schedule for 2027 Spring 2nd UNIST Graduate Admissions: Online Application October 6th 10:00 ~ October 15th, 2026 18:00 / Document Submission October 6th 10:00 ~ October 16th, 2026 18:00 / Stage 1st Result Announcement November 24th, 2026 / Interview November 27th ~ December 8th, 2026 / Announcement for Final Candidates December 22nd, 2026 14:00. Guideline PDF: Foreign Nationality: 50,000 KRW (Online application commission 5,000 KRW) / Enrollment Start Date: March 1st, 2027 (Mon)",
+      "confidence": "HIGH",
+      "laterRounds": "2027 Spring 1st round (application around June 2026) already closed with final results announced; stored row is Spring 2nd."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-06",
+      "applicationDeadline": "2026-10-15",
+      "classStartDate": "2027-03-01",
+      "resultAnnouncedAt": "2026-12-22",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Англи хэлний албан ёсны оноо (TOEFL, IELTS, TEPS, TOEIC г.м.) заавал; англи хэлээр суралцсан бол чөлөөлөгдөж болно. Материалыг 10-р сарын 16-ны 18:00 цагаас өмнө онлайнаар илгээнэ. 1-р шатанд тэнцсэн хүмүүстэй 11-р сарын 27 – 12-р сарын 8-ны хооронд ярилцлага хийнэ.",
+      "sourceUrl": "https://admg-intl.unist.ac.kr/admg-eng/admission/secondary-electric.do",
+      "evidence": "Same 2027 Spring 2nd schedule as MASTER (one graduate round for Master's / Doctoral / Combined).",
+      "confidence": "HIGH",
+      "laterRounds": "Spring 1st already closed."
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "UNIST гадаад оюутныг бакалаврт зөвхөн намрын (9-р сарын) улиралд элсүүлдэг; 3-р сарын элсэлт байхгүй.",
+      "checkUrl": "https://admu-intl.unist.ac.kr/admission-eng/admissions/admissions.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистрын элсэлт зарлагдаагүй (жил бүр 4-р сарын сүүлээр 1-р шатны дүн гардаг тул бүртгэл ойролцоогоор 2027 оны 2–3-р сард).",
+      "checkUrl": "https://admg-intl.unist.ac.kr/admg-eng/index.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуанлитай ижил; 2027 оны намрын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://admg-intl.unist.ac.kr/admg-eng/index.do"
+    }
+  ]
+}

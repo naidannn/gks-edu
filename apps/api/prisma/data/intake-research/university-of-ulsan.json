@@ -1,0 +1,99 @@
+{
+  "slug": "university-of-ulsan",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-06",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-08",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Зөвхөн солонгос хэлээр сургалт явагдана. TOPIK 4 буюу түүнээс дээш (урлаг, дизайн, спортын анги TOPIK 3), эсвэл сургуулийн өөрийн UOU-TOPIK шалгалт (11-р сарын 17). Эх материалыг 12-р сарын 2-ны 14:00 цагт сургуульд хүргэнэ. Анги тус бүр 11-р сарын 11–27-нд ярилцлага авна.",
+      "sourceUrl": "https://global.ulsan.ac.kr/en/ajx_json/UploadMgr/downloadRun.do?qcode=Qm9hcmQsMTkyMTksWQ==",
+      "evidence": "2027학년도 전기 울산대학교 학부 외국인특별전형 모집 요강: 온라인 지원 기간 2026. 10. 19. (월) ~ 2026. 11. 6. (금) / 지원서류 원본의 1차 우편 제출 기한 ~ 2026. 12. 2. (수) 14:00 / 면접 및 구술고사 2026. 11. 11. ~ 11. 27. 중 / 합격자 발표일 2026. 12. 8. (화) 18:00 이후 / 개강일 2027. 3. 2. (화) / 70,000원 전형료. Notice (2026-10-07, says guideline is not final; English line wrongly says 'after 19th November' while Korean says 10. 19.): https://global.ulsan.ac.kr/en/CMS/Board/Board.do?mCode=MN018&mode=view&mgr_seq=2&board_seq=91358",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-06",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-08",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Солонгос хэлний хөтөлбөр: TOPIK 4 буюу түүнээс дээш (урлаг, спортын анги TOPIK 3); англи хэлний хөтөлбөр: IELTS 5.5 эсвэл TOEFL iBT 71. Эх материалыг 12-р сарын 2-ны 14:00 цагт сургуульд хүргэнэ.",
+      "sourceUrl": "https://global.ulsan.ac.kr/en/ajx_json/UploadMgr/downloadRun.do?qcode=Qm9hcmQsMTkyMTcsWQ==",
+      "evidence": "2027학년도 전기 일반대학원 외국인특별전형 모집 요강: 온라인 지원 기간 2026. 10. 19. (월) ~ 2026. 11. 6. (금) / 지원서류 원본의 1차 우편 제출 기한 ~ 2026. 12. 2. (수) 14:00 / 합격자 발표일 2026. 12. 8. (화) 18:00 이후 / 개강일 2027. 3. 2. (화) / 한국 원화 기준 70,000원 전형료 / [한국어 트랙] 4급 이상 (예·체능 3급) / [영어 트랙] IELTS 5.5, TOEFL 71, (NEW)TOEFL 4.0. Notice: https://global.ulsan.ac.kr/en/CMS/Board/Board.do?mCode=MN018&mode=view&mgr_seq=2&board_seq=91357",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-06",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-08",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Солонгос хэлний хөтөлбөр: TOPIK 4 буюу түүнээс дээш (урлаг, спортын анги TOPIK 3); англи хэлний хөтөлбөр: IELTS 5.5 эсвэл TOEFL iBT 71. Эх материалыг 12-р сарын 2-ны 14:00 цагт сургуульд хүргэнэ.",
+      "sourceUrl": "https://global.ulsan.ac.kr/en/ajx_json/UploadMgr/downloadRun.do?qcode=Qm9hcmQsMTkyMTcsWQ==",
+      "evidence": "Same 일반대학원 외국인특별전형 schedule as MASTER (석사/박사/석박사통합 one guideline).",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "2026 оны 4-р сешн (11-р сарын 23-нд эхэлнэ, бүртгэл 10.12–10.16) зөвхөн Солонгост визтэй байгаа хүмүүст нээлттэй; гадаадаас D-4 визээр элсэх боломжгүй.",
+      "checkUrl": "https://international.ulsan.ac.kr/international/406?action=view&no=281320"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны 1-р сешн (3-р сарын 2-нд эхлэх төлөвтэй) элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://international.ulsan.ac.kr/international/406"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны 2-р сешн (5-р сарын 17-нд эхлэх төлөвтэй) элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://international.ulsan.ac.kr/international/406"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны 3-р сешний журам хараахан гараагүй.",
+      "checkUrl": "https://international.ulsan.ac.kr/international/406"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаад оюутны журам хараахан гараагүй (өмнөх жил 3-р сарын сүүлээр гарсан).",
+      "checkUrl": "https://global.ulsan.ac.kr/en/CMS/Board/Board.do?mCode=MN018"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) магистрын журам хараахан гараагүй (өмнөх жил 3-р сарын сүүлээр гарсан).",
+      "checkUrl": "https://global.ulsan.ac.kr/en/CMS/Board/Board.do?mCode=MN018"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын журам хараахан гараагүй (өмнөх жил 3-р сарын сүүлээр гарсан).",
+      "checkUrl": "https://global.ulsan.ac.kr/en/CMS/Board/Board.do?mCode=MN018"
+    }
+  ]
+}

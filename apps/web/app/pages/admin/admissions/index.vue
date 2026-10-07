@@ -226,7 +226,10 @@ const totalPages = computed(() => meta.value?.totalPages ?? 1);
               <DsBadge :tone="INTAKE_PHASE_TONE[row.phase]">{{ INTAKE_PHASE_LABELS[row.phase] }}</DsBadge>
             </td>
             <td data-label="Эх сурвалж">
-              <span class="gks-adm-admin__source">{{ INTAKE_SOURCE_LABELS[row.sourceType] }}</span>
+              <DsBadge v-if="row.sourceType === 'AI_ASSISTED'" tone="info">
+                {{ INTAKE_SOURCE_LABELS.AI_ASSISTED }}
+              </DsBadge>
+              <span v-else class="gks-adm-admin__source">{{ INTAKE_SOURCE_LABELS[row.sourceType] }}</span>
               <DsBadge v-if="!row.verifiedAt" tone="warning">Хянагдаагүй</DsBadge>
             </td>
           </tr>

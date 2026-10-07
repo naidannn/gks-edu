@@ -1,0 +1,64 @@
+{
+  "slug": "kaist",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-22",
+      "applicationDeadline": "2026-10-22",
+      "resultAnnouncedAt": "2027-01-07",
+      "requirementNote": "Хичээл англи хэлээр. TOEFL iBT 83 (2026.01.21-нээс хойш өгсөн бол 4.5) / IELTS 6.5 / TOEIC 720 / TEPS 326 зөвлөмжит оноо. Шаардлагатай бол 12-р сарын 22-нд онлайн ярилцлага. Бүртгэлийн хураамж 80 ам.доллар. Хаврын элсэлтэд зөвхөн Early шат.",
+      "sourceUrl": "https://admission.kaist.ac.kr/intl-undergraduate/application/ApplicationGuide/ApplicationTimeline",
+      "evidence": "Early Admissions (Spring Track / Fall Track): September 22 ~ October 22, 2026, 6:00 PM (KST) / Recommendation Letter October 29, 2026 / Interview December 22, 2026 / Admission Announcement January 7, 2027, 10:00 AM / Academic Year Begins End of February, 2027. Guide PDF: Application fee: USD 80.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2026-09-22",
+      "applicationDeadline": "2026-10-22",
+      "resultAnnouncedAt": "2027-01-07",
+      "requirementNote": "Хичээл англи хэлээр. TOEFL iBT 83 (2026.01.21-нээс хойш өгсөн бол 4.5) / IELTS 6.5 / TOEIC 720 / TEPS 326 зөвлөмжит оноо. Бүртгэлийн хураамж 80 ам.доллар. Намрын элсэлтэд Early (10.22 хүртэл) ба Regular (2027.01.14 хүртэл) хоёр шат бий.",
+      "sourceUrl": "https://admission.kaist.ac.kr/intl-undergraduate/application/ApplicationGuide/ApplicationTimeline",
+      "evidence": "Early track (Spring or Fall 2027): September 22 ~ October 22, 2026, 6:00 PM (KST); Admission Announcement January 7, 2027. Applicants for the Early track may opt to enroll in either the Spring or Fall 2027 semester.",
+      "confidence": "HIGH",
+      "laterRounds": "Regular (Fall Track Only): November 10, 2026 ~ January 14, 2027, 6:00 PM (KST); recommendation January 21, 2027; interview March 3, 2027; announcement March 25, 2027, 10:00 AM; academic year begins end of August 2027."
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "pending": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 хаврын гадаад иргэний магистрантурын бүртгэл 2026.08.18–09.01.",
+      "checkUrl": "https://admission.kaist.ac.kr/intl-graduate/Admission/YearlyTimelines"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: магистрын хуваарьтай ижил (2026.08.18–09.01).",
+      "checkUrl": "https://admission.kaist.ac.kr/intl-graduate/Admission/YearlyTimelines"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын хугацаа \"TBA\" гэж бичигдсэн. Ердийн хуваарь: Early шат 12-р сарын эхнээс сүүл хүртэл, Regular шат 3-р сарын эхнээс сүүл хүртэл — 12-р сарын эхээр дахин шалгана.",
+      "checkUrl": "https://admission.kaist.ac.kr/intl-graduate/Admission/YearlyTimelines"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуанлитай ижил — 2027 намрын хугацаа TBA.",
+      "checkUrl": "https://admission.kaist.ac.kr/intl-graduate/Admission/YearlyTimelines"
+    }
+  ]
+}

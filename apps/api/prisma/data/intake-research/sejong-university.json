@@ -1,0 +1,102 @@
+{
+  "slug": "sejong-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-22",
+      "applicationDeadline": "2026-11-13",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-12-23",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "Ихэнх ангид TOPIK 3 буюу түүнээс дээш (Солонгос хэл бичиг, Медиа коммуникаци, Бизнесийн удирдлага — TOPIK 4; Бүтээлч програм хангамж, Урлаг-биеийн тамир, Энтертайнмент контент — TOPIK 2). Бүх материалыг онлайнаар байршуулна; тэнцсэн бол эх хувийг 2027.01.05-ны дотор шуудангаар хүргэнэ.",
+      "sourceUrl": "https://sos.sejong.ac.kr/pdf/488158/2027%ED%95%99%EB%85%84%20%EC%A0%84%EA%B8%B0%20%ED%95%99%EB%B6%80%20%EC%A0%95%EC%9B%90%EC%99%B8%20%EC%99%B8%EA%B5%AD%EC%9D%B8%20%EB%AA%A8%EC%A7%91%EC%9A%94%EA%B0%95%20(%EA%B5%AD%EB%AC%B8)_2026.09.03.pdf",
+      "evidence": "온라인 원서접수 1차 2026. 09. 07. ~ 2026. 09. 21. 17:00 까지 / 2차 2026. 10. 22. ~ 2026. 11. 13. 17:00 까지 / 합격자 발표 2026. 11. 09. / 2026. 12. 23. 17:00 예정 / 지원서류 원본 제출 & 등록금 납부 2차 2026. 12. 23. ~ 2027. 01. 05. 16:00 까지 / 전형료: 150,000원 / TOPIK: 글로벌자유전공학부 요건 없음, 창의소프트·예체능·엔터 2급, 국어국문·미디어커뮤니케이션·경영 4급, 그 외 3급",
+      "confidence": "HIGH",
+      "laterRounds": "1차 (2026-09-07 ~ 09-21) already closed; the row stores 2차."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-22",
+      "applicationDeadline": "2026-11-13",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-23",
+      "admissionFeeKrw": 170000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (урлаг-биеийн тамирын чиглэл TOPIK 2), эсвэл англи хэлний сонголтод IELTS 5.5 / TOEFL iBT / New TEPS 202. Зарим анги ярилцлага авна. Санхүүгийн баталгаа (Form 5) зэрэг маягтын эх хувийг бүртгэлийн хугацаанд шуудангаар хүргэнэ.",
+      "sourceUrl": "https://sos.sejong.ac.kr/pdf/488123/2027-1_%EC%9D%BC%EB%B0%98%EB%8C%80%ED%95%99%EC%9B%90_%EB%AA%A8%EC%A7%91%EC%9A%94%EA%B0%95(KOR).pdf",
+      "evidence": "인터넷 원서접수 및 서류 업로드 1차 2026. 09. 07. ~ 2026. 09. 21. / 2차 2026. 10. 22. ~ 2026. 11. 13. 17:00 까지 / 개강일: 2027년 3월 2일 / 합격자 발표 2026. 12. 23. 17:00 예정 / 전형료 석사과정, 박사과정, 석·박사통합과정 170,000원 / TOPIK 인문사회, 자연, 공학계열 3급 이상, 예체능 계열 2급 이상 / 공인어학능력 기준(TOEFL iBT 3.5, NEW TEPS 202, IELTS 5.5)",
+      "confidence": "HIGH",
+      "laterRounds": "1차 (2026-09-07 ~ 09-21) already closed; the row stores 2차."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-22",
+      "applicationDeadline": "2026-11-13",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-23",
+      "admissionFeeKrw": 170000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (урлаг-биеийн тамирын чиглэл TOPIK 2), эсвэл англи хэлний сонголтод IELTS 5.5 / TOEFL iBT / New TEPS 202. Зарим анги ярилцлага авна. Санхүүгийн баталгаа (Form 5) зэрэг маягтын эх хувийг бүртгэлийн хугацаанд шуудангаар хүргэнэ.",
+      "sourceUrl": "https://sos.sejong.ac.kr/pdf/488123/2027-1_%EC%9D%BC%EB%B0%98%EB%8C%80%ED%95%99%EC%9B%90_%EB%AA%A8%EC%A7%91%EC%9A%94%EA%B0%95(KOR).pdf",
+      "evidence": "Same table as MASTER (석사과정, 박사과정 share one schedule and fee 170,000원).",
+      "confidence": "HIGH",
+      "laterRounds": "1차 (2026-09-07 ~ 09-21) already closed; the row stores 2차."
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Сэжон хэлний төв (세종어학원) зөвхөн хичээлийн хуанли нийтэлсэн (өвөл 2026.12.01 эхэлнэ); бүртгэлийн эцсийн хугацаа заагаагүй, \"хичээл эхлэхээс 2 сарын өмнө\" өгөхийг зөвлөсөн. Бүртгэлийн хураамж 100,000₩.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/koreanEdu.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын улирал 2027.03.02 эхэлнэ; бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/koreanEdu.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зуны улирал 2027.06.01 эхэлнэ; бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/koreanEdu.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "Намрын улирал 2027.09.01 эхэлнэ; бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/koreanEdu.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/univ.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистр/докторын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/grad1.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистр/докторын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://sos.sejong.ac.kr/eng/admission/guide/grad1.do"
+    }
+  ]
+}

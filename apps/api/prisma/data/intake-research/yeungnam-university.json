@@ -1,0 +1,93 @@
+{
+  "slug": "yeungnam-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-11",
+      "classStartDate": "2027-03-01",
+      "resultAnnouncedAt": "2026-11-23",
+      "admissionFeeKrw": null,
+      "requirementNote": "Онлайн бүртгэлийн дараа материалыг биечлэн эсвэл шуудангаар 11-р сарын 13-ны дотор хүргэнэ. 2-р шат: 2026.12.09–2027.01.06.",
+      "sourceUrl": "https://isa.yu.ac.kr/isa/enterance/admission.do",
+      "evidence": "원서 접수 (온라인) 및 전형료 납부 1차 2026. 10.12.(월) 09:00 ~ 2026. 11.11.(수) 17:00 / 2차 2026. 12. 9.(수) 09:00 ~ 2027. 1. 6.(수) 17:00 / 서류 접수(방문/우편) 1차 2026. 10.12.(월) ~ 2026. 11.13.(금) / 합격자발표 2026. 11. 23.(월) / 2027. 1. 18.(월) / 학기 개시 2027. 3. 1.(월). Fee and TOPIK requirement are in the guideline PDF, which is image-only.",
+      "confidence": "HIGH",
+      "laterRounds": "2차: 원서접수 2026-12-09 ~ 2027-01-06, 서류 ~2027-01-08, 합격자발표 2027-01-18, 등록 2027-01-19~21"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-16",
+      "applicationDeadline": "2026-12-11",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2027-01-11",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Материалыг биечлэн эсвэл шуудангаар 12-р сарын 18-ны дотор хүргэнэ. Зарим анги ярилцлага авна.",
+      "sourceUrl": "https://engraduate.yu.ac.kr/engraduate/admissions/admission-guideline.do",
+      "evidence": "Online Application & Application Fee Payment 1st Round Sep 14 (Mon) – Oct 16 (Fri), 2026, 17:00 / 2nd Round Nov 16 (Mon) – Dec 11 (Fri), 2026, 17:00 / Application fee: KRW 100,000 / Document Submission 2nd Nov 16 – Dec 18, 2026 / Interview may be conducted depending on the department / Announcement of Results Jan 11 (Mon), 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-16",
+      "applicationDeadline": "2026-12-11",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2027-01-11",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Материалыг биечлэн эсвэл шуудангаар 12-р сарын 18-ны дотор хүргэнэ. Зарим анги ярилцлага авна.",
+      "sourceUrl": "https://engraduate.yu.ac.kr/engraduate/admissions/admission-guideline.do",
+      "evidence": "Same schedule as MASTER (one graduate-school table for all degrees). 1st round (Sep 14 – Oct 16, 2026) closed; 2nd round Nov 16 – Dec 11, 2026.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Өвлийн улирлын (2026.12.01-нээс) бүртгэл ерөнхий хуваарьт \"9-р сарын эхнээс 10-р сарын эх хүртэл\" гэж заасан, тодорхой эцсийн өдөр нийтлээгүй — хаагдсан байх магадлалтай, сургуулиас лавлах.",
+      "checkUrl": "https://www.yu.ac.kr/kli/enterance/admission.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын улирлын бүртгэл ерөнхийдөө 12-р сарын эхнээс 1-р сарын эх хүртэл гэж заасан; тодорхой огноо нийтлэгдээгүй.",
+      "checkUrl": "https://www.yu.ac.kr/kli/enterance/admission.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зуны улирлын бүртгэл ерөнхийдөө 3-р сарын эхнээс 4-р сарын эх хүртэл; тодорхой огноо нийтлэгдээгүй.",
+      "checkUrl": "https://www.yu.ac.kr/kli/enterance/admission.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн хуваарь хараахан гараагүй (өмнөх жил 7-р сард бүртгэсэн).",
+      "checkUrl": "https://isa.yu.ac.kr/isa/enterance/admission.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистр/докторын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://engraduate.yu.ac.kr/engraduate/admissions/admission-guideline.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистр/докторын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://engraduate.yu.ac.kr/engraduate/admissions/admission-guideline.do"
+    }
+  ]
+}

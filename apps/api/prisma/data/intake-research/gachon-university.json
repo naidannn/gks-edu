@@ -1,0 +1,104 @@
+{
+  "slug": "gachon-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-09-07",
+      "applicationDeadline": "2026-10-09",
+      "classStartDate": "2026-12-07",
+      "sourceUrl": "https://www.gachon.ac.kr/intl/11796/subview.do",
+      "evidence": "한국어교육센터 모집일정: 겨울학기 (10주) 원서접수 2026.9.7 ~ 10.9 / 개강 및 종강 2026.12.7 ~ 2027.2.22",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-20",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "Солонгос хэлний хөтөлбөрт хэлний оноо заавал биш (зарим анги TOPIK 4 шаардана); англи хэлний хөтөлбөрт (бизнесийн удирдлага, компьютерийн инженер) IELTS 5.5 эсвэл TOEFL iBT 59. Эх материал 10-р сарын 28-ны 12:00 цагт сургуульд хүрсэн байх ёстой. Эрүүл мэндийн шинжлэх ухааны зарим анги онлайн ярилцлагатай.",
+      "sourceUrl": "https://www.gachon.ac.kr/bbs/intl/1948/156236/download.do",
+      "evidence": "2027학년도 1학기 외국인 학부 신·편입학 특별전형 모집요강: 1차 모집 인터넷 원서접수 2026. 10. 12(월), 10:00 ~ 10. 23(금), 16:00 / 서류 제출 ~ 10. 28(수), 12:00 / 합격자발표 2026. 11. 20(금) / 전형료 : 150,000원 / 개강일인 2027년 3월 2일. Notice page: https://www.gachon.ac.kr/bbs/intl/1948/125773/artclView.do",
+      "confidence": "HIGH",
+      "laterRounds": "2차 원서접수 2026.11.23~12.4 16:00 (서류 12.9 12:00, 발표 12.24); 3차 2026.12.28~2027.1.4 16:00 (서류 1.6 12:00, 발표 2027.1.22)"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-07",
+      "applicationDeadline": "2026-10-14",
+      "resultAnnouncedAt": "2026-11-11",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (элсэхээс өмнө ирүүлж болно), эсвэл TOEFL iBT 80 / IELTS 5.5. Материал 10-р сарын 15-ны 16:00 цагт сургуульд хүрсэн байх ёстой. Хөгжмийн ангийн бүртгэлийн хураамж 160,000₩.",
+      "sourceUrl": "https://www.gachon.ac.kr/bbs/intl/1948/156099/download.do",
+      "evidence": "2027학년도 전기 가천대학교 일반대학원 외국인 특별전형 모집요강 (글로벌캠퍼스): 1차 원서접수 2026.10.07.(수) ~ 10.14.(수) 16:00까지 / 첨부서류 제출 ~ 10.15.(목) 16:00까지 / 합격자 발표 2026.11.11.(수) / 전형료 금액 : 120,000원 ※음악학과 160,000원. Notice: https://www.gachon.ac.kr/bbs/intl/1948/125715/artclView.do",
+      "confidence": "HIGH",
+      "laterRounds": "2차 원서접수 2026.11.11~11.18 16:00 (서류 11.19, 발표 12.16); 3차 2026.12.16~12.23 16:00 (서류 12.24, 발표 2027.1.20)"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-07",
+      "applicationDeadline": "2026-10-14",
+      "resultAnnouncedAt": "2026-11-11",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (элсэхээс өмнө ирүүлж болно), эсвэл TOEFL iBT 80 / IELTS 5.5. Материал 10-р сарын 15-ны 16:00 цагт сургуульд хүрсэн байх ёстой. Хөгжмийн ангийн бүртгэлийн хураамж 160,000₩.",
+      "sourceUrl": "https://www.gachon.ac.kr/bbs/intl/1948/156099/download.do",
+      "evidence": "Same 일반대학원 외국인 특별전형 1차 schedule as MASTER (one guideline for 석사·박사).",
+      "confidence": "HIGH",
+      "laterRounds": "2차 원서접수 2026.11.11~11.18 16:00 (발표 12.16); 3차 2026.12.16~12.23 16:00 (발표 2027.1.20)"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний төв зөвхөн 2026 оны хуваарийг нийтэлсэн; 2027 оны хаврын улирлын бүртгэлийн хугацаа хараахан гараагүй (өмнөх жил 12-р сарын 1-нээс эхэлсэн).",
+      "checkUrl": "https://www.gachon.ac.kr/intl/11796/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуваарь хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.gachon.ac.kr/intl/11796/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын хуваарь хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.gachon.ac.kr/intl/11796/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны 2-р улирлын (намрын) гадаад оюутны журам хараахан гараагүй (2027 оны хавар гарна).",
+      "checkUrl": "https://www.gachon.ac.kr/intl/12157/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) магистрын журам хараахан гараагүй (өмнөх жил 3-р сарын сүүлээр гарсан).",
+      "checkUrl": "https://www.gachon.ac.kr/intl/12157/subview.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын журам хараахан гараагүй (өмнөх жил 3-р сарын сүүлээр гарсан).",
+      "checkUrl": "https://www.gachon.ac.kr/intl/12157/subview.do"
+    }
+  ]
+}

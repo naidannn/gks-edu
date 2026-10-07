@@ -1,0 +1,61 @@
+{
+  "slug": "gist",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2026-12-01",
+      "applicationDeadline": "2027-01-29",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2027-04-30",
+      "quota": 15,
+      "admissionFeeKrw": null,
+      "requirementNote": "Англи хэлний албан ёсны оноо (TOEFL, IELTS, TEPS, Duolingo г.м., сүүлийн 2 жилийн) болон нэг зөвлөмж захидал шаардана. Ахлах сургуулиа 2027.07.31-ээс өмнө төгссөн байх. Бүх материалыг онлайнаар илгээнэ; материалын шатнаас сонгогдсон хүмүүстэй ярилцлага хийнэ.",
+      "sourceUrl": "https://www.gist.ac.kr/iuadm/img/sub02/2027_Fall_Undergraduate_Admission_Guideline.pdf",
+      "evidence": "Quota: Approximately 15 students will be selected. / Online Application Dec 1st (Tue), 2026 ~ Jan 29th (Fri), 2027 GIST System / Submission of Documents Dec 1st (Tue), 2026 ~ Jan 29th (Fri), 2027 / Admission Announcement Apr 30th (Fri), 2027 Expected / Registration May 4 (Tue) ~ Jun 25th (Fri), 2027 / Academic Year Begins Fall 2027. No application fee is stated in the guideline (page 2 failed to extract).",
+      "confidence": "HIGH"
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад бакалаврын элсэлтийг зөвхөн намрын улиралд зарласан (2027 Fall журам); 3-р сарын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://www.gist.ac.kr/iuadm/html/sub04/0401.html"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан — 2027 оны хаврын магистр/докторын гадаад оюутны бүртгэл 2026.09.07–10.07 хооронд явагдсан.",
+      "checkUrl": "https://www.gist.ac.kr/iadm/html/sub05/0502.html?mode=V&no=222702"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан — 2027 оны хаврын магистр/докторын гадаад оюутны бүртгэл 2026.09.07–10.07 хооронд явагдсан.",
+      "checkUrl": "https://www.gist.ac.kr/iadm/html/sub05/0502.html?mode=V&no=222702"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистр/докторын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://www.gist.ac.kr/iadm/html/sub05/0502.html"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистр/докторын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://www.gist.ac.kr/iadm/html/sub05/0502.html"
+    }
+  ]
+}

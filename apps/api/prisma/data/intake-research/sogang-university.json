@@ -1,0 +1,83 @@
+{
+  "slug": "sogang-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-09-10",
+      "applicationDeadline": "2026-10-22",
+      "classStartDate": "2026-12-03",
+      "sourceUrl": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php",
+      "evidence": "2026학년도 겨울: 수업기간 12.03 ~ 27.02.22 / 서류접수 및 등록마감 09.10 ~ 10.22",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-14",
+      "applicationDeadline": "2027-01-15",
+      "classStartDate": "2027-03-09",
+      "sourceUrl": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php",
+      "evidence": "2027학년도 봄: 수업기간 03.09 ~ 05.25 / 서류접수 26.12.14 ~ 27.01.15 / 납부마감 27.01.22",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-15",
+      "applicationDeadline": "2027-04-16",
+      "classStartDate": "2027-06-08",
+      "sourceUrl": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php",
+      "evidence": "2027학년도 여름: 수업기간 06.08 ~ 08.25 / 서류접수 03.15 ~ 04.16 / 납부마감 04.23",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-11",
+      "applicationDeadline": "2027-07-16",
+      "classStartDate": "2027-09-07",
+      "sourceUrl": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php",
+      "evidence": "2027학년도 가을: 수업기간 09.07 ~ 11.24 / 서류접수 06.11 ~ 07.16 / 납부마감 07.22",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-18",
+      "applicationDeadline": "2026-12-08",
+      "resultAnnouncedAt": "2027-01-08",
+      "requirementNote": "Материалын эх хувийг 12-р сарын 9-ний 17:00 цагаас өмнө хүргэнэ. 12-р сарын 22 эсвэл 23-нд ярилцлага (анги тус бүр цагаа зарлана).",
+      "sourceUrl": "https://gradsch.sogang.ac.kr/front/cmsboardview.do?siteId=gradsch&bbsConfigFK=403&pkid=941176",
+      "evidence": "[외국인특별전형 - Admission Schedule for Int'l Students] 원서 접수 09:00, Nov. 18 (Wed) ~ 17:00, Dec. 8(Tue), 2026 / 서류 제출 By 17:00, Dec. 9(Wed) / Interview Dec. 22 or 23 / Final Result 14:00, Jan. 8(Fri), 2027",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-18",
+      "applicationDeadline": "2026-12-08",
+      "resultAnnouncedAt": "2027-01-08",
+      "requirementNote": "Материалын эх хувийг 12-р сарын 9-ний 17:00 цагаас өмнө хүргэнэ. 12-р сарын 22 эсвэл 23-нд ярилцлага (анги тус бүр цагаа зарлана).",
+      "sourceUrl": "https://gradsch.sogang.ac.kr/front/cmsboardview.do?siteId=gradsch&bbsConfigFK=403&pkid=941176",
+      "evidence": "Same 외국인특별전형 schedule as MASTER (one graduate-school round).",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027/3-ын гадаад оюутны бүртгэл хаагдсан (онлайн 9.1–9.17, элсэлтийн албаны Instagram-аас; албан журмыг текстээр олж чадаагүй). 2027 оны намрын журам гараагүй.",
+      "checkUrl": "https://admission.sogang.ac.kr"
+    }
+  ]
+}

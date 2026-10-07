@@ -1,0 +1,102 @@
+{
+  "slug": "hanyang-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-09-09",
+      "applicationDeadline": "2026-10-08",
+      "classStartDate": "2026-12-02",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолтын эх хувь, сүүлд төгссөн сургуулийн дипломыг апостиль эсвэл консулын баталгаатай эх хувиар бүрдүүлнэ. Шинэ суралцагчдыг ихэвчлэн үдээс хойших ангид хуваарилна.",
+      "sourceUrl": "https://iie.hanyang.ac.kr/front/regular/introduce/schedule",
+      "evidence": "2026 겨울: 수업기간 2026.12.02~2027.02.12 / 레벨테스트 2026.11.24 10:00 / 등록기간 2026.09.09~2026.10.08 / 원서접수비 150,000원 (환불 불가) — https://iie.hanyang.ac.kr/front/regular/admission/tuition",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-09",
+      "applicationDeadline": "2027-01-07",
+      "classStartDate": "2027-03-03",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолтын эх хувь, сүүлд төгссөн сургуулийн дипломыг апостиль эсвэл консулын баталгаатай эх хувиар бүрдүүлнэ. Шинэ суралцагчдыг ихэвчлэн үдээс хойших ангид хуваарилна.",
+      "sourceUrl": "https://iie.hanyang.ac.kr/front/regular/introduce/schedule",
+      "evidence": "2027 봄: 수업기간 2027.03.03~2027.05.12 / 레벨테스트 2027.02.23 10:00 / 등록기간 2026.12.09~2027.01.07 / 원서접수비 150,000원 (환불 불가) — https://iie.hanyang.ac.kr/front/regular/admission/tuition",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-10",
+      "applicationDeadline": "2027-04-08",
+      "classStartDate": "2027-06-02",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолтын эх хувь, сүүлд төгссөн сургуулийн дипломыг апостиль эсвэл консулын баталгаатай эх хувиар бүрдүүлнэ. Шинэ суралцагчдыг ихэвчлэн үдээс хойших ангид хуваарилна.",
+      "sourceUrl": "https://iie.hanyang.ac.kr/front/regular/introduce/schedule",
+      "evidence": "2027 여름: 수업기간 2027.06.02~2027.08.11 / 레벨테스트 2027.05.26 10:00 / 등록기간 2027.03.10~2027.04.08 / 원서접수비 150,000원 (환불 불가) — https://iie.hanyang.ac.kr/front/regular/admission/tuition",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-09",
+      "applicationDeadline": "2027-07-08",
+      "classStartDate": "2027-09-01",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "D-4 визэнд 10,000,000₩-өөс доошгүй үлдэгдэлтэй банкны тодорхойлолтын эх хувь, сүүлд төгссөн сургуулийн дипломыг апостиль эсвэл консулын баталгаатай эх хувиар бүрдүүлнэ. Шинэ суралцагчдыг ихэвчлэн үдээс хойших ангид хуваарилна.",
+      "sourceUrl": "https://iie.hanyang.ac.kr/front/regular/introduce/schedule",
+      "evidence": "2027 가을: 수업기간 2027.09.01~2027.11.15 / 레벨테스트 2027.08.25 10:00 / 등록기간 2027.06.09~2027.07.08 / 원서접수비 150,000원 (환불 불가) — https://iie.hanyang.ac.kr/front/regular/admission/tuition",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 хаврын гадаад иргэний бакалаврын онлайн бүртгэл 2026.09.01–09.18 (материал 09.30 хүртэл, хариу 12.18).",
+      "checkUrl": "https://oia.hanyang.ac.kr/admission"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын (2-р улирал) гадаад иргэний элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://oia.hanyang.ac.kr/sub4_01"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 хаврын магистрантурын гадаад иргэний онлайн бүртгэл 2026.09.01–09.18 (хариу 12.18).",
+      "checkUrl": "https://oia.hanyang.ac.kr/admission"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: магистрын хуваарьтай ижил (2026.09.01–09.18).",
+      "checkUrl": "https://oia.hanyang.ac.kr/admission"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын магистрантурын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://oia.hanyang.ac.kr/sub4_01"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 намрын докторантурын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://oia.hanyang.ac.kr/sub4_01"
+    }
+  ]
+}

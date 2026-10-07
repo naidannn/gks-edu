@@ -1,0 +1,124 @@
+{
+  "slug": "kyung-hee-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-09-07",
+      "applicationDeadline": "2026-10-30",
+      "classStartDate": "2026-12-14",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "18 нас хүрсэн байх. 11-р сарын 24-нд түвшин тогтоох шалгалт, чиглүүлэх уулзалт (Сөүл кампус).",
+      "sourceUrl": "https://iie.khu.ac.kr/en/bbs/content.php?co_id=OnCampus&sub_me_code=202010",
+      "evidence": "2026 Academic Year — Winter Regular Course: Course Period 2026.12.14 ~ 2027.2.25 / Placement Test/Orientation 2026.11.24 / Application Deadline 2026.9.7 ~ 2026.10.30. Application Fee ₩120,000 (applied from the 2026 Fall semester, charged once); tuition ₩1,850,000.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-07",
+      "applicationDeadline": "2027-01-22",
+      "classStartDate": "2027-03-29",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "18 нас хүрсэн байх. 3-р сарын 16-нд түвшин тогтоох шалгалт, чиглүүлэх уулзалт (Сөүл кампус).",
+      "sourceUrl": "https://iie.khu.ac.kr/en/bbs/content.php?co_id=OnCampus&sub_me_code=202010",
+      "evidence": "2027 Academic Year — Spring Regular Course: 2027.3.29 ~ 2027.6.9 / Placement Test/Orientation 2027.3.16 / Application Deadline 2026.12.7 ~ 2027.1.22",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-08",
+      "applicationDeadline": "2027-04-23",
+      "classStartDate": "2027-06-17",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "18 нас хүрсэн байх. 6-р сарын 8-нд түвшин тогтоох шалгалт, чиглүүлэх уулзалт (Сөүл кампус).",
+      "sourceUrl": "https://iie.khu.ac.kr/en/bbs/content.php?co_id=OnCampus&sub_me_code=202010",
+      "evidence": "2027 Academic Year — Summer Regular Course: 2027.6.17 ~ 2027.8.27 / Placement Test/Orientation 2027.6.8 / Application Deadline 2027.3.8 ~ 2027.4.23",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-07",
+      "applicationDeadline": "2027-07-23",
+      "classStartDate": "2027-09-29",
+      "admissionFeeKrw": 120000,
+      "requirementNote": "18 нас хүрсэн байх. 9-р сарын 20-нд түвшин тогтоох шалгалт, чиглүүлэх уулзалт (Сөүл кампус).",
+      "sourceUrl": "https://iie.khu.ac.kr/en/bbs/content.php?co_id=OnCampus&sub_me_code=202010",
+      "evidence": "2027 Academic Year — Fall Regular Course: 2027.9.29 ~ 2027.12.9 / Placement Test/Orientation 2027.9.20 / Application Deadline 2027.6.7 ~ 2027.7.23",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-26",
+      "applicationDeadline": "2026-11-06",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-24",
+      "admissionFeeKrw": 180000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (зарим анги илүү өндөр түвшин шаардана). Материалыг шуудангаар Сөүл кампус руу 11-р сарын 5-ны дотор илгээнэ. Хөгжим, урлаг, бүжгийн ангиуд энэ шатанд л элсүүлэх ба 12-р сарын 12-нд дадлагын шалгалттай (бүртгэлийн хураамж 250,000₩).",
+      "sourceUrl": "https://iadmission.khu.ac.kr/gglobalcenter/user/contents/view.do?menuNo=8000030",
+      "evidence": "나. 2차 전형: 입학지원서 접수(인터넷접수) 2026년 10월 26일(월) ~ 11월 6일(금) 17:00 / 서류 2026년 11월 5일(목) 소인까지 / 실기고사(예능계열) 2026년 12월 12일(토) / 최종 합격자 발표 2026년 12월 24일(목) 14:00 / 개강 2027년 3월 2일(화). 모집요강 PDF (https://iadmission.khu.ac.kr/upload/contents/202608/202608140232420750.pdf): 전형료 비예능계열 180,000원, 음악·미술·무용·Post Modern 음악학과 250,000원; 신입학 한국어능력시험(TOPIK) 3급 이상.",
+      "confidence": "HIGH",
+      "laterRounds": "1차 전형 (Aug 17–28, 2026, result Oct 23) already closed; stored row is 2차."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-11",
+      "applicationDeadline": "2026-12-18",
+      "resultAnnouncedAt": "2027-01-15",
+      "admissionFeeKrw": 167000,
+      "requirementNote": "Зөвхөн Олон улсын кампусын (Ёнъин) инженер, байгалийн шинжлэх ухааны ангиуд элсүүлнэ. TOPIK 4 буюу түүнээс дээш, эсвэл TOEFL iBT 80 / IELTS 6.0 / TEPS 326. Материалыг 12-р сарын 18-ны дотор шуудангаар илгээнэ. 1-р сарын 8-нд ярилцлага (ангиас хамаарна).",
+      "sourceUrl": "https://iadmission.khu.ac.kr/upload/contents/202609/202609030457310180.pdf",
+      "evidence": "2027학년도 전기 일반대학원 정원외 외국인전형 모집요강 — 수시 모집 전형 일정 (* 국제캠퍼스 이공계열에 한하여 시행): 온라인 원서 접수 2026.12.11.(금) 10:00 ~ 12.18(금) 17:00까지 / 서류제출 12.18(금) 우편소인분까지 / 서류/면접(실기)전형 2027.01.08.(금) / 합격자 발표 2027.01.15.(금) 15:00. 전형료 전 계열 167,000원 (원서접수 수수료 7,000원 포함). 어학: TOPIK 4급 이상 또는 TOEFL iBT 80, IELTS 6.0, TEPS 326.",
+      "confidence": "HIGH",
+      "laterRounds": "정시 모집 (all departments, Sep 7 – Oct 2, 2026, result Dec 11) already closed; stored row is 수시 (Global Campus science/engineering only)."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-11",
+      "applicationDeadline": "2026-12-18",
+      "resultAnnouncedAt": "2027-01-15",
+      "admissionFeeKrw": 167000,
+      "requirementNote": "Зөвхөн Олон улсын кампусын (Ёнъин) инженер, байгалийн шинжлэх ухааны ангиуд элсүүлнэ. TOPIK 4 буюу түүнээс дээш, эсвэл TOEFL iBT 80 / IELTS 6.0 / TEPS 326. Материалыг 12-р сарын 18-ны дотор шуудангаар илгээнэ. 1-р сарын 8-нд ярилцлага (ангиас хамаарна).",
+      "sourceUrl": "https://iadmission.khu.ac.kr/upload/contents/202609/202609030457310180.pdf",
+      "evidence": "Same 수시 schedule as MASTER (석사·박사·석박통합 전형료 167,000원).",
+      "confidence": "HIGH",
+      "laterRounds": "정시 (Sep 7 – Oct 2, 2026) already closed."
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (2-р семестр) гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://iadmission.khu.ac.kr/gglobalcenter/user/main/view.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) магистрын гадаад оюутны элсэлт хараахан зарлагдаагүй.",
+      "checkUrl": "https://iadmission.khu.ac.kr/gglobalcenter/user/main/view.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын гадаад оюутны элсэлт хараахан зарлагдаагүй.",
+      "checkUrl": "https://iadmission.khu.ac.kr/gglobalcenter/user/main/view.do"
+    }
+  ]
+}

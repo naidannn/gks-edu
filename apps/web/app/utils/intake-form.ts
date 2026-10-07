@@ -100,7 +100,10 @@ export function fillIntakeFormFromCandidate(form: IntakeForm, candidate: IntakeC
   // A researched round is unverified by definition — a human has not checked
   // it against the school yet, and the list flags that.
   form.verified = false;
-  form.note = candidate.note ?? '';
+  // The candidate's note is the research's own doubt, written for the reviewer
+  // ("no search ran", "guessed from last year"). `IntakeTerm.note` is printed on
+  // the public university page, so it is never copied across (1H-14).
+  form.note = '';
 }
 
 const text = (value: string): string | null => (value.trim() ? value.trim() : null);

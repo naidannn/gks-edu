@@ -1,0 +1,31 @@
+{
+  "slug": "postech",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027/3-ын гадаад оюутны бүртгэл хаагдсан (2026.08.25–09.02). 2027 оны намрын элсэлт 2027 оны 3–4-р сард нээгдэнэ; журам 2027 оны 1-р сарын сүүлээр гарна.",
+      "checkUrl": "https://adm-iu.postech.ac.kr/user/comm/menu/3317587a17a23d4dacdb9ffc4762bf4a/content/index.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027/3 хаагдсан (гадаад оюутны 2-р шат, 2026.07.06–09.11). 2027 оны намрынх нь 2027-28 оны 1-р шат — өмнөх жил 2.24–4.03 хооронд явагдсан; одоогоор зарлагдаагүй.",
+      "checkUrl": "https://adm-g.postech.ac.kr/ENG/application01/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуанлитай ижил.",
+      "checkUrl": "https://adm-g.postech.ac.kr/ENG/application01/"
+    }
+  ]
+}

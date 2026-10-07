@@ -455,6 +455,9 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
                 <td class="gks-tnum">{{ formatNumericDateUtc(t.classStartDate) }}</td>
                 <td>
                   <DsBadge :tone="INTAKE_STATUS_TONE[t.status]">{{ INTAKE_STATUS_LABELS[t.status] }}</DsBadge>
+                  <DsBadge v-if="t.sourceType === 'AI_ASSISTED'" tone="info">
+                    {{ INTAKE_SOURCE_LABELS.AI_ASSISTED }}
+                  </DsBadge>
                   <DsBadge v-if="!t.verifiedAt" tone="warning">Хянагдаагүй</DsBadge>
                 </td>
                 <td>{{ t.note ?? '—' }}</td>

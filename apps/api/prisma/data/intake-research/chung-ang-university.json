@@ -1,0 +1,107 @@
+{
+  "slug": "chung-ang-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-08-31",
+      "applicationDeadline": "2026-10-09",
+      "classStartDate": "2026-12-07",
+      "resultAnnouncedAt": null,
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Монгол улсын иргэд хамгийн багадаа 4 улирал (1 жил) бүртгүүлнэ. Өргөдөл болон бүх материалыг бүртгэлийн хугацаанд онлайнаар илгээнэ. Сөүл кампусын сургалтын төлбөр нэг улиралд 1,700,000₩.",
+      "sourceUrl": "https://korean.cau.ac.kr/korean/registration.php?mid=m03_01_03",
+      "evidence": "겨울 지원기간 (베트남, 몽골, 우즈벡, 미얀마) 2026.08.31~2026.10.09 / (중국, 일본) 2026.08.31~2026.10.30 / (그 외 기타국가) 2026.08.31~2026.10.23 / 수업기간 2026.12.07~2027.02.16. Fee page (mid=m03_01_05): 정규과정 서울 1,700,000원 전형료 100,000원; 베트남, 미얀마, 몽골, 우즈베키스탄 지원자는 4학기(1년)를 등록해야 합니다.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-16",
+      "applicationDeadline": "2026-11-27",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-18",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "TOPIK 4 буюу түүнээс дээш (Нэгдсэн инженерчлэл TOPIK 5). Шаардлага хангаагүй бол 2 жилийн дотор TOPIK 4 авах нөхцөлтэй урьдчилсан тэнцэл олгоно. Урлаг, биеийн тамирын анги 200,000₩ хураамжтай, 12-р сарын 5-нд дадлагын шалгалт авна. Анагаахын анги энэ шатанд элсүүлэхгүй.",
+      "sourceUrl": "https://oias.cau.ac.kr/cauoie/under/notice.do?mode=download&articleNo=51004&attachNo=62965",
+      "evidence": "구분 2027학년도 전반기(3월 입학) 1차 / 2차 — 원서 접수 및 서류제출 2026.8.31.(월) ~ 9.18.(금) / 2026.11.16.(월) ~ 11.27.(금); 예체능계열 실기고사 2026.10.10.(토) / 2026.12.5.(토); 합격자 발표 2026.10.30.(금) / 2026.12.18.(금); 학부 개강일(예정): 2027.3.2.(화); 전형료 인문대학…경영경제대학 등 150,000원, 의과대학 150,000원, 예술대학 | 체육대학 200,000원; 한국어능력기준 충족 조건: TOPIK 4급 취득 또는 본교 언어교육원 4급 이상 수료; 융합공학부 TOPIK 5급 이상",
+      "confidence": "HIGH",
+      "laterRounds": "1차 (2026-08-31 ~ 09-18) closed; the row stores 2차."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-16",
+      "applicationDeadline": "2026-10-26",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-12-10",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (спорт шинжлэх ухаан, бүжгийн анги TOPIK 2), эсвэл TOEFL iBT 71 / IELTS 5.5 / TEPS 600 / TOEIC 800. Материалыг 10-р сарын 27-ны дотор биечлэн эсвэл шуудангаар хүргэнэ. 11-р сарын 9–21-ний хооронд ярилцлага (гадаадад байгаа бол видео/утсаар). Дадлагын шалгалттай урлагийн ангид хураамж 130,000₩.",
+      "sourceUrl": "https://oias.cau.ac.kr/cauoie/grad/notice.do?mode=view&articleNo=51188",
+      "evidence": "원서접수 2026.10.16.(금) ~ 10.26.(월) / 서류제출 2026.10.16.(금) ~ 10.27.(화) - 우편 접수 시, 마감일 우편 소인분까지 인정 / 화상 또는 전화면접(해외거주자) 2026.11.9 ~ 11.21 / 합격자 발표 2026.12.10.(목) 예정. Guide PDF: 한국어능력시험 3급 이상 (스포츠과학과 및 무용 2급), TOEFL iBT 71, IELTS 5.5, CEFR B2, TEPS 600, TOEIC 800; Application fee General Departments KRW 100,000 / Departments with Practical Exam KRW 130,000",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-16",
+      "applicationDeadline": "2026-10-26",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-12-10",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (спорт шинжлэх ухаан, бүжгийн анги TOPIK 2), эсвэл TOEFL iBT 71 / IELTS 5.5 / TEPS 600 / TOEIC 800. Материалыг 10-р сарын 27-ны дотор биечлэн эсвэл шуудангаар хүргэнэ. 11-р сарын 9–21-ний хооронд ярилцлага (гадаадад байгаа бол видео/утсаар).",
+      "sourceUrl": "https://oias.cau.ac.kr/cauoie/grad/notice.do?mode=view&articleNo=51188",
+      "evidence": "Same notice and guide as MASTER — one schedule for 석사/박사.",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын бүртгэлийн хугацаа нийтлэгдээгүй (2026 оных: Монголд 12.01–01.09).",
+      "checkUrl": "https://korean.cau.ac.kr/korean/registration.php?mid=m03_01_03"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын бүртгэлийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://korean.cau.ac.kr/korean/registration.php?mid=m03_01_03"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын улирлын бүртгэлийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://korean.cau.ac.kr/korean/registration.php?mid=m03_01_03"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлт (1-р шат 3-р сард, 2-р шат 6-р сард) зарлагдаагүй.",
+      "checkUrl": "https://oias.cau.ac.kr/cauoie/under/notice.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후반기) магистр/докторын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://oias.cau.ac.kr/cauoie/grad/notice.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후반기) магистр/докторын элсэлт зарлагдаагүй.",
+      "checkUrl": "https://oias.cau.ac.kr/cauoie/grad/notice.do"
+    }
+  ]
+}
