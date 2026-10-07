@@ -17,13 +17,26 @@ export interface MessengerParticipant {
 export interface MessageItem {
   id: string;
   conversationId: string;
-  kind: 'TEXT' | 'SYSTEM';
+  kind: 'TEXT' | 'SYSTEM' | 'IMAGE';
+  /** For an IMAGE, its caption — possibly empty. */
   body: string;
   fromStaff: boolean;
   sender: MessengerParticipant | null;
   clientToken: string | null;
+  image: MessageImage | null;
   editedAt: Date | null;
   createdAt: Date;
+}
+
+/**
+ * A photo's two signed file tokens (1K-11), redeemed at `GET /files/:token`.
+ * They expire within two hours and are re-minted on every read of the thread.
+ */
+export interface MessageImage {
+  token: string;
+  thumbToken: string;
+  width: number | null;
+  height: number | null;
 }
 
 export interface ConversationListItem {

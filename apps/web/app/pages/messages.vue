@@ -243,6 +243,7 @@ const assigneeLine = computed(() => {
         :other-read-at="thread.otherReadAt.value"
         placeholder="Зөвлөхөд бичих…"
         @send="thread.send"
+        @send-image="thread.sendImage"
         @typing="thread.ping"
         @retry="thread.retry"
         @load-older="thread.loadOlder"

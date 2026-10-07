@@ -1,4 +1,5 @@
-import { Controller, Get, Param, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Param, Res, StreamableFile } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator.js';
 import { StorageService } from './storage.service.js';
@@ -17,9 +18,17 @@ export class FilesController {
   @Get(':token')
   @Public()
   @ApiOperation({ summary: 'Download a file via its short-lived signed token (§9)' })
-  async download(@Param('token') token: string): Promise<StreamableFile> {
-    const path = this.storage.verify(token);
+  async download(
+    @Param('token') token: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { path, expiresAt } = this.storage.verifyWithExpiry(token);
     const buffer = await this.storage.read(path);
+    // Every stored path is unique and never rewritten, so the bytes behind a
+    // token cannot change. `private` keeps them out of any shared cache; the
+    // lifetime ends with the token's own.
+    const maxAge = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    res.setHeader('Cache-Control', `private, max-age=${maxAge}, immutable`);
     return new StreamableFile(buffer, { type: this.storage.contentTypeFor(path) });
   }
 }

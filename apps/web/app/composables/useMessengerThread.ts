@@ -22,6 +22,23 @@ export interface PendingMessage extends MessageItem {
   pending?: boolean;
   /** The send failed; the bubble offers a retry rather than vanishing. */
   failed?: boolean;
+  /**
+   * A photo still on its way up (1K-11): an object URL of the picked file, so
+   * the bubble shows it at once, and the file itself, so a retry can resend it.
+   */
+  localPreview?: string;
+  file?: File;
+}
+
+/** Matches the API's ceiling; checked here so a 30MB pick fails before it uploads. */
+export const MESSENGER_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
+export const MESSENGER_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+
+/** Why a picked file cannot be sent, or null when it can. */
+export function messengerImageProblem(file: File): string | null {
+  if (!MESSENGER_IMAGE_TYPES.includes(file.type)) return 'Зөвхөн JPG, PNG, WebP зураг илгээнэ үү';
+  if (file.size > MESSENGER_IMAGE_MAX_BYTES) return 'Зургийн хэмжээ 20MB-с ихгүй байх ёстой';
+  return null;
 }
 
 export function useMessengerThread() {
@@ -140,6 +157,7 @@ export function useMessengerThread() {
       fromStaff: writesAsStaff.value,
       sender: null,
       clientToken,
+      image: null,
       editedAt: null,
       createdAt: new Date().toISOString(),
       pending: true,
@@ -165,6 +183,64 @@ export function useMessengerThread() {
     }
   }
 
+  /**
+   * A photo with an optional caption (1K-11), optimistic like `send`: the
+   * bubble shows the picked file from an object URL while it uploads. The
+   * server does the compression, so what goes up is the original.
+   */
+  async function sendImage(file: File, caption = ''): Promise<void> {
+    const target = conversation.value;
+    if (!target || sending.value) return;
+
+    const problem = messengerImageProblem(file);
+    if (problem) {
+      error.value = problem;
+      return;
+    }
+
+    const clientToken = crypto.randomUUID();
+    const optimistic: PendingMessage = {
+      id: `pending-${clientToken}`,
+      conversationId: target.id,
+      kind: 'IMAGE',
+      body: caption.trim(),
+      fromStaff: writesAsStaff.value,
+      sender: null,
+      clientToken,
+      image: null,
+      editedAt: null,
+      createdAt: new Date().toISOString(),
+      pending: true,
+      localPreview: URL.createObjectURL(file),
+      file,
+    };
+    messages.value = [...messages.value, optimistic];
+    sending.value = true;
+    error.value = null;
+
+    try {
+      replaceOrAppend(await postImage(target.id, file, optimistic.body, clientToken));
+      otherReadAt.value = null;
+    } catch (cause) {
+      const failed = messages.value.find((item) => item.clientToken === clientToken);
+      if (failed) {
+        failed.pending = false;
+        failed.failed = true;
+      }
+      error.value = apiErrorMessage(cause, 'Зургийг илгээж чадсангүй');
+    } finally {
+      sending.value = false;
+    }
+  }
+
+  function postImage(conversationId: string, file: File, caption: string, clientToken: string) {
+    const form = new FormData();
+    form.append('file', file);
+    if (caption) form.append('body', caption);
+    form.append('clientToken', clientToken);
+    return api.post<MessageItem>(`/messenger/conversations/${conversationId}/images`, form);
+  }
+
   /** Re-sends a bubble that failed, reusing its token so it cannot double-post. */
   async function retry(message: PendingMessage): Promise<void> {
     const target = conversation.value;
@@ -173,10 +249,12 @@ export function useMessengerThread() {
     message.failed = false;
     message.pending = true;
     try {
-      const saved = await api.post<MessageItem>(`/messenger/conversations/${target.id}/messages`, {
-        body: message.body,
-        clientToken: message.clientToken,
-      });
+      const saved = message.file
+        ? await postImage(target.id, message.file, message.body, message.clientToken)
+        : await api.post<MessageItem>(`/messenger/conversations/${target.id}/messages`, {
+            body: message.body,
+            clientToken: message.clientToken,
+          });
       replaceOrAppend(saved);
     } catch {
       message.pending = false;
@@ -220,8 +298,15 @@ export function useMessengerThread() {
       : -1;
     const index = byToken !== -1 ? byToken : messages.value.findIndex((item) => item.id === message.id);
 
-    if (index === -1) messages.value = [...messages.value, message];
-    else messages.value[index] = message;
+    if (index === -1) {
+      messages.value = [...messages.value, message];
+      return;
+    }
+    // The stored photo replaces the local preview; the object URL holds the
+    // whole original in memory until it is revoked.
+    const previous = messages.value[index];
+    if (previous?.localPreview) URL.revokeObjectURL(previous.localPreview);
+    messages.value[index] = message;
   }
 
   /** Wires the thread to the live stream. Call once, from the page. */
@@ -277,6 +362,7 @@ export function useMessengerThread() {
     open,
     loadOlder,
     send,
+    sendImage,
     retry,
     ping,
     leave,

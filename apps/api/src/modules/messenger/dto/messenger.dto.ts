@@ -77,6 +77,26 @@ export class SendMessageDto {
   clientToken?: string;
 }
 
+/**
+ * The text half of a photo upload (1K-11) — the file itself is the multipart
+ * `file` part. Multipart fields always arrive as strings, so an absent caption
+ * is simply omitted rather than sent empty.
+ */
+export class SendImageDto {
+  @ApiPropertyOptional({ maxLength: 4000, description: 'Зургийн тайлбар' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(4000)
+  @Transform(trimBody)
+  body?: string;
+
+  @ApiPropertyOptional({ maxLength: 64 })
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  clientToken?: string;
+}
+
 /** Paging runs backwards from `before`, so a thread opens at its newest end. */
 export class QueryMessagesDto {
   @ApiPropertyOptional({ description: 'Энэ мессежээс өмнөх хуудсыг ав' })

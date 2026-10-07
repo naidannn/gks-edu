@@ -5,6 +5,7 @@ import { ConversationStatus, Role } from '../../prisma/client.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
+import type { StorageService } from '../../storage/storage.service.js';
 import { MessengerEventsService } from './messenger-events.service.js';
 import { MessengerService } from './messenger.service.js';
 import type { MessengerStreamEvent } from './messenger.types.js';
@@ -104,8 +105,19 @@ function makeService(overrides: {
   const notifications = { dispatch: vi.fn().mockResolvedValue(1) } as unknown as NotificationsService;
   const slack = { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
 
-  const service = new MessengerService(prisma, events, notifications, slack);
-  return { service, prisma, events, notifications, slack, tx, conversationUpdate, messageCreate };
+  const storage = {
+    uploadImage: vi.fn().mockResolvedValue({
+      path: 'messenger/conv-1/1-a.webp',
+      thumbPath: 'messenger/conv-1/1-a-thumb.webp',
+      width: 1600,
+      height: 1200,
+      bytes: 180_000,
+    }),
+    signCacheable: vi.fn((path: string) => ({ token: `tok:${path}`, expiresAt: new Date() })),
+  } as unknown as StorageService;
+
+  const service = new MessengerService(prisma, events, notifications, slack, storage);
+  return { service, prisma, events, notifications, slack, storage, tx, conversationUpdate, messageCreate };
 }
 
 describe('MessengerService', () => {
@@ -272,6 +284,73 @@ describe('MessengerService', () => {
  * the badge did not filter by status, so the navigation kept counting a thread
  * that had left the open inbox and nobody could find what to click.
  */
+describe('MessengerService photos (1K-11)', () => {
+  const file = { buffer: Buffer.from('jpeg-bytes') } as Express.Multer.File;
+
+  it('stores the compressed photo under the thread and writes an IMAGE row', async () => {
+    const { service, storage, messageCreate } = makeService();
+    await service.sendImage(CLIENT, 'conv-1', file, { body: 'Паспорт' });
+
+    expect(storage.uploadImage).toHaveBeenCalledWith({ prefix: 'messenger/conv-1', buffer: file.buffer });
+    const data = messageCreate.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data).toMatchObject({
+      kind: 'IMAGE',
+      body: 'Паспорт',
+      imagePath: 'messenger/conv-1/1-a.webp',
+      imageThumbPath: 'messenger/conv-1/1-a-thumb.webp',
+      imageWidth: 1600,
+      imageBytes: 180_000,
+    });
+  });
+
+  it('never uploads for somebody who cannot see the thread', async () => {
+    const { service, storage } = makeService({ conversation: conversationRow({ clientUserId: 'someone-else' }) });
+    await expect(service.sendImage({ ...CLIENT, id: 'user-2' }, 'conv-1', file, {})).rejects.toThrow('Чат олдсонгүй');
+    expect(storage.uploadImage).not.toHaveBeenCalled();
+  });
+
+  it('does not store a retried photo a second time', async () => {
+    const { service, storage, messageCreate } = makeService({ existingMessage: messageRow({ clientToken: 't-1' }) });
+    await service.sendImage(CLIENT, 'conv-1', file, { clientToken: 't-1' });
+    expect(storage.uploadImage).not.toHaveBeenCalled();
+    expect(messageCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a request with no file before touching anything', async () => {
+    const { service, prisma } = makeService();
+    await expect(service.sendImage(CLIENT, 'conv-1', undefined, {})).rejects.toThrow('Зураг сонгоно уу');
+    expect(prisma.conversation.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('gives an uncaptioned photo a preview line of its own', async () => {
+    const { service, conversationUpdate } = makeService();
+    await service.sendImage(CLIENT, 'conv-1', file, {});
+    const data = conversationUpdate.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data.lastMessagePreview).toBe('📷 Зураг');
+  });
+
+  it('hands the bubble signed tokens, never a storage path', async () => {
+    const { service } = makeService({
+      existingMessage: messageRow({
+        kind: 'IMAGE',
+        clientToken: 't-2',
+        imagePath: 'messenger/conv-1/x.webp',
+        imageThumbPath: 'messenger/conv-1/x-thumb.webp',
+        imageWidth: 800,
+        imageHeight: 600,
+      }),
+    });
+    const message = await service.sendImage(CLIENT, 'conv-1', file, { clientToken: 't-2' });
+    expect(message.image).toEqual({
+      token: 'tok:messenger/conv-1/x.webp',
+      thumbToken: 'tok:messenger/conv-1/x-thumb.webp',
+      width: 800,
+      height: 600,
+    });
+    expect(JSON.stringify(message)).not.toContain('"imagePath"');
+  });
+});
+
 describe('MessengerService unread bookkeeping (1N-42)', () => {
   it('clears the staff counter when a thread is resolved', async () => {
     const { service, conversationUpdate } = makeService();

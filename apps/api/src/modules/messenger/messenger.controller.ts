@@ -11,16 +11,22 @@ import {
   Post,
   Query,
   Sse,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Observable, Subject, finalize, interval, map, merge } from 'rxjs';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { isStaff } from '../../common/constants/roles.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
-import { QueryMessagesDto, SendMessageDto, SetTypingDto } from './dto/messenger.dto.js';
+import { QueryMessagesDto, SendImageDto, SendMessageDto, SetTypingDto } from './dto/messenger.dto.js';
 import { MessengerEventsService } from './messenger-events.service.js';
 import { MessengerService } from './messenger.service.js';
 import type { MessengerStreamEvent } from './messenger.types.js';
+
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 /**
  * A thread is one resource whichever side is looking at it, so the operations
@@ -65,6 +71,26 @@ export class MessengerController {
     @Body() dto: SendMessageDto,
   ) {
     return this.messenger.send(user, id, dto);
+  }
+
+  /**
+   * A photo (1K-11). Multer holds it in memory — the default storage — because
+   * it goes straight to `sharp` and the original is never written anywhere.
+   * The 20MB ceiling matches every other upload; the stored result is a WebP
+   * of a few hundred KB at most.
+   */
+  @Post('conversations/:id/images')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
+  @ApiOperation({ summary: 'Зураг илгээх — серверт WebP болгон шахаж хадгална' })
+  sendImage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() dto: SendImageDto,
+  ) {
+    return this.messenger.sendImage(user, id, file, dto);
   }
 
   @Post('conversations/:id/read')

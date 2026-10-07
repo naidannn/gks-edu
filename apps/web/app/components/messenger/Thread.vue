@@ -34,6 +34,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   send: [body: string];
+  sendImage: [file: File, caption: string];
   typing: [];
   retry: [message: PendingMessage];
   loadOlder: [];
@@ -215,6 +216,7 @@ const resolved = computed(() => props.conversation?.status === 'RESOLVED');
         :placeholder="placeholder"
         :sending="sending"
         @send="emit('send', $event)"
+        @send-image="(file, caption) => emit('sendImage', file, caption)"
         @typing="emit('typing')"
       />
     </footer>

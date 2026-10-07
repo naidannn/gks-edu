@@ -21,7 +21,7 @@ export type ConversationTopic =
   | 'DEPARTURE'
   | 'OTHER';
 
-export type MessageKind = 'TEXT' | 'SYSTEM';
+export type MessageKind = 'TEXT' | 'SYSTEM' | 'IMAGE';
 
 /** Who the other side of a thread is, as far as a bubble needs to know. */
 export interface MessengerParticipant {
@@ -30,16 +30,30 @@ export interface MessengerParticipant {
   role: UserRole;
 }
 
+/**
+ * A photo's two signed file tokens (1K-11), redeemed at `GET /files/:token`.
+ * Both point at server-compressed WebP files; the thumbnail is what the
+ * thread renders. Width and height are the full image's, for the box ratio.
+ */
+export interface MessageImage {
+  token: string;
+  thumbToken: string;
+  width: number | null;
+  height: number | null;
+}
+
 export interface MessageItem {
   id: string;
   conversationId: string;
   kind: MessageKind;
+  /** For an IMAGE, its caption — possibly empty. */
   body: string;
   /** True when a staff member wrote it — which side of the thread it sits on. */
   fromStaff: boolean;
   sender: MessengerParticipant | null;
   /** Echoed back so an optimistic bubble can be replaced by the stored row. */
   clientToken: string | null;
+  image: MessageImage | null;
   editedAt: string | null;
   createdAt: string;
 }

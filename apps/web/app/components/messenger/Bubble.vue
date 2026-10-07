@@ -26,6 +26,25 @@ const props = defineProps<{
 defineEmits<{ retry: [message: PendingMessage] }>();
 
 const senderName = computed(() => props.message.sender?.name ?? (props.message.fromStaff ? 'GKS зөвлөх' : ''));
+
+const config = useRuntimeConfig();
+const fileUrl = (token: string): string => `${config.public.apiBase}/files/${token}`;
+
+/**
+ * A photo (1K-11): the stored thumbnail, or — while it is still uploading —
+ * the picked file itself. Clicking opens the full-size WebP in a new tab.
+ */
+const photo = computed(() => {
+  const { image, localPreview } = props.message;
+  if (image) return { src: fileUrl(image.thumbToken), href: fileUrl(image.token), width: image.width, height: image.height };
+  if (localPreview) return { src: localPreview, href: null, width: null, height: null };
+  return null;
+});
+
+/** Reserves the box before the bytes arrive, so the thread does not jump as photos load. */
+const photoRatio = computed(() =>
+  photo.value?.width && photo.value.height ? `${photo.value.width} / ${photo.value.height}` : undefined,
+);
 </script>
 
 <template>
@@ -54,7 +73,21 @@ const senderName = computed(() => props.message.sender?.name ?? (props.message.f
         class="gks-msg__bubble"
         :class="{ 'gks-msg__bubble--pending': message.pending, 'gks-msg__bubble--failed': message.failed }"
       >
-        <p class="gks-msg__body">{{ message.body }}</p>
+        <template v-if="message.kind === 'IMAGE'">
+          <component
+            :is="photo?.href ? 'a' : 'div'"
+            v-if="photo"
+            class="gks-msg__photo"
+            :href="photo.href ?? undefined"
+            target="_blank"
+            rel="noopener"
+            :style="{ aspectRatio: photoRatio }"
+          >
+            <img :src="photo.src" :alt="message.body || 'Зураг'" loading="lazy" decoding="async">
+          </component>
+          <p v-if="message.body" class="gks-msg__body gks-msg__caption">{{ message.body }}</p>
+        </template>
+        <p v-else class="gks-msg__body">{{ message.body }}</p>
       </div>
 
       <div v-if="trailing || message.failed" class="gks-msg__meta">
@@ -158,6 +191,19 @@ const senderName = computed(() => props.message.sender?.name ?? (props.message.f
   color: var(--danger-fg);
   box-shadow: none;
 }
+
+/* A photo bubble is the photo: the padding moves onto the caption. */
+.gks-msg__bubble:has(.gks-msg__photo) { padding: var(--sp-1); }
+.gks-msg__photo {
+  display: block;
+  width: min(280px, 64vw);
+  max-height: 360px;
+  overflow: hidden;
+  border-radius: calc(var(--radius-3) - var(--sp-1));
+  background: var(--surface-sunken);
+}
+.gks-msg__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gks-msg__caption { padding: var(--sp-2) var(--sp-3) var(--sp-1); }
 
 /* `pre-wrap` keeps the paragraph breaks somebody typed; `anywhere` stops a
    pasted URL from pushing the bubble past the pane. */

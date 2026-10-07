@@ -14,6 +14,8 @@ allowBuilds:
   '@scarf/scarf': false
   # Native binary for msgpackr (bullmq's Redis payload encoder) — optional perf boost.
   msgpackr-extract: true
+  # libvips for the messenger's image compression (1K-11).
+  sharp: true
 
 peerDependencyRules:
   allowedVersions:

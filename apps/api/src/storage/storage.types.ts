@@ -13,6 +13,8 @@ export const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
   png: 'image/png',
+  // Messenger photos (1K-11) are always re-encoded to WebP before storage.
+  webp: 'image/webp',
 };
 
 /** Real magic-byte signatures for {@link ALLOWED_UPLOAD_EXTENSIONS} (0-09 MIME sniff). */

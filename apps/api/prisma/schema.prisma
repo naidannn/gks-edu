@@ -2586,6 +2586,9 @@ enum MessageKind {
   /// A line the system wrote: claimed, resolved, reopened. Rendered centred
   /// and greyed, never as somebody's bubble.
   SYSTEM
+  /// A photo (1K-11). `body` is its optional caption; the file itself is a
+  /// server-compressed WebP under `messenger/` in the private bucket.
+  IMAGE
 }
 
 model Message {
@@ -2608,6 +2611,18 @@ model Message {
   /// The sender's own id for this send, so a retried request after a dropped
   /// connection reuses the row instead of posting the line twice.
   clientToken String? @db.VarChar(64)
+
+  /// IMAGE only (1K-11). Both are storage paths, never URLs: the bubble gets
+  /// a short-lived signed link minted per read, like every other file.
+  /// The thumbnail is what the thread renders; the full one opens on click.
+  imagePath      String? @db.VarChar(300)
+  imageThumbPath String? @db.VarChar(300)
+  /// Of the stored full-size image, so the bubble reserves its box before the
+  /// bytes arrive and the thread does not jump as photos load.
+  imageWidth     Int?
+  imageHeight    Int?
+  /// Stored bytes of the full-size image — what compression actually bought.
+  imageBytes     Int?
 
   editedAt DateTime?
 

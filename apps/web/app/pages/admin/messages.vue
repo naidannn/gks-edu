@@ -315,6 +315,7 @@ const responseNote = computed(() => {
         :other-read-at="thread.otherReadAt.value"
         placeholder="Хэрэглэгчид хариу бичих…"
         @send="thread.send"
+        @send-image="thread.sendImage"
         @typing="thread.ping"
         @retry="thread.retry"
         @load-older="thread.loadOlder"

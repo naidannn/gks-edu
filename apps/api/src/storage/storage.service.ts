@@ -12,11 +12,14 @@ import {
   KNOWLEDGE_MIME_BY_EXTENSION,
   type StorageDriver,
 } from './storage.types.js';
+import { compressImage } from './image-compress.js';
 
 export const STORAGE_DRIVER = Symbol('STORAGE_DRIVER');
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 0-09 — 20MB cap
 const SIGNED_URL_TTL_MS = 5 * 60 * 1000; // ARCHITECTURE.md §9 — 5 min
+/** The bucket a cacheable token's expiry is rounded up to — see `signCacheable`. */
+const CACHEABLE_BUCKET_MS = 60 * 60 * 1000;
 
 export interface SignedFileUrl {
   token: string;
@@ -111,6 +114,37 @@ export class StorageService {
     return { path, extension: claimed };
   }
 
+  /**
+   * Stores a messenger photo (1K-11) as two WebP files — the full image and the
+   * thumbnail the thread renders — after `compressImage` has re-encoded it.
+   * The original upload is never written anywhere.
+   */
+  async uploadImage(params: { prefix: string; buffer: Buffer }): Promise<{
+    path: string;
+    thumbPath: string;
+    width: number;
+    height: number;
+    bytes: number;
+  }> {
+    const { prefix, buffer } = params;
+
+    if (buffer.byteLength === 0) {
+      throw new BadRequestException('Файл хоосон байна');
+    }
+    if (buffer.byteLength > MAX_UPLOAD_BYTES) {
+      throw new BadRequestException('Файлын хэмжээ 20MB-с ихгүй байх ёстой');
+    }
+
+    const { full, thumb } = await compressImage(buffer);
+
+    const stem = `${prefix}/${Date.now()}-${randomUUID()}`;
+    const path = `${stem}.webp`;
+    const thumbPath = `${stem}-thumb.webp`;
+    await Promise.all([this.driver.upload(path, full.buffer), this.driver.upload(thumbPath, thumb.buffer)]);
+
+    return { path, thumbPath, width: full.width, height: full.height, bytes: full.buffer.byteLength };
+  }
+
   async read(path: string): Promise<Buffer> {
     return this.driver.read(path);
   }
@@ -126,8 +160,28 @@ export class StorageService {
     return { token, expiresAt: new Date(expiresAt) };
   }
 
+  /**
+   * A token for a file the browser should cache — a chat photo rendered every
+   * time somebody opens the thread. `sign()` would mint a new URL on every
+   * read and the browser would download the same image again each time.
+   *
+   * The expiry is rounded up to the next whole hour plus one more, so every
+   * read within the same hour yields the identical URL, and the link is good
+   * for between one and two hours. Only for immutable paths: the URL is the
+   * cache key, so a file overwritten in place would be served stale.
+   */
+  signCacheable(path: string): SignedFileUrl {
+    const expiresAt = (Math.floor(Date.now() / CACHEABLE_BUCKET_MS) + 2) * CACHEABLE_BUCKET_MS;
+    return { token: this.encode(path, expiresAt), expiresAt: new Date(expiresAt) };
+  }
+
   /** Verifies signature + expiry, returning the path to read or throwing. */
   verify(token: string): string {
+    return this.verifyWithExpiry(token).path;
+  }
+
+  /** `verify`, plus when the token runs out — the files route caches up to that moment. */
+  verifyWithExpiry(token: string): { path: string; expiresAt: number } {
     const [pathB64, expiresAtRaw, signature] = token.split('.');
     if (!pathB64 || !expiresAtRaw || !signature) {
       throw new BadRequestException('Файлын холбоос буруу байна');
@@ -145,7 +199,7 @@ export class StorageService {
       throw new BadRequestException('Файлын холбоосын хугацаа дууссан байна');
     }
 
-    return Buffer.from(pathB64, 'base64url').toString('utf8');
+    return { path: Buffer.from(pathB64, 'base64url').toString('utf8'), expiresAt };
   }
 
   contentTypeFor(path: string): string {

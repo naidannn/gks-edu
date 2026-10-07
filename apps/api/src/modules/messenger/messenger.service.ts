@@ -12,6 +12,7 @@ import {
   Role,
 } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { StorageService } from '../../storage/storage.service.js';
 import { type ClientPhase, clientPhaseOf } from '../clients/client-phase.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
@@ -22,6 +23,7 @@ import {
   QueryMessagesDto,
   QueryMyConversationsDto,
   QueryRecipientsDto,
+  SendImageDto,
   SendMessageDto,
   StartConversationDto,
   StartConversationForClientDto,
@@ -95,6 +97,7 @@ export class MessengerService {
     private readonly events: MessengerEventsService,
     private readonly notifications: NotificationsService,
     private readonly slack: SlackService,
+    private readonly storage: StorageService,
   ) {}
 
   // ── Client side ───────────────────────────────────────────────────────────
@@ -203,19 +206,74 @@ export class MessengerService {
 
   /** Appends to an existing thread. The caller's side is decided by their role. */
   async send(user: AuthenticatedUser, conversationId: string, dto: SendMessageDto) {
+    return this.append(user, conversationId, {
+      kind: MessageKind.TEXT,
+      body: dto.body,
+      clientToken: dto.clientToken,
+    });
+  }
+
+  /**
+   * A photo, with an optional caption (1K-11). The access check and the retry
+   * check both run before anything is compressed or stored, so a stranger's
+   * upload never reaches the bucket and a retried one is not stored twice.
+   */
+  async sendImage(
+    user: AuthenticatedUser,
+    conversationId: string,
+    file: Express.Multer.File | undefined,
+    dto: SendImageDto,
+  ) {
+    if (!file?.buffer?.length) throw new BadRequestException('Зураг сонгоно уу');
+
+    return this.append(user, conversationId, {
+      kind: MessageKind.IMAGE,
+      body: dto.body ?? '',
+      clientToken: dto.clientToken,
+      image: async () => {
+        const stored = await this.storage.uploadImage({
+          prefix: `messenger/${conversationId}`,
+          buffer: file.buffer,
+        });
+        return {
+          imagePath: stored.path,
+          imageThumbPath: stored.thumbPath,
+          imageWidth: stored.width,
+          imageHeight: stored.height,
+          imageBytes: stored.bytes,
+        };
+      },
+    });
+  }
+
+  /** The one write path for a person's message, whichever kind it is. */
+  private async append(
+    user: AuthenticatedUser,
+    conversationId: string,
+    input: {
+      kind: MessageKind;
+      body: string;
+      clientToken?: string;
+      image?: () => Promise<
+        Pick<Prisma.MessageUncheckedCreateInput, 'imagePath' | 'imageThumbPath' | 'imageWidth' | 'imageHeight' | 'imageBytes'>
+      >;
+    },
+  ) {
     const conversation = await this.load(conversationId, user);
     const fromStaff = isStaff(user.role);
 
     // An idempotent retry after a dropped connection returns the stored row
     // rather than posting the line twice.
-    if (dto.clientToken) {
+    if (input.clientToken) {
       const existing = await this.prisma.message.findUnique({
-        where: { conversationId_clientToken: { conversationId, clientToken: dto.clientToken } },
+        where: { conversationId_clientToken: { conversationId, clientToken: input.clientToken } },
         select: MESSAGE_SELECT,
       });
       if (existing) return this.toMessage(existing);
     }
 
+    const image = input.image ? await input.image() : {};
+    const summary = summarise(input.kind, input.body);
     const now = new Date();
 
     const { message, updated } = await this.prisma.$transaction(async (tx) => {
@@ -224,8 +282,10 @@ export class MessengerService {
           conversationId,
           senderId: user.id,
           fromStaff,
-          body: dto.body,
-          clientToken: dto.clientToken ?? null,
+          kind: input.kind,
+          body: input.body,
+          clientToken: input.clientToken ?? null,
+          ...image,
         },
         select: MESSAGE_SELECT,
       });
@@ -234,7 +294,7 @@ export class MessengerService {
         where: { id: conversationId },
         data: {
           lastMessageAt: now,
-          lastMessagePreview: preview(dto.body),
+          lastMessagePreview: preview(summary),
           lastMessageFromStaff: fromStaff,
           // The side that just spoke has, by definition, read everything.
           ...(fromStaff
@@ -267,8 +327,8 @@ export class MessengerService {
 
     this.fanOut(updated, message, { toStaff: true, toUserIds: [updated.clientUserId] });
 
-    if (fromStaff) await this.notifyClient(updated, dto.body);
-    else await this.pingOffice(updated, dto.body, false);
+    if (fromStaff) await this.notifyClient(updated, summary);
+    else await this.pingOffice(updated, summary, false);
 
     return this.toMessage(message);
   }
@@ -847,6 +907,17 @@ export class MessengerService {
       fromStaff: row.fromStaff,
       sender: row.sender ? { id: row.sender.id, name: row.sender.name, role: row.sender.role } : null,
       clientToken: row.clientToken,
+      // Cacheable tokens: the thread re-reads on every open, and a fresh URL
+      // each time would download every photo again.
+      image:
+        row.imagePath && row.imageThumbPath
+          ? {
+              token: this.storage.signCacheable(row.imagePath).token,
+              thumbToken: this.storage.signCacheable(row.imageThumbPath).token,
+              width: row.imageWidth,
+              height: row.imageHeight,
+            }
+          : null,
       editedAt: row.editedAt,
       createdAt: row.createdAt,
     };
@@ -920,6 +991,12 @@ function fullName(client: { lastName: string; firstName: string } | null | undef
 /** `Б.Наран` if we know the name, a neutral noun if we do not. */
 function staffLabel(name: string | null | undefined): string {
   return name?.trim() || 'Ажилтан';
+}
+
+/** What a list row, a bell and Slack say about a message — a photo has no text of its own. */
+function summarise(kind: MessageKind, body: string): string {
+  if (kind !== MessageKind.IMAGE) return body;
+  return body.trim() ? `📷 ${body}` : '📷 Зураг';
 }
 
 function preview(body: string): string {
