@@ -1,0 +1,262 @@
+{
+  "slug": "cha-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [],
+  "faculties": [
+    {
+      "nameKo": "간호대학",
+      "nameEn": "College of Nursing",
+      "nameMn": "Сувилахуйн танхим"
+    },
+    {
+      "nameKo": "약학대학",
+      "nameEn": "College of Pharmacy",
+      "nameMn": "Эм зүйн танхим"
+    },
+    {
+      "nameKo": "글로벌미래인재대학",
+      "nameEn": "Global Future Talent College",
+      "nameMn": "Глобал ирээдүйн авьяастны танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "간호대학",
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаадын иргэн бакалаврт 'бүх боловсролын хөтөлбөрөө гадаадад дүүргэсэн' (전 교육과정 이수자) эсвэл гадаадад ажилладаг эцэг эхийн хүүхэд (재외국민) ангиллаар орно. Элсэлт: бичиг баримтын үнэлгээ 30% + ярилцлага 70%. Ярилцлагаар солонгос хэлний чадварыг шалгана. Сувилахуйн бакалаврын хөтөлбөр Солонгосын сувилахуйн боловсролын үнэлгээний хүрээлэнгийн магадлан итгэмжлэлтэй.",
+      "sourceUrl": "https://admission.cha.ac.kr/wp-content/uploads/2026/05/배포용-차의과학대학교-2027학년도-재외국민과-외국인-특별전형-모집요강.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "약학대학",
+      "nameKo": "약학과",
+      "nameEn": "Pharmacy",
+      "nameMn": "Эм зүй",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаадын иргэн бакалаврт 'бүх боловсролын хөтөлбөрөө гадаадад дүүргэсэн' (전 교육과정 이수자) эсвэл гадаадад ажилладаг эцэг эхийн хүүхэд (재외국민) ангиллаар орно. Элсэлт: бичиг баримтын үнэлгээ 30% + ярилцлага 70%. Ярилцлагаар солонгос хэлний чадварыг шалгана. Эм зүйн анги: Солонгосын их сургуулийн элсэлтийн шалгалт (수능)-ын дүнгийн доод шаардлага үйлчилнэ (3 хичээлийн зэрэглэлийн нийлбэр 7-оос бага, математик заавал).",
+      "sourceUrl": "https://admission.cha.ac.kr/wp-content/uploads/2026/05/배포용-차의과학대학교-2027학년도-재외국민과-외국인-특별전형-모집요강.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌미래인재대학",
+      "nameKo": "글로벌미래인재대학 (무전공)",
+      "nameEn": "Global Future Talent College (undeclared major)",
+      "nameMn": "Глобал ирээдүйн авьяастны танхим (мэргэжил сонгоогүй)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаадын иргэн бакалаврт 'бүх боловсролын хөтөлбөрөө гадаадад дүүргэсэн' (전 교육과정 이수자) эсвэл гадаадад ажилладаг эцэг эхийн хүүхэд (재외국민) ангиллаар орно. Элсэлт: бичиг баримтын үнэлгээ 30% + ярилцлага 70%. Ярилцлагаар солонгос хэлний чадварыг шалгана. Мэргэжил сонгохгүйгээр элсэж, 2-р курсэд амьдралын шинжлэх ухаан эсвэл эрүүл мэндийн нэгдсэн салбарын мэргэжлээс 1-2-ыг сонгоно.",
+      "sourceUrl": "https://admission.cha.ac.kr/wp-content/uploads/2026/05/배포용-차의과학대학교-2027학년도-재외국민과-외국인-특별전형-모집요강.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "의학과",
+      "nameEn": "Medicine",
+      "nameMn": "Анагаах ухаан",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага. Эмнэлзүйн мэргэжилд эмчийн үнэмлэхтэй байх шаардлагатай; суурь анагаах ухаанд үнэмлэхгүй ч болно. Нэгдсэн анагаах ухаан, нийгмийн эрүүл мэнд, урлагаар эмчилгээ, спортын анагаах ухаан, сэтгэл зүйн зөвлөгөө нь зөвхөн докторт.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "의학과",
+      "nameEn": "Medicine",
+      "nameMn": "Анагаах ухаан",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага. Эмнэлзүйн мэргэжилд эмчийн үнэмлэхтэй байх шаардлагатай; суурь анагаах ухаанд үнэмлэхгүй ч болно. Нэгдсэн анагаах ухаан, нийгмийн эрүүл мэнд, урлагаар эмчилгээ, спортын анагаах ухаан, сэтгэл зүйн зөвлөгөө нь зөвхөн докторт.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага. Сувилагчийн үнэмлэхтэй байх (авах төлөвтэй хүн орно) шаардлагатай.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага. Сувилагчийн үнэмлэхтэй байх (авах төлөвтэй хүн орно) шаардлагатай.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "생명과학과",
+      "nameEn": "Life Science",
+      "nameMn": "Амьдралын шинжлэх ухаан",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "생명과학과",
+      "nameEn": "Life Science",
+      "nameMn": "Амьдралын шинжлэх ухаан",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "약학과",
+      "nameEn": "Pharmacy",
+      "nameMn": "Эм зүй",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага. Эм зүйчийн үнэмлэхтэй болон үнэмлэхгүй хүн хоёулаа өргөдөл өгч болно.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "약학과",
+      "nameEn": "Pharmacy",
+      "nameMn": "Эм зүй",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага. Эм зүйчийн үнэмлэхтэй болон үнэмлэхгүй хүн хоёулаа өргөдөл өгч болно.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "AI헬스케어융합학과",
+      "nameEn": "AI Healthcare Convergence",
+      "nameMn": "Хиймэл оюун ба эрүүл мэндийн нэгдсэн анги",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI헬스케어융합학과",
+      "nameEn": "AI Healthcare Convergence",
+      "nameMn": "Хиймэл оюун ба эрүүл мэндийн нэгдсэн анги",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "2027 оны хаврын элсэлт (өргөдөл 2026-10-12 – 11-13). Бичиг баримтын үнэлгээ ба ярилцлага.",
+      "sourceUrl": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [],
+  "excluded": [
+    {
+      "what": "바이오융합과학과, 바이오소재공학과(계약학과), 융합의과학과(계약학과), 임상의학과(외국인전담과정)",
+      "reason": "2027 оны ерөнхий их сургуулийн магистр/докторын элсэлтийн хүснэгтэд ороогүй: бакалаврын шилжилтийн нэгдсэн хөтөлбөр болон байгууллагын захиалгат гэрээт анги. Биофьюжн анги мөн жагсаалтад байхгүй."
+    },
+    {
+      "what": "의학전문대학원, 보건산업대학원, 미술치료대학원",
+      "reason": "Тусгай/мэргэжлийн сургууль — энэ ээлжинд зөвхөн 일반대학원."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бүх түвшний сургалтын төлбөр (등록금), 입학금",
+      "reason": "Сургуулийн албан сайтад гадаад оюутны төлбөрийн хүснэгт нийтлээгүй (бакалавр, магистр, докторын 모집요강-д төлбөр байхгүй; нийтийн хуудас зөвхөн дүрмийг заасан, дүн нь хувийн төлбөрийн хуудсаар). Таамаглаагүй.",
+      "checkAt": "https://www.cha.ac.kr/대학생활/학사안내/학사행정/등록금/"
+    },
+    {
+      "what": "Гадаад оюутны элсэлтийн тэтгэлэг",
+      "reason": "Бакалаврын 모집요강-д тэтгэлгийн дүрэм байхгүй. Магистр/докторт зөвхөн нийтлэг дотоод тэтгэлэг (жишээ нь Ерөнхийлөгчийн тэтгэлэг 25%, нэгж эрдэм шинжилгээний ангийн санал) — гадаад оюутанд зориулсан тогтсон хувь олдсонгүй.",
+      "checkAt": "https://grad.cha.ac.kr/%ea%b5%90%eb%82%b4%ec%9e%a5%ed%95%99%ea%b8%88/"
+    },
+    {
+      "what": "Хэлний бэлтгэл (한국어교육원)",
+      "reason": "Сургуулийн албан сайтад хэлний бэлтгэлийн анги олдсонгүй (글로벌교육원-ийн хуудсанд зөвхөн солилцоо, зуны хөтөлбөр). Мөр оруулаагүй.",
+      "checkAt": "https://global.cha.ac.kr/"
+    },
+    {
+      "what": "Магистр/докторын 모집인원, 입학금 (예치금 300,000₩ — төлбөрийн нэг хэсэг)",
+      "reason": "Эх сурвалж зөвхөн урьдчилгаа 300,000₩ ба өргөдлийн хураамж 90,000₩-г заасан; хүснэгтэнд оноож чадсангүй.",
+      "checkAt": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559"
+    },
+    {
+      "what": "Бакалавр: 약학과-ийн сургалтын жил (4+2 эсэх)",
+      "reason": "Мэдүүлэгт хугацаа заагаагүй тул хоосон үлдээв.",
+      "checkAt": "https://admission.cha.ac.kr/wp-content/uploads/2026/05/배포용-차의과학대학교-2027학년도-재외국민과-외국인-특별전형-모집요강.pdf"
+    },
+    {
+      "what": "Магистр/докторын хугацааны жил (2/3)",
+      "reason": "Мэдүүлэгт хугацаа заагаагүй тул хоосон үлдээв.",
+      "checkAt": "https://grad.cha.ac.kr/%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0/%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/?mod=document&uid=21559"
+    }
+  ]
+}

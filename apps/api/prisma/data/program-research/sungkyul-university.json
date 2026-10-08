@@ -1,0 +1,724 @@
+{
+  "slug": "sungkyul-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 3541000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2025,
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM",
+      "evidence": "인문사회 1학년 3,541,000원 (2~4학년 3,371,000원) — 상기 등록금액은 2025학년도 1학기 기준이며, 향후 변동될 수 있음"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학체능",
+      "tuitionPerTermKrw": 4425000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2025,
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM",
+      "evidence": "공학체능 1학년 4,425,000원 (2~4학년 4,255,000원)"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "예능",
+      "tuitionPerTermKrw": 4871000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2025,
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM",
+      "evidence": "예능 1학년 4,871,000원 (2~4학년 4,701,000원)"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어교육원",
+      "tuitionPerTermKrw": 1100000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://www.sungkyul.ac.kr/sklanguage/3596/subview.do",
+      "confidence": "HIGH",
+      "evidence": "접수비: 50,000원(반환불가) 수업료: 한 학기 1,100,000원 * 4학기 이상 등록해야 하며, 납입 시 4학기 수업료를 납부해야 함"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "신학대학",
+      "nameEn": "College of Theology",
+      "nameMn": "Теологийн танхим"
+    },
+    {
+      "nameKo": "인문대학",
+      "nameEn": "College of Humanities",
+      "nameMn": "Хүмүүнлэгийн танхим"
+    },
+    {
+      "nameKo": "사회과학대학",
+      "nameEn": "College of Social Sciences",
+      "nameMn": "Нийгмийн ухааны танхим"
+    },
+    {
+      "nameKo": "글로벌경영기술대학",
+      "nameEn": "College of Global Business and Technology",
+      "nameMn": "Глобал бизнес, технологийн танхим"
+    },
+    {
+      "nameKo": "사범대학",
+      "nameEn": "College of Education",
+      "nameMn": "Багшийн танхим"
+    },
+    {
+      "nameKo": "IT공과대학",
+      "nameEn": "College of IT Engineering",
+      "nameMn": "МТ-ийн инженерийн танхим"
+    },
+    {
+      "nameKo": "예술대학",
+      "nameEn": "College of Arts",
+      "nameMn": "Урлагийн танхим"
+    },
+    {
+      "nameKo": "미래인재융합대학",
+      "nameEn": "College of Future Talent Convergence",
+      "nameMn": "Ирээдүйн авьяасын нэгдсэн танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "신학대학",
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар. Солонгос хэл, англи хэл, хоёр хэлний гурван хөтөлбөртэй.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "신학대학",
+      "nameKo": "기독교교육상담학과",
+      "nameEn": "Christian Education and Counseling",
+      "nameMn": "Христийн боловсрол, зөвлөгөө",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문대학",
+      "nameKo": "국어국문학과",
+      "nameEn": "Korean Language and Literature",
+      "nameMn": "Солонгос хэл, уран зохиол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문대학",
+      "nameKo": "영어영문학과",
+      "nameEn": "English Language and Literature",
+      "nameMn": "Англи хэл, уран зохиол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문대학",
+      "nameKo": "중어중문학과",
+      "nameEn": "Chinese Language and Literature",
+      "nameMn": "Хятад хэл, уран зохиол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사회과학대학",
+      "nameKo": "국제개발협력학과",
+      "nameEn": "International Development and Cooperation",
+      "nameMn": "Олон улсын хөгжил, хамтын ажиллагаа",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사회과학대학",
+      "nameKo": "행정학부",
+      "nameEn": "Public Administration",
+      "nameMn": "Төрийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар. Хоёр мэргэжилтэй: төрийн удирдлага, орон нутгийн нийтийн авьяас.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사회과학대학",
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사회과학대학",
+      "nameKo": "관광학과",
+      "nameEn": "Tourism",
+      "nameMn": "Аялал жуулчлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌경영기술대학",
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌경영기술대학",
+      "nameKo": "글로벌물류학과",
+      "nameEn": "Global Logistics",
+      "nameMn": "Глобал логистик",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌경영기술대학",
+      "nameKo": "산업경영공학과",
+      "nameEn": "Industrial and Management Engineering",
+      "nameMn": "Үйлдвэрлэл, менежментийн инженерчлэл",
+      "tuitionGroup": "공학체능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사범대학",
+      "nameKo": "유아교육과",
+      "nameEn": "Early Childhood Education",
+      "nameMn": "Нялхсын боловсрол",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "IT공과대학",
+      "nameKo": "컴퓨터공학과",
+      "nameEn": "Computer Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학체능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "IT공과대학",
+      "nameKo": "정보통신공학과",
+      "nameEn": "Information and Communication Engineering",
+      "nameMn": "Мэдээлэл, холбооны инженерчлэл",
+      "tuitionGroup": "공학체능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "IT공과대학",
+      "nameKo": "미디어소프트웨어학과",
+      "nameEn": "Media Software",
+      "nameMn": "Медиа програм хангамж",
+      "tuitionGroup": "공학체능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "IT공과대학",
+      "nameKo": "도시디자인정보공학과",
+      "nameEn": "Urban Design and Information Engineering",
+      "nameMn": "Хотын дизайн, мэдээллийн инженерчлэл",
+      "tuitionGroup": "공학체능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술대학",
+      "nameKo": "실용음악예술학과",
+      "nameEn": "Practical Music Arts",
+      "nameMn": "Хэрэглээний хөгжмийн урлаг",
+      "tuitionGroup": "예능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 3-аас дээш (урлагийн чиглэл). Бүтээлийн бичлэг нэмж өгнө. Санхүүгийн баталгаа: 10,000 доллар. Мэргэжил: дуу хоолой, сонгодог төгөлдөр хуур, вокал, зохиол, хөгжмийн зэмсэг, хөгжмийн технологи.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술대학",
+      "nameKo": "연기예술학과",
+      "nameEn": "Acting Arts",
+      "nameMn": "Жүжиглэх урлаг",
+      "tuitionGroup": "예능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 3-аас дээш (урлагийн чиглэл). Бүтээлийн бичлэг нэмж өгнө. Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술대학",
+      "nameKo": "영화영상학과",
+      "nameEn": "Film and Video",
+      "nameMn": "Кино, видео",
+      "tuitionGroup": "예능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 3-аас дээш (урлагийн чиглэл). Бүтээлийн бичлэг нэмж өгнө. Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술대학",
+      "nameKo": "뷰티디자인학과",
+      "nameEn": "Beauty Design",
+      "nameMn": "Гоо сайхны дизайн",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "미래인재융합대학",
+      "nameKo": "인문사회계열자율전공학부",
+      "nameEn": "Humanities and Social Sciences Undeclared Major",
+      "nameMn": "Хүмүүнлэг, нийгмийн ухааны чөлөөт мэргэжил",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "미래인재융합대학",
+      "nameKo": "공학계열자율전공학부",
+      "nameEn": "Engineering Undeclared Major",
+      "nameMn": "Инженерийн чөлөөт мэргэжил",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "미래인재융합대학",
+      "nameKo": "융합학부",
+      "nameEn": "Convergence Division",
+      "nameMn": "Нэгдсэн мэргэжлийн сургууль",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. TOPIK 4-өөс дээш, эсвэл хоёр хэлний хөтөлбөр (TOPIK-гүй орж, 1 жилийн дотор 320 цагийн солонгос хэлний сургалт дүүргээд сургуулийн шалгалт өгнө). Санхүүгийн баталгаа: 10,000 доллар. Мэргэжлүүд: медиа контент технологи, био гоо сайхны инженерчлэл, К-контент.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "교육학과",
+      "nameEn": "Education",
+      "nameMn": "Боловсролын ухаан",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "음악융합예술학과",
+      "nameEn": "Music Convergence Arts",
+      "nameMn": "Хөгжмийн нэгдсэн урлаг",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон. Мэргэжил: хэрэглээний хөгжим, сонгодог хөгжим. Бүтээлийн жагсаалт шаардана.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "바이오화장품융합공학과",
+      "nameEn": "Bio-Cosmetics Convergence Engineering",
+      "nameMn": "Био гоо сайхны нэгдсэн инженерчлэл",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 2.5,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон. Мэргэжил: олон улсын менежмент.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "교육학과",
+      "nameEn": "Education",
+      "nameMn": "Боловсролын ухаан",
+      "tuitionGroup": null,
+      "durationYears": 2.5,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "음악융합예술학과",
+      "nameEn": "Music Convergence Arts",
+      "nameMn": "Хөгжмийн нэгдсэн урлаг",
+      "tuitionGroup": null,
+      "durationYears": 2.5,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон. Мэргэжил: хэрэглээний хөгжим, сонгодог хөгжим. Бүтээлийн жагсаалт шаардана.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "바이오화장품융합공학과",
+      "nameEn": "Bio-Cosmetics Convergence Engineering",
+      "nameMn": "Био гоо сайхны нэгдсэн инженерчлэл",
+      "tuitionGroup": null,
+      "durationYears": 2.5,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "경영학과(3년제)",
+      "nameEn": "Business Administration (3-year)",
+      "nameMn": "Бизнесийн удирдлага (3 жилийн)",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэлний хөтөлбөр: TOPIK 4 (урлагт 3); хоёр хэлний хөтөлбөр: TOPIK-гүй бол орсны дараа 300 цагийн солонгос хэлний сургалт, сургуулийн шалгалт; англи хэл: TOEFL iBT 59 / IELTS 5.5. Банкны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어교육원",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Жилд 4 улирал (3, 6, 9, 12-р сар), улирал бүр 10 долоо хоног, 4 өдөр 4 цаг. Монгол, хятад, вьетнам, узбек оюутан 2-оос дээш улирал бүртгүүлж, виз өргөдлийг сургууль нэг дор өгнө; нийт 4 улирлын төлбөрийг урьдчилж төлнө. Бүртгэлийн хураамж 50,000₩, даатгал жилд 100,000₩, сурах бичиг 60,000₩.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/sklanguage/3596/subview.do",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 특별전형 입학장학금 (TOPIK 6급)",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "headline": false,
+      "criteria": "TOPIK 6급",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "evidence": "TOPIK 6급 등록금의 100%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 특별전형 입학장학금 (TOPIK 5급)",
+      "kind": "ENTRANCE",
+      "percent": 80,
+      "headline": false,
+      "criteria": "TOPIK 5급",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "evidence": "TOPIK 5급 등록금의 80%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 특별전형 입학장학금 (TOPIK 4급)",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "headline": true,
+      "criteria": "TOPIK 4급, 예체능 외 기타 학부(과) 50%",
+      "noteMn": "Элсэхдээ TOPIK 4 байвал сургалтын төлбөрийн 50% хөнгөлнө (урлагийн чиглэлд 60%). TOPIK 5 бол 80%, TOPIK 6 бол 100% хүртэл хөнгөлөлттэй.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "evidence": "TOPIK 4급 3-2. 예체능 외 기타 학부(과) 입학시, 등록금의 50%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "groups": [
+        "예능"
+      ],
+      "name": "외국인 특별전형 입학장학금 (TOPIK 4급, 예체능)",
+      "kind": "ENTRANCE",
+      "percent": 60,
+      "headline": true,
+      "criteria": "TOPIK 4급, 예체능 60%",
+      "noteMn": "Урлагийн чиглэлд TOPIK 4 бол сургалтын төлбөрийн 60% хөнгөлнө. TOPIK 5 бол 80%, TOPIK 6 бол 100% хүртэл хөнгөлөлттэй.",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "evidence": "3-1. 예체능 입학시, 등록금의 60%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 특별전형 입학장학금 (TOPIK 3급)",
+      "kind": "ENTRANCE",
+      "percent": 30,
+      "headline": false,
+      "criteria": "TOPIK 3급, 예체능 외 30%",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "evidence": "4-2. 예체능 외 기타 학부(과) 입학시, 등록금의 30%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "groups": [
+        "예능"
+      ],
+      "name": "외국인 특별전형 입학장학금 (TOPIK 3급, 예체능)",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "headline": false,
+      "criteria": "TOPIK 3급, 예체능 50%",
+      "sourceUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do",
+      "evidence": "4-1. 예체능 입학시, 등록금의 50%"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "사회복지대학원 요양관리학과, 신학대학원, 교육대학원, 프라임대학원, 계약학과",
+      "reason": "Тусгай/мэргэжлийн сургууль, гэрээт анги — энэ ээлжинд зөвхөн 일반대학원."
+    },
+    {
+      "what": "파이데이아칼리지",
+      "reason": "Гадаад оюутны элсэлтийн хүснэгтэд ороогүй."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалаврын төлбөр: 사범대학 유아교육과, 예술대학 뷰티디자인학과, 인문사회계열·공학계열 자율전공학부, 융합학부",
+      "reason": "Сургуулийн хүснэгт нь зөвхөн гурван ангилал (인문사회/공학체능/예능) бөгөөд эдгээр анги аль ангилалд орохыг бичээгүй (자율전공-д тусдаа 3,818,000₩/3,836,000₩ мөр байгаа). Таамаглаагүй, tuitionGroup=null.",
+      "checkAt": "https://www.sungkyul.ac.kr/global/10073/subview.do"
+    },
+    {
+      "what": "Бакалаврын төлбөр 2025 оны 1-р улирлынх (1-р курс)",
+      "reason": "Сургууль 'хойно өөрчлөгдөж болно' гэж тэмдэглэсэн, 2026/2027 оны хүснэгт нийтлээгүй. 2-4-р курсийн дүн бага (3,371,000 / 4,255,000 / 4,701,000₩). Бүх бакалаврын ангийн tuitionYear=2025.",
+      "checkAt": "https://www.sungkyul.ac.kr/global/10073/subview.do"
+    },
+    {
+      "what": "Бакалаврын төлбөрийн 계열 харгалзуулалт (신학과 гэх мэт)",
+      "reason": "Ангиудыг (신학과 → 인문사회, 산업경영공학과 → 공학체능, 실용음악/연기/영화 → 예능) 계열-д тэнцүүлсэн нь сургуулийн дотоодын 일람표-гүй тул дунд зэргийн итгэлтэй (confidence MEDIUM).",
+      "checkAt": "https://www.sungkyul.ac.kr/global/10073/subview.do"
+    },
+    {
+      "what": "Магистр/докторын сургалтын төлбөр, 입학금, тэтгэлэг",
+      "reason": "Ерөнхий дээд сургуулийн гадаад оюутны мэдүүлэгт төлбөр, тэтгэлгийн дүрэм байхгүй.",
+      "checkAt": "https://www.sungkyul.ac.kr/global/10075/subview.do"
+    },
+    {
+      "what": "2027 оны хаврын бакалавр, магистрын элсэлтийн мэдүүлэг",
+      "reason": "Сургуулийн хуудсанд 2026 оны 3-р сарын элсэлтийн хуанли (2025-11) байна; 2027 оныхыг хараахан нийтлээгүй. Анги жагсаалт өөрчлөгдөж болно.",
+      "checkAt": "https://www.sungkyul.ac.kr/global/10073/subview.do"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн 2027 оны хуанли ба төлбөрийн он",
+      "reason": "Төлбөрийн хуудсанд он заагаагүй, хуанли 2024-2025 оных хэвээр. tuitionYear=null.",
+      "checkAt": "https://www.sungkyul.ac.kr/sklanguage/3596/subview.do"
+    }
+  ]
+}

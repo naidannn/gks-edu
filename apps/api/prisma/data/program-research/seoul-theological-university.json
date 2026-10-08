@@ -1,0 +1,606 @@
+{
+  "slug": "seoul-theological-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어교육원",
+      "tuitionPerTermKrw": 1450000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://intl.stu.ac.kr/CmsHome/sub03_03.eznic",
+      "confidence": "HIGH",
+      "evidence": "정규과정 수강료 5,800,000원 (1,450,000원 * 4학기); 전형료 100,000원 (환불 불가)"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "신학부",
+      "nameEn": "School of Theology",
+      "nameMn": "Теологийн танхим"
+    },
+    {
+      "nameKo": "휴먼서비스학부",
+      "nameEn": "School of Human Services",
+      "nameMn": "Хүний үйлчилгээний танхим"
+    },
+    {
+      "nameKo": "사범학부",
+      "nameEn": "College of Education",
+      "nameMn": "Багшийн танхим"
+    },
+    {
+      "nameKo": "IT융합학부",
+      "nameEn": "School of IT Convergence",
+      "nameMn": "МТ-ийн нэгдсэн танхим"
+    },
+    {
+      "nameKo": "글로벌비즈니스학부",
+      "nameEn": "School of Global Business",
+      "nameMn": "Глобал бизнесийн танхим"
+    },
+    {
+      "nameKo": "아시아문화콘텐츠학부",
+      "nameEn": "School of Asian Culture Contents",
+      "nameMn": "Азийн соёлын контентийн танхим"
+    },
+    {
+      "nameKo": "예술학부",
+      "nameEn": "School of Arts",
+      "nameMn": "Урлагийн танхим"
+    },
+    {
+      "nameKo": "국제학부",
+      "nameEn": "School of International Studies",
+      "nameMn": "Олон улсын сургууль"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "신학부",
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар. Теологийн ангид өргөдөл гаргагч сүм эсвэл элчин сайдын байгууллагын тусгай зөвлөмж, баптисм хүртсэн гэрчилгээ нэмж өгнө.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼서비스학부",
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼서비스학부",
+      "nameKo": "아동보육학과",
+      "nameEn": "Child Care",
+      "nameMn": "Хүүхдийн асрамж, хүмүүжил",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사범학부",
+      "nameKo": "기독교교육과",
+      "nameEn": "Christian Education",
+      "nameMn": "Христийн боловсрол",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар. Христийн боловсролын ангид сүмийн гишүүнчлэлийн тодорхойлолт нэмж өгнө.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "사범학부",
+      "nameKo": "유아교육과",
+      "nameEn": "Early Childhood Education",
+      "nameMn": "Нялхсын боловсрол",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "IT융합학부",
+      "nameKo": "컴퓨터공학과/AI융합학과",
+      "nameEn": "Computer Engineering / AI Convergence",
+      "nameMn": "Компьютерийн инженерчлэл / хиймэл оюуны нэгдэл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "IT융합학부",
+      "nameKo": "데이터사이언스학과",
+      "nameEn": "Data Science",
+      "nameMn": "Өгөгдлийн шинжлэх ухаан",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌비즈니스학부",
+      "nameKo": "글로벌경영학과",
+      "nameEn": "Global Management",
+      "nameMn": "Глобал менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌비즈니스학부",
+      "nameKo": "관광경영학과",
+      "nameEn": "Tourism Management",
+      "nameMn": "Аялал жуулчлалын менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "아시아문화콘텐츠학부",
+      "nameKo": "중국언어문화콘텐츠학과",
+      "nameEn": "Chinese Language and Culture Contents",
+      "nameMn": "Хятад хэл, соёлын контент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "아시아문화콘텐츠학부",
+      "nameKo": "일본어문화콘텐츠학과",
+      "nameEn": "Japanese Language and Culture Contents",
+      "nameMn": "Япон хэл, соёлын контент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술학부",
+      "nameKo": "교회음악과",
+      "nameEn": "Church Music",
+      "nameMn": "Сүмийн хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичиг (тэнцсэн/унасан) ба практик шалгалт. Урлагийн чиглэлд TOPIK 2-оос дээш, төгсөхөөс өмнө 4 авна. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술학부",
+      "nameKo": "실용음악과",
+      "nameEn": "Practical Music",
+      "nameMn": "Хэрэглээний хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичиг (тэнцсэн/унасан) ба практик шалгалт. Урлагийн чиглэлд TOPIK 2-оос дээш, төгсөхөөс өмнө 4 авна. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "자율전공학부",
+      "nameEn": "School of Autonomous Studies (undeclared)",
+      "nameMn": "Чөлөөт мэргэжлийн сургууль (мэргэжил сонгоогүй)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичгийн үнэлгээ (тэнцсэн/унасан) ба ярилцлага (60-аас дээш оноо). TOPIK 4-өөс дээш (3-тай бол төгсөхөөс өмнө 4 авна); бусад хэлний шаардлага хувилбараар. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "글로벌경영학과(영어/한국어 트랙)",
+      "nameEn": "Global Management (English/Korean track)",
+      "nameMn": "Глобал менежмент (англи/солонгос хэлний чиглэл)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Англи эсвэл солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш эсвэл IELTS 5.5 / TOEFL iBT 71. Баримт бичгийн үнэлгээ ба ярилцлага (60-аас дээш оноо). Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "관광경영학과(국제학부)",
+      "nameEn": "Tourism Management (International College)",
+      "nameMn": "Аялал жуулчлалын менежмент (Олон улсын сургууль)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Англи эсвэл солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш эсвэл IELTS 5.5 / TOEFL iBT 71. Баримт бичгийн үнэлгээ ба ярилцлага (60-аас дээш оноо). Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "글로벌한국어학과",
+      "nameEn": "Global Korean Language",
+      "nameMn": "Глобал солонгос хэл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Англи эсвэл солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш эсвэл IELTS 5.5 / TOEFL iBT 71. Баримт бичгийн үнэлгээ ба ярилцлага (60-аас дээш оноо). Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "컴퓨터공학과(영어/한국어 트랙)",
+      "nameEn": "Computer Engineering (English/Korean track)",
+      "nameMn": "Компьютерийн инженерчлэл (англи/солонгос хэлний чиглэл)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Англи эсвэл солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш эсвэл IELTS 5.5 / TOEFL iBT 71. Баримт бичгийн үнэлгээ ба ярилцлага (60-аас дээш оноо). Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "음악과",
+      "nameEn": "Music",
+      "nameMn": "Хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Баримт бичиг (тэнцсэн/унасан) ба практик шалгалт. Урлагийн чиглэлд TOPIK 2-оос дээш, төгсөхөөс өмнө 4 авна. Санхүүгийн баталгаа: 15,000 доллар.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон. Теологийн ангид сүм эсвэл миссийн байгууллагын зөвлөмж шаардлагатай.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон. Теологийн ангид сүм эсвэл миссийн байгууллагын зөвлөмж шаардлагатай.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "기독교교육학과",
+      "nameEn": "Christian Education",
+      "nameMn": "Христийн боловсрол",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "영유아교육·보육학과",
+      "nameEn": "Early Childhood Education and Care",
+      "nameMn": "Нялхас, багачуудын боловсрол ба асрамж",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "IT융합학과",
+      "nameEn": "IT Convergence",
+      "nameMn": "Мэдээллийн технологийн нэгдэл",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "IT융합학과",
+      "nameEn": "IT Convergence",
+      "nameMn": "Мэдээллийн технологийн нэгдэл",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "교회음악학과",
+      "nameEn": "Church Music",
+      "nameMn": "Сүмийн хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон. Практик шалгалттай.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "교회음악학과",
+      "nameEn": "Church Music",
+      "nameMn": "Сүмийн хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон. Практик шалгалттай.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "음악학과",
+      "nameEn": "Music",
+      "nameMn": "Хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Бичиг баримтын шалгалт ба аман шалгалт. TOPIK 3-аас дээш (төгсөхөөс өмнө 4 авна) эсвэл англи хэлний чиглэлд IELTS 5.5 / TOEFL iBT 71. Санхүүгийн баталгаа: 20 сая вон. Практик шалгалттай.",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어교육원",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Жилд 4 улирал, улирал бүр 10 долоо хоног (200 цаг). Хүлээн авалт: 2-р сар/3-р сар/6-р сар/8-9-р сард. Шаардлага: ахлах сургууль төгссөн, 10,000 долларын банкны үлдэгдэл. Бүртгэлийн хураамж 100,000₩.",
+      "sourceUrl": "https://intl.stu.ac.kr/CmsHome/sub03_03.eznic",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인학생 장학금 (2026학번 이후)",
+      "kind": "CONTINUING",
+      "percent": 30,
+      "semesters": null,
+      "headline": true,
+      "criteria": "직전학기 12학점 이상, 평점 3.0 이상 + TOPIK 3급 이상: 30%; 평점 3.5 이상 + TOPIK 4급: 50%; 평점 4.3 이상 + TOPIK 5급: 70%; 영어트랙 평점 2.5-3.0: 20%",
+      "noteMn": "Эхний улирлын дараа, өмнөх улирлын дүнгээр олгоно: голч 3.0+ ба TOPIK 3 бол төлбөрийн 30%, голч 3.5+ ба TOPIK 4 бол 50%, голч 4.3+ ба TOPIK 5 бол 70% хүртэл хөнгөлнө. Англи хэлний чиглэлд зөвхөн голчоор (2.5-3.0 бол 20%). Эхний улиралд автоматаар олгохгүй.",
+      "sourceUrl": "https://www.stu.ac.kr:8443/CmsHome/stu05_01_03.eznic",
+      "evidence": "2026학번 ~ 이후 3.0 이상이고 TOPIK 3급 이상 : 등록금액의 30% 감면 3.5 이상이고 TOPIK 4급 이상 : 50% 4.3 이상이고 TOPIK 5급 이상 : 70%"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "일반대학원 외국인 신입생 장학금",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "semesters": null,
+      "headline": false,
+      "criteria": "어학 능력 시험과 입학 사정을 통과한 학생에게 수업료의 50%(입학금 제외)까지 선별 지급 가능; 지도교수 추천에 따라 차등",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "evidence": "신입생의 경우는 어학 능력 시험과 입학 사정을 통과한 학생에게 장학금을 수업료의 50%(입학금 제외)까지 선별하여 지급할 수 있으며"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "일반대학원 재학생 성적 장학금",
+      "kind": "CONTINUING",
+      "percent": 50,
+      "semesters": null,
+      "headline": false,
+      "criteria": "직전 학기 6학점 이상, F 없음; 평점 3.8 이상 50%, 3.4 이상 35%, 3.2 이상 20%",
+      "sourceUrl": "https://gs.stu.ac.kr/dbimage/stugrad/WebData/StuGs01/down/StuGs01_Foreign.pdf",
+      "evidence": "직전 학기 평균 평점이 3.8 이상 / 수업료의 50% 상당액"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "신학대학원, 신학전문대학원, 사회복지대학원, 상담대학원, 설교대학원, 교회성장대학원, 글로벌경영융합대학원, 성서대학원",
+      "reason": "Тусгай/мэргэжлийн сургуулиуд — энэ ээлжинд зөвхөн 일반대학원."
+    },
+    {
+      "what": "Англи хэлний чиглэлийн ерөнхий дээд сургууль (Admissions for Graduate English Track), GKS-ийн хөтөлбөр",
+      "reason": "Ижил анги/түвшин тул давхар мөр оруулаагүй (мэргэжлүүд ижил); GKS хамрах хүрээнээс гадуур."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалавр, магистр, докторын сургалтын төлбөр (등록금), 입학금",
+      "reason": "Сургуулийн гадаад оюутны хуудас болон мэдүүлэгт төлбөрийн дүн байхгүй. Зөвхөн хэлний бэлтгэлийн төлбөр нийтлэгдсэн. Бүх анги tuitionGroup=null.",
+      "checkAt": "https://intl.stu.ac.kr/CmsHome/sub02_02.eznic"
+    },
+    {
+      "what": "Бакалаврын элсэлтийн 첫 улирлын тэтгэлэг",
+      "reason": "Гадаад оюутны тэтгэлэг эхний улиралд тогтсон хувиар олгогдох дүрэм олдсонгүй (зөвхөн өмнөх улирлын голчоор).",
+      "checkAt": "https://www.stu.ac.kr:8443/CmsHome/stu05_01_03.eznic"
+    },
+    {
+      "what": "Ерөнхий дээд сургуулийн 2027 оны хаврын гадаад оюутны магистр/докторын мэдүүлэг",
+      "reason": "Хамгийн сүүлийн мэдүүлэг 2026 оны намрын сонгон шалгаруулалт (2026-07). 2027 оны хаврынх гараагүй; анги жагсаалт өөрчлөгдөж болно.",
+      "checkAt": "https://gs.stu.ac.kr/CmsHome/StuGs0107_0105.eznic"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн 2027 оны хуанли",
+      "reason": "Сургуулийн хуанли 2025-2026 оныг л харуулсан; төлбөр 'өөрчлөгдөж болно' гэж тэмдэглэсэн, тэр тул tuitionYear хоосон.",
+      "checkAt": "https://intl.stu.ac.kr/CmsHome/sub03_02.eznic"
+    },
+    {
+      "what": "Бакалаврын 사범학부 (기독교교육과, 유아교육과)",
+      "reason": "Албан ёсны мэдүүлэг: квотоос гадуур элсэлт 10%-аас хэтрэхгүй тул элсэгчгүй байж болно.",
+      "checkAt": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf"
+    }
+  ]
+}

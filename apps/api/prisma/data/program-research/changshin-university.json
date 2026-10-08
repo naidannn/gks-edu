@@ -1,0 +1,572 @@
+{
+  "slug": "changshin-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "MASTER",
+      "group": "간호학과 석사",
+      "tuitionPerTermKrw": 4000000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "evidence": "2026학년도 후기 대학원 외국인 신입생 모집요강 등록금 안내 일반대학원 수업료 4,000,000원; 장학 특전: 입학금 전액 면제",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "group": "박사 4,500,000",
+      "tuitionPerTermKrw": 4500000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "evidence": "2026학년도 후기 대학원 외국인 신입생 모집요강 등록금 안내 일반대학원 수업료 4,500,000원; 장학 특전: 입학금 전액 면제",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "group": "박사 3,800,000",
+      "tuitionPerTermKrw": 3800000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "evidence": "2026학년도 후기 대학원 외국인 신입생 모집요강 등록금 안내 일반대학원 수업료 3,800,000원; 장학 특전: 입학금 전액 면제",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "group": "박사 4,250,000",
+      "tuitionPerTermKrw": 4250000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "evidence": "2026학년도 후기 대학원 외국인 신입생 모집요강 등록금 안내 일반대학원 수업료 4,250,000원; 장학 특전: 입학금 전액 면제",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "간호대학",
+      "nameEn": "College of Nursing",
+      "nameMn": "Сувилахуйн танхим"
+    },
+    {
+      "nameKo": "스마트휴먼대학",
+      "nameEn": "College of Smart Human",
+      "nameMn": "Смарт хүний танхим"
+    },
+    {
+      "nameKo": "스마트공과대학",
+      "nameEn": "College of Smart Engineering",
+      "nameMn": "Смарт инженерийн танхим"
+    },
+    {
+      "nameKo": "지역산업자율전공학부",
+      "nameEn": "School of Regional Industry Undeclared Majors",
+      "nameMn": "Бүс нутгийн салбарын чөлөөт мэргэжлийн сургууль"
+    },
+    {
+      "nameKo": "글로벌학부",
+      "nameEn": "School of Global Studies",
+      "nameMn": "Глобал сургууль"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "간호대학",
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "간호대학",
+      "nameKo": "응급구조학과",
+      "nameEn": "Emergency Medical Technology",
+      "nameMn": "Яаралтай тусламжийн мэргэжил",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "간호대학",
+      "nameKo": "물리치료학과",
+      "nameEn": "Physical Therapy",
+      "nameMn": "Физик эмчилгээ",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "유아교육과",
+      "nameEn": "Early Childhood Education",
+      "nameMn": "Нялхсын боловсрол",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "식품영양학과",
+      "nameEn": "Food and Nutrition",
+      "nameMn": "Хүнс, хоол тэжээл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "글로벌비즈니스학과",
+      "nameEn": "Global Business",
+      "nameMn": "Глобал бизнес",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "스마트자산경영학과",
+      "nameEn": "Smart Asset Management",
+      "nameMn": "Смарт хөрөнгийн менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "부동산경영학과(야)",
+      "nameEn": "Real Estate Management (Evening)",
+      "nameMn": "Үл хөдлөх хөрөнгийн менежмент (оройн)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "미용예술학과",
+      "nameEn": "Beauty Arts",
+      "nameMn": "Гоо сайхны урлаг",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트휴먼대학",
+      "nameKo": "뮤직공연예술학과",
+      "nameEn": "Music and Performing Arts",
+      "nameMn": "Хөгжим, тоглолтын урлаг",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트공과대학",
+      "nameKo": "항공정비기계학과",
+      "nameEn": "Aircraft Maintenance and Mechanical Engineering",
+      "nameMn": "Нисэх онгоцны засвар, машин",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트공과대학",
+      "nameKo": "디지털도시건설학과",
+      "nameEn": "Digital Urban Construction",
+      "nameMn": "Дижитал хот байгуулалт",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "스마트공과대학",
+      "nameKo": "스마트팩토리학과",
+      "nameEn": "Smart Factory",
+      "nameMn": "Смарт үйлдвэр",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "지역산업자율전공학부",
+      "nameKo": "지역산업자율전공학부",
+      "nameEn": "Regional Industry Undeclared Majors",
+      "nameMn": "Бүс нутгийн салбарын чөлөөт мэргэжил",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш эсвэл сургуулийн хэлний шалгалт/хэлний курс. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌학부",
+      "nameKo": "글로벌학부 스마트경영전공",
+      "nameEn": "Global Studies - Smart Management",
+      "nameMn": "Глобал сургууль - Смарт менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Англи хэлний сургалт (гадаад оюутны тусгай сургууль). TOEFL iBT 71 / IELTS 5.5 / CEFR B2 / TEPS 600-аас дээш. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌학부",
+      "nameKo": "글로벌학부 IT제조전공",
+      "nameEn": "Global Studies - IT Manufacturing",
+      "nameMn": "Глобал сургууль - IT үйлдвэрлэл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Англи хэлний сургалт (гадаад оюутны тусгай сургууль). TOEFL iBT 71 / IELTS 5.5 / CEFR B2 / TEPS 600-аас дээш. Эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Сургуулийн дэргэдэх Солонгос хэлний төвийн сургалт.",
+      "sourceUrl": "https://admission.cs.ac.kr/international/guideline",
+      "confidence": "LOW"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": "간호학과 석사",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": "박사 4,500,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "부동산학과",
+      "nameEn": "Real Estate",
+      "nameMn": "Үл хөдлөх хөрөнгө",
+      "tuitionGroup": "박사 3,800,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "박사 3,800,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI융합경영학과",
+      "nameEn": "AI Convergence Business Administration",
+      "nameMn": "Хиймэл оюун нэгдсэн менежмент",
+      "tuitionGroup": "박사 3,800,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "식품영양학과",
+      "nameEn": "Food and Nutrition",
+      "nameMn": "Хүнс, хоол тэжээл",
+      "tuitionGroup": "박사 3,800,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI융합공학과",
+      "nameEn": "AI Convergence Engineering",
+      "nameMn": "Хиймэл оюун нэгдсэн инженерчлэл",
+      "tuitionGroup": "박사 4,250,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "글로벌경영학과",
+      "nameEn": "Global Business Administration",
+      "nameMn": "Глобал менежмент",
+      "tuitionGroup": "박사 4,500,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "글로벌교육학과",
+      "nameEn": "Global Education",
+      "nameMn": "Глобал боловсрол",
+      "tuitionGroup": "박사 4,500,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "글로벌공연예술학과",
+      "nameEn": "Global Performing Arts",
+      "nameMn": "Глобал тоглолтын урлаг",
+      "tuitionGroup": "박사 4,500,000",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл тэнхимийн даргын хэлний баталгаа, эсвэл сургуулийн хэлний шалгалт. TOPIK 3-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "면학장학금 (정원내 외국인)",
+      "kind": "ENTRANCE",
+      "percent": 45,
+      "semesters": null,
+      "headline": true,
+      "criteria": "일반대학원 외국인 신입생 (간호학과 제외)",
+      "noteMn": "Ерөнхий магистр/докторын гадаад оюутанд сургалтын төлбөрийн 45%-ийн хөнгөлөлт, элсэлтийн (입학금) төлбөр бүрэн чөлөөлөгдөнө. Сувилахуйн тэнхимд тэтгэлэг олгохгүй. 100%-ийн шатлал байхгүй.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "evidence": "가. 면학장학금 지급 (45%) ※ 간호학과의 경우 학과 운영 특성상 장학금 미지급 나. 입학금 전액 면제"
+    },
+    {
+      "levels": [
+        "PHD"
+      ],
+      "groups": [
+        "박사 4,500,000"
+      ],
+      "name": "면학장학금 (외국인 전담과정)",
+      "kind": "ENTRANCE",
+      "percent": 30,
+      "semesters": null,
+      "headline": false,
+      "criteria": "정원외 외국인 전담과정 (글로벌경영·교육·공연예술); TOPIK 미제출자는 한국어교육센터 연수 필수",
+      "noteMn": "Гадаад оюутны тусгай хөтөлбөрт 30%-ийн хөнгөлөлт. TOPIK-гүй бол сургуулийн Солонгос хэлний сургалтад заавал хамрагдана.",
+      "sourceUrl": "https://grad.cs.ac.kr/board/163/list",
+      "evidence": "※ 외국인 전담과정 30% 감면 (단, 한국어 능력 시험 미제출자, 한국어교육센터 연수 과정 필수)"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "특수대학원 (스마트휴먼대학원, AI융합공과대학원) 석사과정",
+      "reason": "Тусгай/мэргэжлийн сургууль — энэ ээлжинд зөвхөн 일반대학원."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалаврын сургалтын төлбөр ба 입학금 (гадаад оюутан)",
+      "reason": "Гадаад оюутны журамд төлбөр заагаагүй, сургуулийн сайтад гадаад оюутны хүснэгт олдсонгүй; tuitionGroup хоосон.",
+      "checkAt": "https://admission.cs.ac.kr/international/guideline"
+    },
+    {
+      "what": "Бакалаврын элсэлтийн тэтгэлэг (гадаад оюутан)",
+      "reason": "Сургуулийн сайтад гадаад оюутанд зориулсан тусгай элсэлтийн тэтгэлгийн дүрэм олдсонгүй (ерөнхий дүрэм дотоодын оюутнуудынх).",
+      "checkAt": "https://www.cs.ac.kr/document/life2_3"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн төлбөр",
+      "reason": "Хэлний төвийн (한국어교육원/센터) төлбөр, 입학금 албан ёсны хуудсанд олдсонгүй.",
+      "checkAt": "https://www.cs.ac.kr/"
+    },
+    {
+      "what": "Сувилахуйн ба бусад магистрын тэнхим",
+      "reason": "Ерөнхий сургуулийн магистрт зөвхөн сувилахуйн тэнхим нээлттэй (бусад нь тусгай сургууль).",
+      "checkAt": "https://grad.cs.ac.kr/board/163/list"
+    },
+    {
+      "what": "Дотоодын докторын 유아교육학과, 미용예술학과",
+      "reason": "Төлбөрийн хүснэгтэд байгаа ч гадаад оюутны элсэлтийн хүснэгтэд ороогүй тул оруулаагүй.",
+      "checkAt": "https://grad.cs.ac.kr/board/163/list"
+    },
+    {
+      "what": "Хоёр түвшний төлбөр нэг улирлаар эсэх",
+      "reason": "Хүснэгтэд \"수업료\" гэж бичсэн, улирал/жил тодорхой заагаагүй; улирлын төлбөр гэж үзсэн (MEDIUM).",
+      "checkAt": "https://grad.cs.ac.kr/board/163/list"
+    },
+    {
+      "what": "Бакалаврын 2027 оны журам",
+      "reason": "Гадаад оюутны журмын хамгийн сүүлийн хувилбар 2026 оных.",
+      "checkAt": "https://admission.cs.ac.kr/international/guideline"
+    }
+  ]
+}

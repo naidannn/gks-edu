@@ -1,0 +1,310 @@
+{
+  "slug": "uiduk-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 3108000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "Хөнгөлөлтийн хүснэгт: 40% хөнгөлсөн төлбөр 1,864,800 (=3,108,000 x 0.6), 30% хөнгөлсөн 2,175,600 (=3,108,000 x 0.7), 50% хөнгөлсөн 1,554,000 (=3,108,000 x 0.5). Бүтэн төлбөр тусад нь бичигдээгүй, хүснэгтээс тооцоолсон."
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학",
+      "tuitionPerTermKrw": 3994000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "40% хөнгөлсөн 2,396,400 (=3,994,000 x 0.6), 30% хөнгөлсөн 2,795,800 (=3,994,000 x 0.7), 50% хөнгөлсөн 1,997,000 (=3,994,000 x 0.5)."
+    },
+    {
+      "level": "BACHELOR",
+      "group": "예체능",
+      "tuitionPerTermKrw": 4214000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "40% хөнгөлсөн 2,528,400 (=4,214,000 x 0.6), 30% хөнгөлсөн 2,949,800 (=4,214,000 x 0.7), 50% хөнгөлсөн 2,107,000 (=4,214,000 x 0.5)."
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "휴먼융합대학",
+      "nameEn": "College of Human Convergence",
+      "nameMn": "Хүний нэгдсэн танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼융합대학",
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼융합대학",
+      "nameKo": "유아교육과",
+      "nameEn": "Early Childhood Education",
+      "nameMn": "Нялхсын боловсрол",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼융합대학",
+      "nameKo": "외식제과제빵창업학과",
+      "nameEn": "Food Service, Baking and Start-up",
+      "nameMn": "Хоол, нарийн боов, бизнес эхлүүлэх",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼융합대학",
+      "nameKo": "반려동물학부",
+      "nameEn": "Companion Animal Division",
+      "nameMn": "Гэрийн тэжээвэр амьтны сургууль",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон. Мэргэжил: гэрийн тэжээвэр амьтны эрүүл мэнд, гэрийн тэжээвэр амьтны үйлдвэрлэл.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "휴먼융합대학",
+      "nameKo": "체육학부",
+      "nameEn": "Sports Division",
+      "nameMn": "Спортын сургууль",
+      "tuitionGroup": "예체능",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Урлаг, спортын чиглэлд хэлний шаардлага байхгүй (нэмэлт нөхцөлийг Олон улсын боловсролын төвтэй урьдчилж тохиролцоно). Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон. Мэргэжил: амралт чөлөөт цагийн спорт, мэргэжлийн спортын сургалт.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "불교문화학과",
+      "nameEn": "Buddhist Culture",
+      "nameMn": "Буддын соёл",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "한국어학과",
+      "nameEn": "Korean Language",
+      "nameMn": "Солонгос хэл",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "경찰정보보안학과",
+      "nameEn": "Police and Information Security",
+      "nameMn": "Цагдаа, мэдээллийн аюулгүй байдал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "전력시스템공학과",
+      "nameEn": "Power System Engineering",
+      "nameMn": "Цахилгаан системийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Эцэг эх, суралцагч гадаад иргэн байх. Солонгос хэл: TOPIK 3-аас дээш, эсвэл нийгмийн интеграцийн хөтөлбөр 3-р шат, Сэжон хаганы дунд 1, эсвэл их сургуулийн хэлний курс 1 жил (600 цаг) + сургуулийн UU-TOPIK шалгалт. Баримт бичгийн үнэлгээ ба ярилцлага. Банкны үлдэгдэл 16 сая вон.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 장학금 A (신·편입생)",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "우리 대학교에 신·편입한 외국인 유학생: 입학 학기 등록금의 40% 감면",
+      "noteMn": "Шинээр элссэн гадаад оюутан элссэн улиралдаа төлбөрийн 40% хөнгөлөлт авна. Дараа нь голч 2.5+ эсвэл TOPIK 4 бол 40%, голч 3.5+ ба TOPIK 4 бол 50%, TOPIK 6 бол бүтэн хөнгөлөлт. Ректорын тусгай санал бүхий хүнд 2 жил бүтэн хөнгөлөлт.",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "evidence": "A 우리 대학교에 신‧편입한 외국인 유학생 입학 학기 등록금의 40% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 장학금 B (총장특별추천자)",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": 4,
+      "headline": false,
+      "criteria": "총장특별추천자 2년간 등록금 전액 감면",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "evidence": "B ... 총장특별추천자 2년간 등록금 전액 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 장학금 C (평점 1.6-2.5)",
+      "kind": "CONTINUING",
+      "percent": 30,
+      "headline": false,
+      "criteria": "직전 학기 평점 1.6 이상 2.5 미만",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "evidence": "C ... 등록금의 30% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 장학금 D (평점 2.5 이상 혹은 TOPIK 4급)",
+      "kind": "CONTINUING",
+      "percent": 40,
+      "headline": false,
+      "criteria": "직전 학기 평점 2.5 이상 혹은 TOPIK 4급 이상",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "evidence": "D ... 등록금의 40% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 장학금 E (평점 3.5 이상 + TOPIK 4급)",
+      "kind": "CONTINUING",
+      "percent": 50,
+      "headline": false,
+      "criteria": "직전 학기 평점 3.5 이상이며 TOPIK 4급 이상",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "evidence": "E ... 등록금의 50% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 장학금 G (TOPIK 6급)",
+      "kind": "CONTINUING",
+      "percent": 100,
+      "headline": false,
+      "criteria": "TOPIK 6급 취득자: 취득 이후 학기부터 전액",
+      "sourceUrl": "https://ipsi.uu.ac.kr/pdf/0201.pdf",
+      "evidence": "G TOPIK6급(외국인 대상) 취득자 취득 이후 학기부터 등록금 전액 감면"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "불교대학원, 사회복지대학원, 경영대학원, 교육대학원",
+      "reason": "Тусгай/мэргэжлийн сургууль — энэ ээлжинд зөвхөн 일반대학원."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Магистр/докторын (일반대학원) анги, төлбөр, тэтгэлэг",
+      "reason": "grad.uu.ac.kr сайт энэ машинаас нээгдсэнгүй (холболтын хугацаа дууссан), өөр албан ёсны эх олдсонгүй. Файлд оруулаагүй.",
+      "checkAt": "https://grad.uu.ac.kr/"
+    },
+    {
+      "what": "Хэлний бэлтгэл (한국어교육원)",
+      "reason": "lang.uu.ac.kr нээгдсэнгүй; албан ёсны хуудсаас төлбөр, хуанли уншиж чадсангүй. Мөр оруулаагүй.",
+      "checkAt": "http://lang.uu.ac.kr/eng/sub_5/index3.php"
+    },
+    {
+      "what": "Бакалаврын төлбөр: 유아교육과, 외식제과제빵창업학과, 반려동물학부",
+      "reason": "Хөнгөлөлтийн хүснэгт зөвхөн 인문사회/공학/예체능 гурван ангилалтай; сургууль 사범계열, 자연계열-ийг аль нэгд нь оноож тэмдэглээгүй. Таамаглаагүй, tuitionGroup=null.",
+      "checkAt": "https://ipsi.uu.ac.kr/pdf/0201.pdf"
+    },
+    {
+      "what": "Бакалаврын бүтэн төлбөр",
+      "reason": "Сургууль бүтэн төлбөрийг тусад нь нийтлээгүй; хөнгөлсөн дүнгээс (3 хувилбарт тулгасан) тооцоолсон тул confidence MEDIUM. 입학금 заагаагүй.",
+      "checkAt": "https://ipsi.uu.ac.kr/pdf/0201.pdf"
+    },
+    {
+      "what": "Хоёр дахь блокийн ангиуд (불교문화, 한국어, 경찰정보보안, 경영, 전력시스템)-ийн танхим",
+      "reason": "Хүснэгтийн нэгтгэсэн нүднээс аль танхимд харьяалагдах нь тодорхойгүй; faculty=null.",
+      "checkAt": "https://ipsi.uu.ac.kr/pdf/0201.pdf"
+    },
+    {
+      "what": "2027 оны хаврын элсэлтийн мэдүүлэг",
+      "reason": "Хамгийн сүүлийнх нь 2026 оны намрын (후기) мэдүүлэг; 2027 оных хараахан гараагүй.",
+      "checkAt": "https://ipsi.uu.ac.kr/bbs/content.php?co_id=0201"
+    }
+  ]
+}
