@@ -1,0 +1,42 @@
+{
+  "slug": "inje-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Гадаад оюутны 2027 оны хаврын журмыг албан ёсны сайтаас (oia.inje.ac.kr) уншиж чадсангүй; хараахан нийтлэгдсэн эсэх нь тодорхойгүй.",
+      "checkUrl": "https://cms.inje.ac.kr/gc/academic/acad-06.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журмыг албан ёсны сайтаас (oia.inje.ac.kr) уншиж чадсангүй; хараахан нийтлэгдсэн эсэх нь тодорхойгүй.",
+      "checkUrl": "https://cms.inje.ac.kr/gc/academic/acad-06.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журмыг албан ёсны сайтаас (oia.inje.ac.kr) уншиж чадсангүй; хараахан нийтлэгдсэн эсэх нь тодорхойгүй.",
+      "checkUrl": "https://oia.inje.ac.kr/en/undergraduate-students"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журмыг албан ёсны сайтаас (oia.inje.ac.kr) уншиж чадсангүй; хараахан нийтлэгдсэн эсэх нь тодорхойгүй. Дотоодын 2027 оны 수시 бүртгэл 9/28–10/16 нь гадаад оюутанд тусдаа гэж заагаагүй.",
+      "checkUrl": "https://oia.inje.ac.kr/%EB%8C%80%ED%95%99%EC%9B%90%EC%83%9D/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журмыг албан ёсны сайтаас (oia.inje.ac.kr) уншиж чадсангүй; хараахан нийтлэгдсэн эсэх нь тодорхойгүй.",
+      "checkUrl": "https://oia.inje.ac.kr/%EB%8C%80%ED%95%99%EC%9B%90%EC%83%9D/"
+    }
+  ]
+}

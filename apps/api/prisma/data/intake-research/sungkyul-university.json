@@ -1,0 +1,49 @@
+{
+  "slug": "sungkyul-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Албан ёсны хуудас дээрх хоёр хүснэгт зөрүүтэй (өргөдлийн эцсийн хугацаа 10-р сарын 10 ба 10-р сарын 23); баталгаажуулж чадаагүй.",
+      "checkUrl": "https://www.sungkyul.ac.kr/global/9534/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын улирлын (2027-03) бүртгэл хараахан зарлагдаагүй; 2026 оны хавар 2025-12-01-ээс 2026-01-23 хооронд явагдсан.",
+      "checkUrl": "https://www.sungkyul.ac.kr/global/9534/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зуны улирлын 2027 оны хуанли хараахан гараагүй.",
+      "checkUrl": "https://www.sungkyul.ac.kr/global/9534/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны элсэлтийн журам хараахан гараагүй (өмнөх жил 2025-11-11-ээс 11-28 хооронд явагдсан).",
+      "checkUrl": "https://www.sungkyul.ac.kr/global/10073/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.sungkyul.ac.kr/global/10075/subview.do"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "slug": "kyungil-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) гадаадын оюутны элсэлтийн журам хараахан нийтлэгдээгүй (өмнөх жил 11-р сарын эхээр гарсан, материал 11-р сарын 20-оос).",
+      "checkUrl": "https://www.kiu.ac.kr/admission/sub.htm?nav_code=ips1556602088"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) ерөнхий магистрын гадаадын оюутны журам хараахан нийтлэгдээгүй; сайтад зөвхөн 2026 оны хаврын журам байна.",
+      "checkUrl": "https://www.kiu.ac.kr/admission/sub.htm?nav_code=ips1556273319"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) докторын гадаадын оюутны журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.kiu.ac.kr/admission/sub.htm?nav_code=ips1556273319"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Олон улсын солилцооны сургалтын төвийн (국제교류교육원) солонгос хэлний курсийн хуваарь албан сайтад олдсонгүй.",
+      "checkUrl": "https://global.kiu.ac.kr/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Солонгос хэлний курсийн 2027 оны хаврын бүртгэлийн хугацаа албан сайтад олдсонгүй.",
+      "checkUrl": "https://global.kiu.ac.kr/"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) журам хараахан гараагүй.",
+      "checkUrl": "https://www.kiu.ac.kr/admission/sub.htm?nav_code=ips1556602088"
+    }
+  ]
+}

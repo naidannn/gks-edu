@@ -1,0 +1,57 @@
+{
+  "slug": "seoul-theological-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "resultAnnouncedAt": "2026-12-04",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "Эцэг эх хоёулаа гадаад иргэн байх. Солонгос хэлний чиглэл: TOPIK 4 буюу түүнээс дээш (TOPIK 3 бол төгсөхөөс өмнө 4-ийг авна); урлагийн чиглэл TOPIK 2. Өөрийн болон хуулийн асран хамгаалагчийн 15,000 ам.доллар банкны үлдэгдэл шаардана. Онлайн бүртгэл 17:00 хүртэл (16:00), материалыг 10-р сарын 27-ны 16:00 хүртэл хүргүүлнэ. Ярилцлага (11-р сарын 11-15, гадаадад байгаа бол онлайн). 2-р шат 11-р сарын 24 - 12-р сарын 1.",
+      "sourceUrl": "https://intl.stu.ac.kr/dbimage/intl/WebData/down/2027_foreigner_03_1.pdf",
+      "evidence": "원서접수 2026년 10월 12일(월) 10:00 ~ 2026년 10월 23일(금) 16:00 / 서류제출기간 ~ 2026년 10월 27일(화) 16:00 / 합격자발표 2026년 12월 4일(금) 10:00 / 전형료 150,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2차 원서접수 2026-11-24~12-01, 서류 ~12-03, 합격자발표 2027-01-11"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний курсийн (한국어교육원) бүртгэл зөвхөн сар бүрээр (хавар 12-р сард материал авна) нийтлэгдсэн, тодорхой огноо албан сайтад байхгүй.",
+      "checkUrl": "https://intl.stu.ac.kr/CmsHome/sub03_03.eznic"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын улирлын материалыг 12-р сард авна гэсэн ерөнхий мэдээлэл байгаа ч тодорхой эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://intl.stu.ac.kr/CmsHome/sub03_03.eznic"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын (대학원) гадаадын оюутны 2027 оны журам олдсонгүй; гадаадын оюутны сайт зөвхөн бакалаврыг хамарна.",
+      "checkUrl": "https://www.stu.ac.kr/CmsHome/stu03_02.eznic"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Докторын гадаадын оюутны 2027 оны журам олдсонгүй.",
+      "checkUrl": "https://www.stu.ac.kr/CmsHome/stu03_02.eznic"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://intl.stu.ac.kr/CmsHome/sub02_02.eznic"
+    }
+  ]
+}

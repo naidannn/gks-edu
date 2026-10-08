@@ -1,0 +1,64 @@
+{
+  "slug": "korea-aerospace-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-10-23",
+      "resultAnnouncedAt": "2026-11-13",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Эцэг эх болон өргөдөл гаргагч хоёулаа гадаад иргэн байх. TOPIK 3 буюу түүнээс дээш (зарим тэнхимд англи хэлний оноо хүлээн авна, тэнхмээр өөр). Онлайн бүртгэл jinhakapply-аар 17:00 хүртэл, материалыг 10-р сарын 26-ны дотор хүргүүлнэ. Шаардлагатай бол ярилцлага (11-р сарын 3-4). 2-р шат 11-р сарын 16-20.",
+      "sourceUrl": "https://grad.kau.ac.kr/admission/guide_f.php",
+      "evidence": "원서접수 2026.10.19.(월)~10.23(금) 17시 / 서류제출 마감 2026.10.26(월) / 합격자 발표 2026.11.13(금) / 전형료: 전 과정 100,000원(접수 수수료 5,000원 포함)",
+      "confidence": "HIGH",
+      "laterRounds": "2차 2026-11-16~11-20 (발표 2026-12-11); 3차 2026-12-16~12-18 (서비스경영·항공경영학과만, 발표 2027-01-08)"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-10-23",
+      "resultAnnouncedAt": "2026-11-13",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Эцэг эх болон өргөдөл гаргагч хоёулаа гадаад иргэн, магистрын зэрэгтэй (эсвэл төгсөх төлөвтэй). TOPIK 3 буюу түүнээс дээш (зарим тэнхимд TOPIK 4), тэнхмээр өөр. Онлайн бүртгэл 17:00 хүртэл, материалыг 10-р сарын 26-ны дотор хүргүүлнэ. Шаардлагатай бол ярилцлага.",
+      "sourceUrl": "https://grad.kau.ac.kr/admission/guide_f.php",
+      "evidence": "Same schedule as MASTER; 박사과정: 국내·외 대학에서 석사학위를 취득한 자 또는 동 예정자",
+      "confidence": "HIGH",
+      "laterRounds": "2차 2026-11-16~11-20; 3차 2026-12-16~12-18 (외국인 전담학과만)"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаадын (순수외국인) бакалаврын 2027 оны хаврын журам албан сайтад хараахан нийтлэгдээгүй (олдсон хуваарь нь 2024 оных).",
+      "checkUrl": "http://college.kau.ac.kr/web/pages/gc14542h.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан сайтаас хэлний курсийн хуваарь олдсонгүй.",
+      "checkUrl": "https://www.kau.ac.kr/english"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаадын оюутны журам хараахан гараагүй.",
+      "checkUrl": "https://grad.kau.ac.kr/admission/guide_f.php"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаадын оюутны журам хараахан гараагүй.",
+      "checkUrl": "https://grad.kau.ac.kr/admission/guide_f.php"
+    }
+  ]
+}

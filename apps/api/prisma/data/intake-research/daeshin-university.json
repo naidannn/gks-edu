@@ -1,0 +1,35 @@
+{
+  "slug": "daeshin-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан сайт (daeshin.ac.kr) нээгдсэнгүй тул 2027 оны журмыг уншиж чадсангүй; 2027 оны гадаадын оюутны төлөвлөгөө ноорог төлөвтэй, эцсийн журам гараагүй.",
+      "checkUrl": "https://www.daeshin.ac.kr/html/02_admission/01_5.php"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан сайт нээгдсэнгүй тул 2027 оны ерөнхий магистрын гадаадын оюутны журмыг уншиж чадсангүй (өмнөх жил 1-р шат 9-р сарын 22 - 10-р сарын 31).",
+      "checkUrl": "https://www.daeshin.ac.kr/html/02_admission/02_3.php"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан сайт нээгдсэнгүй тул 2027 оны докторын гадаадын оюутны журмыг уншиж чадсангүй.",
+      "checkUrl": "https://www.daeshin.ac.kr/html/02_admission/02_3.php"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан сайт нээгдсэнгүй; хэлний курсийн мэдээлэл олдсонгүй.",
+      "checkUrl": "https://www.daeshin.ac.kr/"
+    }
+  ]
+}

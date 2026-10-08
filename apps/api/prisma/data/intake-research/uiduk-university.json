@@ -1,0 +1,42 @@
+{
+  "slug": "uiduk-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны (외국인 학위과정) журам хараахан гараагүй; хамгийн сүүлийнх нь 2026-9-р сарын 후기 журам (хаагдсан).",
+      "checkUrl": "https://ipsi.uu.ac.kr/bbs/content.php?co_id=0201"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны ерөнхий их сургуулийн элсэлтийн журам олдсонгүй; 2027 оны хаврын журам хараахан гараагүй.",
+      "checkUrl": "https://grad.uu.ac.kr/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын мэдээлэлтэй адил, хараахан гараагүй.",
+      "checkUrl": "https://grad.uu.ac.kr/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын хэлтсийн Солонгос хэлний хөтөлбөрийн 2027 оны хуанли сайтаас олдсонгүй.",
+      "checkUrl": "http://lang.uu.ac.kr/eng/sub_5/index3.php"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://ipsi.uu.ac.kr/bbs/content.php?co_id=0201"
+    }
+  ]
+}

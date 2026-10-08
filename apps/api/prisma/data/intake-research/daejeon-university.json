@@ -1,0 +1,49 @@
+{
+  "slug": "daejeon-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хуанли нь зөвхөн ойролцоо (өвлийн улирал: бүртгэл 11-р сарын эхээр, 12-р сарын эхээр эхэлнэ); тодорхой огноо нийтлэгдээгүй.",
+      "checkUrl": "https://www.dju.ac.kr/intro/global/cntnts.html?mi=7425"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хуанли нь зөвхөн ойролцоо (бүртгэл 2-р сарын эхээр); тодорхой огноо нийтлэгдээгүй.",
+      "checkUrl": "https://www.dju.ac.kr/intro/global/cntnts.html?mi=7425"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Хуанли нь зөвхөн ойролцоо (бүртгэл 5-р сарын эхээр); тодорхой огноо нийтлэгдээгүй.",
+      "checkUrl": "https://www.dju.ac.kr/intro/global/cntnts.html?mi=7425"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын 순수외국인 журам хараахан гараагүй (одоогийн журам 2026-2 улирлынх, бүртгэл 5/18–6/5 байсан).",
+      "checkUrl": "https://www.dju.ac.kr/intro/global/cntnts.html?mi=7425"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын журам хараахан гараагүй (сайтад 2026 оны намрын журам байна).",
+      "checkUrl": "https://www.dju.ac.kr/intro/global/cntnts.html?mi=7425"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын журам хараахан гараагүй (сайтад 2026 оны намрын журам байна).",
+      "checkUrl": "https://www.dju.ac.kr/intro/global/cntnts.html?mi=7425"
+    }
+  ]
+}

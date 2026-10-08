@@ -1,0 +1,43 @@
+{
+  "slug": "cha-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "notOffered": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан — 재외국민·외국인 특별전형 2026-07-06–07-10 (UWAY Apply). 'Эцэг эх хоёулаа гадаад' төрлийн (글로벌교육원, 031-850-9005) 2027 оны хаврын журам олдсонгүй.",
+      "checkUrl": "https://admission.cha.ac.kr/%EC%9E%AC%EC%99%B8%EA%B5%AD%EB%AF%BC-%EC%99%B8%EA%B5%AD%EC%9D%B8/%EC%9E%AC%EC%99%B8%EA%B5%AD%EB%AF%BC-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) журам хараахан гараагүй; 2026 оных 2026-04-09-нд нийтлэгдсэн.",
+      "checkUrl": "https://admission.cha.ac.kr/%EC%9E%AC%EC%99%B8%EA%B5%AD%EB%AF%BC-%EC%99%B8%EA%B5%AD%EC%9D%B8/%EC%9E%AC%EC%99%B8%EA%B5%AD%EB%AF%BC-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD/"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны ерөнхий их сургуулийн (일반대학원) журам олдсонгүй.",
+      "checkUrl": "https://admission.cha.ac.kr/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны ерөнхий их сургуулийн (일반대학원) журам олдсонгүй.",
+      "checkUrl": "https://admission.cha.ac.kr/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Солонгос хэлний курсийн хуудас олдсонгүй; байхгүй гэдгийг баталгаажуулаагүй.",
+      "checkUrl": "https://admission.cha.ac.kr/"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "slug": "kyungnam-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хугацаа зөвхөн ерөнхий (хаврын улирал: 12-р сарын эцэс хүртэл); тодорхой огноо нийтлэгдээгүй.",
+      "checkUrl": "https://www.kyungnam.ac.kr/international/6903/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны сайтад зөвхөн 2026 оны намрын журам байна; 2027 оны хаврын журам хараахан гараагүй.",
+      "checkUrl": "https://www.kyungnam.ac.kr/international/6904/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Их сургуулийн хуанлид 2027 оны хаврын элсэлт 11-р сард зарлагдахаар төлөвлөгдсөн; журам хараахан гараагүй.",
+      "checkUrl": "https://www.kyungnam.ac.kr/grad/966/subview.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Их сургуулийн хуанлид 2027 оны хаврын элсэлт 11-р сард зарлагдахаар төлөвлөгдсөн; журам хараахан гараагүй.",
+      "checkUrl": "https://www.kyungnam.ac.kr/grad/966/subview.do"
+    }
+  ]
+}

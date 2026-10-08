@@ -1,0 +1,35 @@
+{
+  "slug": "mokpo-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны хуанли шинэчлэгдээгүй; тодорхой хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://eng.mokpo.ac.kr/eng/647/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны журам хараахан гараагүй (өмнөх жил 8-р сард нийтэлсэн, хуучин журам л байна).",
+      "checkUrl": "https://ipsi.mokpo.ac.kr/bbs/ipsi/223/artclList.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны журам хараахан гараагүй (өмнөх жил 10-р сарын 10-нд нийтэлсэн).",
+      "checkUrl": "https://admgraduate.mokpo.ac.kr/bbs/admgraduate/792/artclList.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны журам хараахан гараагүй (өмнөх жил 10-р сарын 10-нд нийтэлсэн).",
+      "checkUrl": "https://admgraduate.mokpo.ac.kr/bbs/admgraduate/792/artclList.do"
+    }
+  ]
+}

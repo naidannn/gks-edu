@@ -1,0 +1,35 @@
+{
+  "slug": "dongshin-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны гадаад оюутны элсэлтийн журам (2026-ынх 2025-10-17-нд гарсан) хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://ie.dsu.ac.kr/ie/index.php?pCode=ieadmis_korean"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны гадаад оюутны элсэлтийн журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.dsu.ac.kr/eng/index.php?pCode=dsunoti&mode=list&pg=1"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны гадаад оюутны элсэлтийн журам хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.dsu.ac.kr/eng/index.php?pCode=dsunoti&mode=list&pg=1"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Солонгос хэлний хөтөлбөрийн (KLP) 2027 оны хуанли хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://korean.dsu.ac.kr/korean/"
+    }
+  ]
+}
