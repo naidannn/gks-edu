@@ -1,0 +1,42 @@
+{
+  "slug": "shinhan-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний хөтөлбөрийн хуудсанд элсэлтийн хугацаа байхгүй (төлбөр, бичиг баримт л байна).",
+      "checkUrl": "https://globleen.shinhan.ac.kr/globle/1825/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журам хараахан гараагүй; байгаа хуудас 2025 оны хугацаа бөгөөд хуучирсан.",
+      "checkUrl": "https://globleen.shinhan.ac.kr/globle/1805/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://globleen.shinhan.ac.kr/globle/1805/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын сургуулийн сайт (gs.shinhan.ac.kr) нээгдсэнгүй; 2027 оны хаврын журам баталгаажаагүй.",
+      "checkUrl": "https://gs.shinhan.ac.kr/graduate/3058/subview.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын сургуулийн сайт (gs.shinhan.ac.kr) нээгдсэнгүй; 2027 оны хаврын журам баталгаажаагүй.",
+      "checkUrl": "https://gs.shinhan.ac.kr/graduate/3058/subview.do"
+    }
+  ]
+}

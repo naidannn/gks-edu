@@ -1,0 +1,42 @@
+{
+  "slug": "kyungsung-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний хөтөлбөрийн хуудас олдсонгүй.",
+      "checkUrl": "https://kscms.ks.ac.kr/ia/CMS/Board/Board.do?mCode=MN045"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын журам хараахан гараагүй; зөвхөн ерөнхий төлөвлөгөө (хүсэлт 2026 оны 7-р сараас 2027 оны 2-р сар хүртэл) байгаа, тодорхой огноо байхгүй.",
+      "checkUrl": "https://kscms.ks.ac.kr/ia/CMS/Board/Board.do?mCode=MN045"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://kscms.ks.ac.kr/ia/CMS/Board/Board.do?mCode=MN045"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын журам хараахан гараагүй (одоо 2026 оны намрын журам байна).",
+      "checkUrl": "https://kscms.ks.ac.kr/ia/CMS/Contents/Contents.do?mCode=MN069"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын журам хараахан гараагүй (одоо 2026 оны намрын журам байна).",
+      "checkUrl": "https://kscms.ks.ac.kr/ia/CMS/Contents/Contents.do?mCode=MN069"
+    }
+  ]
+}

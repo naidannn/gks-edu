@@ -1,0 +1,69 @@
+{
+  "slug": "kyonggi-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-04",
+      "resultAnnouncedAt": "2026-12-18",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "TOPIK 4 (урлаг, спортын чиглэл TOPIK 3) буюу түүнээс дээш, эсвэл Сежон Хаквоны 2-р шатны (урлаг 1-р шат) гэрчилгээ гэх мэт. Эцэг эх нь хоёулаа гадаад иргэн байх. Бичиг баримтыг 11-р сарын 5-ны 17:00 цагаас өмнө (шуудангийн тамга хүчинтэй) хүргүүлнэ. Ярилцлага 2026-11-28 (Сувон кампус).",
+      "sourceUrl": "https://www.kyonggi.ac.kr/kgraduate/contents.do?key=124",
+      "evidence": "온라인 원서접수 2026.10.12.(월) 10:00 ~ 2026.11.04.(수) 24:00 / 서류제출 ~ 2026.11.05.(목) 17:00 / 면접고사 2026.11.28.(토) / 합격자 발표 2026.12.18.(금) 14:00(예정) / 전형료 : 80,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-11-04",
+      "resultAnnouncedAt": "2026-12-18",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "TOPIK 4 (урлаг, спортын чиглэл TOPIK 3) буюу түүнээс дээш, эсвэл Сежон Хаквоны 2-р шатны (урлаг 1-р шат) гэрчилгээ гэх мэт. Эцэг эх нь хоёулаа гадаад иргэн байх. Бичиг баримтыг 11-р сарын 5-ны 17:00 цагаас өмнө (шуудангийн тамга хүчинтэй) хүргүүлнэ. Ярилцлага 2026-11-28 (Сувон кампус).",
+      "sourceUrl": "https://www.kyonggi.ac.kr/kgraduate/contents.do?key=124",
+      "evidence": "온라인 원서접수 2026.10.12.(월) 10:00 ~ 2026.11.04.(수) 24:00 / 서류제출 ~ 2026.11.05.(목) 17:00 / 면접고사 2026.11.28.(토) / 합격자 발표 2026.12.18.(금) 14:00(예정) / 전형료 : 80,000원",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургууль «10-р сард» гэж л зарласан; 2027 оны хаврын гарын авлага зураг хэлбэртэй PDF тул огноог уншиж чадсангүй.",
+      "checkUrl": "https://www.kyonggi.ac.kr/international_kgu/contents.do?key=7156"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний сургалтын (국제교육원) бүртгэл тогтсон хугацаагүй, тусдаа эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://www.kyonggi.ac.kr/IOIE/contents.do?key=1485"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлт «4-р сард» гэж төлөвлөгдсөн; журам хараахан гараагүй.",
+      "checkUrl": "https://www.kyonggi.ac.kr/international_kgu/contents.do?key=7538"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) элсэлт хараахан зарлагдаагүй.",
+      "checkUrl": "https://www.kyonggi.ac.kr/kgraduate/contents.do?key=124"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуваариатай ижил, хараахан зарлагдаагүй.",
+      "checkUrl": "https://www.kyonggi.ac.kr/kgraduate/contents.do?key=124"
+    }
+  ]
+}

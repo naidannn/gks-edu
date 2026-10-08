@@ -1,0 +1,49 @@
+{
+  "slug": "korea-university-sejong",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-06",
+      "applicationDeadline": "2026-11-06",
+      "resultAnnouncedAt": "2026-12-31",
+      "admissionFeeKrw": 150000,
+      "requirementNote": "Хэлний шаардлагын аль нэгийг хангана: TOPIK, KLIP/солонгос хэлний сургалтын гэрчилгээ, TOEFL iBT эсвэл IELTS Academic, эсвэл солонгос/англи хэлээр явагддаг ахлах сургуулийн бүх хөтөлбөрийг төгссөн байх. Хэлний нотлох бичгийг 2026-12-11 10:00 цаг хүртэл нөхөж болно. Бүх материалыг 11-р сарын 6-ны дотор хүргэх ёстой. Эм зүйн анги (200,000 вон): 12-р сарын 17-нд биечлэн ярилцлага.",
+      "sourceUrl": "https://siae.korea.ac.kr/bbs/siae/538/182364/download.do",
+      "evidence": "온라인 원서접수 및 서류 업로드 2026.10.06-11.06 / 최종합격자 발표 2026.12.31(17:00) / 약학과면접 2026.12.17 / 전 계열(약학과 제외) 150,000 원, 약학과 200,000 원 / 어학능력 자격 ... 12 월 11 일(오전 10 시)까지 보완 필수",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "KLIP (Солонгос хэлний эрчимжүүлсэн хөтөлбөр)-ийн 2027 оны хаврын бүртгэлийн хугацаа албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://oku.korea.ac.kr/sejong/index.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сэжүн кампусын ерөнхий магистрын гадаад оюутны 2027 оны хаврын журам албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://oku.korea.ac.kr/sejong/index.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Докторын гадаад оюутны 2027 оны хаврын журам албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://oku.korea.ac.kr/sejong/index.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) элсэлт 2027 оны 3-4-р сард зарлагдана (өмнөх жил 2026-04-01-нд зарласан).",
+      "checkUrl": "https://siae.korea.ac.kr/bbs/siae/538/artclList.do"
+    }
+  ]
+}

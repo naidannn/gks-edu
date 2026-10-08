@@ -1,0 +1,49 @@
+{
+  "slug": "gwangju-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Өвлийн улирал 2026-11-23-нд эхэлнэ гэж заасан боловч бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://ie.gwangju.ac.kr/page/?site=gw_ie&mn=1454"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын хуваарь хараахан нийтлэгдээгүй (одоогоор 2026 оны хуваарь л байна).",
+      "checkUrl": "https://ie.gwangju.ac.kr/page/?site=gw_ie&mn=1454"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сайт дээр зөвхөн 2026 оны намрын элсэлтийн хуваарь (2026-06-01 ~ 07-24, хаагдсан) байна; 2027 оны хаврын хуваарь гараагүй.",
+      "checkUrl": "https://ie.gwangju.ac.kr/page/?site=gw_ie&mn=1455"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сайт дээр зөвхөн 2026 оны намрын элсэлт (2026-06-08 ~ 06-19, хаагдсан) байна; 2027 оны хаврын журам гараагүй.",
+      "checkUrl": "https://ie.gwangju.ac.kr/page/?site=gw_ie&mn=1456"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуваариатай ижил: 2027 оны хаврын журам гараагүй.",
+      "checkUrl": "https://ie.gwangju.ac.kr/page/?site=gw_ie&mn=1456"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://ie.gwangju.ac.kr/page/?site=gw_ie&mn=1455"
+    }
+  ]
+}

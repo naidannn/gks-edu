@@ -1,0 +1,79 @@
+{
+  "slug": "busan-university-of-foreign-studies",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-23",
+      "applicationDeadline": "2026-12-04",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2027-01-12",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Солонгос хэлний трек: TOPIK 3 буюу түүнээс дээш (эсвэл ярилцлагаар солонгос хэлний чадвараа харуулна). Англи хэлний трек: IELTS Academic 5.5 эсвэл CEFR B2 (эсвэл ярилцлагаар). Ярилцлага ZOOM-оор. Онлайн бүртгэл болон материалыг 12-р сарын 4-ний 17:00 цагаас өмнө хүргүүлнэ.",
+      "laterRounds": "1-р шат 2026-09-28 ~ 10-08 (хаагдсан).",
+      "sourceUrl": "https://oiaglobal.bufs.ac.kr/notice/382?sca=Admissions",
+      "evidence": "■ 1차 원서접수 : 2026.09.28.(월) ~ 2026.10.08.(목) 17:00까지 ■ 2차 원서접수 : 2026.11.23.(월) ~ 2026.12.04.(금) 17:00까지 / 2차 합격자 발표 2027.01.12 / 개강 2027.03.02 / 전형료 80,000원 (모집요강 국문 PDF)",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан: 2026 оны өвлийн улирлын элсэлтийн хуваарь 8-р сарын 20-нд зарлагдаж, ирсэн өргөдлийн үр дүн 8-р сарын 27-нд гарсан.",
+      "checkUrl": "https://www.bufs.ac.kr/bbs/board.php?bo_table=klce_main"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын бүртгэлийн хугацаа хараахан нийтлэгдээгүй. Мөн 'бүртгэлд хязгаарлалттай улс' (FAQ) жагсаалт зураг хэлбэртэй тул Монголд хамаарах эсэхийг шалгах шаардлагатай.",
+      "checkUrl": "https://www.bufs.ac.kr/bbs/board.php?bo_table=klce_board"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуваарь хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://www.bufs.ac.kr/bbs/board.php?bo_table=klce_board"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) магистрын журам хараахан гараагүй (хамгийн сүүлийнх нь 2026 оны намрын 2-р шат).",
+      "checkUrl": "https://oiaglobal.bufs.ac.kr/notice?sca=Admissions"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) докторын журам хараахан гараагүй.",
+      "checkUrl": "https://oiaglobal.bufs.ac.kr/notice?sca=Admissions"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://oiaglobal.bufs.ac.kr/notice?sca=Admissions"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын магистрын журам хараахан гараагүй.",
+      "checkUrl": "https://oiaglobal.bufs.ac.kr/notice?sca=Admissions"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын докторын журам хараахан гараагүй.",
+      "checkUrl": "https://oiaglobal.bufs.ac.kr/notice?sca=Admissions"
+    }
+  ]
+}

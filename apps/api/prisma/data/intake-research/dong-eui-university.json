@@ -1,0 +1,70 @@
+{
+  "slug": "dong-eui-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 1-р шат 2026-09-14 ~ 10-06 дууссан; 2-р шатны хугацаа хараахан зарлагдаагүй (өнгөрсөн жил 10-р сарын дундуур зарлагдсан).",
+      "checkUrl": "https://deuhome.deu.ac.kr/exchange1/sub06_01_03.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 1-р шат 2026-09-14 ~ 10-06 дууссан; 2-р шатны хугацаа хараахан зарлагдаагүй (өнгөрсөн жил 10-р сарын дундуур зарлагдсан).",
+      "checkUrl": "https://deuhome.deu.ac.kr/exchange1/sub06_01_03.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 1-р шат 2026-09-14 ~ 10-06 дууссан; 2-р шатны хугацаа хараахан зарлагдаагүй (өнгөрсөн жил 10-р сарын дундуур зарлагдсан).",
+      "checkUrl": "https://deuhome.deu.ac.kr/exchange1/sub06_01_03.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://deuhome.deu.ac.kr/exchange1/sub06_01_03.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://deuhome.deu.ac.kr/exchange1/sub06_01_03.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://deuhome.deu.ac.kr/exchange1/sub06_01_03.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний бэлтгэлийн (국제언어교육원) 2027 оны хуваарь албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://exchange.deu.ac.kr/lang_intro/index.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний бэлтгэлийн (국제언어교육원) 2027 оны хуваарь албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://exchange.deu.ac.kr/lang_intro/index.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Хэлний бэлтгэлийн (국제언어교육원) 2027 оны хуваарь албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://exchange.deu.ac.kr/lang_intro/index.do"
+    }
+  ]
+}

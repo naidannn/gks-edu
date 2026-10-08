@@ -1,0 +1,70 @@
+{
+  "slug": "silla-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-02",
+      "applicationDeadline": "2026-11-30",
+      "resultAnnouncedAt": "2026-12-18",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (зарим тэнхимд TOPIK 2 хүлээн авч, элссэний дараа эхний улиралд 300 цагийн солонгос хэлний курс заавал үздэг; Олон улсын коллеж болон Глобал инженерийн коллежид тусдаа шаардлага). Материалыг шуудангаар эсвэл биечлэн өгч, шалгалтын хураамжийг төлснөөр бүртгэл баталгаажна.",
+      "sourceUrl": "https://global.silla.ac.kr/global/?pCode=notice&mode=fdn&idx=738&num=1",
+      "evidence": "입학지원서류 제출 및 전형료 납부 2026. 11. 02(월) ∼ 11. 30.(월) / 합격자 발표 2026. 12. 18(금) 합격자 개별 발표 / 입학전형료 70,000원(아래의 지정계좌로 입금) / 한국어능력시험(TOPIK) 3급 이상",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний сургалтын хуанлид 1-р улирал 3-р сар, 2-р улирал 9-р сар гэж заасан; 12-р сарын элсэлт байхгүй/нийтлэгдээгүй.",
+      "checkUrl": "https://global.silla.ac.kr/global/index.php?pCode=admission02"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хуучин хүснэгтэд 'өмнөх оны 11-р сарын 1 ~ 5-р сарын 15' гэсэн ерөнхий хугацаа байгаа, 2027 оны тодорхой эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://global.silla.ac.kr/global/index.php?pCode=admission02"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://global.silla.ac.kr/global/?pCode=notice"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын сургуулийн 2027 оны хаврын (전기) журам хараахан гараагүй; одоогоор 2026 оны намрын (후기) журам байна.",
+      "checkUrl": "https://grad.silla.ac.kr/grad/index.php?pCode=1666924026"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын сургуулийн 2027 оны хаврын (전기) журам хараахан гараагүй; одоогоор 2026 оны намрын (후기) журам байна.",
+      "checkUrl": "https://grad.silla.ac.kr/grad/index.php?pCode=1666924026"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://grad.silla.ac.kr/grad/index.php?pCode=1666924026"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам хараахан гараагүй.",
+      "checkUrl": "https://grad.silla.ac.kr/grad/index.php?pCode=1666924026"
+    }
+  ]
+}

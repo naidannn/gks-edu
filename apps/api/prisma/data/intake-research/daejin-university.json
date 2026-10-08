@@ -1,0 +1,56 @@
+{
+  "slug": "daejin-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-29",
+      "applicationDeadline": "2026-11-05",
+      "resultAnnouncedAt": "2026-11-24",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (урлаг, спортын чиглэл TOPIK 2); төгсөхөөс өмнө TOPIK 4 авна. Зөвхөн Study in Korea (studyinkorea.go.kr) сайтаар бүртгүүлнэ, эцсийн хугацаа 17:00. Бичиг баримтын шинжилгээ болон ярилцлага (2026-11-14 ~ 15) байна.",
+      "sourceUrl": "https://admission.daejin.ac.kr/detail.do?menuurl=V1eFtRP%2FhAdfBbp9t3CXcw%3D%3D&board_seq=10741&pageNo=1&categoryid=0",
+      "evidence": "온라인 원서 접수 2026.10.29(목) ~ 11.05(목) 17:00 / 면접고사 2026.11.14(토) ~ 11.15(일) / 합격자 발표 2026.11.24(화) / 8. 전형료 : 100,000원 / 한국어능력시험(TOPIK) 3급(예체능계열 2급) 이상",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хэлний төвийн (els.daejin.ac.kr) хуудас нээгдсэнгүй; хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://els.daejin.ac.kr/els/7732/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний төвийн хуудас нээгдсэнгүй; 2027 оны хаврын хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://els.daejin.ac.kr/els/7732/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://admission.daejin.ac.kr/submenu.do?menuurl=kzVEfrpisRbR9lks5Jqg8A%3D%3D"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын сургуулийн 2027 оны хаврын журам олдсонгүй.",
+      "checkUrl": "https://www.daejin.ac.kr/grad/5692/subview.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дипломын сургуулийн 2027 оны хаврын журам олдсонгүй.",
+      "checkUrl": "https://www.daejin.ac.kr/grad/5692/subview.do"
+    }
+  ]
+}

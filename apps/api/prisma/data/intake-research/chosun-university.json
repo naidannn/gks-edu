@@ -1,0 +1,90 @@
+{
+  "slug": "chosun-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-20",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-30",
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (урлаг, биеийн тамирын чиглэл: TOPIK 2), эсвэл Чосон их сургуулийн CSU-TOPIK шалгалтад тэнцсэн байх. Ярилцлагатай. Онлайн бүртгэлийн дараа материалын эх хувийг 11-р сарын 27-ны дотор шуудангаар эсвэл биечлэн хүргүүлнэ.",
+      "laterRounds": "2-р шат: онлайн бүртгэл 2026-12-07 ~ 12-24, материал 12-31 хүртэл, ярилцлага 2027-01-12~14, үр дүн 2027-01-27.",
+      "sourceUrl": "https://inno.chosun.ac.kr/bbs/global/424/379007/download.do",
+      "evidence": "온라인 원서 접수 1차 2026.10.19.(월) 10:00 ~ 11.20.(금) 17:00 / 2차 2026.12.7.(월) ~ 12.24.(목) / 서류 제출 ~ 2026.11.27.(금) / 합격자 발표 2026.12.30.(수) / 개강 2027.3.2.(화)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-27",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2027-01-06",
+      "requirementNote": "TOPIK 3 эсвэл Сэжон Институтийн дунд 2 түвшин, эсвэл TOEFL iBT 71 / IELTS 5.5 / CEFR B2 (мөн удирдагч профессорын суралцах чадварын баталгаа хүчинтэй). Онлайн бүртгэлийн дараа материалыг 12-р сарын 11-ний дотор шуудангаар эсвэл биечлэн хүргүүлнэ; хоёуланг нь хийснээр бүртгэл дуусна.",
+      "sourceUrl": "https://inno.chosun.ac.kr/bbs/global/425/379194/download.do",
+      "evidence": "인터넷 원서접수 2026. 10. 19.(월) 10:00 ~ 2026. 11. 27.(금) 17:00 / 입학지원서 및 서류제출 ~ 2026. 12. 11.(금) 17:00 / 합격자 발표 2027. 1. 6.(수) 15:00 (예정) / 개강일: 2027. 3. 2.(화)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-27",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2027-01-06",
+      "requirementNote": "TOPIK 3 эсвэл Сэжон Институтийн дунд 2 түвшин, эсвэл TOEFL iBT 71 / IELTS 5.5 / CEFR B2 (мөн удирдагч профессорын суралцах чадварын баталгаа хүчинтэй). Бакалавр болон магистрын дипломын хавсралт шаардана. Материалыг 12-р сарын 11-ний дотор хүргүүлнэ.",
+      "sourceUrl": "https://inno.chosun.ac.kr/bbs/global/425/379194/download.do",
+      "evidence": "Same guide as MASTER (석사/석박사통합 및 박사과정 지원자 공통 일정). (박사): 학사 및 석사과정성적증명서(국문/영문)",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан: 2026 оны өвлийн улирлын бүртгэл 09.01 ~ 09.18 байсан, элсэлт 2026-11-23.",
+      "checkUrl": "https://inno.chosun.ac.kr/global/2641/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний бэлтгэлийн 2027 оны хуваарь хараахан нийтлэгдээгүй (сайтад зөвхөн 2026 оны 3 улирлын хуваарь байна).",
+      "checkUrl": "https://inno.chosun.ac.kr/global/2641/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Хэлний бэлтгэлийн 2027 оны хуваарь хараахан нийтлэгдээгүй.",
+      "checkUrl": "https://inno.chosun.ac.kr/global/2641/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://inno.chosun.ac.kr/global/2738/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) магистрын журам хараахан гараагүй.",
+      "checkUrl": "https://inno.chosun.ac.kr/global/2739/subview.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын журам хараахан гараагүй.",
+      "checkUrl": "https://inno.chosun.ac.kr/global/2739/subview.do"
+    }
+  ]
+}

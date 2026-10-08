@@ -1,0 +1,92 @@
+{
+  "slug": "dong-a-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-30",
+      "applicationDeadline": "2026-10-14",
+      "resultAnnouncedAt": "2026-11-17",
+      "admissionFeeKrw": 40000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (эсвэл Дон-А хэлний тест 3-р түвшин); элсэлтийн дараа төгсөхөөс өмнө TOPIK 4 авна. Материалыг онлайнаар хавсаргаж, тэтгэгдсэн бол эх хувийг 11-р сарын 24-ний дотор оффист өгнө. Монгол сурагч асрамжийн/төрөл садангийн баримт (친족관계증명서) хэрэглэж болно.",
+      "sourceUrl": "http://global.donga.ac.kr/global/CMS/Board/Board.do?mCode=MN066&mode=view&mgr_seq=717&board_seq=8517029",
+      "evidence": "모집기간 1차 2026.09.30.( 수 ) ~ 10.14.( 수 ) 24:00 까지 / 2차 2026.12.09.( 수 ) ~ 12.23.( 수 ) / 3차 2027.01.20.( 수 ) ~ 01.28.( 목 ) / 합격자 발표 2026.11.17.(화) 14:00 예정 / 1차 모집: ~ 2026.11.24.( 화 ) 까지 국제교류과 사무실로 제출 / 전형료 금액 : 40,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2차: 2026-12-09 ~ 2026-12-23 (хариу 2027-01-22); 3р: 2027-01-20 ~ 2027-01-28, зөвхөн Солонгост оршин суугчид (хариу 2027-02-16)"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-30",
+      "applicationDeadline": "2026-10-14",
+      "resultAnnouncedAt": "2026-11-17",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Солонгос хэлний анги: TOPIK 3 буюу түүнээс дээш; англи хэлний анги: IELTS 5.5 эсвэл ижил түвшин. Мэргэжлийн ярилцлага 2026-11-04 (урьдчилсан). Материалыг онлайнаар хавсаргаж, тэтгэгдсэн бол эх хувийг 11-р сарын 27-ны дотор өгнө.",
+      "sourceUrl": "http://global.donga.ac.kr/global/CMS/Board/Board.do?mCode=MN066&mode=view&mgr_seq=717&board_seq=8517032",
+      "evidence": "1차 모집기간 2026.09.30.( 수 ) ~ 10.14.( 수 ), 23:59 / 전공구술고사 2026.11.04.(수) 예정 / 합격자 발표 2026.11.17.(화) 14:00 예정 / 합격자 원본서류제출 : 2026.11.27.( 금 ) 까지 / 전형료 금액: 석사학위과정 - 70,000원 / 박사학위과정 및 석 ·박사통합과정 - 80,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2차: 2026-12-09 ~ 2026-12-23 (хөтөлбөр өөрчлөгдөж болно)"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-09-30",
+      "applicationDeadline": "2026-10-14",
+      "resultAnnouncedAt": "2026-11-17",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Солонгос хэлний анги: TOPIK 3 буюу түүнээс дээш; англи хэлний анги: IELTS 5.5 эсвэл ижил түвшин. Мэргэжлийн ярилцлага 2026-11-04 (урьдчилсан). Материалыг онлайнаар хавсаргаж, тэтгэгдсэн бол эх хувийг 11-р сарын 27-ны дотор өгнө.",
+      "sourceUrl": "http://global.donga.ac.kr/global/CMS/Board/Board.do?mCode=MN066&mode=view&mgr_seq=717&board_seq=8517032",
+      "evidence": "1차 모집기간 2026.09.30.( 수 ) ~ 10.14.( 수 ), 23:59 / 전공구술고사 2026.11.04.(수) 예정 / 합격자 발표 2026.11.17.(화) 14:00 예정 / 합격자 원본서류제출 : 2026.11.27.( 금 ) 까지 / 전형료 금액: 석사학위과정 - 70,000원 / 박사학위과정 및 석 ·박사통합과정 - 80,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2차: 2026-12-09 ~ 2026-12-23 (хөтөлбөр өөрчлөгдөж болно)"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Өвлийн улирал (2026-11-30 ~ 2027-02-05) хуанлид байгаа боловч элсэлтийн хүсэлт авах эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://global.donga.ac.kr/global/CMS/Contents/Contents.do?mCode=MN029"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын хуанли, хүсэлтийн хугацаа нийтлэгдээгүй (одоо зөвхөн 2026 оны хуанли байна).",
+      "checkUrl": "https://global.donga.ac.kr/global/CMS/Contents/Contents.do?mCode=MN029"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын хуанли, хүсэлтийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://global.donga.ac.kr/global/CMS/Contents/Contents.do?mCode=MN029"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "http://global.donga.ac.kr/global/CMS/Board/Board.do?mCode=MN066"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "http://global.donga.ac.kr/global/CMS/Board/Board.do?mCode=MN066"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "http://global.donga.ac.kr/global/CMS/Board/Board.do?mCode=MN066"
+    }
+  ]
+}

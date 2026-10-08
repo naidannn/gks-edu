@@ -1,0 +1,74 @@
+{
+  "slug": "duksung-womens-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "requirementNote": "Онлайн бүртгэл 10-р сарын 23-ны 17:00 цагт хаагдана (төлбөр төлж дуусгана). Материалыг шуудан эсвэл биечлэн 10-р сарын 30-ны дотор хүргүүлнэ. Зөвхөн эцэг эх нь хоёулаа гадаад иргэн байх оюутан хамрагдана.",
+      "sourceUrl": "https://www.duksung.ac.kr/bbs/boardView.do?bsIdx=382&bIdx=930841&page=1&menuId=1692&bcIdx=0&searchCondition=SUBJECT&searchKeyword=",
+      "evidence": "[1차] 2026. 10. 12.(월) 10:00 ~ 10. 23.(금) 17:00 / [2차] 2026. 11. 23.(월) 10:00 ~ 12. 4.(금) 17:00 / 제출서류 접수 [1차] 2026. 10. 12.(월) ~ 10. 30.(금) [2차] 2026. 11. 23.(월) ~ 12. 11.(금)",
+      "confidence": "HIGH",
+      "laterRounds": "2차 원서접수 2026-11-23 ~ 2026-12-04 17:00, 서류 ~ 2026-12-11"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "resultAnnouncedAt": "2026-11-20",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "TOPIK 3-аас доош (эсвэл гэрчилгээгүй) оюутан элсэснээс хойш 1 жилийн дотор TOPIK 3 авна, төгсөхөөс өмнө TOPIK 4 авсан байх ёстой. Элсэлтийн шалгалтад ярилцлага (солонгос эсвэл англи хэлээр) орно. Санхүүгийн баталгаа: өөрийн эсвэл эцэг эхийн нэр дээрх 16,000 доллараас дээш банкны үлдэгдлийн тодорхойлолт. Материалыг 10-р сарын 27-ны 17:00 цагаас өмнө хүргүүлнэ.",
+      "sourceUrl": "https://graduate.duksung.ac.kr/uploads/CONTENTS/site/graduate/spring-2027.pdf",
+      "evidence": "원서접수 2026. 10. 12.(월) 09:00 ~ 10. 23.(금) 16:00 인터넷 접수 / 전형료 석사, 박사, 석‧박사통합 : ￦80,000 / 구비서류 제출마감 2026. 10. 27.(화)까지 17:00 도착분에 한함 / 합격자 발표 2026. 11. 20.(금) 14:00 예정 / 외국인 입학전형(정원 외) - 정원 내 전형 일정과 동일",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-23",
+      "resultAnnouncedAt": "2026-11-20",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "TOPIK 3-аас доош (эсвэл гэрчилгээгүй) оюутан элсэснээс хойш 1 жилийн дотор TOPIK 3 авна, төгсөхөөс өмнө TOPIK 4 авсан байх ёстой. Элсэлтийн шалгалтад ярилцлага (солонгос эсвэл англи хэлээр) орно. Санхүүгийн баталгаа: өөрийн эсвэл эцэг эхийн нэр дээрх 16,000 доллараас дээш банкны үлдэгдлийн тодорхойлолт. Материалыг 10-р сарын 27-ны 17:00 цагаас өмнө хүргүүлнэ.",
+      "sourceUrl": "https://graduate.duksung.ac.kr/uploads/CONTENTS/site/graduate/spring-2027.pdf",
+      "evidence": "원서접수 2026. 10. 12.(월) 09:00 ~ 10. 23.(금) 16:00 인터넷 접수 / 전형료 석사, 박사, 석‧박사통합 : ￦80,000 / 구비서류 제출마감 2026. 10. 27.(화)까지 17:00 도착분에 한함 / 합격자 발표 2026. 11. 20.(금) 14:00 예정 / 외국인 입학전형(정원 외) - 정원 내 전형 일정과 동일",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний бэлтгэл хөтөлбөрийн хуваарь, бүртгэлийн хугацаа албан ёсны сайтад олдсонгүй.",
+      "checkUrl": "https://www.duksung.ac.kr/bbs/board.do?bsIdx=2569&menuId=7788"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй (2027 оны хавар гарна).",
+      "checkUrl": "https://www.duksung.ac.kr/bbs/board.do?bsIdx=382&menuId=1692"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) элсэлт хараахан зарлагдаагүй.",
+      "checkUrl": "https://graduate.duksung.ac.kr/contents/contents.do?ciIdx=5992&menuId=8268"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Магистрын хуваариатай ижил, хараахан зарлагдаагүй.",
+      "checkUrl": "https://graduate.duksung.ac.kr/contents/contents.do?ciIdx=5992&menuId=8268"
+    }
+  ]
+}
