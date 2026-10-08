@@ -1,0 +1,336 @@
+{
+  "slug": "gist",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "MASTER",
+      "group": "일반대학원",
+      "tuitionPerTermKrw": 3607000,
+      "admissionFeeKrw": 680000,
+      "tuitionYear": null,
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub04/0401.html",
+      "confidence": "HIGH",
+      "evidence": "Tuition Assistance (All students): Tuition fully supported: 3,607,000 won per semester. ※ The one-time matriculation fee of 680,000 won is charged to all newly admitted students"
+    },
+    {
+      "level": "PHD",
+      "group": "일반대학원",
+      "tuitionPerTermKrw": 3607000,
+      "admissionFeeKrw": 680000,
+      "tuitionYear": null,
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub04/0401.html",
+      "confidence": "HIGH",
+      "evidence": "Tuition Assistance (All students): Tuition fully supported: 3,607,000 won per semester. ※ The one-time matriculation fee of 680,000 won is charged to all newly admitted students"
+    }
+  ],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "전기전자컴퓨터공학부",
+      "nameEn": "Electrical Engineering and Computer Science",
+      "nameMn": "Цахилгаан, электроник, компьютерийн инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "전기전자컴퓨터공학부",
+      "nameEn": "Electrical Engineering and Computer Science",
+      "nameMn": "Цахилгаан, электроник, компьютерийн инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "신소재공학부",
+      "nameEn": "Materials Science and Engineering",
+      "nameMn": "Материал судлал, инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "신소재공학부",
+      "nameEn": "Materials Science and Engineering",
+      "nameMn": "Материал судлал, инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "기계공학부",
+      "nameEn": "Mechanical and Robotics Engineering",
+      "nameMn": "Машин механик ба роботикийн инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "기계공학부",
+      "nameEn": "Mechanical and Robotics Engineering",
+      "nameMn": "Машин механик ба роботикийн инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "지구·환경공학부",
+      "nameEn": "Environment and Energy Engineering",
+      "nameMn": "Байгаль орчин, эрчим хүчний инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "지구·환경공학부",
+      "nameEn": "Environment and Energy Engineering",
+      "nameMn": "Байгаль орчин, эрчим хүчний инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "생명과학부",
+      "nameEn": "Life Sciences",
+      "nameMn": "Амьдралын шинжлэх ухаан",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "생명과학부",
+      "nameEn": "Life Sciences",
+      "nameMn": "Амьдралын шинжлэх ухаан",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "물리·광과학과",
+      "nameEn": "Physics and Photon Science",
+      "nameMn": "Физик, фотоникийн шинжлэх ухаан",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "물리·광과학과",
+      "nameEn": "Physics and Photon Science",
+      "nameMn": "Физик, фотоникийн шинжлэх ухаан",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "화학과",
+      "nameEn": "Chemistry",
+      "nameMn": "Хими",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "화학과",
+      "nameEn": "Chemistry",
+      "nameMn": "Хими",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "의생명공학과",
+      "nameEn": "Biomedical Science and Engineering",
+      "nameMn": "Биомедикал шинжлэх ухаан, инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "의생명공학과",
+      "nameEn": "Biomedical Science and Engineering",
+      "nameMn": "Биомедикал шинжлэх ухаан, инженерчлэл",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI대학원",
+      "nameEn": "Artificial Intelligence",
+      "nameMn": "Хиймэл оюун ухаан",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Англи хэлний шалгалтын дүн шаардана (TOEFL iBT 80 орчим, IELTS, TOEIC, TEPS). Албан ёсны шалгалтгүй бол болзолт элсэлтээр элсэж, 6 сарын дотор дүнгээ өгнө. Хоёр санал болгох захидал хэрэгтэй. Хичээл голдуу англи хэлээр.",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub03/0301.html",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Tuition Assistance",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": null,
+      "headline": true,
+      "criteria": "Бүх оюутанд сургалтын төлбөр (3,607,000 вон/улирал) бүрэн дэмжигдэнэ",
+      "noteMn": "Бүх магистр, докторын оюутны сургалтын төлбөр 100% хөнгөлөгдөнө. Нэмээд гадаад оюутанд сар бүр тэтгэлэг (магистр 140,000, доктор 295,000 вон), хоолны тэтгэмж (100,000 вон орчим) болон голч 3.0+ бол олон улсын оюутны тэтгэмж (120,000 вон) олгодог. Нэг удаагийн элсэлтийн хураамж 680,000 вон төлнө (зарим тохиолдолд чөлөөлж болно).",
+      "sourceUrl": "https://www.gist.ac.kr/iadm/html/sub04/0401.html",
+      "evidence": "Tuition Assistance (All students) Tuition fully supported: 3,607,000 won per semester; Monthly Stipends (All International Students): 140,000 won M.S., 295,000 Ph.D.; International student allowance 120,000 won per month, GPA 3.0"
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "excluded": [
+    {
+      "what": "반도체공학과 (Semiconductor Engineering) бакалавр",
+      "reason": "Бакалаврын журамд 'зөвхөн Солонгос оюутан' гэж бичсэн."
+    },
+    {
+      "what": "융합기술학제학부 (эрчим хүч / соёлын технологи / ухаалаг робот)",
+      "reason": "Англи хэл дээрх гадаад оюутны хөтөлбөрийн жагсаалтад тусдаа нэрлэгдээгүй; Солонгос нэр баталгаагүй тул оруулаагүй."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалавр (학부) — ангиуд ба төлбөр",
+      "reason": "2027 намрын журамд бүх нэгдүгээр курсын оюутан мэргэжилгүй элсэж, нэгдүгээр курсын төгсгөлд сонгодог; төрийн санхүүжилттэй бүрэн тэтгэлэг олгоно гэсэн ч төлбөрийн дүн ба Солонгос нэр журамд байхгүй. Нэр, төлбөргүйгээр гар аргаар нэмэх хэрэгтэй (колледжүүд: AI, Байгалийн ухаан, Инженерчлэл, Амьдралын шинжлэх ухаан ба анагаах инженерчлэл; ~15 оюутан).",
+      "checkAt": "https://www.gist.ac.kr/iuadm/img/sub02/2027_Fall_Undergraduate_Admission_Guideline.pdf"
+    },
+    {
+      "what": "Магистр/докторын хөтөлбөр: AI Policy and Strategy, Integrative Neuroscience and Physiology, Mathematical Sciences (зөвхөн магистр), Semiconductor Engineering",
+      "reason": "Англи жагсаалтад бий боловч Солонгос албан ёсны нэр олдсонгүй тул оруулаагүй.",
+      "checkAt": "https://www.gist.ac.kr/iadm/html/sub03/0301.html"
+    },
+    {
+      "what": "Солонгос нэрсийн тохирол",
+      "reason": "Англи журмын нэрсийг (жишээ нь Mechanical and Robotics Engineering, Environment and Energy Engineering) дотоодын элсэлтийн хуудсанд байгаа 기계공학부, 지구·환경공학부-тэй тааруулсан; нэр өөрчлөгдсөн байж болзошгүй. AI대학원 нь дотоодын журамд зөвхөн нэгдсэн/докторын, тиймээс зөвхөн докторыг оруулсан.",
+      "checkAt": "https://www.gist.ac.kr/iadm/html/sub03/0301.html"
+    },
+    {
+      "what": "Төлбөрийн он",
+      "reason": "Тэтгэлгийн хуудсанд хичээлийн жил заагаагүй; зарим дүн 2022 оны байж болно.",
+      "checkAt": "https://www.gist.ac.kr/iadm/html/sub04/0401.html"
+    }
+  ]
+}

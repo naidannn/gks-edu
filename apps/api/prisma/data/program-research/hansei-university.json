@@ -1,0 +1,745 @@
+{
+  "slug": "hansei-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "신학과",
+      "tuitionPerTermKrw": 3723000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "신학과 3,723,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 3898000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "경영학전공/경찰행정/사회복지/영어/중국어 3,898,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "미디어·관광",
+      "tuitionPerTermKrw": 3954000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "미디어커뮤니케이션전공, 관광경영학전공 3,954,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "첨단융합",
+      "tuitionPerTermKrw": 4798000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "AI소프트웨어전공, AI융합보안전공 4,798,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "디자인",
+      "tuitionPerTermKrw": 5107000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "디자인학부 5,107,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "음악",
+      "tuitionPerTermKrw": 5210000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "음악전공 5,210,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공연예술",
+      "tuitionPerTermKrw": 5232000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "공연예술전공 5,232,000원"
+    },
+    {
+      "level": "MASTER",
+      "group": "신학",
+      "tuitionPerTermKrw": 3853000,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "신학과 3,853,000원; 입학금 60만원 별도"
+    },
+    {
+      "level": "MASTER",
+      "group": "경영·디자인",
+      "tuitionPerTermKrw": 4602000,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "경영학과, 디자인학과 4,602,000원; 입학금 60만원 별도"
+    },
+    {
+      "level": "MASTER",
+      "group": "IT융합",
+      "tuitionPerTermKrw": 4703000,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "IT융합학과 4,703,000원; 입학금 60만원 별도"
+    },
+    {
+      "level": "PHD",
+      "group": "일반",
+      "tuitionPerTermKrw": 4926000,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": 2027,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH",
+      "evidence": "신학과, 경찰학과, 경영학과, 사회복지학과, 상담심리학과, 디자인학과, IT융합학과 4,926,000원; 입학금 60만원 별도"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어학당",
+      "tuitionPerTermKrw": 1250000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9616696376.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "수업료 (1년 4개학기) 5,000,000원 — 4 улирал тул улирал бүр 1,250,000; 입학금 заагаагүй (전형료 50,000원 тусдаа)"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "신학과",
+      "nameEn": "Department of Theology",
+      "nameMn": "Теологийн танхим"
+    },
+    {
+      "nameKo": "인문사회학부",
+      "nameEn": "School of Humanities and Social Sciences",
+      "nameMn": "Хүмүүнлэг, нийгмийн ухааны танхим"
+    },
+    {
+      "nameKo": "첨단융합학부",
+      "nameEn": "School of Advanced Convergence",
+      "nameMn": "Дэвшилтэт нэгдлийн танхим"
+    },
+    {
+      "nameKo": "예술학부",
+      "nameEn": "School of Arts",
+      "nameMn": "Урлагийн танхим"
+    },
+    {
+      "nameKo": "디자인학부",
+      "nameEn": "School of Design",
+      "nameMn": "Дизайны танхим"
+    },
+    {
+      "nameKo": "일반대학원",
+      "nameEn": "Graduate School",
+      "nameMn": "Ерөнхий магистр, докторын сургууль"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "신학과",
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "신학과",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "미디어커뮤니케이션전공",
+      "nameEn": "Media Communication",
+      "nameMn": "Медиа харилцаа",
+      "tuitionGroup": "미디어·관광",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "경영학전공",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "관광경영학전공",
+      "nameEn": "Tourism Management",
+      "nameMn": "Аялал жуулчлалын менежмент",
+      "tuitionGroup": "미디어·관광",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "경찰행정학전공",
+      "nameEn": "Police Administration",
+      "nameMn": "Цагдаагийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "사회복지학전공",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "영어전공",
+      "nameEn": "English",
+      "nameMn": "Англи хэл",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "인문사회학부",
+      "nameKo": "중국어전공",
+      "nameEn": "Chinese",
+      "nameMn": "Хятад хэл",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "첨단융합학부",
+      "nameKo": "AI소프트웨어전공",
+      "nameEn": "AI Software",
+      "nameMn": "Хиймэл оюун, програм хангамж",
+      "tuitionGroup": "첨단융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "첨단융합학부",
+      "nameKo": "AI융합보안전공",
+      "nameEn": "AI Convergence Security",
+      "nameMn": "Хиймэл оюун, нэгдсэн аюулгүй байдал",
+      "tuitionGroup": "첨단융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술학부",
+      "nameKo": "음악전공",
+      "nameEn": "Music",
+      "nameMn": "Хөгжим",
+      "tuitionGroup": "음악",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "예술학부",
+      "nameKo": "공연예술전공",
+      "nameEn": "Performing Arts",
+      "nameMn": "Тоглолтын урлаг",
+      "tuitionGroup": "공연예술",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "디자인학부",
+      "nameKo": "시각정보디자인전공",
+      "nameEn": "Visual Information Design",
+      "nameMn": "Дүрслэлийн мэдээллийн дизайн",
+      "tuitionGroup": "디자인",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "디자인학부",
+      "nameKo": "실내건축디자인전공",
+      "nameEn": "Interior Architecture Design",
+      "nameMn": "Дотоод засал, архитектурын дизайн",
+      "tuitionGroup": "디자인",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "디자인학부",
+      "nameKo": "섬유패션디자인전공",
+      "nameEn": "Textile and Fashion Design",
+      "nameMn": "Нэхмэл, загварын дизайн",
+      "tuitionGroup": "디자인",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": null,
+      "otherRequirements": "Бүрэн дунд сургууль төгссөн (12 жилийн боловсрол), эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3-р түвшин (урлаг, спортын чиглэлд 2-р түвшин). Элсэлт: бичиг баримтын шалгаруулалт, дараа нь ярилцлага. Төгсөхөөс өмнө TOPIK 4 (урлагт 3) өгөх ёстой.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": "일반대학원",
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "신학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бакалаврын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Танилцуулга, судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": "일반대학원",
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration (Bilingual Track)",
+      "nameMn": "Бизнесийн удирдлага (хоёр хэлний чиглэл)",
+      "tuitionGroup": "경영·디자인",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бакалаврын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Танилцуулга, судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": "일반대학원",
+      "nameKo": "IT융합학과",
+      "nameEn": "IT Convergence (Bilingual Track)",
+      "nameMn": "IT нэгдэл (хоёр хэлний чиглэл)",
+      "tuitionGroup": "IT융합",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бакалаврын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Танилцуулга, судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": "일반대학원",
+      "nameKo": "음악과",
+      "nameEn": "Music",
+      "nameMn": "Хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бакалаврын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Танилцуулга, судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": "일반대학원",
+      "nameKo": "디자인학과",
+      "nameEn": "Design",
+      "nameMn": "Дизайн",
+      "tuitionGroup": "경영·디자인",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Бакалаврын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Танилцуулга, судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration (Bilingual Track)",
+      "nameMn": "Бизнесийн удирдлага (хоёр хэлний чиглэл)",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "경찰학과",
+      "nameEn": "Police Science",
+      "nameMn": "Цагдаагийн ухаан",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "상담심리학과",
+      "nameEn": "Counseling Psychology (Bilingual Track)",
+      "nameMn": "Зөвлөх сэтгэл судлал (хоёр хэлний чиглэл)",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare (Bilingual Track)",
+      "nameMn": "Нийгмийн халамж (хоёр хэлний чиглэл)",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "IT융합학과",
+      "nameEn": "IT Convergence (Bilingual Track)",
+      "nameMn": "IT нэгдэл (хоёр хэлний чиглэл)",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "음악과",
+      "nameEn": "Music",
+      "nameMn": "Хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": "일반대학원",
+      "nameKo": "디자인학과",
+      "nameEn": "Design",
+      "nameMn": "Дизайн",
+      "tuitionGroup": "일반",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Магистрын зэрэг (төгсөх жилийн оюутан хамаарна). TOPIK 3-р түвшин. Судалгааны төлөвлөгөөг солонгос хэлээр бичнэ. Бичиг баримтын шалгаруулалт (70+ оноо).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어학당",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Улирал бүр 10 долоо хоног, жилд 4 улирал (720 цаг). Ахлах сургууль төгссөн, 18 нас хүрсэн, D-4-1 визээр. Ахлах сургуулийн дундаж 6.7+, тасалсан 5-аас доош. Жилийн өртөг: сургалтын төлбөр 5,000,000₩ + сурах бичиг 280,000₩ + соёлын арга хэмжээ 200,000₩ + даатгал 150,000₩ (бүгд 5,680,000₩).",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9616696376.pdf",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Элсэлтийн тэтгэлэг TOPIK 4",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "semesters": null,
+      "headline": true,
+      "criteria": "학부 신입생 TOPIK 4급",
+      "noteMn": "TOPIK 4 бол сургалтын төлбөрийн 50% хөнгөлөлт; TOPIK 5 бол 70%, TOPIK 6 бол 100% (хамгийн өндөр шат). Дараа нь голч оноо, TOPIK-оор тэтгэлэг шинэчлэгдэнэ.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "학부 신입생 TOPIK 6급 100% / 5급 70% / 4급 50% / 3급(본교 어학당 출신) 40% / 3급 30%",
+      "groups": [
+        "신학과",
+        "인문사회",
+        "미디어·관광",
+        "첨단융합",
+        "디자인",
+        "음악",
+        "공연예술"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Элсэлтийн тэтгэлэг TOPIK 5",
+      "kind": "ENTRANCE",
+      "percent": 70,
+      "headline": false,
+      "criteria": "TOPIK 5급",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "TOPIK 5급 70%",
+      "semesters": null
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Элсэлтийн тэтгэлэг TOPIK 6",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "headline": false,
+      "criteria": "TOPIK 6급",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "TOPIK 6급 100%",
+      "semesters": null
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Элсэлтийн тэтгэлэг TOPIK 3",
+      "kind": "ENTRANCE",
+      "percent": 30,
+      "headline": false,
+      "criteria": "TOPIK 3급 (본교 어학당 출신 40%)",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "TOPIK 3급 30%",
+      "semesters": null
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Суралцаж буй оюутны тэтгэлэг",
+      "kind": "CONTINUING",
+      "percent": 100,
+      "headline": false,
+      "criteria": "GPA 4.3 & TOPIK 6급 100%; GPA 4.0 & TOPIK 5급 50%; GPA 3.0 & TOPIK 4급 30%",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "재학생 GPA 4.3 & TOPIK 6급 100% / GPA 4.0 & TOPIK 5급 50% / GPA 3.0 & TOPIK 4급 30%",
+      "semesters": null
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Элсэлтийн тэтгэлэг (дээд) TOPIK 4",
+      "kind": "ENTRANCE",
+      "percent": 60,
+      "headline": true,
+      "criteria": "대학원 신입생 TOPIK 4급; 음악계열 제외",
+      "groups": [
+        "신학",
+        "경영·디자인",
+        "IT융합",
+        "일반"
+      ],
+      "noteMn": "TOPIK 4 бол сургалтын төлбөрийн 60% хөнгөлөлт; TOPIK 5 бол 70%, TOPIK 6 бол 100% (хамгийн өндөр шат), TOPIK 3 бол 50%, шалгалтын дүнгүй бол 40%. Суралцаж буй үед голч 3.0+ бол үргэлжилнэ.",
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "대학원 신입생 TOPIK 6급 100% / 5급 70% / 4급 60% / 3급 50% / 기본 40%; 재학생(GPA 3.0 이상) 동일",
+      "semesters": null
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Дээд — TOPIK 5/6",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "headline": false,
+      "criteria": "TOPIK 6급 100%, 5급 70%",
+      "groups": [
+        "신학",
+        "경영·디자인",
+        "IT융합",
+        "일반"
+      ],
+      "sourceUrl": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf",
+      "evidence": "TOPIK 6급 100%, 5급 70%",
+      "semesters": null
+    }
+  ],
+  "excluded": [
+    {
+      "what": "특수대학원 (영산신학대학원, 심리상담대학원, 융합치료대학원, 휴먼서비스대학원, 예술대학원)",
+      "reason": "Энэ ээлжинд зөвхөн 일반대학원 судална (PLAN.md §2)."
+    },
+    {
+      "what": "일반대학원 석사: 신학과 성서학 (비대면 월요일 전일제 과정)",
+      "reason": "Мэргэжил дотор орсон, тусдаа анги биш; бүртгэлийн нэр нь 신학과."
+    }
+  ],
+  "pending": [
+    {
+      "what": "음악과 (магистр, доктор) — төлбөрийн ангилал",
+      "reason": "Сургууль 실기 (5,314,000₩ магистр / 5,749,000₩ доктор) болон 이론 (4,914,000₩ / 5,215,000₩) гэж хоёр үнэ нийтэлсэн ч аль мэргэжил аль ангилалд орохыг заагаагүй. Таамагласангүй.",
+      "checkAt": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf"
+    },
+    {
+      "what": "Бакалаврын 입학금",
+      "reason": "Бакалаврт 입학금 заагаагүй (зөвхөн дээд зэрэгт 600,000₩).",
+      "checkAt": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf"
+    },
+    {
+      "what": "Төлбөрийн он",
+      "reason": "2027 оны 1-р улирлын журамд 'хойно нэмэгдэж болно' гэсэн тэмдэглэлтэй; хүснэгт өөрөө хичээлийн жилийг заагаагүй (журмын жилээр 2027 гэж авсан).",
+      "checkAt": "http://hsiec.hansei.ac.kr/upload_rb/AX_9964992905.pdf"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн 입학금",
+      "reason": "Зөвхөн 전형료 50,000₩ байгаа; 입학금 заагаагүй. Улирлын төлбөр жилийн 5,000,000₩-ийг 4 улиралд хуваасан.",
+      "checkAt": "http://hsiec.hansei.ac.kr/upload_rb/AX_9616696376.pdf"
+    }
+  ]
+}

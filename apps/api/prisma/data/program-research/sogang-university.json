@@ -1,0 +1,58 @@
+{
+  "slug": "sogang-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어교육원",
+      "tuitionPerTermKrw": 1860000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php",
+      "confidence": "HIGH",
+      "evidence": "KGP200 (주 20시간, 총 200시간) 수강료 1,860,000원; 전형료 100,000원(신입생만, 환불 불가); 2026년 봄학기부터 수강료 변동; 학기당 10주"
+    }
+  ],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어교육원",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Улирал бүр 10 долоо хоног, жилд 4 улирал (хавар, зун, намар, өвөл); өглөөний анги (9:00–13:00) 1,860,000₩, үдээс хойших анги (13:30–17:30) 1,800,000₩. Өргөдлийн хураамж 100,000₩ (шинэ оюутанд, буцаагдахгүй), сурах бичиг тусдаа. D-4 визэнд 2 ба түүнээс дээш улирал бүртгүүлэх, 10,000 ам.долларын дансны баримт шаардлагатай.",
+      "sourceUrl": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [],
+  "excluded": [],
+  "pending": [
+    {
+      "what": "Бакалаврын гадаад оюутны элсэлтийн анги, төлбөр, тэтгэлэг",
+      "reason": "Сургуулийн өөрийн албан ёсны вэбээс 외국인 특별전형 모집요강 олдсонгүй: admission.sogang.ac.kr нь зөвхөн 수시/정시/재외국민-ийг агуулдаг; гадаад оюутны өргөдлийг 2026 оны 7-р сард (7.7–7.10) нээсэн ч журмын текст олдсонгүй. Бакалаврын төлбөр сургуулийн албан ёсны хуудсанд дүнгээр заагаагүй. Таамагласангүй.",
+      "checkAt": "https://admission.sogang.ac.kr"
+    },
+    {
+      "what": "Магистр, докторын 일반대학원 анги ба төлбөр",
+      "reason": "일반대학원 외국인 모집요강 албан ёсны домэйнд олдсонгүй (Nuxt апп, хуудас JS-ээр ачаалагддаг). Зөвхөн мэдээллийн сайт 'Байгалийн ухаан, инженерийн гадаад аспирантад Seoul ANCHOR + Sogang Global тэтгэлгээр 100% (입학금 тусдаа)' гэж мэдээлсэн — албан ёсны эх биш тул оруулсангүй.",
+      "checkAt": "https://sogang.ac.kr/en/guide/graduate-programs"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн 입학금",
+      "reason": "Зөвхөн өргөдлийн хураамж (전형료 100,000₩) заасан; 입학금 заагаагүй.",
+      "checkAt": "https://klec.sogang.ac.kr/?url=/dep_03/3100.php"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн тэтгэлэг",
+      "reason": "Тэтгэлгийн хуудсыг (장학금) уншаагүй.",
+      "checkAt": "https://klec.sogang.ac.kr/"
+    }
+  ]
+}
