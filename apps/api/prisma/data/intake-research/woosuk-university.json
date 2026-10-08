@@ -1,0 +1,42 @@
+{
+  "slug": "woosuk-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны бакалаврын зөвхөн 'эцэг эх хоёулаа гадаад' төрлийн элсэлт үлдсэн (재외국민 болон бусад гадаад оюутны төрөл зогссон); хугацаа сар бүрийн журмаар зарлагдана, одоогоор нийтлэгдээгүй.",
+      "checkUrl": "https://global.woosuk.ac.kr/main/?menu=75"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "Зарлагдаагүй (2027 оны 'эцэг эх хоёулаа гадаад' төрлийн хуваарь хугацаагаар тусдаа зарлагдана).",
+      "checkUrl": "https://global.woosuk.ac.kr/main/?menu=75"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) дээд сургуулийн журам одоогоор нийтлэгдээгүй.",
+      "checkUrl": "https://grad.woosuk.ac.kr/main/?menu=47"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) дээд сургуулийн журам одоогоор нийтлэгдээгүй.",
+      "checkUrl": "https://grad.woosuk.ac.kr/main/?menu=47"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны сайтаас хэлний бэлтгэл курсийн хуваарь олдсонгүй.",
+      "checkUrl": "https://global.woosuk.ac.kr/main/?menu=75"
+    }
+  ]
+}

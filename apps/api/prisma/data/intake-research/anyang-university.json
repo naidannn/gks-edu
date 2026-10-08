@@ -1,0 +1,42 @@
+{
+  "slug": "anyang-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны 3-р сарын гадаад оюутны журам одоогоор нийтлэгдээгүй (өмнөх жил 10-р сарын сүүлээр нийтэлсэн).",
+      "checkUrl": "https://enter.anyang.ac.kr/10000024"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://enter.anyang.ac.kr/10000024"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны магистрын журам албан ёсны сайтаас олдсонгүй.",
+      "checkUrl": "https://enter.anyang.ac.kr/10000024"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны докторын журам албан ёсны сайтаас олдсонгүй.",
+      "checkUrl": "https://enter.anyang.ac.kr/10000024"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "한국어교육원 сайт руу орох боломжгүй байсан; хуваарь олдсонгүй.",
+      "checkUrl": "https://www.anyang.ac.kr/main/index.do"
+    }
+  ]
+}

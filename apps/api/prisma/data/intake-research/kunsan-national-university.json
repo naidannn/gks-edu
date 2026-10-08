@@ -1,0 +1,63 @@
+{
+  "slug": "kunsan-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хаагдсан: 2026 оны өвлийн улирлын (2026.12.07 эхлэх) бүртгэл 2026.09.14–09.25 байсан.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303005003000"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын (3-р сарын эхэн) бүртгэлийн хугацаа зарлагдаагүй; жилд 4 улирал.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303005003000"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303005003000"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303005003000"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны бакалаврын журам нийтлэгдээгүй (одоо 2026 оны намрын нэмэлт элсэлтийн журам байна).",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303001000000"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303001000000"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын журам одоогоор нийтлэгдээгүй.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303002000000"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Докторын журам одоогоор нийтлэгдээгүй.",
+      "checkUrl": "https://www.kunsan.ac.kr/inter/index.kunsan?menuCd=DOM_000013303002000000"
+    }
+  ]
+}

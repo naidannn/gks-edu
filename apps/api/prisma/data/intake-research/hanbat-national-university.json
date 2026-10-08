@@ -1,0 +1,49 @@
+{
+  "slug": "hanbat-national-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-14",
+      "applicationDeadline": "2026-12-16",
+      "resultAnnouncedAt": "2027-01-15",
+      "admissionFeeKrw": 60000,
+      "requirementNote": "Эцэг эх хоёулаа гадаад иргэн байх. TOPIK 3 буюу түүнээс дээш, эсвэл англи хэлний шалгуур (IELTS 6.0 болон TOPIK 2 хоёулаа). Ярилцлага 2027-01-06. Бичиг баримтыг 12-р сарын 18-ны 17:00 хүртэл ирүүлнэ.",
+      "sourceUrl": "https://www.hanbat.ac.kr/cmm/fms/FileDown.do?atchFileId=FILE_000000199569Pi9&fileSn=0",
+      "evidence": "원서 접수 2026. 10. 14.(수) 10:00 ~ 12. 16.(수) 18:00 / 서류제출 ~ 12. 18.(금) 17:00 / 면접고사 2027. 1. 6.(수) / 합격자 발표 2027. 1. 15.(금) 15:00 이후 / 전 모집단위 60,000원",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн гадаад иргэний 2027 оны 3-р сарын журам хараахан олдсонгүй.",
+      "checkUrl": "https://www.hanbat.ac.kr/postgraduate/sub05_01.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Докторын гадаад иргэний 2027 оны 3-р сарын журам хараахан олдсонгүй.",
+      "checkUrl": "https://www.hanbat.ac.kr/postgraduate/sub05_01.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын харилцааны газар зөвхөн жилийн 4 улирал (3, 6, 9, 12-р сарын эхээр) гэж нийтэлсэн; өргөдлийн эцсийн огноо байхгүй.",
+      "checkUrl": "https://hanbat.ac.kr/global/sub05_01.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) гадаад иргэний журам хараахан гараагүй.",
+      "checkUrl": "https://www.hanbat.ac.kr/bbs/BBSMSTR_000000000138/list.do?mno=sub04_03&kind=notice4"
+    }
+  ]
+}

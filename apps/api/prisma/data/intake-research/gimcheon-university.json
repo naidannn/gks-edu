@@ -1,0 +1,63 @@
+{
+  "slug": "gimcheon-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Одоогоор зарлагдаагүй; 한국어과정 жилд 4 улирал (10 долоо хоног), сүүлийн нийтлэгдсэн мэдээлэл 2026 оны намрын улирлынх (хаагдсан).",
+      "checkUrl": "https://iec.gimcheon.ac.kr/site/iec/html/sub2/0204.html"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын бүртгэлийн хугацаа зарлагдаагүй.",
+      "checkUrl": "https://iec.gimcheon.ac.kr/site/iec/html/sub2/0204.html"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://iec.gimcheon.ac.kr/site/iec/html/sub2/0204.html"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://iec.gimcheon.ac.kr/site/iec/html/sub2/0204.html"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны 3-р сарын гадаад оюутны бакалаврын журам одоогоор нийтлэгдээгүй (сүүлийн журам 2026 оны 9-р сарын элсэлтийнх).",
+      "checkUrl": "https://ibhak.gimcheon.ac.kr/site/ibhak/html/sub5/0501.html"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "Зарлагдаагүй.",
+      "checkUrl": "https://ibhak.gimcheon.ac.kr/site/ibhak/html/sub5/0501.html"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны магистрын журам албан ёсны сайтаас олдсонгүй.",
+      "checkUrl": "https://www.gimcheon.ac.kr/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны докторын журам албан ёсны сайтаас олдсонгүй.",
+      "checkUrl": "https://www.gimcheon.ac.kr/"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "slug": "kangnam-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Эцэг эх хоёулаа гадаад иргэний 2027 оны хаврын элсэлтийн журам хараахан гараагүй (өмнөх жил 11-р сарын 10-нд нээгдсэн).",
+      "checkUrl": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн 2027 оны хаврын гадаад оюутны журам хараахан гараагүй.",
+      "checkUrl": "https://grd.kangnam.ac.kr/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн 2027 оны хаврын гадаад оюутны журам хараахан гараагүй.",
+      "checkUrl": "https://grd.kangnam.ac.kr/"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны хэлний сургалтын хуудас олдсонгүй.",
+      "checkUrl": "https://www.kangnam.ac.kr"
+    }
+  ]
+}
