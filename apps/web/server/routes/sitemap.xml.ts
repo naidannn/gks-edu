@@ -90,6 +90,7 @@ export default defineEventHandler(async (event) => {
     ['/terms', 'yearly', '0.3'],
     ['/privacy', 'yearly', '0.3'],
     ['/refund', 'yearly', '0.3'],
+    ['/data-deletion', 'yearly', '0.3'],
   ];
 
   const entries: SitemapUrl[] = [
