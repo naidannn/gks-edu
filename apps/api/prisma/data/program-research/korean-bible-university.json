@@ -1,0 +1,275 @@
+{
+  "slug": "korean-bible-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 3543000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "학부 외국인 입학 안내 2 수업료 계열 등록금 인문사회 3,543,000 (* 장학금: 50%)"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "자연과학",
+      "tuitionPerTermKrw": 4186000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "자연과학 4,186,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학",
+      "tuitionPerTermKrw": 3954000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "공학 3,954,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "일반대학원",
+      "tuitionPerTermKrw": 4370000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "MEDIUM",
+      "evidence": "대학원 외국인 입학 안내 일반대학원 신학 상담 간호 4,370,000 (※ 장학금: 50%)"
+    },
+    {
+      "level": "PHD",
+      "group": "일반대학원",
+      "tuitionPerTermKrw": 4370000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "LOW",
+      "evidence": "대학원 외국인 입학 안내 일반대학원 신학 상담 간호 4,370,000 (※ 장학금: 50%)"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어교육센터",
+      "tuitionPerTermKrw": 1200000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "HIGH",
+      "evidence": "1 교육과정 1급~6급 수업료 1,200,000 10주 / 등록: 수업료 1,200,000원/학기(10주), 필수경비 400,000원, 전형료 50,000원"
+    }
+  ],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "AI융합학부",
+      "nameEn": "AI Convergence",
+      "nameMn": "Хиймэл оюуны нэгдсэн салбар",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш, эсвэл тус сургуулийн хэлний төвийн 4-р түвшин дүүргэсэн, эсвэл Сэжон хаган дунд шатны 1-р хөтөлбөр. Англи хэлний хөтөлбөр: IELTS 5.5, TOEFL iBT 80-аас дээш. Эцэг эх, оюутан хоёулаа гадаад иргэн, ерөнхий боловсролын 12 жил, 20,000,000₩-аас дээш банкны дансны тодорхойлолт. Цэвэр гадаад иргэнд ярилцлага, элсэлтийн хураамж байхгүй. Христийн шашны боловсролын сургууль.",
+      "sourceUrl": "https://www.bible.ac.kr/ko/global/admissioninfo",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": "자연과학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш, эсвэл тус сургуулийн хэлний төвийн 4-р түвшин дүүргэсэн, эсвэл Сэжон хаган дунд шатны 1-р хөтөлбөр. Англи хэлний хөтөлбөр: IELTS 5.5, TOEFL iBT 80-аас дээш. Эцэг эх, оюутан хоёулаа гадаад иргэн, ерөнхий боловсролын 12 жил, 20,000,000₩-аас дээш банкны дансны тодорхойлолт. Цэвэр гадаад иргэнд ярилцлага, элсэлтийн хураамж байхгүй. Христийн шашны боловсролын сургууль.",
+      "sourceUrl": "https://www.bible.ac.kr/ko/global/admissioninfo",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "영유아보육학과",
+      "nameEn": "Early Childhood Care and Education",
+      "nameMn": "Бага насны хүүхдийн асрамж, боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш, эсвэл тус сургуулийн хэлний төвийн 4-р түвшин дүүргэсэн, эсвэл Сэжон хаган дунд шатны 1-р хөтөлбөр. Англи хэлний хөтөлбөр: IELTS 5.5, TOEFL iBT 80-аас дээш. Эцэг эх, оюутан хоёулаа гадаад иргэн, ерөнхий боловсролын 12 жил, 20,000,000₩-аас дээш банкны дансны тодорхойлолт. Цэвэр гадаад иргэнд ярилцлага, элсэлтийн хураамж байхгүй. Христийн шашны боловсролын сургууль.",
+      "sourceUrl": "https://www.bible.ac.kr/ko/global/admissioninfo",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш, эсвэл тус сургуулийн хэлний төвийн 4-р түвшин дүүргэсэн, эсвэл Сэжон хаган дунд шатны 1-р хөтөлбөр. Англи хэлний хөтөлбөр: IELTS 5.5, TOEFL iBT 80-аас дээш. Эцэг эх, оюутан хоёулаа гадаад иргэн, ерөнхий боловсролын 12 жил, 20,000,000₩-аас дээш банкны дансны тодорхойлолт. Цэвэр гадаад иргэнд ярилцлага, элсэлтийн хураамж байхгүй. Христийн шашны боловсролын сургууль.",
+      "sourceUrl": "https://www.bible.ac.kr/ko/global/admissioninfo",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "성서학과",
+      "nameEn": "Biblical Studies",
+      "nameMn": "Библийн судлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-аас дээш, эсвэл тус сургуулийн хэлний төвийн 4-р түвшин дүүргэсэн, эсвэл Сэжон хаган дунд шатны 1-р хөтөлбөр. Англи хэлний хөтөлбөр: IELTS 5.5, TOEFL iBT 80-аас дээш. Эцэг эх, оюутан хоёулаа гадаад иргэн, ерөнхий боловсролын 12 жил, 20,000,000₩-аас дээш банкны дансны тодорхойлолт. Цэвэр гадаад иргэнд ярилцлага, элсэлтийн хураамж байхгүй. Христийн шашны боловсролын сургууль.",
+      "sourceUrl": "https://www.bible.ac.kr/ko/global/admissioninfo",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "일반대학원 신학과",
+      "nameEn": "Graduate School of Theology (General)",
+      "nameMn": "Теологийн ерөнхий магистрын сургууль",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Христийн шашны теологийн магистр (M.A., Th.M.), 2 жил (4 улирал). Мэргэшил: хуучин гэрээ, шинэ гэрээ, системчилсэн теологи, түүхэн теологи, практик теологи, номлол судлал, христийн сэтгэл зүйн зөвлөгөө, Библийн тайлбар.",
+      "sourceUrl": "https://grad.bible.ac.kr/ko/theology/intro",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "일반대학원 신학과",
+      "nameEn": "Graduate School of Theology (General)",
+      "nameMn": "Теологийн ерөнхий докторын сургууль",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Теологийн докторын хөтөлбөр, 3 жил (6 улирал).",
+      "sourceUrl": "https://grad.bible.ac.kr/ko/theology/intro",
+      "confidence": "LOW"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "일반대학원 간호학과",
+      "nameEn": "Graduate School of Nursing (General)",
+      "nameMn": "Сувилахуйн ерөнхий магистрын сургууль",
+      "tuitionGroup": "일반대학원",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Сувилахуйн магистр (M.S.N.), 2 жил (4 улирал).",
+      "sourceUrl": "https://grad.bible.ac.kr/ko/nurse/intro",
+      "confidence": "LOW"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어교육센터",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "1-6-р түвшин, улирал бүр 10 долоо хоног. Бүртгэлийн хураамж 50,000₩, заавал төлөх зардал 400,000₩ (6 сарын даатгал, 1 жилийн сурах бичиг). Визийн төрөл D-4-1. Монгол хэл дээрх элсэлтийн заавар сургуулийн сайтад бий. Хэлний төвийн оюутан сургуулийн дотуур байранд байрлах боломжгүй.",
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Гадаад оюутны тэтгэлэг 50%",
+      "percent": 50,
+      "headline": true,
+      "noteMn": "Гадаад оюутнуудад сургалтын төлбөрийн 50%-ийн тэтгэлэг олгодог. Нөхцөл болон 100%-ийн тэтгэлгийн талаар сургуулиас лавлана.",
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "evidence": "학부 외국인 입학 안내 2 수업료 * 장학금: 50%"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Гадаад оюутны тэтгэлэг 50% (аспирантур)",
+      "percent": 50,
+      "headline": true,
+      "noteMn": "Гадаад оюутанд сургалтын төлбөрөөс 50% хөнгөлнө. Мөн дотуур байрны төлбөр чөлөөлөгдөж, сургуулийн хэлний төвийн хичээлд (ирц 70%+) үнэ төлбөргүй суух боломжтой.",
+      "sourceUrl": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf",
+      "evidence": "대학원 외국인 입학 안내 ※ 장학금: 50% / 외국인유학생 혜택: 교내 기숙사비 전액 장학금, 한국어 수업 수강 시 전액 장학금(출석률 70% 이상), 전형료 면제"
+    }
+  ],
+  "notOffered": [],
+  "excluded": [
+    {
+      "what": "특수대학원 (신학대학원, 사회복지대학원, 보육대학원)",
+      "reason": "Энэ шатанд зөвхөн ерөнхий (일반) аспирантурыг судалдаг."
+    },
+    {
+      "what": "편입학",
+      "reason": "Шилжих элсэлт тусдаа журамтай тул оруулаагүй."
+    },
+    {
+      "what": "한국어 특별과정 (3주 여름캠프)",
+      "reason": "Тогтмол Солонгос хэлний бэлтгэл биш, богино хугацааны."
+    },
+    {
+      "what": "AI융합학부-ийн 전공 (컴퓨터소프트웨어, 인공지능, AI휴먼서비스융합)",
+      "reason": "Нэг төлбөрийн бүлэгтэй тул 학부-ээр нь нэг мөр болгосон."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалаврын 입학금",
+      "reason": "Сургуулийн материалд 입학금 дурдаагүй.",
+      "checkAt": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf"
+    },
+    {
+      "what": "Төлбөрийн хүснэгтийн улирлын нэгж",
+      "reason": "Хүснэгт 'улирал' гэж тодорхой бичээгүй (2026 оны хэлний төвийн материалд). Улирал гэж үзсэн.",
+      "checkAt": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf"
+    },
+    {
+      "what": "Аспирантурын (석사/박사) тусдаа төлбөр, хэлний шаардлага",
+      "reason": "Нэг дүн (4,370,000₩) нь 일반대학원 бүх мэргэжилд; магистр/докторыг тусад нь заагаагүй, хэлний оноо заагаагүй.",
+      "checkAt": "https://grad.bible.ac.kr/ko/start/entrance"
+    },
+    {
+      "what": "간호학과 박사과정",
+      "reason": "Сайтад зөвхөн магистр дурдсан.",
+      "checkAt": "https://grad.bible.ac.kr/ko/nurse/intro"
+    },
+    {
+      "what": "Бакалаврын тэтгэлгийн дэлгэрэнгүй (100% түвшин)",
+      "reason": "'Тэтгэлэг 50%' гэсэн ганц мөр л байгаа; нөхцөл тодорхойгүй.",
+      "checkAt": "https://www.bible.ac.kr/modules/bible/templets/ctl/images/2026_한국성서대학교_한국어교육센터_모집요강_KOR_26.pdf"
+    }
+  ]
+}

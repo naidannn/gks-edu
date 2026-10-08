@@ -1,0 +1,911 @@
+{
+  "slug": "seokyeong-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "3,649,000 (글로벌관광경영)",
+      "tuitionPerTermKrw": 3649000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH",
+      "evidence": "11. 등록금 안내 2026학년도 등록금 기준 글로벌융합대학 글로벌관광경영학과 3,649,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "4,546,000 (뷰티·헤어·디자인)",
+      "tuitionPerTermKrw": 4546000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH",
+      "evidence": "글로벌헤어&메이크업디자인학과, 글로벌뷰티테라피&코스메틱학과, 디자인학부 4,546,000원"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "4,791,000 (공연예술)",
+      "tuitionPerTermKrw": 4791000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH",
+      "evidence": "공연예술 4,791,000원 (2026학년도 등록금, 7월 등록금심의위원회에 따라 변경될 수 있음)"
+    },
+    {
+      "level": "MASTER",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 4225000,
+      "admissionFeeKrw": 938000,
+      "tuitionYear": null,
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM",
+      "evidence": "11. 등록금 (한 학기 기준) 입학금 938,000원, ① 한국어수업 지원자 인문사회 4,225,000원 (2027학년도 최종등록금은 27.1월~2월 결정, 인상될 수 있음)"
+    },
+    {
+      "level": "PHD",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 4225000,
+      "admissionFeeKrw": 938000,
+      "tuitionYear": null,
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM",
+      "evidence": "11. 등록금 (한 학기 기준) 입학금 938,000원, ① 한국어수업 지원자 인문사회 4,225,000원 (2027학년도 최종등록금은 27.1월~2월 결정, 인상될 수 있음)"
+    },
+    {
+      "level": "MASTER",
+      "group": "공학",
+      "tuitionPerTermKrw": 5296000,
+      "admissionFeeKrw": 938000,
+      "tuitionYear": null,
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM",
+      "evidence": "11. 등록금 (한 학기 기준) 입학금 938,000원, ① 한국어수업 지원자 공학 5,296,000원 (2027학년도 최종등록금은 27.1월~2월 결정, 인상될 수 있음)"
+    },
+    {
+      "level": "PHD",
+      "group": "공학",
+      "tuitionPerTermKrw": 5296000,
+      "admissionFeeKrw": 938000,
+      "tuitionYear": null,
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM",
+      "evidence": "11. 등록금 (한 학기 기준) 입학금 938,000원, ① 한국어수업 지원자 공학 5,296,000원 (2027학년도 최종등록금은 27.1월~2월 결정, 인상될 수 있음)"
+    },
+    {
+      "level": "MASTER",
+      "group": "예체능",
+      "tuitionPerTermKrw": 5621000,
+      "admissionFeeKrw": 938000,
+      "tuitionYear": null,
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM",
+      "evidence": "11. 등록금 (한 학기 기준) 입학금 938,000원, ① 한국어수업 지원자 예체능 5,621,000원 (2027학년도 최종등록금은 27.1월~2월 결정, 인상될 수 있음)"
+    },
+    {
+      "level": "PHD",
+      "group": "예체능",
+      "tuitionPerTermKrw": 5621000,
+      "admissionFeeKrw": 938000,
+      "tuitionYear": null,
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM",
+      "evidence": "11. 등록금 (한 학기 기준) 입학금 938,000원, ① 한국어수업 지원자 예체능 5,621,000원 (2027학년도 최종등록금은 27.1월~2월 결정, 인상될 수 있음)"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "글로벌융합대학",
+      "nameEn": "College of Global Convergence",
+      "nameMn": "Дэлхийн нэгдлийн танхим"
+    },
+    {
+      "nameKo": "공연예술대학",
+      "nameEn": "College of Performing Arts",
+      "nameMn": "Жүжиглэх урлагийн танхим"
+    },
+    {
+      "nameKo": "디자인&영상대학",
+      "nameEn": "College of Design and Visual Arts",
+      "nameMn": "Дизайн, дүрс бичлэгийн танхим"
+    },
+    {
+      "nameKo": "미래융합대학",
+      "nameEn": "College of Future Convergence",
+      "nameMn": "Ирээдүйн нэгдлийн танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "글로벌관광경영학과",
+      "nameEn": "Global Tourism Management",
+      "nameMn": "Дэлхийн аялал жуулчлалын менежмент",
+      "tuitionGroup": "3,649,000 (글로벌관광경영)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаад оюутнуудад зориулсан тусгай анги. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "글로벌헤어&메이크업디자인학과",
+      "nameEn": "Global Hair and Makeup Design",
+      "nameMn": "Дэлхийн үс засалт, нүүр будалтын дизайн",
+      "tuitionGroup": "4,546,000 (뷰티·헤어·디자인)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаад оюутнуудад зориулсан тусгай анги. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "글로벌뷰티테라피&코스메틱학과",
+      "nameEn": "Global Beauty Therapy and Cosmetics",
+      "nameMn": "Дэлхийн гоо сайхны эмчилгээ, косметик",
+      "tuitionGroup": "4,546,000 (뷰티·헤어·디자인)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаад оюутнуудад зориулсан тусгай анги. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "글로벌융합경영전공",
+      "nameEn": "Global Convergence Business",
+      "nameMn": "Дэлхийн нэгдсэн бизнес (글로벌융합학부 1)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "한불문화융복합번역전공",
+      "nameEn": "Korean-French Cultural Convergence and Translation",
+      "nameMn": "Солонгос-Францын соёл, орчуулга (글로벌융합학부 1)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "실용무용전공",
+      "nameEn": "Practical Dance",
+      "nameMn": "Хэрэглээний бүжиг (글로벌융합학부 2)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаад оюутнуудад зориулсан тусгай анги. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "스포츠앤테크놀리지 전공",
+      "nameEn": "Sports and Technology",
+      "nameMn": "Спорт ба технологи (글로벌융합학부 2)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "골프매니지먼트 전공",
+      "nameEn": "Golf Management",
+      "nameMn": "Гольфын менежмент (글로벌융합학부 2)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "글로벌댄스스포츠 전공",
+      "nameEn": "Global Dance Sports",
+      "nameMn": "Дэлхийн бүжгийн спорт (글로벌융합학부 2)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌융합대학",
+      "nameKo": "K-문화예술융합전공",
+      "nameEn": "K-Culture and Arts Convergence",
+      "nameMn": "K-соёл, урлагийн нэгдэл (글로벌융합학부 2)",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공연예술대학",
+      "nameKo": "공연예술학부",
+      "nameEn": "School of Performing Arts",
+      "nameMn": "Жүжиглэх урлагийн сургууль",
+      "tuitionGroup": "4,791,000 (공연예술)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: загвар жүжиглэх, тайзны загвар, мюзикл, тайзны техник, жүжиглэх, найруулга. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공연예술대학",
+      "nameKo": "실용음악학부",
+      "nameEn": "School of Practical Music",
+      "nameMn": "Хэрэглээний хөгжмийн сургууль",
+      "tuitionGroup": "4,791,000 (공연예술)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Гадаад оюутнуудад зориулсан тусгай анги. Мэргэжил: хөгжим зохиол, дуу, хөгжмийн зэмсэг, өөрөө зохиогч дуучин. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공연예술대학",
+      "nameKo": "음악학부",
+      "nameEn": "School of Music",
+      "nameMn": "Хөгжмийн сургууль",
+      "tuitionGroup": "4,791,000 (공연예술)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: төгөлдөр хуур, найрал хөгжим. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공연예술대학",
+      "nameKo": "무용예술학부",
+      "nameEn": "School of Dance Arts",
+      "nameMn": "Бүжгийн урлагийн сургууль",
+      "tuitionGroup": "4,791,000 (공연예술)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: солонгос уламжлалт бүжиг. Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "디자인&영상대학",
+      "nameKo": "디자인학부",
+      "nameEn": "School of Design",
+      "nameMn": "Дизайны сургууль",
+      "tuitionGroup": "4,546,000 (뷰티·헤어·디자인)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: амьдралын хэв маягийн дизайн (LF), визуал дизайн (VD). Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "디자인&영상대학",
+      "nameKo": "영화영상학과",
+      "nameEn": "Film and Video",
+      "nameMn": "Кино, дүрс бичлэг",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "디자인&영상대학",
+      "nameKo": "광고홍보영상학과",
+      "nameEn": "Advertising, PR and Video",
+      "nameMn": "Сурталчилгаа, олон нийтийн харилцаа, дүрс бичлэг",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "미래융합대학",
+      "nameKo": "미래융합학부",
+      "nameEn": "School of Future Convergence",
+      "nameMn": "Ирээдүйн нэгдлийн сургууль",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "미래융합대학",
+      "nameKo": "자유전공학부",
+      "nameEn": "School of Open Major",
+      "nameMn": "Чөлөөт мэргэжлийн сургууль",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "미래융합대학",
+      "nameKo": "아트앤테크놀로지학과",
+      "nameEn": "Art and Technology",
+      "nameMn": "Урлаг ба технологи",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний шаардлага: TOPIK 3 (урлаг, спортын чиглэлд 2); эс бөгөөс сургуулийн хэлний шалгалт өгч, нөхцөлт элсэлтээр эхний улиралд хэлний хичээл үзнэ. Төгсөхөд TOPIK 4 (урлагт 3) шаардлагатай. Элсэлт зөвхөн ярилцлагаар.",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Хэлний соёлын боловсролын төвийн (언어문화교육원) солонгос хэлний хөтөлбөр; суралцагч бичиг баримтаа и-мэйлээр илгээнэ.",
+      "sourceUrl": "https://lcec.skuniv.ac.kr/korean-course",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: менежмент, K-контентын соёлын менежмент, аялал жуулчлалын менежмент (докторт аялал жуулчлал байхгүй). Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: менежмент, K-контентын соёлын менежмент, аялал жуулчлалын менежмент (докторт аялал жуулчлал байхгүй). Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "문화예술학과",
+      "nameEn": "Culture and Arts",
+      "nameMn": "Соёл, урлаг",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: соёл урлагийн судлал, мюзикл (практик шалгалттай). Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "문화예술학과",
+      "nameEn": "Culture and Arts",
+      "nameMn": "Соёл, урлаг",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: соёл урлагийн судлал, мюзикл (практик шалгалттай). Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌한국어교육학과",
+      "nameEn": "Global Korean Language Education",
+      "nameMn": "Дэлхийн солонгос хэлний боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: гадаад хэл болох солонгос хэлний боловсрол. Төгсөлтийн шаардлага: гадаад оюутанд TOPIK 6. Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "전자컴퓨터공학과",
+      "nameEn": "Electronic and Computer Engineering",
+      "nameMn": "Электрон, компьютерийн инженер",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "전자컴퓨터공학과",
+      "nameEn": "Electronic and Computer Engineering",
+      "nameMn": "Электрон, компьютерийн инженер",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "도시계획·건설방재공학과",
+      "nameEn": "Urban Planning and Construction Disaster Prevention Engineering",
+      "nameMn": "Хот төлөвлөлт, барилгын гамшгаас хамгаалах инженер",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "도시계획·건설방재공학과",
+      "nameEn": "Urban Planning and Construction Disaster Prevention Engineering",
+      "nameMn": "Хот төлөвлөлт, барилгын гамшгаас хамгаалах инженер",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "환경화학공학과",
+      "nameEn": "Environmental and Chemical Engineering",
+      "nameMn": "Байгаль орчин, химийн инженер",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "환경화학공학과",
+      "nameEn": "Environmental and Chemical Engineering",
+      "nameMn": "Байгаль орчин, химийн инженер",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "디자인학과",
+      "nameEn": "Design",
+      "nameMn": "Дизайн",
+      "tuitionGroup": "예체능",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: дизайн. Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "미용예술학과",
+      "nameEn": "Beauty Arts",
+      "nameMn": "Гоо сайхны урлаг",
+      "tuitionGroup": "예체능",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: үс засалтын дизайн, нүүр будалтын дизайн, гоо сайхны эмчилгээ. Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "미용예술학과",
+      "nameEn": "Beauty Arts",
+      "nameMn": "Гоо сайхны урлаг",
+      "tuitionGroup": "예체능",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 4,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: үс засалтын дизайн, нүүр будалтын дизайн, гоо сайхны эмчилгээ. Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "무용예술학과",
+      "nameEn": "Dance Arts",
+      "nameMn": "Бүжгийн урлаг",
+      "tuitionGroup": "예체능",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Мэргэжил: солонгос бүжиг, хэрэглээний бүжиг. Практик шалгалттай. Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "공연예술학과",
+      "nameEn": "Performing Arts",
+      "nameMn": "Жүжиглэх урлаг",
+      "tuitionGroup": "예체능",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "실용음악학과",
+      "nameEn": "Practical Music",
+      "nameMn": "Хэрэглээний хөгжим",
+      "tuitionGroup": "예체능",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Практик шалгалттай. Шаардлага: TOPIK (инженер, хүмүнлэгийн чиглэлд магистр 4, урлагт 3; докторт 4); хангалтгүй бол нөхцөлт элсэлтээр 300 цаг (докторт 500 цаг) хэлний хичээл үзэж, төгсөхөөс өмнө TOPIK 4 (докторт 5) авна.",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 한국어(TOPIK) 우수장학금 6급",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 6급",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "evidence": "외국인 한국어(TOPIK) 우수장학금 2급 10% 3급 40% 4급 70% 5급 80% 6급 100% (신입생 입학 첫 학기)"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 한국어(TOPIK) 우수장학금 5급",
+      "kind": "ENTRANCE",
+      "percent": 80,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 5급",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "evidence": "외국인 한국어(TOPIK) 우수장학금 2급 10% 3급 40% 4급 70% 5급 80% 6급 100% (신입생 입학 첫 학기)"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 한국어(TOPIK) 우수장학금 4급",
+      "kind": "ENTRANCE",
+      "percent": 70,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "입학 시 TOPIK 4급",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "evidence": "외국인 한국어(TOPIK) 우수장학금 2급 10% 3급 40% 4급 70% 5급 80% 6급 100% (신입생 입학 첫 학기)",
+      "noteMn": "TOPIK 4-р түвшинтэй бол элсэлтийн эхний улиралд сургалтын төлбөрийн 70%-ийг хөнгөлнө (TOPIK 5 бол 80%, TOPIK 6 бол 100%). Энэ нь зөвхөн элссэн эхний улиралд, эхний улирлын төлбөрийг бүтнээр төлсний дараа буцаан олгоно; дараагийн улирлаас голч дүн ба TOPIK-ийн түвшнээр 10-100% хөнгөлнө."
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 한국어(TOPIK) 우수장학금 3급",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 3급",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "evidence": "외국인 한국어(TOPIK) 우수장학금 2급 10% 3급 40% 4급 70% 5급 80% 6급 100% (신입생 입학 첫 학기)"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 한국어(TOPIK) 우수장학금 2급",
+      "kind": "ENTRANCE",
+      "percent": 10,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 2급",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "evidence": "외국인 한국어(TOPIK) 우수장학금 2급 10% 3급 40% 4급 70% 5급 80% 6급 100% (신입생 입학 첫 학기)"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인성적우수장학금 (TOPIK 연동)",
+      "kind": "MERIT",
+      "percent": 100,
+      "headline": false,
+      "criteria": "직전학기 평점 4.3 이상 + TOPIK 6급; 15학점 이상",
+      "sourceUrl": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf",
+      "evidence": "4.3이상~4.5 토픽6급 수업료 100% 감면 ... 3.0이상~3.5미만 토픽3급 10% 감면"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "신입생 어학성적우수장학금 TOPIK 6급",
+      "kind": "ENTRANCE",
+      "percent": 90,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 6급",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "신입생 어학성적우수장학금 한국어시험(TOPIK) 6급 수업료의 90% 5급 50% 4급 40% 3급 30% (입학학기 적용, 입학금 제외, 석/박사과정 동일)"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "신입생 어학성적우수장학금 TOPIK 5급",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 5급",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "신입생 어학성적우수장학금 한국어시험(TOPIK) 6급 수업료의 90% 5급 50% 4급 40% 3급 30% (입학학기 적용, 입학금 제외, 석/박사과정 동일)"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "신입생 어학성적우수장학금 TOPIK 4급",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "입학 시 TOPIK 4급",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "신입생 어학성적우수장학금 한국어시험(TOPIK) 6급 수업료의 90% 5급 50% 4급 40% 3급 30% (입학학기 적용, 입학금 제외, 석/박사과정 동일)",
+      "noteMn": "TOPIK 4-р түвшинтэй бол элсэлтийн эхний улиралд сургалтын төлбөрийн 40%-ийг хөнгөлнө (TOPIK 5 бол 50%, TOPIK 6 бол 90%). Эхний улиралд л олгоно; дараагийн улирлаас голч 3.5+ бол 30-50%."
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "신입생 어학성적우수장학금 TOPIK 3급",
+      "kind": "ENTRANCE",
+      "percent": 30,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 시 TOPIK 3급",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "신입생 어학성적우수장학금 한국어시험(TOPIK) 6급 수업료의 90% 5급 50% 4급 40% 3급 30% (입학학기 적용, 입학금 제외, 석/박사과정 동일)"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "재학생 성적우수장학금 4.3 이상",
+      "kind": "MERIT",
+      "percent": 50,
+      "headline": false,
+      "criteria": "직전학기 성적 4.3 이상",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "재학생 성적우수장학금 직전학기 성적 4.3 이상 수업료의 50%"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "재학생 성적우수장학금 4.0 이상",
+      "kind": "MERIT",
+      "percent": 40,
+      "headline": false,
+      "criteria": "직전학기 성적 4.0 이상",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "재학생 성적우수장학금 직전학기 성적 4.0 이상 수업료의 40%"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "재학생 성적우수장학금 3.5 이상",
+      "kind": "MERIT",
+      "percent": 30,
+      "headline": false,
+      "criteria": "직전학기 성적 3.5 이상",
+      "sourceUrl": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913",
+      "evidence": "재학생 성적우수장학금 직전학기 성적 3.5 이상 수업료의 30%"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "Бакалаврын 편입학 (шилжин ороход) нээлттэй анги (인문과학대학, 사회과학대학, 이공대학 гэх мэт)",
+      "reason": "Эдгээр нь шилжин орох хүсэлтэд л нээлттэй, шинээр элсэх жагсаалтад ороогүй."
+    },
+    {
+      "what": "이중언어수업 (хятад + солонгос хэлний) хөтөлбөр: 글로벌융합경영학과 гэх мэт, 국제융합대학원",
+      "reason": "Хятад хэлний давхар хөтөлбөр ба 국제융합대학원 нь тусдаа сургууль/хөтөлбөр; энэ ээлжинд оруулаагүй."
+    },
+    {
+      "what": "경영문화대학원, 미용예술대학원, 실용음악대학원, 융합대학원 (특수대학원)",
+      "reason": "Зөвхөн 일반대학원 орно."
+    },
+    {
+      "what": "글로벌음악학과 (성악), 2027 оны намрын элсэлт",
+      "reason": "Шинэ анги, 2027 оны намрын (9-р сар) элсэлтээр сонгоно; төлбөр хараахан гараагүй."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалаврын 2027 оны хуваарь, 입학금",
+      "reason": "Одоо 2026 оны намрын (후기) журам л байна; 입학금 заагаагүй тул null. Төлбөр 2026 оных, 7-р сард өөрчлөгдөж болно.",
+      "checkAt": "https://intl.skuniv.ac.kr/admission-guideline"
+    },
+    {
+      "what": "글로벌융합학부 1/2, 영화영상학과, 광고홍보영상학과, 미래융합대학-ийн сургалтын төлбөр",
+      "reason": "Төлбөрийн хүснэгтэд эдгээр анги тусдаа заагаагүй тул tuitionGroup null.",
+      "checkAt": "https://intl.skuniv.ac.kr/files/2026_semester_guideline_kr.pdf"
+    },
+    {
+      "what": "Солонгос хэлний бэлтгэл (언어문화교육원)-ийн төлбөр, 입학금, tuitionYear",
+      "reason": "언어문화교육원-ийн сайтад хураамжийн дүн нийтлэгдээгүй.",
+      "checkAt": "https://lcec.skuniv.ac.kr/korean-course"
+    },
+    {
+      "what": "음악학과 (관현악, 피아노, 지휘) аспирантур",
+      "reason": "Шалгалтын хүснэгтэд байгаа боловч 모집학과 жагсаалтад ороогүй тул оруулаагүй.",
+      "checkAt": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913"
+    },
+    {
+      "what": "Аспирантурын сургалтын төлбөрийн он",
+      "reason": "Хүснэгтэд он заагаагүй тул tuitionYear null; 2027 оны эцсийн дүн 1-2-р сард батлагдана.",
+      "checkAt": "https://grad.skuniv.ac.kr/index.php?mid=admission_archives&document_srl=26913"
+    }
+  ]
+}

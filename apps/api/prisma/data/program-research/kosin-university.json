@@ -1,0 +1,589 @@
+{
+  "slug": "kosin-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "인문",
+      "tuitionPerTermKrw": 2955000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 인문 수업료(학기) 2,955,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "사회과학",
+      "tuitionPerTermKrw": 3320000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 사회과학 수업료(학기) 3,320,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "자연과학",
+      "tuitionPerTermKrw": 3580000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 자연과학 수업료(학기) 3,580,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "체육",
+      "tuitionPerTermKrw": 3715000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 체육 수업료(학기) 3,715,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "예술(디자인)",
+      "tuitionPerTermKrw": 3990000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 예술(디자인) 수업료(학기) 3,990,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "예술(음악)",
+      "tuitionPerTermKrw": 4060000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 예술(음악) 수업료(학기) 4,060,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학",
+      "tuitionPerTermKrw": 3580000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "학사과정 등록금 공학 수업료(학기) 3,580,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 3300000,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "Global Education / Global Business Administration 입학금 600,000원 등록금(학기) 3,300,000원"
+    },
+    {
+      "level": "MASTER",
+      "group": "예체능",
+      "tuitionPerTermKrw": 3500000,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "Global Convergence Arts / Global Sports 입학금 600,000원 등록금(학기) 3,500,000원"
+    },
+    {
+      "level": "MASTER",
+      "group": "공학",
+      "tuitionPerTermKrw": null,
+      "admissionFeeKrw": 600000,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "Global AI Convergence 등록금(학기) 추후 결정 후 고지"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어연수",
+      "tuitionPerTermKrw": 1200000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "confidence": "MEDIUM",
+      "evidence": "한국어과정 수업료 2,400,000원 / 6개월(2학기) 기준 → 학기당 1,200,000원 (2026-겨울학기 기준)"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "글로벌 특화(유학생 중심)",
+      "nameEn": "Global Specialised (international students)",
+      "nameMn": "Олон улсын оюутны тусгай танхим"
+    },
+    {
+      "nameKo": "보건복지대학",
+      "nameEn": "College of Health and Welfare",
+      "nameMn": "Эрүүл мэнд, нийгмийн халамжийн танхим"
+    },
+    {
+      "nameKo": "창의융합대학",
+      "nameEn": "College of Creative Convergence",
+      "nameMn": "Бүтээлч нэгдлийн танхим"
+    },
+    {
+      "nameKo": "라이프대학",
+      "nameEn": "College of Life",
+      "nameMn": "Амьдралын танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 특화(유학생 중심)",
+      "nameKo": "글로벌AI융합학부",
+      "nameEn": "Global AI Convergence Division",
+      "nameMn": "Глобал хиймэл оюун нэгдлийн салбар",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 특화(유학생 중심)",
+      "nameKo": "글로벌 웰니스학부",
+      "nameEn": "Global Wellness Division",
+      "nameMn": "Глобал веллнес салбар",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 특화(유학생 중심)",
+      "nameKo": "글로벌 콘텐츠 음악학부",
+      "nameEn": "Global Content Music Division",
+      "nameMn": "Глобал контент хөгжмийн салбар",
+      "tuitionGroup": "예술(음악)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "사회복지학과",
+      "nameEn": "Dept. of Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "사회과학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "의료경영학과",
+      "nameEn": "Dept. of Healthcare Management",
+      "nameMn": "Эрүүл мэндийн менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "재활치료학과",
+      "nameEn": "Dept. of Rehabilitation Therapy",
+      "nameMn": "Нөхөн сэргээх эмчилгээ",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "작업치료학과",
+      "nameEn": "Dept. of Occupational Therapy",
+      "nameMn": "Үйл ажиллагааны эмчилгээ",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "응급구조학과",
+      "nameEn": "Dept. of Emergency Medical Services",
+      "nameMn": "Яаралтай тусламж",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "바이오과학수사학과",
+      "nameEn": "Dept. of Bioscience & Forensic Investigation",
+      "nameMn": "Био шинжлэх ухаан, криминалистик",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "창의융합대학",
+      "nameKo": "미디어영상마케팅학과",
+      "nameEn": "Dept. of Media, Film & Marketing",
+      "nameMn": "Медиа, кино, маркетинг",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "창의융합대학",
+      "nameKo": "시각디자인학과",
+      "nameEn": "Dept. of Visual Design",
+      "nameMn": "Харааны дизайн",
+      "tuitionGroup": "예술(디자인)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "창의융합대학",
+      "nameKo": "음악콘텐츠학과",
+      "nameEn": "Dept. of Music Content",
+      "nameMn": "Хөгжмийн контент",
+      "tuitionGroup": "예술(음악)",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "창의융합대학",
+      "nameKo": "식품영양학과",
+      "nameEn": "Dept. of Food & Nutrition",
+      "nameMn": "Хүнс, хоол тэжээл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "창의융합대학",
+      "nameKo": "태권도학과",
+      "nameEn": "Dept. of Taekwondo",
+      "nameMn": "Тэквондо",
+      "tuitionGroup": "체육",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "창의융합대학",
+      "nameKo": "자율전공학부",
+      "nameEn": "Division of Individualized Studies",
+      "nameMn": "Чөлөөт мэргэжлийн салбар",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "라이프대학",
+      "nameKo": "한국어교육학과",
+      "nameEn": "Dept. of Korean Language Education",
+      "nameMn": "Солонгос хэлний боловсрол",
+      "tuitionGroup": "인문",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 2-р түвшин ба түүнээс дээш, эсвэл Косин их сургуулийн хэлний төвд 1+ жил сураад KOSIN TOPIK 3+. Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59) ба түүнээс дээш. TOPIK 2-оор элссэн бол эхний жилд солонгос хэлний 300 цаг заавал судална. Төгсөхөд TOPIK 4 (урлаг, спорт 3).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌교육학과",
+      "nameEn": "Global Education",
+      "nameMn": "Глобал боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-р түвшин (урлаг, спортод 2-р түвшин). Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59). Бакалаврын зэрэгтэй байх. 3 жил (6 улирал), диплом бичихгүй. Зөвхөн гадаад оюутанд зориулсан сургууль.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/graduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌경영학과",
+      "nameEn": "Global Business Administration",
+      "nameMn": "Глобал менежмент",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-р түвшин (урлаг, спортод 2-р түвшин). Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59). Бакалаврын зэрэгтэй байх. 3 жил (6 улирал), диплом бичихгүй. Зөвхөн гадаад оюутанд зориулсан сургууль.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/graduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌융합예술학과",
+      "nameEn": "Global Convergence Arts",
+      "nameMn": "Глобал нэгдсэн урлаг",
+      "tuitionGroup": "예체능",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-р түвшин (урлаг, спортод 2-р түвшин). Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59). Бакалаврын зэрэгтэй байх. 3 жил (6 улирал), диплом бичихгүй. Зөвхөн гадаад оюутанд зориулсан сургууль.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/graduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌웰니스융합학과",
+      "nameEn": "Global Sports",
+      "nameMn": "Глобал веллнес нэгдэл",
+      "tuitionGroup": "예체능",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 2,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-р түвшин (урлаг, спортод 2-р түвшин). Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59). Бакалаврын зэрэгтэй байх. 3 жил (6 улирал), диплом бичихгүй. Зөвхөн гадаад оюутанд зориулсан сургууль.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/graduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌AI융합공학학과",
+      "nameEn": "Global AI Convergence",
+      "nameMn": "Глобал хиймэл оюун нэгдсэн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3-р түвшин (урлаг, спортод 2-р түвшин). Англи хэлний хөтөлбөр: IELTS 5.5 (TOEFL iBT 59). Бакалаврын зэрэгтэй байх. 3 жил (6 улирал), диплом бичихгүй. Зөвхөн гадаад оюутанд зориулсан сургууль.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/graduate",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어연수",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Глобал хэлний сургалтын төв (D-4). Жилд 4 удаа (3, 6, 9, 12-р сар) элсэнэ, улирал бүр 200 цаг, ням гарагаас бусад ажлын өдөр 09:00-13:00. Доод хугацаа 6 сар, дээд хугацаа 24 сар. Дагалдах зардал: 6 сарын оюутны байр 1,100,000₩ (эхний 6 сар заавал), даатгал 120,000₩, соёлын аялал 200,000₩.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/courses",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Шинэ оюутны TOPIK 3 тэтгэлэг (첫 학기 수업료 100% 면제)",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "TOPIK 3급 취득자 첫 학기 수업료 100% 면제",
+      "noteMn": "TOPIK 3-р түвшинтэй элсэгчид эхний улирлын сургалтын төлбөр 100% чөлөөлөгдөнө. TOPIK 2 ба IELTS 5.5+ бол 30%, KOSIN TOPIK 3 бол 20%. Бүх шинэ оюутанд улирал бүр 10%-ийн үндсэн тэтгэлэг; 2-р улирлаас голч дүнгээр (шилдэг 1.5% нь 100%) тэтгэлэг олгоно.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "evidence": "TOPIK 3급 취득자 100% 전액 면제 (첫 학기 수업료); TOPIK 2급 취득자 & IELTS 5.5 이상 30% 감면; KOSIN TOPIK 3급 취득자 20% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Шилдэг голч дүнгийн тэтгэлэг (성적우수 장학금, 2학기부터)",
+      "kind": "CONTINUING",
+      "percent": 100,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "상위 1.5% 100%, 5% 70%, 15% 40%, 30% 30%, 50% 20%, 100% 10% (직전 학기 GPA, TOPIK 3급 이상)",
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "evidence": "상위 1.5% 이내 100% 전액 면제 ... 상위 100% 이내 10%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Бүх шинэ оюутны үндсэн тэтгэлэг",
+      "kind": "ENTRANCE",
+      "percent": 10,
+      "headline": false,
+      "criteria": "모든 신입생 매 학기 기본 장학금 10%",
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "evidence": "10% 모든 신입생 매 학기 기본 장학금"
+    },
+    {
+      "levels": [
+        "MASTER"
+      ],
+      "groups": [
+        "인문사회"
+      ],
+      "name": "국제융합대학원 입학장학금 (인문사회)",
+      "kind": "ENTRANCE",
+      "percent": 20,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "글로벌교육학과·글로벌경영학과 첫학기 등록금 20% 감면",
+      "noteMn": "Элсэлтийн эхний улирлын сургалтын төлбөрөөс 20% хөнгөлнө.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "evidence": "글로벌교육학과 글로벌경영학과 등록금 20% 감면"
+    },
+    {
+      "levels": [
+        "MASTER"
+      ],
+      "groups": [
+        "예체능"
+      ],
+      "name": "국제융합대학원 입학장학금 (예체능)",
+      "kind": "ENTRANCE",
+      "percent": 25,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "글로벌융합예술학과·글로벌웰니스융합학과 첫학기 등록금 25% 감면",
+      "noteMn": "Элсэлтийн эхний улирлын сургалтын төлбөрөөс 25% хөнгөлнө.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/fees",
+      "evidence": "글로벌융합예술학과 글로벌웰니스융합학과 등록금 25% 감면"
+    }
+  ],
+  "notOffered": [
+    "PHD"
+  ],
+  "excluded": [
+    {
+      "what": "일반대학원·신학대학원 등 (신학과, 의학과 등 내국인 대학원)",
+      "reason": "Гадаад оюутанд нээлттэй зөвхөн Олон улсын нэгдсэн сургууль (국제융합대학원) тул бусад сургуулийг оруулаагүй."
+    },
+    {
+      "what": "편입학 (2, 3학년)",
+      "reason": "Шилжих элсэлт тусдаа, хуваарь нь хараахан батлагдаагүй; шинээр элсэх бакалаврын жагсаалтад оруулаагүй."
+    },
+    {
+      "what": "영어연수과정 (EAP)",
+      "reason": "Англи хэлний бэлтгэл нь Солонгос хэлний бэлтгэл биш тул оруулаагүй."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалаврын ихэнх анги (글로벌AI융합학부, 웰니스학부, 의료경영, 재활치료, 작업치료, 응급구조, 바이오과학수사, 미디어영상마케팅, 식품영양, 자율전공)-ийн төлбөрийн 계열",
+      "reason": "Сургууль 7 бүлгийн төлбөр нийтэлсэн ч анги бүрийн бүлгийг заагаагүй; таамаглаагүй.",
+      "checkAt": "https://global.kosin.ac.kr/#/fees"
+    },
+    {
+      "what": "Бакалаврын 입학금",
+      "reason": "Хуудсанд бакалаврын 입학금 дурдаагүй (зөвхөн 전형료 60,000₩).",
+      "checkAt": "https://global.kosin.ac.kr/#/fees"
+    },
+    {
+      "what": "Магистр 글로벌AI융합공학학과-ийн улирлын төлбөр",
+      "reason": "Сургууль \"хожим тодорхойлж мэдэгдэнэ\" гэсэн.",
+      "checkAt": "https://global.kosin.ac.kr/#/fees"
+    },
+    {
+      "what": "Төлбөрийн хүснэгтийн хичээлийн жил",
+      "reason": "Хуудас хүснэгтийн жилийг заагаагүй тул tuitionYear хоосон.",
+      "checkAt": "https://global.kosin.ac.kr/#/fees"
+    },
+    {
+      "what": "Докторын түвшин",
+      "reason": "Гадаад оюутанд нээлттэй докторын хөтөлбөр олдсонгүй.",
+      "checkAt": "https://global.kosin.ac.kr/#/courses"
+    }
+  ]
+}

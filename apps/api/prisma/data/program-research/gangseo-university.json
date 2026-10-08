@@ -1,0 +1,362 @@
+{
+  "slug": "gangseo-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "G2빅데이터경영학과",
+      "nameEn": "G2 Big Data Business Administration",
+      "nameMn": "G2 Том өгөгдлийн бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "상담심리학과",
+      "nameEn": "Counseling Psychology",
+      "nameMn": "Сэтгэлзүйн зөвлөгөө",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "AI기반경영학과",
+      "nameEn": "AI-based Business Administration",
+      "nameMn": "Хиймэл оюунд суурилсан бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "글로벌경영학과",
+      "nameEn": "Global Business Administration",
+      "nameMn": "Глобал бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "한식경영학과",
+      "nameEn": "Korean Cuisine Management",
+      "nameMn": "Солонгос хоолны менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "문화경영학과",
+      "nameEn": "Culture Management",
+      "nameMn": "Соёлын менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "식품영양학과",
+      "nameEn": "Food and Nutrition",
+      "nameMn": "Хүнс, хоол тэжээл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 60,000₩.",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "실용음악학과",
+      "nameEn": "Practical Music",
+      "nameMn": "Практик хөгжим",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. Солонгос чиглэл: TOPIK 3 эсвэл тэнцэх хэлний түвшин. Англи чиглэл: TOEFL iBT 80 / IELTS 5.5 эсвэл англи хэлтэй орны иргэн. Элсэлтийн орон тоо хязгааргүй. Шалгалтын хураамж 70,000₩ (бусад анги 60,000₩).",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌경영학과",
+      "nameEn": "Global Business Management",
+      "nameMn": "Глобал бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "사회복지상담심리학과",
+      "nameEn": "Social Welfare and Counseling Psychology",
+      "nameMn": "Нийгмийн халамж, сэтгэлзүйн зөвлөгөө",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "목회상담학과",
+      "nameEn": "Pastoral Counseling",
+      "nameMn": "Пастор зөвлөгөө",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "글로벌경영학과",
+      "nameEn": "Global Business Management",
+      "nameMn": "Глобал бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지상담심리학과",
+      "nameEn": "Social Welfare and Counseling Psychology",
+      "nameMn": "Нийгмийн халамж, сэтгэлзүйн зөвлөгөө",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "목회상담학과",
+      "nameEn": "Pastoral Counseling",
+      "nameMn": "Пастор зөвлөгөө",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Эцэг эх хоёулаа гадаад иргэн байх ёстой. TOPIK 3 эсвэл сургуулийн хэлний шалгалтын 3-р түвшин; англи хөтөлбөрт TOEFL iBT 80 / IELTS 5.5. Банкны дансны үлдэгдэл 15,000 ам.доллар. Шалгалтын хураамж 100,000₩.",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Гадаад оюутны элсэлтийн тэтгэлэг",
+      "kind": "ENTRANCE",
+      "percent": null,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "Шинэ оюутан",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/template/2026foren.pdf",
+      "evidence": "신입생 : 장학금 50만원 지급"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Гадаад оюутны голчийн тэтгэлэг",
+      "kind": "MERIT",
+      "percent": null,
+      "semesters": null,
+      "headline": false,
+      "criteria": "Өмнөх улирлын голч 2.0+, 15+ кредит",
+      "sourceUrl": "https://entrance.gangseo.ac.kr/template/2026foren.pdf",
+      "evidence": "직전학기 평점 3.0이상 50만원 / 2.5 45만원 / 2.0 40만원"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Гадаад оюутны элсэлтийн тэтгэлэг",
+      "kind": "ENTRANCE",
+      "percent": 10,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "Тэтгэлгийн төрлөөс хамаарч 10-30%",
+      "sourceUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205",
+      "evidence": "입학 시 수업료 10-30% 상당의 장학금 지급"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "신학대학원, 사회복지대학원, 상담대학원, 교육대학원",
+      "reason": "Тусгай дээд сургууль — зөвхөн 일반대학원 судалсан."
+    },
+    {
+      "what": "편입학 (шилжилт) ба 재외국민 12년 전형",
+      "reason": "Өөр элсэлтийн төрөл; зөвхөн эцэг эх хоёулаа гадаад иргэн оюутны шууд элсэлт."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бүх түвшний гадаад оюутны сургалтын төлбөр ба 입학금",
+      "reason": "Сургуулийн албан ёсны хуудас, мэдэгдэлд гадаад оюутны (эсвэл бүх оюутны) улирлын төлбөр, 계열 хүснэгт олдсонгүй. Таамаглаагүй.",
+      "checkAt": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462"
+    },
+    {
+      "what": "Бакалаврын 2027 оны (3-р сарын) бодит журам",
+      "reason": "Одоогоор зөвхөн 2027 оны төлөвлөгөө (2026-09 ~ 2027-02 хугацаанд шатаар) бий; хугацаатай журам гараагүй. Анги жагсаалт нь төлөвлөгөөнөөс.",
+      "checkAt": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462"
+    },
+    {
+      "what": "Ангиудын танхим (단과대학)",
+      "reason": "Гадаад оюутны журамд танхим заагаагүй, зөвхөн 계열 (인문사회/자연/예체능) байна.",
+      "checkAt": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462"
+    },
+    {
+      "what": "Дээд сургуулийн хөтөлбөрүүдийн шинэчлэлт",
+      "reason": "Дээд сургуулийн гадаад оюутны хуудасны хуваарь 2023 оных; анги жагсаалтыг л авсан. Одоогийн ангиудыг лавлах.",
+      "checkAt": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0205"
+    },
+    {
+      "what": "Бакалаврын тэтгэлэг (хувь)",
+      "reason": "Тэтгэлэг тогтмол мөнгөн дүнтэй (500,000₩ г.м.), хувиар заагаагүй.",
+      "checkAt": "https://entrance.gangseo.ac.kr/template/2026foren.pdf"
+    },
+    {
+      "what": "Хэлний бэлтгэл (한국어교육)",
+      "reason": "Албан ёсны хуудсанд хэлний бэлтгэлийн төлбөр, бүртгэл олдсонгүй.",
+      "checkAt": "https://gangseo.ac.kr/kcua/mainService"
+    }
+  ]
+}

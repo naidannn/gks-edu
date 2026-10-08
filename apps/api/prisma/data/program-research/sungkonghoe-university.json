@@ -1,0 +1,353 @@
+{
+  "slug": "sungkonghoe-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "국제학부",
+      "tuitionPerTermKrw": 4281000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do",
+      "confidence": "HIGH",
+      "evidence": "4. 등록금: 1학기 4,281,000원 ※ 입학금 없음 (2026학년도 9월학기 외국인 특별전형 모집요강)"
+    },
+    {
+      "level": "MASTER",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 5039000,
+      "admissionFeeKrw": 831500,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH",
+      "evidence": "일반대학원 석사 신학과/사회복지학과/사회학과/국제문화연구학과 831,500 5,039,000 (2026학년도 학기별)"
+    },
+    {
+      "level": "MASTER",
+      "group": "인공지능융합",
+      "tuitionPerTermKrw": 6046000,
+      "admissionFeeKrw": 831500,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH",
+      "evidence": "인공지능융합학과 831,500 6,046,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "MAINS",
+      "tuitionPerTermKrw": 5746000,
+      "admissionFeeKrw": 831500,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH",
+      "evidence": "아시아비정부기구학전공(MAINS) 831,500 5,746,000"
+    },
+    {
+      "level": "PHD",
+      "group": "박사",
+      "tuitionPerTermKrw": 5643000,
+      "admissionFeeKrw": 831500,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH",
+      "evidence": "박사 신학과/사회복지학과/사회학과/국제문화연구학과/협동조합경영학과/융합경영학과 831,500 5,643,000"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어학당",
+      "tuitionPerTermKrw": 1200000,
+      "admissionFeeKrw": 100000,
+      "tuitionYear": null,
+      "sourceUrl": "https://www.skhu.ac.kr/studykorean/3407/subview.do",
+      "confidence": "HIGH",
+      "evidence": "정규과정반 10주/학기 09:00~13:00 1~6급 입학금: 100,000원 수업료 : 1,200,000원"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "국제학부",
+      "nameEn": "School of International Studies",
+      "nameMn": "Олон улсын танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "글로벌미디어아트전공",
+      "nameEn": "Global Media Art",
+      "nameMn": "Глобал медиа урлаг",
+      "tuitionGroup": "국제학부",
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Зөвхөн гадаад оюутнуудад зориулсан Олон улсын танхим (эцэг эх хоёулаа гадаад иргэн байх). Англи чиглэл: IELTS 5.5 / TOEFL iBT 71 эсвэл Солонгос чиглэл: TOPIK 3-аас дээш. Эхний жилдээ хоёр мэргэжлийг сонгож болно. Банкны дансны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제학부",
+      "nameKo": "글로벌디지털경영전공",
+      "nameEn": "Global Digital Management",
+      "nameMn": "Глобал дижитал менежмент",
+      "tuitionGroup": "국제학부",
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Зөвхөн гадаад оюутнуудад зориулсан Олон улсын танхим (эцэг эх хоёулаа гадаад иргэн байх). Англи чиглэл: IELTS 5.5 / TOEFL iBT 71 эсвэл Солонгос чиглэл: TOPIK 3-аас дээш. Эхний жилдээ хоёр мэргэжлийг сонгож болно. Банкны дансны үлдэгдэл 20 сая вон.",
+      "sourceUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла. Орой (зарим нь өдөр) хичээллэнэ; өргөдлөөс өмнө тэнхмийн эрхлэгчтэй зөвлөлдөнө.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "사회학과",
+      "nameEn": "Sociology",
+      "nameMn": "Нийгэм судлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "국제문화연구학과",
+      "nameEn": "International Cultural Studies",
+      "nameMn": "Олон улсын соёл судлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "인공지능융합학과",
+      "nameEn": "AI Convergence",
+      "nameMn": "Хиймэл оюун нэгдэл",
+      "tuitionGroup": "인공지능융합",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "아시아비정부기구학전공",
+      "nameEn": "Asian NGO Studies (MAINS)",
+      "nameMn": "Азийн ТББ судлал (MAINS)",
+      "tuitionGroup": "MAINS",
+      "durationYears": null,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "otherRequirements": "Хичээл англи хэлээр. Англи хэлний төлөвлөгөө (study plan) нэмж өгнө. Бүх хичээл англи хэлээр, сургалт 1.5 жил (4 улирал). Сургалтын хугацаа 1 жил 6 сар.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "박사",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "박사",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла. Орой (зарим нь өдөр) хичээллэнэ.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회학과",
+      "nameEn": "Sociology",
+      "nameMn": "Нийгэм судлал",
+      "tuitionGroup": "박사",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "협동조합경영학과",
+      "nameEn": "Cooperative Management",
+      "nameMn": "Хоршооллын менежмент",
+      "tuitionGroup": "박사",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "융합경영학과",
+      "nameEn": "Convergence Management",
+      "nameMn": "Нэгдсэн менежмент",
+      "tuitionGroup": "박사",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "otherRequirements": "TOPIK 3-аас дээш (сургуулиа төгсөхөөс өмнө TOPIK 4 шаардана). Хэрэв хөтөлбөр англи хэлээр бол TOPIK-ийн шаардлагыг тэнхимээс лавла.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어학당",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Улирал бүр 10 долоо хоног, 09:00-13:00, 1-6 түвшин. Элсэлтийн хураамж 100,000₩.",
+      "sourceUrl": "https://www.skhu.ac.kr/studykorean/3407/subview.do",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Гадаад оюутны сургалтын дэмжлэг (элсэлтийн улирал)",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "TOPIK 3-аас дээш эсвэл IELTS 5.5-аас дээш",
+      "noteMn": "Элсэх улиралдаа TOPIK 3 эсвэл IELTS 5.5 байвал сургалтын төлбөрийн 40%-ийг хөнгөлнө. Дараагийн улирлуудад өмнөх улирлын голчоор: 4.3+ бол 100%, 4.0+ бол 70%, 3.8+ бол 50%. Тэтгэлэг дээд тал нь 4 жил (8 улирал).",
+      "sourceUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do",
+      "evidence": "외국인유학생 학업지원장학금 토픽 3급 이상 또는 IELTS 5.5 이상인 경우 수업료의 40% 감면; 직전학기 평균평점 4.3 이상 수업료 100% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Дэмжлэгийн тэтгэлэг (ODA орнууд)",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "ODA Korea-ийн жагсаалтын хөгжиж буй орны иргэн",
+      "sourceUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do",
+      "evidence": "글로벌동행장학금 ODA Korea 사이트 최근년도 기준 수혜국 출신자 수업료의 40% 감면"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Голч 4.3+ тэтгэлэг",
+      "kind": "MERIT",
+      "percent": 100,
+      "semesters": 7,
+      "headline": false,
+      "criteria": "Өмнөх улирлын голч 4.3+ (2-р улирлаас)",
+      "sourceUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do",
+      "evidence": "직전학기 평균평점 4.3 이상 수업료 100% 감면"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Гадаад оюутны 50% тэтгэлэг",
+      "kind": "CONTINUING",
+      "percent": 50,
+      "semesters": null,
+      "headline": true,
+      "criteria": "Гадаад оюутны тусгай элсэлтээр элссэн; өмнөх улирлын голч 3.5+",
+      "noteMn": "Гадаад оюутны тусгай элсэлтээр элссэн, өмнөх улирлын голч 3.5+ байвал сургалтын төлбөрийн 50%-ийг хөнгөлнө (суралцах хугацаанд). Элсэх улиралд зөвлөх багш эсвэл ярилцлагын гишүүдийн санал болгосноор 40% хүртэл хөнгөлөлт олгож болно.",
+      "sourceUrl": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do",
+      "evidence": "외국인 및 재외국민 공통 수업료의 50% 1) 외국인 특별전형(정원외)로 입학 2) 직전 학기 성적 평균평점 3.5 이상 수업연한 내; 입학(추천) 수업료 40% 이내"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "신학대학원, 시민사회복지대학원, 교육대학원, 시민평화대학원, 문화대학원, 임팩트경영대학원",
+      "reason": "Тусгай дээд сургууль — зөвхөн 일반대학원 судлав."
+    },
+    {
+      "what": "4학년 편입학 (4-р курст шилжих)",
+      "reason": "Шилжилт тусдаа журам; зөвхөн 1-р курсийн элсэлт."
+    },
+    {
+      "what": "재외국민/북한이탈주민 전형",
+      "reason": "Гадаад оюутны (부모 모두 외국인) тусгай элсэлтэд хамаарахгүй."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Магистр/докторын 2027 оны төлбөр ба 2027 оны хавар (전기) элсэлтийн журам",
+      "reason": "Одоо 2026 оны намрын (후기) журам, 2026 оны төлбөр байна; 2027 оны журам гарсны дараа шинэчилнэ.",
+      "checkAt": "https://www.skhu.ac.kr/skhu/907/subview.do"
+    },
+    {
+      "what": "Бакалаврын 2027 оны төлбөр ба журам",
+      "reason": "Нийтлэгдсэн журам 2026 оны 9-р сарын элсэлтийнх (2026 оны төлбөр).",
+      "checkAt": "https://www.skhu.ac.kr/skhu/5305/subview.do"
+    },
+    {
+      "what": "Магистрийн 신학과 болон 협동조합경영·융합경영 석박사통합 хөтөлбөр",
+      "reason": "Элсэлтийн хүснэгтэд магистрийн 신학과 байхгүй, 통합 хөтөлбөрийг тусад нь жагсаасан; төлбөрийн хүснэгтэд 신학과 석사 гэж байгаа тул зөрүү. Таамаглаагүй.",
+      "checkAt": "https://www.skhu.ac.kr/viewer/skhu/3/fileDown1/fileDownload.do"
+    },
+    {
+      "what": "ODA тэтгэлэгт Монгол орох эсэх",
+      "reason": "ODA Korea сайтын жагсаалтаас шалгаагүй.",
+      "checkAt": "https://www.skhu.ac.kr/skhu/5305/subview.do"
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "slug": "seoul-christian-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [],
+  "faculties": [
+    {
+      "nameKo": "글로벌 AI융합대학",
+      "nameEn": "College of Global AI Convergence",
+      "nameMn": "Глобал хиймэл оюуны нэгдсэн танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 AI융합대학",
+      "nameKo": "AI 빅데이터 융합",
+      "nameEn": "AI & Big Data Convergence",
+      "nameMn": "Хиймэл оюун ба том өгөгдлийн нэгдэл",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Элсэлтийн хураамж 60,000₩. Христийн шашны сургууль.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260928_095531_477_1e463eaa.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 AI융합대학",
+      "nameKo": "K-뷰티 힐링",
+      "nameEn": "K-Beauty Healing",
+      "nameMn": "К-гоо сайхан, эдгэрэлт",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Элсэлтийн хураамж 60,000₩. Христийн шашны сургууль.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260928_095531_477_1e463eaa.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 AI융합대학",
+      "nameKo": "AI 경영",
+      "nameEn": "AI Management",
+      "nameMn": "Хиймэл оюуны менежмент",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Элсэлтийн хураамж 60,000₩. Христийн шашны сургууль.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260928_095531_477_1e463eaa.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 AI융합대학",
+      "nameKo": "AI 신학",
+      "nameEn": "AI Theology",
+      "nameMn": "Хиймэл оюуны теологи",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Элсэлтийн хураамж 60,000₩. Христийн шашны сургууль.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260928_095531_477_1e463eaa.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌 AI융합대학",
+      "nameKo": "국제개발",
+      "nameEn": "International Development",
+      "nameMn": "Олон улсын хөгжил",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Элсэлтийн хураамж 60,000₩. Христийн шашны сургууль.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260928_095531_477_1e463eaa.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "AI융합학과",
+      "nameEn": "AI Convergence",
+      "nameMn": "Хиймэл оюуны нэгдсэн анги",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI융합학과",
+      "nameEn": "AI Convergence",
+      "nameMn": "Хиймэл оюуны нэгдсэн анги",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "글로벌융합경영학과",
+      "nameEn": "Global Convergence Management",
+      "nameMn": "Глобал нэгдсэн менежмент",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "글로벌융합경영학과",
+      "nameEn": "Global Convergence Management",
+      "nameMn": "Глобал нэгдсэн менежмент",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "국제개발협력학과",
+      "nameEn": "International Development Cooperation",
+      "nameMn": "Олон улсын хөгжлийн хамтын ажиллагаа",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "국제개발협력학과",
+      "nameEn": "International Development Cooperation",
+      "nameMn": "Олон улсын хөгжлийн хамтын ажиллагаа",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "AI융합신학과",
+      "nameEn": "AI Convergence Theology",
+      "nameMn": "Хиймэл оюуны нэгдсэн теологи",
+      "tuitionGroup": null,
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI융합신학과",
+      "nameEn": "AI Convergence Theology",
+      "nameMn": "Хиймэл оюуны нэгдсэн теологи",
+      "tuitionGroup": null,
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Солонгос хэлний хөтөлбөр: TOPIK 3, эсвэл хэлний курс дүүргэсэн, эсвэл сургуулийн Солонгос хэлний шалгалт 3-р түвшин. Англи хэлний хөтөлбөр: TOEFL iBT 80, IELTS 5.5 эсвэл TEPS 600-аас дээш. Зөвхөн эцэг эх, оюутан хоёулаа гадаад иргэн байх. Бичиг баримтаар сонгоно. Христийн шашны сургууль. Зөвхөн 9 дүгээр сард элсэнэ.",
+      "sourceUrl": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [],
+  "notOffered": [],
+  "excluded": [
+    {
+      "what": "Монгол оюутанд нээлттэй бусад (мэргэжлийн) аспирантур, тусгай сургууль",
+      "reason": "Зөвхөн ерөнхий (일반) аспирантур, гадаад иргэний элсэлтийн зарлалд орсон ангиуд."
+    },
+    {
+      "what": "2, 3-р курсын шилжих элсэлт",
+      "reason": "Тусдаа шилжих журам; шинэ элсэлтийн жагсаалтад оруулаагүй."
+    },
+    {
+      "what": "Мэргэшил (AI빅데이터융합, K-뷰티힐링, AI경영 гэх мэт)",
+      "reason": "Аспирантурын мэргэшлүүд тул ангийн мөрөнд нэгтгэж бичсэн."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бүх түвшний сургалтын төлбөр ба 입학금",
+      "reason": "Албан ёсны сайтад гадаад иргэний сургалтын төлбөр нийтлэгдээгүй (International Student > Scholarships хуудас хоосон, мөн 모집요강-д төлбөр байхгүй). Таамаглаагүй.",
+      "checkAt": "https://www.scu.ac.kr/study/international/scholarship"
+    },
+    {
+      "what": "Гадаад оюутны тэтгэлэг",
+      "reason": "Тэтгэлгийн дүрэм нийтлэгдээгүй.",
+      "checkAt": "https://www.scu.ac.kr/study/international/scholarship"
+    },
+    {
+      "what": "Хэлний бэлтгэл (한국어교육원)",
+      "reason": "Албан ёсны сайтад Солонгос хэлний курсын мэдээлэл олдсонгүй.",
+      "checkAt": "https://www.scu.ac.kr/study/international/admissions"
+    },
+    {
+      "what": "Докторын аспирантурын элсэлтийн нөхцөл",
+      "reason": "Зарлалд магистр (4 улирал), доктор (6 улирал) гэж нэг хүснэгтэд бичсэн; мэргэжил тус бүрийн докторын нээлттэй эсэхийг ангиар нь баталгаажуулаагүй.",
+      "checkAt": "https://www.scu.ac.kr/api/file?path=entrance-notice-files&filename=20260923_103715_431_fcea3c47.pdf"
+    }
+  ]
+}
