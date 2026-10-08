@@ -1,0 +1,670 @@
+{
+  "slug": "kangwon-national-university-wonju",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 1744000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 학부 외국인 모집요강): 인문, 사회 1,744,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "이학체육",
+      "tuitionPerTermKrw": 2104000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 학부 외국인 모집요강): 이학, 체육 2,104,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학",
+      "tuitionPerTermKrw": 2308000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 학부 외국인 모집요강): 공학 2,308,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 2082000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 일반대학원 외국인 모집요강): 인문,사회 2,082,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "이학체육",
+      "tuitionPerTermKrw": 2518000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 일반대학원 외국인 모집요강): 이학,체육 2,518,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "공학",
+      "tuitionPerTermKrw": 2729000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 일반대학원 외국인 모집요강): 공학 2,729,000"
+    },
+    {
+      "level": "PHD",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 2082000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 일반대학원 외국인 모집요강): 인문,사회 2,082,000"
+    },
+    {
+      "level": "PHD",
+      "group": "이학체육",
+      "tuitionPerTermKrw": 2518000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 일반대학원 외국인 모집요강): 이학,체육 2,518,000"
+    },
+    {
+      "level": "PHD",
+      "group": "공학",
+      "tuitionPerTermKrw": 2729000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH",
+      "evidence": "2026학년도 신입생 기준 등록금 (강릉·원주캠퍼스 일반대학원 외국인 모집요강): 공학 2,729,000"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "보건복지대학",
+      "nameEn": "College of Health and Welfare",
+      "nameMn": "Эрүүл мэнд, халамжийн танхим"
+    },
+    {
+      "nameKo": "과학기술대학",
+      "nameEn": "College of Science and Technology",
+      "nameMn": "Шинжлэх ухаан, технологийн танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "다문화학과",
+      "nameEn": "Multicultural Studies",
+      "nameMn": "Олон соёлын судлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "보건복지대학",
+      "nameKo": "디지털미디어커뮤니케이션학과",
+      "nameEn": "Digital Media Communication",
+      "nameMn": "Дижитал медиа харилцаа",
+      "tuitionGroup": null,
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "과학기술대학",
+      "nameKo": "컴퓨터공학과",
+      "nameEn": "Computer Science and Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "과학기술대학",
+      "nameKo": "AI콘텐츠공학과",
+      "nameEn": "AI Content Engineering",
+      "nameMn": "Хиймэл оюун контентийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "과학기술대학",
+      "nameKo": "기계융합공학부",
+      "nameEn": "Mechanical Convergence Engineering",
+      "nameMn": "Машин, нэгдсэн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "과학기술대학",
+      "nameKo": "전기공학과",
+      "nameEn": "Electrical Engineering",
+      "nameMn": "Цахилгааны инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "과학기술대학",
+      "nameKo": "정보통신공학과",
+      "nameEn": "Information and Communication Engineering",
+      "nameMn": "Мэдээлэл, холбооны инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "과학기술대학",
+      "nameKo": "산업경영공학과",
+      "nameEn": "Industrial and Management Engineering",
+      "nameMn": "Үйлдвэрлэл, менежментийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл Сэжон хаганы (Sejong Institute) солонгос хэлний дунд шат 1. Хэлний оноогоо дараа нь өгөх баталгаа бичиг өгч болно",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "유아교육과",
+      "nameEn": "Early Childhood Education",
+      "nameMn": "Бага насны хүүхдийн боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "유아교육과",
+      "nameEn": "Early Childhood Education",
+      "nameMn": "Бага насны хүүхдийн боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": "이학체육",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": "이학체육",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "컴퓨터공학과",
+      "nameEn": "Computer Science and Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "컴퓨터공학과",
+      "nameEn": "Computer Science and Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "AI콘텐츠공학과",
+      "nameEn": "AI Content Engineering",
+      "nameMn": "Хиймэл оюун контентийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI콘텐츠공학과",
+      "nameEn": "AI Content Engineering",
+      "nameMn": "Хиймэл оюун контентийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "소프트웨어학과",
+      "nameEn": "Software",
+      "nameMn": "Програм хангамж",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "소프트웨어학과",
+      "nameEn": "Software",
+      "nameMn": "Програм хангамж",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "전기공학과",
+      "nameEn": "Electrical Engineering",
+      "nameMn": "Цахилгааны инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "전기공학과",
+      "nameEn": "Electrical Engineering",
+      "nameMn": "Цахилгааны инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "정보통신공학과",
+      "nameEn": "Information and Communication Engineering",
+      "nameMn": "Мэдээлэл, холбооны инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "기계시스템공학과",
+      "nameEn": "Mechanical System Engineering",
+      "nameMn": "Машины системийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "기계시스템공학과",
+      "nameEn": "Mechanical System Engineering",
+      "nameMn": "Машины системийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "기계의용공학과",
+      "nameEn": "Mechanical and Biomedical Engineering",
+      "nameMn": "Машин, анагаах инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "기계의용공학과",
+      "nameEn": "Mechanical and Biomedical Engineering",
+      "nameMn": "Машин, анагаах инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "자동차공학과",
+      "nameEn": "Automotive Engineering",
+      "nameMn": "Автомашины инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "자동차공학과",
+      "nameEn": "Automotive Engineering",
+      "nameMn": "Автомашины инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "산업경영공학과",
+      "nameEn": "Industrial and Management Engineering",
+      "nameMn": "Үйлдвэрлэл, менежментийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "산업경영공학과",
+      "nameEn": "Industrial and Management Engineering",
+      "nameMn": "Үйлдвэрлэл, менежментийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3-аас дээш, эсвэл КНУ-ийн хэлний бэлтгэлийн 4-р түвшин, эсвэл англи хэлний оноо (TOEFL iBT 71 / IELTS 5.5 / New TEPS 327)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Шинэ оюутны тэтгэлэг (TOPIK 5+, А анги)",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "TOPIK 5급 이상 (일반학과)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "evidence": "한국어능력시험 5급 이상 A급; A급: 수업료 전액면제"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Шинэ оюутны тэтгэлэг (TOPIK 4, В анги)",
+      "kind": "ENTRANCE",
+      "percent": 80,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "TOPIK 4급 이상 (일반학과)",
+      "noteMn": "Зөвхөн эхний улиралд олгоно. TOPIK 4 бол сургалтын төлбөрийн 80%, TOPIK 5-аас дээш бол 100% (бүтэн хөнгөлөлт), TOPIK 3 эсвэл англи хэлний оноотой бол 20% хөнгөлнө. Дараа нь өмнөх улирлын голч дүн 4.0+ бол 100%, 3.5+ бол 80%, 3.0+ бол 40%, 2.5+ бол 10% хөнгөлөлт.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "evidence": "한국어능력시험 4급 이상 B급; B급: 수업료80%면제; 신입생장학금지급은1학년1학기에한함"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "Шинэ оюутны тэтгэлэг (TOPIK 3 / англи хэлний оноо, D анги)",
+      "kind": "ENTRANCE",
+      "percent": 20,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "TOPIK 3급 이상 또는 영어(TOEFL iBT 80, IELTS 5.5 등)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "evidence": "한국어능력시험 3급 이상, 영어능력시험 ... D급; D급: 수업료20%면제"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Шинэ оюутны тэтгэлэг (TOPIK 4+, А анги)",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "한국어능력시험 4급 이상",
+      "noteMn": "Зөвхөн эхний улиралд олгоно. TOPIK 4-өөс дээш бол эхний улирлын төлбөр бүтэн (100%) хөнгөлөгдөнө. TOPIK 3 эсвэл англи хэлний оноотой бол 40% хөнгөлнө. Дараа нь голч дүн 3.5+ бол төлбөрийн 50% хүртэл хөнгөлөлт бий.",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "evidence": "한국어능력시험 4급 이상 A급 (전액 면제); 첫 번째 학기만 해당"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "Шинэ оюутны тэтгэлэг (TOPIK 3 / англи хэл, С анги)",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "한국어능력시험 3급 이상, 영어능력시험(TOEFL iBT 80, IELTS 5.5 등)",
+      "sourceUrl": "https://global.kangwon.ac.kr/global/conts/1189/directory.do",
+      "evidence": "C급 (40% 면제); 교수 추천 입학생 C급"
+    }
+  ],
+  "notOffered": [
+    "LANGUAGE_PREP"
+  ],
+  "excluded": [
+    {
+      "what": "Элсэлт хаалттай: 치과대학, 유아교육과(бакалавр), 간호학과(бакалавр), 자유전공학부, 사회복지학과(대학원), 다문화학과(대학원)",
+      "reason": "2026 оны намрын журамд Вонжу кампусаас эдгээрийг гадаад оюутанд авахгүй гэж тэмдэглэсэн."
+    },
+    {
+      "what": "Бакалаврын 편입학 тусдаа бүртгэлтэй тэнхим ((편입학) 멀티미디어공학과, 기계공학과, 자동차공학과)",
+      "reason": "Зөвхөн шилжих оюутанд нээлттэй."
+    },
+    {
+      "what": "대학원 석·박사통합과정",
+      "reason": "Системд зөвхөн магистр, докторын түвшин байгаа тул нэгдсэн хөтөлбөрийг тусад нь тоолоогүй."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалавр: 디지털미디어커뮤니케이션학과 төлбөрийн ангилал",
+      "reason": "Мэдүүлгийн хүснэгтэд тэнхим бүрээр биш 계열 гэж бичсэн, энэ тэнхим алинд хамаарах нь тодорхойгүй. Таамаглаагүй.",
+      "checkAt": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    },
+    {
+      "what": "Бакалавр: 사회복지학과, 다문화학과 төлбөр",
+      "reason": "인문,사회 계열гэж үзсэн (албан ёсоор тэнхим бүрээр баталгаажаагүй).",
+      "checkAt": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    },
+    {
+      "what": "Вонжу кампусын хэлний бэлтгэл (한국어교육원)",
+      "reason": "global.kangwon.ac.kr дээр Вонжугийн хэлний хөтөлбөрийн хуудас байхгүй (гадны сайт руу холбосон). Чунчон, Гангнын, Самчок кампусыг тус тусад нь оруулсан.",
+      "checkAt": "https://global.kangwon.ac.kr/global/conts/1212/directory.do"
+    },
+    {
+      "what": "Магистр/доктор: 입학금",
+      "reason": "Гангнын-Вонжугийн журамд 입학금 заагаагүй.",
+      "checkAt": "https://global.kangwon.ac.kr/global/conts/1189/directory.do"
+    }
+  ]
+}
