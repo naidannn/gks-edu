@@ -3,6 +3,7 @@ import { Prisma } from '../../prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
 import { universityDetailCacheKey } from '../universities/universities.service.js';
+import { catalogueNameKey } from './catalogue-name.js';
 import type { CreateFacultyDto, UpdateFacultyDto } from './dto/faculty.dto.js';
 import { PROGRAMS_FACETS_CACHE_KEY } from './programs.service.js';
 
@@ -44,7 +45,7 @@ export class FacultiesService {
 
   async create(dto: CreateFacultyDto) {
     const university = await this.requireUniversity(dto.universityId);
-    await this.assertNameFree(dto.universityId, dto.nameMn);
+    await this.assertNameFree(dto.universityId, dto.nameMn, dto.nameKo ?? null);
 
     const faculty = await this.prisma.faculty.create({
       data: { ...dto, nameMn: dto.nameMn.trim() },
@@ -56,8 +57,11 @@ export class FacultiesService {
 
   async update(id: string, dto: UpdateFacultyDto) {
     const current = await this.require(id);
-    if (dto.nameMn && dto.nameMn.trim() !== current.nameMn) {
-      await this.assertNameFree(current.universityId, dto.nameMn, id);
+    const nameMn = dto.nameMn?.trim() ?? current.nameMn;
+    // `undefined` leaves the Korean name as it is; `null` clears it.
+    const nameKo = dto.nameKo === undefined ? current.nameKo : dto.nameKo;
+    if (nameMn !== current.nameMn || catalogueNameKey(nameKo) !== catalogueNameKey(current.nameKo)) {
+      await this.assertNameFree(current.universityId, nameMn, nameKo, id);
     }
 
     const faculty = await this.prisma.faculty.update({
@@ -83,38 +87,17 @@ export class FacultiesService {
 
   /**
    * The name a research run (or a form that let somebody type one) produced,
-   * as a row id.
+   * as a row id, creating the faculty when the school has not got one yet.
    *
-   * Matching is on the trimmed name, case-insensitively, against both the
-   * Mongolian and the Korean column: a run reports `공과대학`, and the faculty
-   * the office created last month may be stored under exactly that. An empty
-   * name is not an error — it is a programme with no college, which is normal.
+   * Matching is against all three columns in `catalogueNameKey` form: a run
+   * reports `공과대학`, and the faculty the office created last month may be
+   * stored under exactly that — or under `공과 대학`. An empty name is not an
+   * error — it is a programme with no college, which is normal.
    */
   async resolve(universityId: string, name: string | null | undefined): Promise<string | null> {
     const trimmed = name?.trim();
     if (!trimmed) return null;
-
-    const existing = await this.prisma.faculty.findFirst({
-      where: {
-        universityId,
-        OR: [
-          { nameMn: { equals: trimmed, mode: 'insensitive' } },
-          { nameKo: { equals: trimmed, mode: 'insensitive' } },
-          { nameEn: { equals: trimmed, mode: 'insensitive' } },
-        ],
-      },
-      select: { id: true },
-    });
-    if (existing) return existing.id;
-
-    const created = await this.prisma.faculty.create({
-      // A Korean name is stored in both columns until somebody words it in
-      // Mongolian: the list has to show something, and `공과대학` is at least
-      // the school's own word for it.
-      data: { universityId, nameMn: trimmed, nameKo: /[가-힯]/.test(trimmed) ? trimmed : null },
-      select: { id: true },
-    });
-    return created.id;
+    return (await this.resolveMany(universityId, [trimmed])).get(trimmed) ?? null;
   }
 
   /**
@@ -128,40 +111,53 @@ export class FacultiesService {
     const wanted = [...new Set(names.map((name) => name?.trim()).filter((name): name is string => Boolean(name)))];
     if (wanted.length === 0) return new Map();
 
-    const existing = await this.prisma.faculty.findMany({
-      where: { universityId },
-      select: { id: true, nameMn: true, nameEn: true, nameKo: true },
-    });
-
-    const byName = new Map<string, string>();
-    for (const faculty of existing) {
-      for (const name of [faculty.nameMn, faculty.nameEn, faculty.nameKo]) {
-        if (name) byName.set(name.trim().toLowerCase(), faculty.id);
+    const index = async () => {
+      const faculties = await this.prisma.faculty.findMany({
+        where: { universityId },
+        select: { id: true, nameMn: true, nameEn: true, nameKo: true },
+      });
+      const byKey = new Map<string, string>();
+      for (const faculty of faculties) {
+        for (const name of [faculty.nameMn, faculty.nameEn, faculty.nameKo]) {
+          const key = catalogueNameKey(name);
+          if (key) byKey.set(key, faculty.id);
+        }
       }
+      return byKey;
+    };
+
+    let byKey = await index();
+
+    // One new row per key, not per wording: `공과 대학` and `공과대학` in the
+    // same batch are one college, and the second would collide with the first
+    // on the Korean-name index.
+    const missing = new Map<string, string>();
+    for (const name of wanted) {
+      const key = catalogueNameKey(name)!;
+      if (!byKey.has(key) && !missing.has(key)) missing.set(key, name);
     }
 
-    const missing = wanted.filter((name) => !byName.has(name.toLowerCase()));
-    if (missing.length) {
+    if (missing.size) {
       await this.prisma.faculty.createMany({
-        data: missing.map((name) => ({
+        // A Korean name is stored in both columns until somebody words it in
+        // Mongolian: the list has to show something, and `공과대학` is at least
+        // the school's own word for it.
+        data: [...missing.values()].map((name) => ({
           universityId,
           nameMn: name,
           nameKo: /[가-힯]/.test(name) ? name : null,
         })),
         skipDuplicates: true,
       });
-
-      const created = await this.prisma.faculty.findMany({
-        where: { universityId, nameMn: { in: missing } },
-        select: { id: true, nameMn: true },
-      });
-      for (const faculty of created) byName.set(faculty.nameMn.trim().toLowerCase(), faculty.id);
+      // Re-read rather than trust what was sent: a row `skipDuplicates` dropped
+      // was created by somebody else a moment ago, and it is the one to point at.
+      byKey = await index();
     }
 
     // Keyed by the caller's own wording, so a candidate can look itself up.
     const resolved = new Map<string, string>();
     for (const name of wanted) {
-      const id = byName.get(name.toLowerCase());
+      const id = byKey.get(catalogueNameKey(name)!);
       if (id) resolved.set(name, id);
     }
     return resolved;
@@ -187,12 +183,31 @@ export class FacultiesService {
     return university?.slug ?? null;
   }
 
-  private async assertNameFree(universityId: string, nameMn: string, exceptId?: string) {
-    const duplicate = await this.prisma.faculty.findFirst({
-      where: { universityId, nameMn: nameMn.trim(), ...(exceptId ? { id: { not: exceptId } } : {}) },
-      select: { id: true },
+  /**
+   * `nameMn` is unique per school, and so is the Korean name in
+   * `catalogueNameKey` form — the second compared here because the index is on
+   * an expression Prisma cannot filter by. A school has a dozen colleges.
+   */
+  private async assertNameFree(universityId: string, nameMn: string, nameKo: string | null, exceptId?: string) {
+    const koKey = catalogueNameKey(nameKo);
+    const siblings = await this.prisma.faculty.findMany({
+      where: {
+        universityId,
+        OR: [{ nameMn: nameMn.trim() }, ...(koKey ? [{ nameKo: { not: null } }] : [])],
+        ...(exceptId ? { id: { not: exceptId } } : {}),
+      },
+      select: { nameMn: true, nameKo: true },
     });
-    if (duplicate) throw new ConflictException('Энэ сургуульд ижил нэртэй танхим бүртгэгдсэн байна.');
+
+    if (siblings.some((faculty) => faculty.nameMn === nameMn.trim())) {
+      throw new ConflictException('Энэ сургуульд ижил нэртэй танхим бүртгэгдсэн байна.');
+    }
+    const twin = koKey ? siblings.find((faculty) => catalogueNameKey(faculty.nameKo) === koKey) : undefined;
+    if (twin) {
+      throw new ConflictException(
+        `Энэ сургуульд «${twin.nameKo}» солонгос нэртэй танхим «${twin.nameMn}» нэрээр бүртгэгдсэн байна.`,
+      );
+    }
   }
 
   /**

@@ -1,13 +1,15 @@
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { blankToNull } from './university-program.dto.js';
 
 /**
  * Танхим — one college of one university (단과대학).
  *
- * The Korean name is the useful one: it is what the prospectus prints and what
- * staff match a research run against. `nameMn` is ours and is what the list
- * shows, so it is the only required one.
+ * The Korean name is the useful one: it is what the prospectus prints, what
+ * staff match a research run against, and — spaces and case ignored — unique
+ * per school. `nameMn` is ours and is what the list shows, so it is the only
+ * required one.
  */
 export class CreateFacultyDto {
   @ApiProperty()
@@ -21,12 +23,14 @@ export class CreateFacultyDto {
   nameMn!: string;
 
   @ApiPropertyOptional({ example: 'College of Engineering' })
+  @Transform(blankToNull)
   @IsString()
   @MaxLength(200)
   @IsOptional()
   nameEn?: string | null;
 
   @ApiPropertyOptional({ example: '공과대학' })
+  @Transform(blankToNull)
   @IsString()
   @MaxLength(200)
   @IsOptional()

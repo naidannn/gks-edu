@@ -21,10 +21,19 @@ export const toBoolean = ({ value }: { value: unknown }) =>
   value === true || value === 'true' ? true : value === false || value === 'false' ? false : undefined;
 
 /**
+ * A blank secondary name is "not known", the same as null. Stored as `''` it
+ * would be a Korean name every other blank collides with on the unique index.
+ */
+export const blankToNull = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.trim() || null : value;
+
+/**
  * One programme (анги) at one university, with what it costs.
  *
- * `nameMn` is unique per university and level, so the same department can be
- * run at several levels. The college is optional: a graduate department usually
+ * `nameMn` is unique per university and level, and so is `nameKo` with spaces
+ * and case ignored (`catalogueNameKey`) — the Korean name is the school's own
+ * and what recognises a department our Mongolian wording has drifted on. The
+ * same department can be run at several levels. The college is optional: a graduate department usually
  * has none, and inventing one would be worse than the gap.
  */
 export class CreateProgramDto {
@@ -43,12 +52,14 @@ export class CreateProgramDto {
   nameMn!: string;
 
   @ApiPropertyOptional({ example: 'Marketing' })
+  @Transform(blankToNull)
   @IsString()
   @MaxLength(200)
   @IsOptional()
   nameEn?: string | null;
 
   @ApiPropertyOptional({ example: '마케팅학과' })
+  @Transform(blankToNull)
   @IsString()
   @MaxLength(200)
   @IsOptional()

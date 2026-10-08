@@ -7,6 +7,7 @@ import { PrismaService } from '../../../prisma/prisma.service.js';
 import { AdmissionConfigService } from '../../admissions/admission-config.service.js';
 import { DeepseekService } from '../../admissions/research/deepseek.service.js';
 import { GeminiService, extractJson } from '../../admissions/research/gemini.service.js';
+import { catalogueNameKey } from '../catalogue-name.js';
 import {
   ProgramResearchParseError,
   parseProgramResearchResult,
@@ -235,7 +236,7 @@ export class ProgramResearchService {
     const best = new Map<string, ProgramCandidate>();
 
     for (const candidate of candidates) {
-      const name = (candidate.nameKo ?? candidate.nameEn ?? '').trim().toLowerCase();
+      const name = catalogueNameKey(candidate.nameKo ?? candidate.nameEn) ?? '';
       const key = `${candidate.level}:${name}`;
       const current = best.get(key);
       if (!current || rank[candidate.confidence] > rank[current.confidence]) best.set(key, candidate);

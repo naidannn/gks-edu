@@ -557,6 +557,10 @@ model GksRankingConfig {
 /// A programme may sit under no faculty at all. A research run often cannot
 /// find one, and a graduate department usually lives under 대학원 rather than a
 /// college — an invented parent would be worse than an honest gap.
+///
+/// Unique per school on `nameMn`, and on `nameKo` with spaces and case ignored —
+/// the second is a SQL-only expression index (`faculties_universityId_nameKo_key`)
+/// a generated migration will try to drop.
 model Faculty {
   id           String     @id @default(uuid()) @db.Uuid
   universityId String     @db.Uuid
@@ -588,6 +592,12 @@ model Faculty {
 /// fee (입학금) separate. `tuitionYear` says which academic year the number was
 /// read off — a price with no year on it is the one that gets quoted to a
 /// client two years stale.
+///
+/// Unique per school and level on `nameMn`, and on `nameKo` with spaces and
+/// case ignored — the Korean name is the school's own, the Mongolian one is our
+/// translation and drifts. The second is a SQL-only expression index
+/// (`university_programs_universityId_level_nameKo_key`) a generated migration
+/// will try to drop.
 model UniversityProgram {
   id           String       @id @default(uuid()) @db.Uuid
   universityId String       @db.Uuid

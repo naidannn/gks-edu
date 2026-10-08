@@ -14,6 +14,7 @@ import {
   UNIVERSITIES_FACETS_CACHE_KEY,
   universityDetailCacheKey,
 } from '../universities/universities.service.js';
+import { catalogueNameKey } from './catalogue-name.js';
 import type { BulkCreateProgramsDto } from './dto/bulk-programs.dto.js';
 import type { QueryAdminProgramsDto } from './dto/query-programs.dto.js';
 import type { CreateProgramDto, UpdateProgramDto } from './dto/university-program.dto.js';
@@ -123,7 +124,7 @@ export class AdminProgramsService extends ProgramsService {
 
   async create(dto: CreateProgramDto, userId: string | null) {
     const university = await this.requireUniversity(dto.universityId);
-    await this.assertNameFree(dto.universityId, dto.level, dto.nameMn);
+    await this.assertNameFree(dto.universityId, dto.level, dto.nameMn, dto.nameKo ?? null);
 
     const data = this.toWriteData(dto, userId, await this.resolveFaculty(dto.universityId, dto));
     const program = await this.prisma.universityProgram.create({
@@ -144,7 +145,14 @@ export class AdminProgramsService extends ProgramsService {
   async update(id: string, dto: UpdateProgramDto, userId: string | null, expectedUniversityId?: string) {
     const current = await this.prisma.universityProgram.findUnique({
       where: { id },
-      select: { id: true, universityId: true, level: true, nameMn: true, university: { select: { slug: true } } },
+      select: {
+        id: true,
+        universityId: true,
+        level: true,
+        nameMn: true,
+        nameKo: true,
+        university: { select: { slug: true } },
+      },
     });
     if (!current) throw new NotFoundException('Хөтөлбөр олдсонгүй.');
     if (expectedUniversityId && current.universityId !== expectedUniversityId) {
@@ -153,8 +161,14 @@ export class AdminProgramsService extends ProgramsService {
 
     const level = dto.level ?? current.level;
     const nameMn = dto.nameMn ?? current.nameMn;
-    if (level !== current.level || nameMn !== current.nameMn) {
-      await this.assertNameFree(current.universityId, level, nameMn, id);
+    // `undefined` leaves the Korean name as it is; `null` clears it.
+    const nameKo = dto.nameKo === undefined ? current.nameKo : dto.nameKo;
+    if (
+      level !== current.level
+      || nameMn !== current.nameMn
+      || catalogueNameKey(nameKo) !== catalogueNameKey(current.nameKo)
+    ) {
+      await this.assertNameFree(current.universityId, level, nameMn, nameKo, id);
     }
 
     const program = await this.prisma.universityProgram.update({
@@ -205,16 +219,18 @@ export class AdminProgramsService extends ProgramsService {
    *
    * A duplicate is skipped, not merged and not failed: a school's list is
    * researched more than once, and the second run mostly repeats the first.
-   * The caller gets both numbers back so the screen can say what happened.
+   * The Korean name is what recognises it — the second run words the Mongolian
+   * name its own way, so matching on `nameMn` alone let the same department in
+   * twice. The caller gets both numbers back so the screen can say what happened.
    */
   async bulkCreate(dto: BulkCreateProgramsDto, userId: string | null) {
     const university = await this.requireUniversity(dto.universityId);
 
     const existing = await this.prisma.universityProgram.findMany({
       where: { universityId: dto.universityId },
-      select: { level: true, nameMn: true },
+      select: { level: true, nameMn: true, nameKo: true },
     });
-    const taken = new Set(existing.map((program) => `${program.level}:${program.nameMn.trim().toLowerCase()}`));
+    const taken = new Set(existing.flatMap((program) => programKeys(program.level, program.nameMn, program.nameKo)));
 
     // Colleges are resolved once for the whole batch: a research run brings
     // back sixty departments across eight of them, and resolving each on its
@@ -229,12 +245,12 @@ export class AdminProgramsService extends ProgramsService {
     const rows: Prisma.UniversityProgramCreateManyInput[] = [];
 
     for (const entry of dto.programs) {
-      const key = `${entry.level}:${entry.nameMn.trim().toLowerCase()}`;
-      if (taken.has(key)) {
+      const keys = programKeys(entry.level, entry.nameMn, entry.nameKo);
+      if (keys.some((key) => taken.has(key))) {
         skipped.push(entry.nameMn);
         continue;
       }
-      taken.add(key);
+      for (const key of keys) taken.add(key);
 
       const facultyId = entry.facultyName ? (facultyIds.get(entry.facultyName.trim()) ?? null) : null;
       const data = this.toWriteData(
@@ -347,17 +363,41 @@ export class AdminProgramsService extends ProgramsService {
     return university;
   }
 
-  private async assertNameFree(universityId: string, level: string, nameMn: string, exceptId?: string) {
-    const duplicate = await this.prisma.universityProgram.findFirst({
+  /**
+   * The two rules the table enforces, checked first so the editor gets a
+   * sentence instead of a constraint name: `nameMn` is unique per school and
+   * level, and so is the Korean name in `catalogueNameKey` form. The second is
+   * compared here rather than in the query because the index is on an
+   * expression Prisma cannot filter by; one level of one school is a few
+   * dozen rows.
+   */
+  private async assertNameFree(
+    universityId: string,
+    level: string,
+    nameMn: string,
+    nameKo: string | null,
+    exceptId?: string,
+  ) {
+    const koKey = catalogueNameKey(nameKo);
+    const siblings = await this.prisma.universityProgram.findMany({
       where: {
         universityId,
         level: level as Prisma.EnumProgramLevelFilter['equals'],
-        nameMn,
+        OR: [{ nameMn }, ...(koKey ? [{ nameKo: { not: null } }] : [])],
         ...(exceptId ? { id: { not: exceptId } } : {}),
       },
-      select: { id: true },
+      select: { nameMn: true, nameKo: true },
     });
-    if (duplicate) throw new ConflictException('Энэ түвшинд ижил нэртэй хөтөлбөр бүртгэгдсэн байна.');
+
+    if (siblings.some((program) => program.nameMn === nameMn)) {
+      throw new ConflictException('Энэ түвшинд ижил нэртэй хөтөлбөр бүртгэгдсэн байна.');
+    }
+    const twin = koKey ? siblings.find((program) => catalogueNameKey(program.nameKo) === koKey) : undefined;
+    if (twin) {
+      throw new ConflictException(
+        `Энэ түвшинд «${twin.nameKo}» солонгос нэртэй хөтөлбөр «${twin.nameMn}» нэрээр бүртгэгдсэн байна.`,
+      );
+    }
   }
 
   /**
@@ -382,4 +422,13 @@ export class AdminProgramsService extends ProgramsService {
         .catch((error: Error) => this.logger.warn(`Рэйтинг дахин тооцоолол дараалалд орсонгүй: ${error.message}`)),
     ]);
   }
+}
+
+/**
+ * What a programme collides on inside one school: its level with the
+ * Mongolian name, and its level with the Korean name when it has one.
+ */
+function programKeys(level: string, nameMn: string, nameKo: string | null | undefined): string[] {
+  const koKey = catalogueNameKey(nameKo);
+  return [`${level}:mn:${nameMn.trim().toLowerCase()}`, ...(koKey ? [`${level}:ko:${koKey}`] : [])];
 }
