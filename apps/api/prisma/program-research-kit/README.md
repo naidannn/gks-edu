@@ -49,6 +49,12 @@ written only by `pnpm programs:import` (`../import-programs.ts`, `--dry`, `--onl
 4. After the import: `POST /admin/universities/ranking/recompute` (or wait for the nightly job).
 5. Commit the new JSON files with explicit paths — other sessions work in the same tree.
 
+### Searching the research files
+
+`apps/api/prisma/data/.ignore` keeps the research JSON out of ripgrep, so code searches stay
+clean. Git and the importers are unaffected. To search the data: `rg --no-ignore <term>
+apps/api/prisma/data`. Review a big file with `jq`, not by reading it whole.
+
 ### Reader setup
 
 `../intake-research-kit/fetch.sh` reads pages and PDFs; it needs a venv with `pypdf`

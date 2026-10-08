@@ -7,8 +7,12 @@ touch any database, git, or deploy. You only write
 `/Users/user/amarhan/projects/gks-edu/apps/api/prisma/data/program-research/<slug>.json`.
 
 ## Match the finished example exactly
-- `apps/api/prisma/data/program-research/korea-university.json`
+- `apps/api/prisma/data/program-research/korea-university.json` — **do not Read it whole**: it is
+  ~175 KB (60–80k tokens) and the shape repeats. Read a sample instead:
+  `jq '{slug, researchedAt, tuitionTables: .tuitionTables[:3], faculties: .faculties[:3], programs: [.programs[0], .programs[60], .programs[-1]], scholarships: .scholarships[:2], excluded, pending}' apps/api/prisma/data/program-research/korea-university.json`
 - Field docs + validator: `apps/api/prisma/import-programs.ts` (`ResearchFile`, `validate`).
+- The Grep tool skips `apps/api/prisma/data/` (see the `.ignore` there). To search research files,
+  use `rg --no-ignore <term> apps/api/prisma/data` in Bash.
 
 ## Scope, per school
 - `BACHELOR`: every 모집단위 in the 외국인 특별전형 (신입학) 모집요강 → faculty (대학/학부) + programme.

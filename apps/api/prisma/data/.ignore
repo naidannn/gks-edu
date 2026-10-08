@@ -1,0 +1,6 @@
+# Research output (1H-12 intakes, 1I-10 programmes): hundreds of JSON files full of Korean
+# department names and field names that also appear in the code. Kept out of ripgrep (and so
+# out of Claude Code's search) to keep code searches clean. Git, the importers and direct reads
+# are unaffected; search the data itself with `rg --no-ignore <term> apps/api/prisma/data`.
+intake-research/
+program-research/
