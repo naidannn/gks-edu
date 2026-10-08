@@ -102,6 +102,7 @@ export interface SchoolInput {
   logoPath: string | null;
   isPublished: boolean;
   acceptsLanguagePrep: boolean;
+  gksRank: number | null;
   faculties: number;
   programs: ProgramAggregate[];
   intakes: IntakeAggregate[];
@@ -192,6 +193,7 @@ export function scoreSchool(school: SchoolInput): CatalogueProgressRow {
     logoPath: school.logoPath,
     isPublished: school.isPublished,
     acceptsLanguagePrep: school.acceptsLanguagePrep,
+    gksRank: school.gksRank,
     levels,
     faculties: school.faculties,
     programs,

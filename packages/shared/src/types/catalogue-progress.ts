@@ -70,6 +70,8 @@ export interface CatalogueProgressRow {
   logoPath: string | null;
   isPublished: boolean;
   acceptsLanguagePrep: boolean;
+  /** The catalogue order (1 = first) — every list on the page follows it. Null sorts last. */
+  gksRank: number | null;
   levels: CatalogueLevelCell[];
   faculties: number;
   programs: number;

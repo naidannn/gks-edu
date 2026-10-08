@@ -227,8 +227,11 @@ export class CatalogueProgressService {
             logoPath: true,
             isPublished: true,
             acceptsLanguagePrep: true,
+            gksRank: true,
           },
-          orderBy: { nameMn: 'asc' },
+          // The catalogue's own order (CLAUDE.md, "Two ranks"), so the office
+          // works the schools in the order clients see them.
+          orderBy: [{ gksRank: { sort: 'asc', nulls: 'last' } }, { nameMn: 'asc' }],
         }),
         this.prisma.$queryRaw<ProgramSqlRow[]>`
           SELECT

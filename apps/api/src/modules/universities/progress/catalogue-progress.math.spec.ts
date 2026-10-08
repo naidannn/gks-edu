@@ -18,6 +18,7 @@ function school(overrides: Partial<SchoolInput> = {}): SchoolInput {
     logoPath: null,
     isPublished: true,
     acceptsLanguagePrep: false,
+    gksRank: null,
     faculties: 0,
     programs: [],
     intakes: [],

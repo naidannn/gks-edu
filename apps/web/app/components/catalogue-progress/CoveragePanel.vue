@@ -21,7 +21,6 @@ const props = defineProps<{
 }>();
 
 const LEVELS: ProgramLevel[] = ['LANGUAGE_PREP', 'BACHELOR', 'MASTER', 'PHD'];
-const SEVERITY: CatalogueGapState[] = ['MISSING', 'PARTIAL', 'NO_BASE', 'NOT_FOUND', 'COMPLETE'];
 
 /** What "X of Y" means on each tab; programmes are counted per level instead. */
 const FRACTION: Record<Exclude<CoverageCheck, 'programs'>, {
@@ -62,17 +61,12 @@ const share = (row: CatalogueProgressRow) => {
   return whole ? f.part(row) / whole : 0;
 };
 
+// Rows arrive in the catalogue's order (`gksRank`); filtering keeps it.
 const filtered = computed(() => {
   const needle = q.value.trim().toLowerCase();
   return props.rows
     .filter((row) => !state.value || row.states[props.check] === state.value)
-    .filter((row) => !needle || [row.nameEn, row.nameMn, row.nameKo].some((name) => name.toLowerCase().includes(needle)))
-    .sort(
-      (a, b) =>
-        SEVERITY.indexOf(a.states[props.check]) - SEVERITY.indexOf(b.states[props.check]) ||
-        share(a) - share(b) ||
-        universityName(a).localeCompare(universityName(b)),
-    );
+    .filter((row) => !needle || [row.nameEn, row.nameMn, row.nameKo].some((name) => name.toLowerCase().includes(needle)));
 });
 
 function levelCell(row: CatalogueProgressRow, level: ProgramLevel) {

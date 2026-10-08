@@ -16,8 +16,6 @@ import type {
 const props = defineProps<{ rows: CatalogueProgressRow[]; summary: CatalogueProgressSummary }>();
 
 const LEVELS: ProgramLevel[] = ['LANGUAGE_PREP', 'BACHELOR', 'MASTER', 'PHD'];
-/** Gaps first: the list is a to-do list. */
-const SEVERITY: CatalogueGapState[] = ['MISSING', 'NOT_FOUND', 'PARTIAL', 'NO_BASE', 'COMPLETE'];
 
 const state = ref<CatalogueGapState | ''>('');
 const term = ref('');
@@ -33,17 +31,13 @@ const years = computed(() => {
   return [...byYear.entries()].map(([year, terms]) => ({ year, terms }));
 });
 
+// Rows arrive in the catalogue's order (`gksRank`); filtering keeps it.
 const filtered = computed(() => {
   const needle = q.value.trim().toLowerCase();
   return props.rows
     .filter((row) => !state.value || row.states.intakes === state.value)
     .filter((row) => !term.value || row.rounds.some((round) => termKey(round) === term.value))
-    .filter((row) => !needle || [row.nameEn, row.nameMn, row.nameKo].some((name) => name.toLowerCase().includes(needle)))
-    .sort(
-      (a, b) =>
-        SEVERITY.indexOf(a.states.intakes) - SEVERITY.indexOf(b.states.intakes) ||
-        universityName(a).localeCompare(universityName(b)),
-    );
+    .filter((row) => !needle || [row.nameEn, row.nameMn, row.nameKo].some((name) => name.toLowerCase().includes(needle)));
 });
 
 type LevelView =
