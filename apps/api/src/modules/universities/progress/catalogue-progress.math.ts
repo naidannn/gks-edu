@@ -1,5 +1,8 @@
 import type {
   CatalogueCheck,
+  CatalogueGapState,
+  CatalogueIntakeResearch,
+  CatalogueIntakeRound,
   CatalogueLevelCell,
   CatalogueProgressRow,
   CatalogueProgressStatus,
@@ -24,6 +27,14 @@ export const CATALOGUE_CHECKS: readonly CatalogueCheck[] = [
   'scholarship',
 ];
 
+export const CATALOGUE_GAP_STATES: readonly CatalogueGapState[] = [
+  'COMPLETE',
+  'PARTIAL',
+  'MISSING',
+  'NOT_FOUND',
+  'NO_BASE',
+];
+
 /**
  * The levels a school is expected to have intakes and programmes for.
  *
@@ -34,18 +45,32 @@ export const CATALOGUE_CHECKS: readonly CatalogueCheck[] = [
  * that no check asks for, and the per-level table read over 100%). PhD is
  * counted and shown but never demanded — a handful of clients a year, and
  * asking for it would keep all 135 schools below 100%.
+ *
+ * A level the intake research found the school does not run for foreigners
+ * (`notOffered`) is never asked for — it is not missing, it does not exist.
  */
 export function expectedLevels(school: {
   acceptsLanguagePrep: boolean;
   programs?: { level: ProgramLevel; total: number }[];
   intakes?: { level: ProgramLevel; total: number }[];
+  notOffered?: ProgramLevel[];
 }): ProgramLevel[] {
   const hasLanguagePrep = [...(school.programs ?? []), ...(school.intakes ?? [])].some(
     (row) => row.level === 'LANGUAGE_PREP' && row.total > 0,
   );
-  return school.acceptsLanguagePrep || hasLanguagePrep
-    ? ['LANGUAGE_PREP', 'BACHELOR', 'MASTER']
-    : ['BACHELOR', 'MASTER'];
+  const levels: ProgramLevel[] =
+    school.acceptsLanguagePrep || hasLanguagePrep ? ['LANGUAGE_PREP', 'BACHELOR', 'MASTER'] : ['BACHELOR', 'MASTER'];
+  return levels.filter((level) => !school.notOffered?.includes(level));
+}
+
+/**
+ * The bucket for a "part of a whole" check: nothing to measure, none, some, all.
+ * Intakes add one more — `NOT_FOUND`, researched and empty — in `scoreSchool`.
+ */
+export function gapState(part: number, whole: number): CatalogueGapState {
+  if (whole <= 0) return 'NO_BASE';
+  if (part >= whole) return 'COMPLETE';
+  return part > 0 ? 'PARTIAL' : 'MISSING';
 }
 
 /** Programme counts per school and level, straight off one GROUP BY. */
@@ -53,6 +78,8 @@ export interface ProgramAggregate {
   level: ProgramLevel;
   total: number;
   withTuition: number;
+  /** Priced, off a table older than last year's. */
+  staleTuition: number;
   withScholarship: number;
   withFaculty: number;
   verified: number;
@@ -78,6 +105,9 @@ export interface SchoolInput {
   faculties: number;
   programs: ProgramAggregate[];
   intakes: IntakeAggregate[];
+  /** Upcoming rounds, already ordered by term. */
+  rounds: CatalogueIntakeRound[];
+  research: CatalogueIntakeResearch | null;
   lastActivityAt: Date | null;
   lastActivityBy: string | null;
 }
@@ -86,11 +116,13 @@ const ratio = (part: number, whole: number) => (whole > 0 ? Math.min(1, part / w
 const sum = <T>(rows: T[], pick: (row: T) => number) => rows.reduce((total, row) => total + pick(row), 0);
 
 export function scoreSchool(school: SchoolInput): CatalogueProgressRow {
-  const expected = expectedLevels(school);
+  const notOffered = school.research?.notOffered ?? [];
+  const expected = expectedLevels({ ...school, notOffered });
 
   const levels: CatalogueLevelCell[] = PROGRAM_LEVELS.map((level) => ({
     level,
     expected: expected.includes(level),
+    notOffered: notOffered.includes(level),
     programs: school.programs.find((row) => row.level === level)?.total ?? 0,
     upcomingIntakes: school.intakes.find((row) => row.level === level)?.upcoming ?? 0,
   }));
@@ -131,6 +163,20 @@ export function scoreSchool(school: SchoolInput): CatalogueProgressRow {
     scholarship: perLevel(degreeLevels, (row) => row.withScholarship),
   };
 
+  const intakeLevels = expectedCells.filter((cell) => cell.upcomingIntakes > 0).length;
+  const intakeState = gapState(intakeLevels, expectedCells.length);
+  const states: Record<CatalogueCheck, CatalogueGapState> = {
+    // Nothing upcoming splits two ways: someone read the school's pages and
+    // found no round to publish, or nobody has looked yet.
+    intakes: intakeState === 'MISSING' && school.research ? 'NOT_FOUND' : intakeState,
+    programs: gapState(expectedCells.filter((cell) => cell.programs > 0).length, expectedCells.length),
+    faculties: gapState(bachelorWithFaculty, bachelorPrograms),
+    // The tabs read the programmes on file; a level with none at all is the
+    // programmes tab's gap, not this one's.
+    tuition: gapState(programsWithTuition, programs),
+    scholarship: gapState(programsWithScholarship, degreePrograms),
+  };
+
   const mean = sum([...CATALOGUE_CHECKS], (check) => checks[check]) / CATALOGUE_CHECKS.length;
   const percent = Math.round(mean * 100);
   const anythingEntered = programs > 0 || school.faculties > 0 || sum(school.intakes, (row) => row.total) > 0;
@@ -150,6 +196,7 @@ export function scoreSchool(school: SchoolInput): CatalogueProgressRow {
     faculties: school.faculties,
     programs,
     programsWithTuition,
+    programsStaleTuition: sum(school.programs, (row) => row.staleTuition),
     degreePrograms,
     programsWithScholarship,
     bachelorPrograms,
@@ -157,7 +204,10 @@ export function scoreSchool(school: SchoolInput): CatalogueProgressRow {
     programsVerified: sum(school.programs, (row) => row.verified),
     upcomingIntakes: sum(school.intakes, (row) => row.upcoming),
     upcomingIntakesVerified: sum(school.intakes, (row) => row.upcomingVerified),
+    rounds: school.rounds,
+    research: school.research,
     checks,
+    states,
     percent,
     status,
     lastActivityAt: school.lastActivityAt?.toISOString() ?? null,
@@ -172,6 +222,26 @@ export function summarise(rows: CatalogueProgressRow[]): CatalogueProgressSummar
   const checksComplete = Object.fromEntries(
     CATALOGUE_CHECKS.map((check) => [check, rows.filter((row) => row.checks[check] === 1).length]),
   ) as Record<CatalogueCheck, number>;
+
+  const states = Object.fromEntries(
+    CATALOGUE_CHECKS.map((check) => [
+      check,
+      Object.fromEntries(
+        CATALOGUE_GAP_STATES.map((state) => [state, rows.filter((row) => row.states[check] === state).length]),
+      ),
+    ]),
+  ) as CatalogueProgressSummary['states'];
+
+  const terms = new Map<string, { year: number; month: number; schools: Set<string>; rounds: number }>();
+  for (const row of rows) {
+    for (const round of row.rounds) {
+      const key = `${round.year}-${String(round.month).padStart(2, '0')}`;
+      const term = terms.get(key) ?? { year: round.year, month: round.month, schools: new Set(), rounds: 0 };
+      term.schools.add(row.id);
+      term.rounds += 1;
+      terms.set(key, term);
+    }
+  }
 
   const levels = Object.fromEntries(
     PROGRAM_LEVELS.map((level) => {
@@ -191,6 +261,10 @@ export function summarise(rows: CatalogueProgressRow[]): CatalogueProgressSummar
     schools: rows.length,
     byStatus,
     checksComplete,
+    states,
+    terms: [...terms.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, term]) => ({ year: term.year, month: term.month, schools: term.schools.size, rounds: term.rounds })),
     averagePercent: rows.length ? Math.round(sum(rows, (row) => row.percent) / rows.length) : 0,
     levels,
     programs: {

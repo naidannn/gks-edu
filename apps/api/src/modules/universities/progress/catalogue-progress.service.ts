@@ -9,7 +9,10 @@ import {
 } from './catalogue-progress.math.js';
 import type {
   CatalogueActivityEntry,
+  CatalogueIntakeResearch,
+  CatalogueIntakeRound,
   CatalogueProgress,
+  CatalogueResearchPending,
   CatalogueStaffActivity,
 } from './catalogue-progress.types.js';
 
@@ -119,6 +122,7 @@ interface ProgramSqlRow {
   level: ProgramLevel;
   total: number;
   with_tuition: number;
+  stale_tuition: number;
   with_scholarship: number;
   with_faculty: number;
   verified: number;
@@ -133,6 +137,32 @@ interface IntakeSqlRow {
   upcoming_verified: number;
   last_at: Date | null;
 }
+
+interface RoundSqlRow {
+  university_id: string;
+  level: ProgramLevel;
+  year: number;
+  month: number;
+  internal_deadline: Date | null;
+  verified: boolean;
+  ai_researched: boolean;
+}
+
+/** The shape `pnpm intakes:import` writes into `IntakeResearchRecord.pending`. */
+type StoredPending = Omit<CatalogueResearchPending, 'checkUrl'> & { checkUrl?: string };
+
+/**
+ * "Upcoming" is a round the office can still register for: not cancelled, and
+ * our own deadline not yet past (CLAUDE.md — every count runs on the internal
+ * date). A round with no dates yet counts by its year, so a half-entered row
+ * still shows up as started.
+ */
+const UPCOMING = Prisma.sql`
+  status <> 'CANCELLED' AND (
+    "internalDeadline" >= now()
+    OR ("internalDeadline" IS NULL AND year >= extract(year FROM now()))
+  )
+`;
 
 interface FacultySqlRow {
   university_id: string;
@@ -174,8 +204,19 @@ export class CatalogueProgressService {
     const since = new Date(Date.now() - periodDays * 86_400_000);
 
     // Read-only, so `Promise.all` rather than `$transaction` (CLAUDE.md rule 9).
-    const [schools, programRows, intakeRows, facultyRows, lastTouches, periodRows, researchRows, verifiedRows] =
-      await Promise.all([
+    const [
+      schools,
+      programRows,
+      intakeRows,
+      roundRows,
+      researchRecords,
+      geminiRuns,
+      facultyRows,
+      lastTouches,
+      periodRows,
+      researchRows,
+      verifiedRows,
+    ] = await Promise.all([
         this.prisma.university.findMany({
           select: {
             id: true,
@@ -195,6 +236,11 @@ export class CatalogueProgressService {
             level::text AS level,
             count(*)::int AS total,
             count(*) FILTER (WHERE "tuitionPerTermKrw" IS NOT NULL OR "tuitionPerYearKrw" IS NOT NULL)::int AS with_tuition,
+            -- Same rule as the programme list's staleTuition: older than last year's table.
+            count(*) FILTER (
+              WHERE ("tuitionPerTermKrw" IS NOT NULL OR "tuitionPerYearKrw" IS NOT NULL)
+                AND "tuitionYear" < extract(year FROM now()) - 1
+            )::int AS stale_tuition,
             count(*) FILTER (
               WHERE "scholarshipMaxPercent" IS NOT NULL OR NULLIF(btrim("scholarshipNote"), '') IS NOT NULL
             )::int AS with_scholarship,
@@ -204,10 +250,6 @@ export class CatalogueProgressService {
           FROM "university_programs"
           GROUP BY 1, 2
         `,
-        // "Upcoming" is a round the office can still register for: not
-        // cancelled, and our own deadline not yet past (CLAUDE.md — every
-        // count runs on the internal date). A round with no dates yet counts
-        // by its year, so a half-entered row still shows up as started.
         this.prisma.$queryRaw<IntakeSqlRow[]>`
           SELECT
             university_id,
@@ -222,13 +264,32 @@ export class CatalogueProgressService {
               level::text AS level,
               "updatedAt" AS updated_at,
               "verifiedAt" IS NOT NULL AS verified,
-              status <> 'CANCELLED' AND (
-                "internalDeadline" >= now()
-                OR ("internalDeadline" IS NULL AND year >= extract(year FROM now()))
-              ) AS upcoming
+              (${UPCOMING}) AS upcoming
             FROM "intake_terms"
           ) t
           GROUP BY 1, 2
+        `,
+        this.prisma.$queryRaw<RoundSqlRow[]>`
+          SELECT
+            "universityId" AS university_id,
+            level::text AS level,
+            year,
+            month,
+            "internalDeadline" AS internal_deadline,
+            "verifiedAt" IS NOT NULL AS verified,
+            "sourceType" = 'AI_ASSISTED' AS ai_researched
+          FROM "intake_terms"
+          WHERE ${UPCOMING}
+          ORDER BY year, month, level
+        `,
+        this.prisma.intakeResearchRecord.findMany(),
+        // A school researched through the Gemini button in the admin counts as
+        // researched too; it leaves no pending list behind.
+        this.prisma.$queryRaw<{ university_id: string; at: Date }[]>`
+          SELECT "universityId" AS university_id, max(COALESCE("finishedAt", "createdAt")) AS at
+          FROM "intake_research_runs"
+          WHERE status = 'SUCCEEDED'
+          GROUP BY 1
         `,
         this.prisma.$queryRaw<FacultySqlRow[]>`
           SELECT "universityId" AS university_id, count(*)::int AS total, max("updatedAt") AS last_at
@@ -285,12 +346,25 @@ export class CatalogueProgressService {
     const intakesBySchool = groupBy(intakeRows, (row) => row.university_id);
     const facultiesBySchool = new Map(facultyRows.map((row) => [row.university_id, row]));
     const touchBySchool = new Map(lastTouches.map((row) => [row.university_id, row]));
+    const roundsBySchool = groupBy(roundRows, (row) => row.university_id);
+    const recordBySchool = new Map(researchRecords.map((row) => [row.universityId, row]));
+    const geminiBySchool = new Map(geminiRuns.map((row) => [row.university_id, row.at]));
 
     const rows = schools.map((school) => {
       const programs = programsBySchool.get(school.id) ?? [];
       const intakes = intakesBySchool.get(school.id) ?? [];
       const faculty = facultiesBySchool.get(school.id);
       const touch = touchBySchool.get(school.id);
+      const rounds = (roundsBySchool.get(school.id) ?? []).map(
+        (row): CatalogueIntakeRound => ({
+          level: row.level,
+          year: row.year,
+          month: row.month,
+          internalDeadline: row.internal_deadline?.toISOString() ?? null,
+          verified: row.verified,
+          aiResearched: row.ai_researched,
+        }),
+      );
 
       const rowsAt = latest([...programs.map((row) => row.last_at), ...intakes.map((row) => row.last_at), faculty?.last_at]);
       // The audit row names who; a row timestamp clearly newer than it was
@@ -307,6 +381,7 @@ export class CatalogueProgressService {
             level: row.level,
             total: row.total,
             withTuition: row.with_tuition,
+            staleTuition: row.stale_tuition,
             withScholarship: row.with_scholarship,
             withFaculty: row.with_faculty,
             verified: row.verified,
@@ -320,6 +395,8 @@ export class CatalogueProgressService {
             upcomingVerified: row.upcoming_verified,
           }),
         ),
+        rounds,
+        research: research(recordBySchool.get(school.id), geminiBySchool.get(school.id), rounds),
         lastActivityAt,
         lastActivityBy: audited ? touch.actor_name : null,
       });
@@ -403,6 +480,28 @@ export class CatalogueProgressService {
       .map(({ schools, ...rest }) => ({ ...rest, schoolsTouched: schools.size }))
       .sort((a, b) => b.schoolsTouched - a.schoolsTouched || (b.lastActiveAt ?? '').localeCompare(a.lastActiveAt ?? ''));
   }
+}
+
+/**
+ * The import's record and the Gemini runs, as one answer. A pending round that
+ * has since been entered by hand is dropped — it is no longer missing.
+ */
+function research(
+  record: { researchedAt: Date; notOffered: ProgramLevel[]; pending: Prisma.JsonValue } | undefined,
+  geminiAt: Date | undefined,
+  rounds: CatalogueIntakeRound[],
+): CatalogueIntakeResearch | null {
+  const researchedAt = latest([record?.researchedAt, geminiAt]);
+  if (!researchedAt) return null;
+  const entered = new Set(rounds.map((round) => `${round.level} ${round.year}/${round.month}`));
+  const stored = Array.isArray(record?.pending) ? (record.pending as unknown as StoredPending[]) : [];
+  return {
+    researchedAt: researchedAt.toISOString(),
+    notOffered: record?.notOffered ?? [],
+    pending: stored
+      .filter((row) => !entered.has(`${row.level} ${row.year}/${row.month}`))
+      .map((row) => ({ ...row, checkUrl: row.checkUrl ?? null })),
+  };
 }
 
 function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {

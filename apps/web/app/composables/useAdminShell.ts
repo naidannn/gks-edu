@@ -55,7 +55,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { to: '/admin/universities', label: 'Сургууль', icon: 'school', keywords: 'university их сургууль' },
       {
         to: '/admin/universities/progress',
-        label: 'Мэдээлэл бэлтгэлийн явц',
+        label: 'Мэдээллийн бүрэн байдал',
         icon: 'clipboard-check',
         keywords: 'progress явц бүрэн дутуу бөглөсөн ажилтан элсэлт анги танхим тэтгэлэг completeness',
       },

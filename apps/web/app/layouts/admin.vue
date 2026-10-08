@@ -36,7 +36,7 @@ watch(() => route.fullPath, () => { sidebarOpen.value = false; });
 /**
  * One item lights up per page: the one `findAdminNavItem` picks, i.e. an exact
  * match or else the longest prefix. A plain prefix test lit up both
- * "Сургууль" and "Мэдээлэл бэлтгэлийн явц" on `/admin/universities/progress`.
+ * "Сургууль" and "Мэдээллийн бүрэн байдал" on `/admin/universities/progress`.
  */
 function isActive(to: string): boolean {
   return findAdminNavItem(route.path)?.to === to;

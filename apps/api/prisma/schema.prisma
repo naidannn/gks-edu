@@ -502,6 +502,7 @@ model University {
   researchRuns        IntakeResearchRun[]
   programResearchRuns ProgramResearchRun[]
   knowledgeDocuments  KnowledgeDocument[]
+  intakeResearch      IntakeResearchRecord?
 
   @@index([isPublished])
   @@index([regionEn])
@@ -892,6 +893,32 @@ model IntakeResearchRun {
   @@index([universityId, createdAt])
   @@index([status])
   @@map("intake_research_runs")
+}
+
+/// What the last read of a school's own admissions pages found (1H-12, 1A-43).
+///
+/// One row per school, written only by `pnpm intakes:import` from
+/// `prisma/data/intake-research/<slug>.json`. The rounds themselves land in
+/// `IntakeTerm`; this keeps what did not become a round — the levels the school
+/// does not run for foreigners, and the rounds looked for and not found — so
+/// the progress page can tell "researched, nothing published yet" from "never
+/// looked at". Staff-only: no public payload reads it.
+model IntakeResearchRecord {
+  universityId String     @id @db.Uuid
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  /// The day the pages were read.
+  researchedAt DateTime       @db.Date
+  /// Rounds the research file published.
+  roundsFound  Int            @default(0)
+  /// Levels the school does not run for foreign students — never counted as missing.
+  notOffered   ProgramLevel[] @default([])
+  /// `{ level, year, month, reason, checkUrl? }[]` — looked for, not published; `reason` is Mongolian.
+  pending      Json           @default("[]")
+
+  updatedAt DateTime @updatedAt
+
+  @@map("intake_research_records")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

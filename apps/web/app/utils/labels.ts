@@ -17,6 +17,7 @@ import type {
   BalanceTrigger,
   CaseStage,
   CatalogueCheck,
+  CatalogueGapState,
   CatalogueProgressStatus,
   ClientPhase,
   ClientStatus,
@@ -167,6 +168,42 @@ export const CATALOGUE_CHECK_LABELS: Record<CatalogueCheck, string> = {
   faculties: 'Танхим',
   tuition: 'Төлбөр',
   scholarship: 'Тэтгэлэг',
+};
+
+/**
+ * 1A-43 — what each bucket is called on each tab of the progress page. The same
+ * state reads differently per check: "missing" intakes means nobody has looked
+ * yet, missing tuition means the programmes are there without a price.
+ */
+export const CATALOGUE_GAP_LABELS: Record<CatalogueCheck, Partial<Record<CatalogueGapState, string>>> = {
+  intakes: {
+    COMPLETE: 'Бүрэн',
+    PARTIAL: 'Зарим түвшин дутуу',
+    NOT_FOUND: 'Судалсан, элсэлт олдоогүй',
+    MISSING: 'Судлаагүй — нэмэх',
+  },
+  programs: { COMPLETE: 'Бүрэн', PARTIAL: 'Зарим түвшин дутуу', MISSING: 'Анги ороогүй' },
+  faculties: {
+    COMPLETE: 'Бүрэн',
+    PARTIAL: 'Зарим анги танхимгүй',
+    MISSING: 'Танхим ороогүй',
+    NO_BASE: 'Бакалаврын анги алга',
+  },
+  tuition: { COMPLETE: 'Бүрэн', PARTIAL: 'Зарим анги төлбөргүй', MISSING: 'Төлбөр ороогүй', NO_BASE: 'Анги алга' },
+  scholarship: {
+    COMPLETE: 'Бүрэн',
+    PARTIAL: 'Зарим анги тэтгэлэггүй',
+    MISSING: 'Тэтгэлэг ороогүй',
+    NO_BASE: 'Бак/маг/док анги алга',
+  },
+};
+
+export const CATALOGUE_GAP_TONES: Record<CatalogueGapState, BadgeTone> = {
+  COMPLETE: 'success',
+  PARTIAL: 'warning',
+  NOT_FOUND: 'info',
+  MISSING: 'danger',
+  NO_BASE: 'neutral',
 };
 
 export const CATALOGUE_PROGRESS_STATUS_LABELS: Record<CatalogueProgressStatus, string> = {

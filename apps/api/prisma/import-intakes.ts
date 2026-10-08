@@ -4,6 +4,7 @@
  *   pnpm intakes:import                      # apply every file
  *   pnpm intakes:import --dry                # report what would change, write nothing
  *   pnpm intakes:import --only snu,konkuk    # just these slugs (file names)
+ *   pnpm intakes:import --records-only       # only what each read found, rounds untouched
  *
  * One JSON file per school under `prisma/data/intake-research/<slug>.json`,
  * written by a person or an agent reading the school's 모집요강 in a browser.
@@ -27,6 +28,12 @@
  * append to `note` (1H-14) from every row, verified or not: that sentence was
  * written for a reviewer and has been showing on the public site.
  *
+ * Every file also writes the school's `IntakeResearchRecord` — when it was
+ * read, the levels it does not offer, and the rounds still pending — which is
+ * how the progress page tells "researched, nothing found" from "never looked
+ * at". `--records-only` writes just those, for a database whose rounds have
+ * since been edited by hand.
+ *
  * Re-running is safe: writes are upserts keyed on (university, level, year,
  * month), and a file that has not changed writes the same values again.
  */
@@ -46,6 +53,7 @@ loadEnv({ path: ['.env', '../../.env'], quiet: true });
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry');
+const recordsOnly = args.includes('--records-only');
 const onlyIndex = args.indexOf('--only');
 const only = onlyIndex >= 0 ? new Set((args[onlyIndex + 1] ?? '').split(',').filter(Boolean)) : null;
 
@@ -118,6 +126,14 @@ function validate(file: string, data: ResearchFile): void {
   if (!data.slug || `${data.slug}.json` !== file) fail(file, `slug must match the file name`);
   checkDate(file, 'researchedAt', data.researchedAt, true);
   if (!Array.isArray(data.rounds)) fail(file, 'rounds must be an array');
+  const levels = Object.values(ProgramLevel) as string[];
+  for (const level of data.notOffered ?? []) if (!levels.includes(level)) fail(file, `notOffered: unknown level ${level}`);
+  for (const pending of data.pending ?? []) {
+    // Read back by the progress page, so it is held to the shape it expects.
+    if (!levels.includes(pending.level)) fail(file, `pending: unknown level ${pending.level}`);
+    if (!Number.isInteger(pending.year) || !Number.isInteger(pending.month)) fail(file, `pending ${pending.level}: bad year/month`);
+    if (typeof pending.reason !== 'string' || !pending.reason.trim()) fail(file, `pending ${pending.level}: reason is required`);
+  }
   const seen = new Set<string>();
   for (const round of data.rounds) {
     const id = `${round.level} ${round.year}/${round.month}`;
@@ -201,12 +217,12 @@ async function main(): Promise<void> {
   const missing = files.filter((file) => !bySlug.has(file.slug));
   if (missing.length) throw new Error(`Not in the catalogue: ${missing.map((file) => file.slug).join(', ')}`);
 
-  await stripResearchCaveats();
+  if (!recordsOnly) await stripResearchCaveats();
 
   const config = await prisma.admissionConfig.findUnique({ where: { id: 'default' } });
   const leadDays = config?.internalLeadDays ?? DEFAULT_INTERNAL_LEAD_DAYS;
   const now = new Date();
-  const counts = { created: 0, updated: 0, keptVerified: 0 };
+  const counts = { created: 0, updated: 0, keptVerified: 0, records: 0 };
 
   console.log(`\nInternal deadlines run ${leadDays} day(s) ahead of the school's.`);
 
@@ -214,7 +230,7 @@ async function main(): Promise<void> {
     const university = bySlug.get(file.slug)!;
     console.log(`\n${university.nameEn} (${file.slug}) — read ${file.researchedAt}`);
 
-    for (const round of file.rounds) {
+    for (const round of recordsOnly ? [] : file.rounds) {
       const key = {
         universityId: university.id,
         level: round.level,
@@ -284,10 +300,30 @@ async function main(): Promise<void> {
     for (const pending of file.pending ?? []) {
       console.log(`  ${pending.level.padEnd(13)} ${pending.year}/${String(pending.month).padStart(2)}  pending — ${pending.reason}`);
     }
+
+    counts.records++;
+    if (dryRun) continue;
+    const record = {
+      researchedAt: dateUtc(file.researchedAt)!,
+      roundsFound: file.rounds.length,
+      notOffered: file.notOffered ?? [],
+      pending: (file.pending ?? []).map(({ level, year, month, reason, checkUrl }) => ({
+        level,
+        year,
+        month,
+        reason,
+        ...(checkUrl ? { checkUrl } : {}),
+      })),
+    };
+    await prisma.intakeResearchRecord.upsert({
+      where: { universityId: university.id },
+      update: record,
+      create: { universityId: university.id, ...record },
+    });
   }
 
   console.log(
-    `\n${dryRun ? '[dry] would create' : 'Created'} ${counts.created}, ${dryRun ? 'update' : 'updated'} ${counts.updated}, kept ${counts.keptVerified} verified round(s) across ${files.length} school(s).`,
+    `\n${dryRun ? '[dry] would create' : 'Created'} ${counts.created}, ${dryRun ? 'update' : 'updated'} ${counts.updated}, kept ${counts.keptVerified} verified round(s) across ${files.length} school(s); ${dryRun ? 'would write' : 'wrote'} ${counts.records} research record(s).`,
   );
 }
 
