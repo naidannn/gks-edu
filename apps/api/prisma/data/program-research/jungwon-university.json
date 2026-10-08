@@ -1,0 +1,53 @@
+{
+  "slug": "jungwon-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어학당",
+      "tuitionPerTermKrw": 1100000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2026,
+      "sourceUrl": "http://jwukorean.jwu.ac.kr/site/deptSiteView.jwu?categoryId=D2_870&depth=2&taskType=0",
+      "confidence": "MEDIUM",
+      "evidence": "2026년 가을학기 정규과정 등록금: 20주(2학기) 등록비 50,000원 수업료 2,200,000원 교재비 160,000원; 1년(4학기) 수업료 4,400,000원 — 1학기 = 2,200,000 / 2"
+    }
+  ],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어학당",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Улирал бүр 10 долоо хоног (160 цаг). Бүртгэлийн хураамж 50,000₩ (нэг удаа), сурах бичиг 160,000₩ (20 долоо хоног) тусдаа. Сургуулийн нийтэлсэн 20 долоо хоногийн (2 улирал) сургалтын төлбөр 2,200,000₩.",
+      "sourceUrl": "http://jwukorean.jwu.ac.kr/site/deptSiteView.jwu?categoryId=D2_870&depth=2&taskType=0",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "scholarships": [],
+  "excluded": [],
+  "pending": [
+    {
+      "what": "Бакалаврын гадаад оюутны элсэлт",
+      "reason": "Одоогийн (2027) гадаад оюутны 모집요강 олдсонгүй. Сүүлийн гадаад оюутны 모집요강 нь 2024 оны (2023-05-31) учир хуучирсан тул анги/төлбөр авсангүй.",
+      "checkAt": "https://ipsi.jwu.ac.kr/boards/admission-guidelines"
+    },
+    {
+      "what": "Магистр/докторын элсэлт",
+      "reason": "Гадаад оюутны 대학원 모집요강, анги, төлбөр олдсонгүй.",
+      "checkAt": "https://ipsi.jwu.ac.kr/boards/admission-guidelines"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн 입학금",
+      "reason": "Зөвхөн бүртгэлийн хураамж (50,000₩) байгаа; улирлын төлбөр нь 2 улирлын дүнг 2-т хуваасан тооцоо.",
+      "checkAt": "http://jwukorean.jwu.ac.kr/site/deptSiteView.jwu?categoryId=D2_870&depth=2&taskType=0"
+    }
+  ]
+}
