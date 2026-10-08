@@ -16,6 +16,7 @@ function harness() {
   const prisma = {
     chatMessage: { findFirst: vi.fn(), findMany: vi.fn() },
     chatFeedback: { upsert: vi.fn().mockResolvedValue({ value: 'DOWN', reason: 'WRONG' }) },
+    chatSession: { findMany: vi.fn().mockResolvedValue([]) },
   } as unknown as PrismaService;
 
   const config = { getOrThrow: () => 'test-refresh-secret' } as unknown as ConfigService;
@@ -102,5 +103,56 @@ describe('ChatSessionService.publicTranscript', () => {
     // stored before citations existed must still be readable.
     expect(message!.sources).toEqual([]);
     expect(message!.cards).toEqual([]);
+  });
+});
+
+describe('ChatSessionService.listSummaries', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const A = '11111111-1111-4111-8111-111111111111';
+  const B = '22222222-2222-4222-8222-222222222222';
+
+  it('keeps only the tokens that verify, and the session each one names', async () => {
+    const { service, prisma } = harness();
+    const forged = service.sign(B).replace(/\.[^.]+$/, '.forged');
+
+    await service.listSummaries({ tokens: [service.sign(A), forged, 'not-a-token'] });
+
+    const where = vi.mocked(prisma.chatSession.findMany).mock.calls[0]![0]!.where!;
+    // A token is the whole of a guest's proof. Listing a session on a token
+    // that does not verify would hand its opening question to anyone who can
+    // guess an id.
+    expect(where.OR).toEqual([{ id: { in: [A] } }]);
+  });
+
+  it('adds a signed-in caller’s own sessions, and nobody else’s', async () => {
+    const { service, prisma } = harness();
+
+    await service.listSummaries({ tokens: [], userId: 'u1' });
+
+    const where = vi.mocked(prisma.chatSession.findMany).mock.calls[0]![0]!.where!;
+    expect(where.OR).toEqual([{ userId: 'u1' }]);
+    expect(where.status).toEqual({ not: 'CLOSED' });
+  });
+
+  it('asks the database nothing when the caller proves no session at all', async () => {
+    const { service, prisma } = harness();
+
+    expect(await service.listSummaries({ tokens: ['junk'] })).toEqual([]);
+    expect(prisma.chatSession.findMany).not.toHaveBeenCalled();
+  });
+
+  it('titles a conversation by its opening question, on one line', async () => {
+    const { service, prisma } = harness();
+    vi.mocked(prisma.chatSession.findMany).mockResolvedValue([
+      { id: A, status: 'ACTIVE', lastMessageAt: new Date(), messages: [{ content: 'Сөүлд\n\nхэлний   бэлтгэл' }] },
+      { id: B, status: 'ACTIVE', lastMessageAt: new Date(), messages: [{ content: 'я'.repeat(120) }] },
+    ] as never);
+
+    const [first, second] = await service.listSummaries({ tokens: [service.sign(A)] });
+
+    expect(first!.title).toBe('Сөүлд хэлний бэлтгэл');
+    expect(second!.title).toHaveLength(80);
+    expect(second!.title.endsWith('…')).toBe(true);
   });
 });

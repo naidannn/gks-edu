@@ -48,6 +48,16 @@ watch(
   },
 );
 
+// A card or a chip that links somewhere has done its job once the page
+// changes; on a phone the panel is a sheet over that page, and leaving it open
+// hides the very thing the visitor asked to see.
+watch(
+  () => route.fullPath,
+  () => {
+    open.value = false;
+  },
+);
+
 watch(open, (isOpen) => {
   if (!isOpen) return;
   nextTick(() => composer.value?.focus());
@@ -95,7 +105,10 @@ function rate(
         :messages="chat.messages.value"
         :greeting="chat.greeting.value"
         :activity="chat.activity.value"
+        :signed-in="auth.isAuthenticated"
+        :busy="chat.sending.value"
         @rate="rate"
+        @ask="send"
       />
 
       <p v-if="chat.offline.value" class="gks-chat-widget__offline">

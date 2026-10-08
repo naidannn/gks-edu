@@ -46,6 +46,8 @@ onMounted(async () => {
     step.value = 2;
   }
   if (typeof route.query.universityId === 'string') universityId.value = route.query.universityId;
+  // The assistant's cards know a school by its slug, not its id (2C-13).
+  else if (typeof route.query.university === 'string') preselectSlug.value = route.query.university;
   // `/admissions` and the school page link straight to one round.
   if (typeof route.query.intakeId === 'string') intakeId.value = route.query.intakeId;
 });
@@ -91,6 +93,17 @@ watch(
 
 const profile = computed(() => overview.value?.profile ?? null);
 const openServices = computed(() => overview.value?.openServiceTypes ?? []);
+
+/** A school named by slug, resolved once the catalogue has loaded. */
+const preselectSlug = ref('');
+watch(
+  [preselectSlug, () => catalogue.universities.value],
+  ([slug, list]) => {
+    if (!slug || universityId.value) return;
+    const match = list.find((university) => university.slug === slug);
+    if (match) universityId.value = match.id;
+  },
+);
 
 const universityOptions = computed(() =>
   toUniversityOptions(catalogue.universities.value, 'Дараа шийдье / зөвлөхтэй ярина'));

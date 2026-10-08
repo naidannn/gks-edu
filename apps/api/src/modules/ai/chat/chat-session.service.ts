@@ -22,6 +22,15 @@ const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** How many stored messages are replayed to the model; the rest is the summary. */
 const HISTORY_TURNS = 12;
 
+/** How many past conversations the `/chat` sidebar lists. */
+const HISTORY_LIST_LIMIT = 50;
+
+/** The opening question, on one line and short enough for a sidebar row. */
+function titleOf(content: string): string {
+  const line = content.replace(/\s+/g, ' ').trim();
+  return line.length > 80 ? `${line.slice(0, 79).trimEnd()}…` : line;
+}
+
 export interface StartSessionInput {
   channel: ChatChannel;
   userId?: string | null;
@@ -282,6 +291,62 @@ export class ChatSessionService {
     });
   }
 
+  /**
+   * The conversation list beside the `/chat` page (2C-13).
+   *
+   * Two ways in, unioned: the sessions whose tokens the browser still holds —
+   * each one proves itself, exactly as it would for a turn — and, for someone
+   * signed in, their own sessions from any device. Only the two widget
+   * channels: a Facebook thread or a copilot session is not a conversation this
+   * person had on our site.
+   *
+   * A closed session is one somebody removed from this list, and one with no
+   * messages is a session minted and never used; neither is history. The title
+   * is the opening question, which is how people recognise their own threads.
+   */
+  async listSummaries(params: { tokens: string[]; userId?: string | null }) {
+    const ids = params.tokens
+      .map((token) => {
+        const id = this.sessionIdFromToken(token);
+        return id && this.verify(token, id) ? id : null;
+      })
+      .filter((id): id is string => id !== null);
+
+    const owners: Prisma.ChatSessionWhereInput[] = [];
+    if (ids.length) owners.push({ id: { in: ids } });
+    if (params.userId) owners.push({ userId: params.userId });
+    if (!owners.length) return [];
+
+    const rows = await this.prisma.chatSession.findMany({
+      where: {
+        OR: owners,
+        channel: { in: [ChatChannel.WEB_WIDGET, ChatChannel.PORTAL] },
+        status: { not: ChatSessionStatus.CLOSED },
+        messageCount: { gt: 0 },
+      },
+      orderBy: { lastMessageAt: 'desc' },
+      take: HISTORY_LIST_LIMIT,
+      select: {
+        id: true,
+        status: true,
+        lastMessageAt: true,
+        messages: {
+          where: { role: ChatRole.USER },
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+          select: { content: true },
+        },
+      },
+    });
+
+    return rows.map((row) => ({
+      sessionId: row.id,
+      status: row.status,
+      title: titleOf(row.messages[0]?.content ?? ''),
+      lastMessageAt: row.lastMessageAt,
+    }));
+  }
+
   async close(sessionId: string): Promise<void> {
     await this.prisma.chatSession.update({
       where: { id: sessionId },
@@ -327,6 +392,15 @@ export class ChatSessionService {
     if (Number.parseInt(expiresRaw, 10) < Date.now()) return false;
 
     return Buffer.from(idB64, 'base64url').toString('utf8') === sessionId;
+  }
+
+  /** The session a token names — unverified; `verify` is still the proof. */
+  sessionIdFromToken(token: string): string | null {
+    if (!token.startsWith('ai_')) return null;
+    const [idB64] = token.slice(3).split('.');
+    if (!idB64) return null;
+
+    return Buffer.from(idB64, 'base64url').toString('utf8') || null;
   }
 
   /** A browser id for a guest who arrives without one. */

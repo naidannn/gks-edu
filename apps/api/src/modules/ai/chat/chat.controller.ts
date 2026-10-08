@@ -18,7 +18,12 @@ import { AccessLevelService } from '../access-level.js';
 import { AiConfigService } from '../ai-config.service.js';
 import { ChatSessionService } from './chat-session.service.js';
 import { OptionalUserService } from './optional-user.service.js';
-import { ChatFeedbackDto, SendChatMessageDto, StartChatSessionDto } from './dto/chat.dto.js';
+import {
+  ChatFeedbackDto,
+  ChatHistoryDto,
+  SendChatMessageDto,
+  StartChatSessionDto,
+} from './dto/chat.dto.js';
 import { TurnOrchestrator, type TurnEvent } from './turn.orchestrator.js';
 
 /** nginx closes an idle upstream at `proxy_read_timeout`; a comment keeps it awake. */
@@ -104,6 +109,24 @@ export class ChatController {
       greeting: config.greeting,
       enabled: config.enabled,
     };
+  }
+
+  /**
+   * The caller's past conversations, newest first — the `/chat` sidebar (2C-13).
+   *
+   * A POST because a guest's proof is a list of tokens, and tokens do not
+   * belong in a URL any more than the questions do. Not gated on the kill
+   * switch: switching the assistant off stops new answers, it does not make
+   * somebody's earlier conversation unreadable.
+   */
+  @Post('history')
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 600_000 } })
+  @ApiOperation({ summary: 'List the caller’s conversations' })
+  async listHistory(@Body() dto: ChatHistoryDto, @Req() request: Request) {
+    const user = await this.optionalUser.resolve(request);
+
+    return this.sessions.listSummaries({ tokens: dto.tokens ?? [], userId: user?.id ?? null });
   }
 
   @Get('sessions/:id')

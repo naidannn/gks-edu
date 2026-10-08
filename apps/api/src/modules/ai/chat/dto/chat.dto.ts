@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ChatChannel, FeedbackReason, FeedbackValue } from '../../../../prisma/client.js';
 
 export class StartChatSessionDto {
@@ -65,4 +75,21 @@ export class ChatFeedbackDto {
   @MaxLength(1_000)
   @IsOptional()
   comment?: string;
+}
+
+/**
+ * The conversations a caller may list (2C-13).
+ *
+ * A guest's only proof is the token of each conversation, so the browser sends
+ * every one it still holds; the server keeps those that verify. A signed-in
+ * caller's own conversations come back without any.
+ */
+export class ChatHistoryDto {
+  @ApiPropertyOptional({ type: [String], description: 'Session tokens the browser holds' })
+  @IsArray()
+  @ArrayMaxSize(50)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  @IsOptional()
+  tokens?: string[];
 }

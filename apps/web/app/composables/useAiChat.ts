@@ -2,6 +2,7 @@ import type {
   AiChatCard,
   AiChatChannel,
   AiChatMessageItem,
+  AiChatSessionSummary,
   AiChatTranscript,
   AiFeedbackReason,
   AiFeedbackValue,
@@ -42,6 +43,10 @@ const SILENCE_TIMEOUT_MS = 45_000;
 const TOKEN_KEY = 'gks:ai:token';
 const SESSION_KEY = 'gks:ai:session';
 const ANON_KEY = 'gks:ai:anon';
+/** Every guest token this browser still holds — the proof behind the history list. */
+const HELD_KEY = 'gks:ai:held';
+/** The server keeps fifty; holding more proves nothing extra. */
+const MAX_HELD = 50;
 
 /** A message on screen, which is a stored one plus whatever is still arriving. */
 export interface AiChatBubble {
@@ -80,6 +85,9 @@ export function useAiChat() {
   const loadedSessionId = useState<string | null>('ai:loaded', () => null);
   /** Which shell this conversation started in — set by whichever widget mounts. */
   const channel = useState<AiChatChannel>('ai:channel', () => 'WEB_WIDGET');
+  /** Past conversations, newest first — the `/chat` sidebar (2C-13). */
+  const history = useState<AiChatSessionSummary[]>('ai:history', () => []);
+  const historyLoading = useState<boolean>('ai:historyLoading', () => false);
 
   // ─── the guest's own identifiers ────────────────────────────────────────────
 
@@ -111,6 +119,52 @@ export function useAiChat() {
       window.localStorage.removeItem(SESSION_KEY);
     } catch {
       // See above.
+    }
+  }
+
+  /**
+   * The tokens of every conversation this browser started, expired ones gone.
+   *
+   * The current token is folded in, so a conversation started before the list
+   * existed is not lost from the sidebar on the first visit after it shipped.
+   */
+  function heldTokens(): string[] {
+    let held: string[] = [];
+    try {
+      const parsed: unknown = JSON.parse(stored(HELD_KEY) ?? '[]');
+      if (Array.isArray(parsed)) held = parsed.filter((item): item is string => typeof item === 'string');
+    } catch {
+      // A corrupted list is an empty one; the server is the record.
+    }
+
+    const current = stored(TOKEN_KEY);
+    if (current && !held.includes(current)) held.unshift(current);
+
+    const now = Date.now();
+    return held.filter((token) => (parseChatToken(token)?.expiresAt ?? 0) > now).slice(0, MAX_HELD);
+  }
+
+  function holdTokens(tokens: string[]): void {
+    remember(HELD_KEY, JSON.stringify(tokens.slice(0, MAX_HELD)));
+  }
+
+  function tokenFor(id: string): string | null {
+    return heldTokens().find((token) => parseChatToken(token)?.sessionId === id) ?? null;
+  }
+
+  /** Makes `id` the conversation every later call acts in — or none, for `null`. */
+  function makeCurrent(id: string | null): void {
+    if (import.meta.server) return;
+    const token = id ? tokenFor(id) : null;
+    try {
+      if (id) window.localStorage.setItem(SESSION_KEY, id);
+      else window.localStorage.removeItem(SESSION_KEY);
+      // A conversation reached through the account has no token here, and a
+      // token for some other conversation must not ride along with it.
+      if (token) window.localStorage.setItem(TOKEN_KEY, token);
+      else window.localStorage.removeItem(TOKEN_KEY);
+    } catch {
+      // See `stored`.
     }
   }
 
@@ -160,8 +214,10 @@ export function useAiChat() {
    * not have to clear their own storage to be able to ask a question.
    */
   async function ensureSession(): Promise<string> {
+    // A signed-in caller reaches their own sessions by account, so one opened
+    // from the sidebar on another device needs no token here (§12.1).
     const existing = sessionId.value ?? stored(SESSION_KEY);
-    if (existing && stored(TOKEN_KEY)) {
+    if (existing && (stored(TOKEN_KEY) || auth.isAuthenticated)) {
       sessionId.value = existing;
       return existing;
     }
@@ -177,6 +233,7 @@ export function useAiChat() {
 
     remember(TOKEN_KEY, started.token);
     remember(SESSION_KEY, started.sessionId);
+    holdTokens([started.token, ...heldTokens().filter((token) => token !== started.token)]);
     sessionId.value = started.sessionId;
     greeting.value = started.greeting;
     loadedSessionId.value = started.sessionId;
@@ -195,26 +252,34 @@ export function useAiChat() {
    */
   async function restore(): Promise<void> {
     const existing = stored(SESSION_KEY);
-    if (!existing || !stored(TOKEN_KEY)) return;
+    if (!existing || !(stored(TOKEN_KEY) || auth.isAuthenticated)) return;
     if (loadedSessionId.value === existing && !auth.isAuthenticated) return;
 
+    await load(existing);
+  }
+
+  /** Reads one conversation back into the thread. `false` when it cannot be read. */
+  async function load(id: string): Promise<boolean> {
     try {
-      const transcript = await api.get<AiChatTranscript>(`/ai/chat/sessions/${existing}`, {
+      const transcript = await api.get<AiChatTranscript>(`/ai/chat/sessions/${id}`, {
         headers: chatHeaders(),
       });
 
       if (transcript.status === 'CLOSED') {
         forget();
-        return;
+        sessionId.value = null;
+        return false;
       }
 
       sessionId.value = transcript.sessionId;
       loadedSessionId.value = transcript.sessionId;
       messages.value = transcript.messages.map(toBubble);
+      return true;
     } catch {
       // A token we cannot use is worse than none: it would fail every turn.
       forget();
       sessionId.value = null;
+      return false;
     }
   }
 
@@ -361,6 +426,7 @@ export function useAiChat() {
       case 'done':
         patch({ id: event.messageId, grounded: event.grounded, pending: false });
         activity.value = null;
+        touchHistory();
         return;
       case 'error':
         patch({ pending: false });
@@ -403,23 +469,105 @@ export function useAiChat() {
     }
   }
 
-  /** Ends the conversation and starts the next visitor from a clean thread. */
-  async function reset(): Promise<void> {
+  // ─── history (2C-13) ────────────────────────────────────────────────────────
+
+  /** The sidebar list: every token this browser holds, plus the account's own. */
+  async function loadHistory(): Promise<void> {
+    const tokens = heldTokens();
+    if (!tokens.length && !auth.isAuthenticated) {
+      history.value = [];
+      return;
+    }
+
+    historyLoading.value = true;
+    try {
+      history.value = await api.post<AiChatSessionSummary[]>(
+        '/ai/chat/history',
+        { tokens },
+        { headers: chatHeaders() },
+      );
+      holdTokens(tokens);
+    } catch {
+      // A sidebar that failed to load is an empty sidebar, not a broken chat.
+    } finally {
+      historyLoading.value = false;
+    }
+  }
+
+  /**
+   * Moves the current conversation to the top of the list after a turn.
+   *
+   * Locally, not by reloading: the only things that changed are the order and,
+   * for a new conversation, that it exists — and its title is the question the
+   * visitor just typed.
+   */
+  function touchHistory(): void {
     const id = sessionId.value;
+    if (!id) return;
+
+    const existing = history.value.find((item) => item.sessionId === id);
+    const firstQuestion = messages.value.find((message) => message.role === 'USER')?.content ?? '';
+    const title = existing?.title ?? firstQuestion.replace(/\s+/g, ' ').trim().slice(0, 80);
+
+    history.value = [
+      { sessionId: id, status: existing?.status ?? 'ACTIVE', title, lastMessageAt: new Date().toISOString() },
+      ...history.value.filter((item) => item.sessionId !== id),
+    ];
+  }
+
+  /** Opens an earlier conversation from the list, and makes it the one a new message goes to. */
+  async function open(id: string): Promise<void> {
+    if (sending.value || id === sessionId.value) return;
+
+    offline.value = null;
+    makeCurrent(id);
+    const loaded = await load(id);
+    if (!loaded) history.value = history.value.filter((item) => item.sessionId !== id);
+  }
+
+  /**
+   * A clean thread, with the previous one kept.
+   *
+   * Not a close: the conversation stays in the list and can be picked up again,
+   * which is what people expect "new chat" to mean. The session for the next
+   * question is minted when that question is sent, not here.
+   */
+  function newChat(): void {
+    if (sending.value) return;
+
     messages.value = [];
     offline.value = null;
     sessionId.value = null;
     loadedSessionId.value = null;
+    makeCurrent(null);
+  }
 
-    if (id) {
-      try {
-        await api.post(`/ai/chat/sessions/${id}/close`, {}, { headers: chatHeaders() });
-      } catch {
-        // Closing is bookkeeping; a failure must not keep the visitor in a
-        // thread they asked to leave.
-      }
+  /**
+   * Takes a conversation off the list.
+   *
+   * On the server that is a close: the office still has the transcript, the
+   * visitor no longer sees it, and the assistant will not answer in it again.
+   */
+  async function remove(id: string): Promise<void> {
+    const token = tokenFor(id);
+    history.value = history.value.filter((item) => item.sessionId !== id);
+    if (id === sessionId.value) newChat();
+
+    try {
+      await api.post(
+        `/ai/chat/sessions/${id}/close`,
+        {},
+        {
+          headers: {
+            ...(token ? { 'X-Chat-Token': token } : {}),
+            ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
+          },
+        },
+      );
+    } catch {
+      // Closing is bookkeeping; the row is already gone from the list.
     }
-    forget();
+    holdTokens(heldTokens().filter((held) => held !== token));
   }
 
   return {
@@ -434,6 +582,11 @@ export function useAiChat() {
     restore,
     send,
     rate,
-    reset,
+    history,
+    historyLoading,
+    loadHistory,
+    open,
+    newChat,
+    remove,
   };
 }

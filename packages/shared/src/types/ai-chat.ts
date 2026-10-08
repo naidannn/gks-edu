@@ -104,3 +104,12 @@ export interface AiAssistantConfigPayload {
   updatedAt: string;
   updatedBy: { id: string; name: string | null } | null;
 }
+
+/** One row of the `/chat` sidebar — `POST /ai/chat/history` (2C-13). */
+export interface AiChatSessionSummary {
+  sessionId: string;
+  status: AiSessionStatus;
+  /** The opening question, on one line, at most 80 characters. */
+  title: string;
+  lastMessageAt: string;
+}

@@ -15,6 +15,10 @@ const props = defineProps<{
   activity: { name: string; label: string } | null;
   /** Roomier bubbles and a wider column on the full page. */
   wide?: boolean;
+  /** Who the next-step links are for — a person to reach differs (2C-04). */
+  signedIn?: boolean;
+  /** A turn is in flight: no chips under an answer that is about to be superseded. */
+  busy?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -22,7 +26,23 @@ const emit = defineEmits<{
     messageId: string,
     payload: { value: AiFeedbackValue; reason?: AiFeedbackReason; comment?: string },
   ];
+  /** A chip or a starter was pressed: send this as the visitor's question. */
+  ask: [prompt: string];
 }>();
+
+/** The latest finished answer — the only one that carries chips. */
+const lastAnswerIndex = computed(() => {
+  const index = props.messages.length - 1;
+  const last = props.messages[index];
+  return last?.role === 'ASSISTANT' && !last.pending && !props.busy ? index : -1;
+});
+
+const nextSteps = computed(() => {
+  const last = props.messages[lastAnswerIndex.value];
+  if (!last) return [];
+  const asked = props.messages.filter((message) => message.role === 'USER').map((message) => message.content);
+  return aiNextSteps(last.cards, { signedIn: Boolean(props.signedIn) }, asked);
+});
 
 const scroller = ref<HTMLElement | null>(null);
 
@@ -63,6 +83,8 @@ watch(
       last?.content,
       last?.pending,
       last?.sources.length,
+      last?.cards.length,
+      lastAnswerIndex.value,
       props.activity?.label,
     ] as const;
   },
@@ -80,9 +102,27 @@ defineExpose({ scrollToEnd });
 
 <template>
   <div ref="scroller" class="gks-chat-thread" :class="{ 'gks-chat-thread--wide': wide }" @scroll.passive="onScroll">
-    <p v-if="greeting && !messages.length" class="gks-chat-bubble gks-chat-bubble--ai gks-chat-bubble--greeting">
-      {{ greeting }}
-    </p>
+    <!-- The empty conversation: the page draws its own; the widget's is the
+         greeting and the four questions people ask first. -->
+    <template v-if="!messages.length">
+      <slot name="empty">
+        <p v-if="greeting" class="gks-chat-bubble gks-chat-bubble--ai gks-chat-bubble--greeting">
+          {{ greeting }}
+        </p>
+        <div class="gks-chat-starters">
+          <button
+            v-for="starter in AI_STARTERS"
+            :key="starter.label"
+            type="button"
+            class="gks-chat-starter"
+            @click="emit('ask', starter.prompt)"
+          >
+            <DsIcon :name="starter.icon" :size="15" />
+            {{ starter.prompt }}
+          </button>
+        </div>
+      </slot>
+    </template>
 
     <template v-for="(message, index) in messages" :key="message.id ?? `pending-${index}`">
       <div v-if="message.role === 'USER'" class="gks-chat-row gks-chat-row--user">
@@ -99,12 +139,21 @@ defineExpose({ scrollToEnd });
           </span>
         </p>
 
+        <AiChatCard v-for="(card, cardIndex) in message.cards" :key="`${card.type}-${cardIndex}`" :card="card" />
+
         <AiChatSources v-if="message.sources.length" :sources="message.sources" />
 
         <AiChatFeedback
           v-if="message.id && !message.pending"
           :feedback="message.feedback"
           @rate="(payload) => emit('rate', message.id!, payload)"
+        />
+
+        <AiChatNextSteps
+          v-if="index === lastAnswerIndex"
+          :actions="nextSteps"
+          class="gks-chat-steps"
+          @ask="(prompt) => emit('ask', prompt)"
         />
       </div>
     </template>
@@ -170,6 +219,28 @@ defineExpose({ scrollToEnd });
   border-bottom-left-radius: 4px;
 }
 .gks-chat-bubble--greeting { color: var(--text-muted); }
+
+.gks-chat-starters { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.gks-chat-starter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: var(--border-hair) solid var(--brand-200);
+  border-radius: var(--radius-2);
+  background: var(--surface-card);
+  color: var(--brand-700);
+  font: inherit;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+.gks-chat-starter:hover { background: var(--brand-050); }
+.gks-chat-starter .gks-icon { flex: none; }
+
+/* An answer that ends on a card needs a breath before the chips. */
+.gks-chat-steps { margin-top: var(--sp-1); }
 
 .gks-chat-typing { display: inline-flex; gap: 4px; align-items: center; vertical-align: middle; }
 .gks-chat-typing i {
