@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   ROBOTS_FILTERED,
   ROBOTS_INDEXABLE,
+  DESCRIPTION_MAX,
   absoluteUrl,
+  breadcrumbJsonLd,
   canonicalPath,
+  clampDescription,
+  faqPageJsonLd,
   listingSeo,
 } from '../app/utils/seo';
 
@@ -84,5 +88,53 @@ describe('listingSeo', () => {
     for (const page of ['0', '-2', 'abc', '2.5']) {
       expect(listingSeo(SITE, '/blog', { page }).canonical).toBe('https://gksedu.mn/blog');
     }
+  });
+});
+
+describe('clampDescription', () => {
+  it('passes a short description through, whitespace collapsed', () => {
+    expect(clampDescription('  Сөүл   хотод\nбайрлах  ')).toBe('Сөүл хотод байрлах');
+  });
+
+  it('turns nothing into undefined rather than an empty tag', () => {
+    expect(clampDescription(null)).toBeUndefined();
+    expect(clampDescription('   ')).toBeUndefined();
+  });
+
+  // A snippet cut mid-word reads as broken; the cut falls on a space.
+  it('cuts a long text on a word boundary, with an ellipsis, within the limit', () => {
+    const long = 'Солонгосын их сургуулийн элсэлт, '.repeat(10);
+    const clamped = clampDescription(long)!;
+    expect(clamped.length).toBeLessThanOrEqual(DESCRIPTION_MAX);
+    expect(clamped.endsWith('…')).toBe(true);
+    expect(clamped).not.toMatch(/[,\s]…$/);
+    expect(long.startsWith(clamped.slice(0, -1))).toBe(true);
+  });
+});
+
+describe('faqPageJsonLd', () => {
+  it('maps question/answer pairs onto schema.org Questions', () => {
+    expect(faqPageJsonLd([{ question: 'Q?', answer: 'A.' }])).toEqual({
+      '@type': 'FAQPage',
+      mainEntity: [{ '@type': 'Question', name: 'Q?', acceptedAnswer: { '@type': 'Answer', text: 'A.' } }],
+    });
+  });
+
+  // An empty `mainEntity` is invalid markup; better no block at all.
+  it('yields nothing for an empty list', () => {
+    expect(faqPageJsonLd([])).toBeUndefined();
+  });
+});
+
+describe('breadcrumbJsonLd', () => {
+  it('links every crumb but the last, and keeps the root without a trailing slash', () => {
+    expect(breadcrumbJsonLd(SITE, [['Нүүр', '/'], ['Сургуулиуд', '/universities'], ['KAIST']])).toEqual({
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Нүүр', item: SITE },
+        { '@type': 'ListItem', position: 2, name: 'Сургуулиуд', item: `${SITE}/universities` },
+        { '@type': 'ListItem', position: 3, name: 'KAIST', item: undefined },
+      ],
+    });
   });
 });

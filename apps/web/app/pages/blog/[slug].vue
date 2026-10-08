@@ -12,14 +12,21 @@ if (error.value) {
 }
 
 const title = computed(() => post.value?.seoTitle || post.value?.title || 'Нийтлэл');
-const description = computed(() => post.value?.seoDescription || post.value?.excerpt || undefined);
+// An editor's SEO description is written to fit; an excerpt was not, so it is cut to the snippet.
+const description = computed(() => post.value?.seoDescription || clampDescription(post.value?.excerpt));
 
 const siteUrl = useSiteUrl();
 const absoluteUrl = useAbsoluteUrl();
 const coverImage = computed(() => absoluteUrl(post.value?.coverImagePath));
 
+usePageSeo({
+  title,
+  description,
+  ogType: 'article',
+  // Absent, the site-wide campus card stands in — better than no preview at all.
+  ogImage: coverImage,
+});
 useHead(() => ({
-  title: title.value,
   script: post.value
     ? [
         jsonLdScript({
@@ -60,12 +67,6 @@ useHead(() => ({
     : [],
 }));
 useSeoMeta({
-  description,
-  ogTitle: title,
-  ogDescription: description,
-  ogType: 'article',
-  // Absent, the site-wide campus card stands in — better than no preview at all.
-  ogImage: () => coverImage.value,
   articlePublishedTime: () => post.value?.publishedAt ?? undefined,
   articleModifiedTime: () => post.value?.updatedAt,
 });

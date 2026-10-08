@@ -188,14 +188,13 @@ async function submit() {
   }
 }
 
-useHead({ title: 'Зөвлөгөө авах' });
-useSeoMeta({
+usePageSeo({
+  title: 'Солонгост суралцах зөвлөгөө авах',
   description:
     'Солонгост суралцах зөвлөгөө авах хүсэлт. Хэлний бэлтгэл, бакалавр, магистр, доктор, ' +
     'GKS тэтгэлгийн зуучлал — GKS EDU GROUP.',
   ogTitle: 'Үнэгүй зөвлөгөө авах · GKS Edu',
   ogDescription: 'Хэдхэн талбар бөглөөд зөвлөхтэй холбогдоорой.',
-  ogType: 'website',
 });
 </script>
 

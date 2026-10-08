@@ -6,13 +6,12 @@
  * text is 1A-22 and lands through the content screens, not through this file.
  */
 
-useHead({ title: 'Хэлний бэлтгэлийн зуучлал' });
-useSeoMeta({
+usePageSeo({
+  title: 'Солонгос хэлний бэлтгэлийн зуучлал, D-4 виз',
   description:
     'Солонгосын их сургуулийн хэлний бэлтгэл ангид элсэх зуучлал: сургууль сонголт, материал бүрдүүлэлт, D-4 виз, явахын өмнөх бэлтгэл.',
   ogTitle: 'Хэлний бэлтгэлээс эхлээрэй',
   ogDescription: 'Сургууль сонголтоос виз хүртэл бүх алхмыг нэг дор.',
-  ogType: 'website',
 });
 </script>
 

@@ -85,6 +85,64 @@ const { data: pricing } = await useApiFetch<PublicServicePricing[]>('/pricing/pu
 
 const price = computed(() => pricing.value?.find((row) => row.serviceType === props.service) ?? null);
 
+/**
+ * The service by name in structured data. `MASTER` is the graduate page, which
+ * sells master's and doctoral brokerage alike, so the label table alone would
+ * understate it.
+ */
+const SERVICE_NAMES: Partial<Record<ServiceType, string>> = {
+  LANGUAGE_PREP: 'Солонгос хэлний бэлтгэлийн зуучлал',
+  BACHELOR: 'Солонгост бакалаврт суралцах зуучлал',
+  MASTER: 'Солонгост магистр, докторт суралцах зуучлал',
+};
+
+const route = useRoute();
+const siteUrl = useSiteUrl();
+
+/**
+ * `Service` + `BreadcrumbList` + `FAQPage` (1A-45). The offer appears only when
+ * the business has configured a price — the same rule the price block follows —
+ * and it is the brokerage fee alone, never tuition, which the school charges.
+ * The FAQ answers sit inside <details>, so the marked-up text is on the page.
+ */
+useHead(() => {
+  const name = SERVICE_NAMES[props.service] ?? `${SERVICE_LABELS[props.service]} зуучлал`;
+  const url = `${siteUrl}${canonicalPath(route.path)}`;
+  return {
+    script: [
+      jsonLdScript({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Service',
+            name,
+            serviceType: 'Education consulting',
+            description: props.lead,
+            url,
+            provider: {
+              '@type': 'Organization',
+              '@id': `${siteUrl}/#organization`,
+              name: COMPANY.name,
+              url: siteUrl,
+            },
+            areaServed: { '@type': 'Country', name: 'Mongolia' },
+            offers: price.value
+              ? {
+                  '@type': 'Offer',
+                  price: price.value.totalAmount,
+                  priceCurrency: 'MNT',
+                  url,
+                }
+              : undefined,
+          },
+          breadcrumbJsonLd(siteUrl, [['Нүүр', '/'], [name]]),
+          faqPageJsonLd(props.faqs ?? []),
+        ].filter(Boolean),
+      }),
+    ],
+  };
+});
+
 </script>
 
 <template>

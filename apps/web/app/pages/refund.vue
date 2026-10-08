@@ -209,12 +209,10 @@ const SECTIONS: LegalSection[] = [
   },
 ];
 
-useHead({ title: 'Төлбөр, буцаалтын журам' });
-useSeoMeta({
+usePageSeo({
+  title: 'Төлбөр, буцаалтын журам',
   description:
     'Зуучлалын үйлчилгээний төлбөрийн бүтэц, төлөх сувгууд, урьдчилгааны нөхцөл, гэрээ цуцлах, буцаалт хүсэх журам.',
-  ogTitle: 'Төлбөр, буцаалтын журам · GKS Edu',
-  ogType: 'website',
 });
 </script>
 

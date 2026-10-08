@@ -268,17 +268,15 @@ const TIMELINE = [
 // scraped from the EC2 host's own address must still point at gksedu.mn.
 const socialImage = `${useSiteUrl()}/img/gks-scholarship-og.png`;
 
-useHead({ title: `2027 GKS бакалавр · ${MAJORS.length} мэргэжил бүрэн тэтгэлгээр` });
-useSeoMeta({
+usePageSeo({
+  title: `2027 GKS бакалавр · ${MAJORS.length} мэргэжил бүрэн тэтгэлгээр`,
   description:
     `2027 оны GKS бакалаврын UIC хөтөлбөр: 10 их сургуулийн ${MAJORS.length} мэргэжил. Сургалтын төлбөр 100%, ` +
-    'сар бүрийн тэтгэмж, онгоцны тийз, солонгос хэлний бэлтгэл. Хиймэл оюун, программ хангамж, инженер, хүнс-био.',
+    'сарын тэтгэмж, онгоцны тийз, солонгос хэлний бэлтгэл.',
   ogTitle: `2027 GKS: ${MAJORS.length} мэргэжил бүрэн тэтгэлгээр`,
   ogDescription: 'Сургалтын төлбөр 100%, сар бүрийн тэтгэмж, онгоцны тийз, хэлний бэлтгэл. Улсын квот байхгүй.',
-  ogType: 'website',
   ogImage: socialImage,
-  twitterCard: 'summary_large_image',
-  twitterImage: socialImage,
+  ogImageSize: [1730, 909],
 });
 </script>
 

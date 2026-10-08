@@ -247,17 +247,15 @@ const consultationLink = computed(() => {
 
 const socialImage = `${useSiteUrl()}/img/gks-scholarship-og.png`;
 
-useHead({ title: 'GKS тэтгэлэгт хамрагдах боломжоо 1 минутад шалгах' });
-useSeoMeta({
+usePageSeo({
+  title: 'GKS тэтгэлэгт хамрагдах боломжоо 1 минутад шалгах',
   description:
-    'Нас, боловсрол, голч дүн, хэлний түвшингээ оруулаад БНСУ-ын Засгийн газрын тэтгэлгийн шалгуурыг ' +
-    'хангаж байгаа эсэхээ, материалынхаа хүч болон юуг сайжруулбал боломж нэмэгдэхийг шууд хараарай.',
+    'Нас, боловсрол, голч дүн, хэлний түвшингээ оруулаад GKS тэтгэлгийн шалгуурыг хангаж буй эсэх, ' +
+    'материалынхаа хүч, юуг сайжруулахаа шууд хараарай.',
   ogTitle: 'Та GKS тэтгэлэгт хамрагдах боломжтой юу?',
   ogDescription: '1 минут, 5 асуулт. Шалгуур, материалынхаа хүч, дараагийн алхмууд.',
-  ogType: 'website',
   ogImage: socialImage,
-  twitterCard: 'summary_large_image',
-  twitterImage: socialImage,
+  ogImageSize: [1730, 909],
 });
 </script>
 

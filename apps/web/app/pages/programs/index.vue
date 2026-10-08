@@ -173,13 +173,12 @@ function placeLine(program: ProgramListItem): string {
     .join(' · ');
 }
 
-useHead({ title: 'Солонгосын сургуулиудын ангиуд, сургалтын төлбөр' });
-useSeoMeta({
+usePageSeo({
+  title: 'Солонгосын сургуулиудын ангиуд, сургалтын төлбөр',
   description:
-    'Солонгосын их, дээд сургуулиудын гадаад оюутан элсдэг ангиуд — сургалтын төлбөр, TOPIK ' +
-    'шаардлага, хичээлийн хэлийн хамт. Мэргэжлийнхээ нэрээр хайгаад харьцуулна уу.',
+    'Солонгосын их сургуулиудын гадаад оюутан элсдэг ангиуд — сургалтын төлбөр, TOPIK шаардлага, ' +
+    'хичээлийн хэлтэй нь. Мэргэжлээрээ хайж харьцуулаарай.',
   ogTitle: 'Ангиуд, сургалтын төлбөр · GKS Edu',
-  ogType: 'website',
 });
 // Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
 useListingSeo('/programs');

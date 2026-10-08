@@ -47,16 +47,15 @@ const PROCESS = [
 // scraped from the EC2 host's own address must still point at gksedu.mn.
 const socialImage = `${useSiteUrl()}/img/gks-scholarship-og.png`;
 
-useHead({ title: 'GKS · БНСУ-ын Засгийн газрын тэтгэлэг' });
-useSeoMeta({
+usePageSeo({
+  // "GKS тэтгэлэг" is the phrase people type; the old title led with "GKS ·".
+  title: 'GKS тэтгэлэг — БНСУ-ын Засгийн газрын тэтгэлэг',
   description:
     'GKS тэтгэлгийн боломж, санхүүгийн дэмжлэг, үндсэн шалгуур болон жил бүрийн хугацаа. GKS EDU GROUP 50+ оюутныг тэтгэлэгт тэнцүүлсэн туршлагатай.',
   ogTitle: 'Санхүүгээс үл хамааран Солонгост сур · GKS',
   ogDescription: '100% сургалтын төлбөр, сар бүрийн тэтгэлэг, онгоцны тийз, хэлний бэлтгэл.',
-  ogType: 'website',
   ogImage: socialImage,
-  twitterCard: 'summary_large_image',
-  twitterImage: socialImage,
+  ogImageSize: [1730, 909],
 });
 </script>
 

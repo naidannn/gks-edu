@@ -25,6 +25,11 @@ function toggle(id: string) {
   openId.value = openId.value === id ? null : id;
 }
 
+usePageSeo({
+  title: 'Түгээмэл асуулт хариулт',
+  description: 'GKS EDU GROUP-ийн үйлчилгээ, үнэ, материал, визтэй холбоотой түгээмэл асуултын хариулт.',
+});
+
 /**
  * `FAQPage` markup, and the reason the answers below render with `v-show`
  * rather than `v-if`: structured data has to describe text that is actually on
@@ -35,26 +40,9 @@ function toggle(id: string) {
  * Emitted only when there are entries — an `FAQPage` with an empty
  * `mainEntity` is invalid, and the list is still being filled (1A-22).
  */
-useHead(() => ({
-  title: 'Түгээмэл асуулт хариулт',
-  script: (data.value ?? []).length
-    ? [
-        jsonLdScript({
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: (data.value ?? []).map((item) => ({
-            '@type': 'Question',
-            name: item.question,
-            acceptedAnswer: { '@type': 'Answer', text: item.answer },
-          })),
-        }),
-      ]
-    : [],
-}));
-useSeoMeta({
-  description: 'GKS EDU GROUP-ийн үйлчилгээ, үнэ, материал, визтэй холбоотой түгээмэл асуултын хариулт.',
-  ogTitle: 'Түгээмэл асуулт хариулт · GKS Edu',
-  ogType: 'website',
+useHead(() => {
+  const faq = faqPageJsonLd(data.value ?? []);
+  return { script: faq ? [jsonLdScript({ '@context': 'https://schema.org', ...faq })] : [] };
 });
 </script>
 

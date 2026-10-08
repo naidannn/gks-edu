@@ -23,11 +23,9 @@ function goToPage(next: number) {
   router.push({ query: { ...route.query, page: String(next) } });
 }
 
-useHead({ title: 'Мэдээ, нийтлэл' });
-useSeoMeta({
+usePageSeo({
+  title: 'Мэдээ, нийтлэл',
   description: 'Солонгост суралцах, элсэлт, виз, тэтгэлэгтэй холбоотой зөвлөгөө, мэдээ, нийтлэл.',
-  ogTitle: 'Мэдээ, нийтлэл · GKS Edu',
-  ogType: 'website',
 });
 useListingSeo('/blog');
 </script>

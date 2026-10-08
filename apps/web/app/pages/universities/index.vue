@@ -114,13 +114,11 @@ const accreditationOptions = computed(() => [
 const total = computed(() => data.value?.meta.total ?? 0);
 const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 
-useHead({ title: 'Солонгосын их, дээд сургуулиуд' });
-useSeoMeta({
+usePageSeo({
+  title: 'Солонгосын их, дээд сургуулиуд',
   description:
     'Солонгосын 135 их, дээд сургуулийн каталог — байршил, оюутны тоо, амьжиргааны зардал, ' +
-    'хэлний бэлтгэл, GKS тэтгэлгийн боломж. GKS EDU GROUP-ийн зуучлалын үйлчилгээ.',
-  ogTitle: 'Солонгосын их, дээд сургуулиуд · GKS Edu',
-  ogType: 'website',
+    'хэлний бэлтгэл, GKS тэтгэлгийн боломж.',
 });
 // Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
 useListingSeo('/universities');

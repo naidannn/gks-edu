@@ -255,12 +255,10 @@ const SECTIONS: LegalSection[] = [
   },
 ];
 
-useHead({ title: 'Үйлчилгээний нөхцөл' });
-useSeoMeta({
+usePageSeo({
+  title: 'Үйлчилгээний нөхцөл',
   description:
     'GKSedu.mn платформыг ашиглах нөхцөл: бүртгэл, мэдээллийн статус, зуучлалын гэрээ, төлбөр, талуудын эрх үүрэг.',
-  ogTitle: 'Үйлчилгээний нөхцөл · GKS Edu',
-  ogType: 'website',
 });
 </script>
 

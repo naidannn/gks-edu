@@ -12,7 +12,7 @@
  */
 definePageMeta({ layout: 'default' });
 useNoIndex();
-useHead({ title: 'Захиалгаас гарах — GKSedu.mn' });
+useHead({ title: 'Захиалгаас гарах' });
 
 const route = useRoute();
 const api = useApi();

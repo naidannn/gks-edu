@@ -83,13 +83,12 @@ const regionOptions = computed(() => [
   ...(facets.value?.regions ?? []).map((row) => ({ value: row.value, label: `${row.label} (${row.count})` })),
 ]);
 
-useHead({ title: 'Солонгосын сургуулиудын элсэлт' });
-useSeoMeta({
+usePageSeo({
+  title: 'Солонгосын их сургуулиудын элсэлтийн хугацаа',
   description:
-    'Солонгосын их, дээд сургуулиудын хэлний бэлтгэл, бакалавр, магистр, докторын элсэлтийн ' +
-    'хугацаа — материал хүлээн авах эцсийн хугацаа, хичээл эхлэх огноогоор шүүж үзнэ үү.',
+    'Солонгосын их сургуулиудын хэлний бэлтгэл, бакалавр, магистр, докторын элсэлт — ' +
+    'бүртгэлийн эцсийн хугацаа, хичээл эхлэх огноогоор нь шүүж үзнэ үү.',
   ogTitle: 'Сургуулиудын элсэлтийн хугацаа · GKS Edu',
-  ogType: 'website',
 });
 // Filters are query strings on one page, not thousands of pages (`useSeo.ts`).
 useListingSeo('/admissions');

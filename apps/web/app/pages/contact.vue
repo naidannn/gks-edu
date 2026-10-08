@@ -42,12 +42,13 @@ const CHANNELS = [
   },
 ];
 
-useHead({ title: 'Холбоо барих' });
-useSeoMeta({
+usePageSeo({
+  title: 'Холбоо барих',
+  // The full address runs the snippet past 160 characters; the tower and the
+  // landmark are what find the office, the floor is on the page itself.
   description:
-    `GKS EDU GROUP-тэй холбогдох: ${COMPANY.phoneLabel}, ${COMPANY.email}. Оффис: ${COMPANY.addressOneLine}. Ажлын цаг: ${COMPANY.workingHours}.`,
-  ogTitle: 'Холбоо барих · GKS Edu',
-  ogType: 'website',
+    `GKS EDU GROUP-тэй холбогдох: ${COMPANY.phoneLabel}, ${COMPANY.email}. ` +
+    `Оффис: ${COMPANY.city}, ${COMPANY.landmark}, Eco International Tower. ${COMPANY.workingHours}.`,
 });
 </script>
 

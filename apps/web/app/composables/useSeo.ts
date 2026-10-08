@@ -58,6 +58,63 @@ export function useSiteSeo(): void {
   });
 }
 
+export interface PageSeo {
+  /** The `<title>` before the site suffix — the template adds ` · GKS Edu`. */
+  title: MaybeRefOrGetter<string>;
+  /** The search snippet. Keep it under `DESCRIPTION_MAX`; data-built ones go through `clampDescription`. */
+  description: MaybeRefOrGetter<string | undefined>;
+  /** The share-card headline, when it should read differently from the title. Defaults to the title with the suffix. */
+  ogTitle?: MaybeRefOrGetter<string>;
+  /** The share-card text. Defaults to `description`. */
+  ogDescription?: MaybeRefOrGetter<string | undefined>;
+  /** Absolute URL of a page-specific share image; absent, the site default from `useSiteSeo` stands. */
+  ogImage?: MaybeRefOrGetter<string | undefined>;
+  ogImageAlt?: MaybeRefOrGetter<string | undefined>;
+  /** Pixel size of `ogImage`. Without it the default image's 1200×630 would be claimed for it. */
+  ogImageSize?: [width: number, height: number];
+  ogType?: 'website' | 'article';
+}
+
+/**
+ * Title, description and the share card in one call, for every indexable page.
+ *
+ * Pages used to write these one tag at a time, and most of them forgot one:
+ * a page with a `description` but no `og:description` sends Facebook and
+ * Telegram off to guess, and the Twitter tags were set on three pages out of
+ * twenty. Here the share card is derived from the search snippet unless the
+ * page says otherwise, so the two can only differ on purpose.
+ *
+ * A page-specific image replaces the default one's alt text as well — the
+ * default alt describes the campus card, not whatever the page put there.
+ */
+export function usePageSeo(seo: PageSeo): void {
+  const ogTitle = () => toValue(seo.ogTitle) ?? `${toValue(seo.title)}${SITE_TITLE_SUFFIX}`;
+  const ogDescription = () => toValue(seo.ogDescription) ?? toValue(seo.description);
+
+  useHead({ title: () => toValue(seo.title) });
+  useSeoMeta({
+    description: () => toValue(seo.description),
+    ogTitle,
+    ogDescription,
+    ogType: seo.ogType ?? 'website',
+    twitterTitle: ogTitle,
+    twitterDescription: ogDescription,
+  });
+
+  if (seo.ogImage) {
+    const image = () => toValue(seo.ogImage);
+    useSeoMeta({
+      ogImage: image,
+      twitterImage: image,
+      // Only alongside an image of the page's own: when the getter yields
+      // nothing, the default image keeps the default alt.
+      ogImageAlt: () => (image() ? (toValue(seo.ogImageAlt) ?? ogTitle()) : undefined),
+      ogImageWidth: seo.ogImageSize?.[0],
+      ogImageHeight: seo.ogImageSize?.[1],
+    });
+  }
+}
+
 /**
  * Everything behind a login. `robots.txt` already asks crawlers not to fetch
  * these, which is exactly why the meta tag is needed too: a page that is only

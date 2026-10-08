@@ -174,8 +174,14 @@ const FAQ = [
  */
 const siteUrl = useSiteUrl();
 
+usePageSeo({
+  title: 'Солонгост суралцах зуучлал, GKS тэтгэлэг',
+  description:
+    'Солонгосын их, дээд сургуульд суралцах зуучлал: хэлний бэлтгэл, бакалавр, магистр, доктор, ' +
+    'GKS тэтгэлэг. 135 сургуулийн элсэлт, төлбөрийн мэдээлэл нэг дор.',
+  ogTitle: 'GKS EDU GROUP · Солонгост суралцах зуучлал',
+});
 useHead({
-  title: 'Солонгост суралцах зуучлал',
   script: [
     jsonLdScript({
       '@context': 'https://schema.org',
@@ -189,7 +195,16 @@ useHead({
           logo: `${siteUrl}/icon-512.png`,
           image: `${siteUrl}/img/og-default.jpg`,
           description: COMPANY.tagline,
+          slogan: COMPANY.motto,
           telephone: COMPANY.phone,
+          email: COMPANY.email,
+          contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'customer service',
+            telephone: COMPANY.phone,
+            email: COMPANY.email,
+            areaServed: COMPANY.countryCode,
+          },
           address: {
             '@type': 'PostalAddress',
             streetAddress: `${COMPANY.landmark}, ${COMPANY.street}`,
@@ -207,16 +222,12 @@ useHead({
           inLanguage: 'mn',
           publisher: { '@id': `${siteUrl}/#organization` },
         },
+        // The accordion further down renders every answer inside <details>,
+        // so the marked-up text is on the page, collapsed or not.
+        faqPageJsonLd(FAQ.map((item) => ({ question: item.q, answer: item.a }))),
       ],
     }),
   ],
-});
-useSeoMeta({
-  description:
-    'GKS EDU GROUP — Солонгосын их, дээд сургуульд суралцах зуучлалын үйлчилгээ. Хэлний ' +
-    'бэлтгэл, бакалавр, магистр, доктор, GKS тэтгэлэг. 135 сургуулийн мэдээлэл нэг дор.',
-  ogTitle: 'GKS EDU GROUP · Солонгост суралцах зуучлал',
-  ogType: 'website',
 });
 </script>
 

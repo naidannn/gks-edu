@@ -368,11 +368,24 @@ const dormitoryRows = computed<Fact[]>(() => {
 const siteUrl = useSiteUrl();
 const absoluteUrl = useAbsoluteUrl();
 
+// Schools are named in English across the whole public site — the Mongolian
+// transliteration varies between sources, while the English name is what a
+// visitor can match against the school's own site and paperwork. The `<title>`
+// carries the Mongolian name as well, because that is what people in
+// Ulaanbaatar type: "Корё их сургууль", not "Korea University".
+usePageSeo({
+  title: () => (uni.value.nameMn ? `${uni.value.nameEn} — ${uni.value.nameMn}` : uni.value.nameEn),
+  // What the page answers goes after the intro when it fits; a long intro is
+  // clamped on its own rather than cutting the tail off half-way.
+  description: () => {
+    const intro = uni.value.shortIntroMn ?? `${uni.value.nameEn} — ${uni.value.cityMn}, Солонгос.`;
+    const full = `${intro} Элсэлт, төлбөр, амьжиргааны зардал.`;
+    return full.length <= DESCRIPTION_MAX ? full : clampDescription(intro);
+  },
+  ogTitle: () => `${uni.value.nameEn} · GKS Edu`,
+  ogType: 'article',
+});
 useHead(() => ({
-  // Schools are named in English across the whole public site — the Mongolian
-  // transliteration varies between sources, while the English name is what a
-  // visitor can match against the school's own site and paperwork.
-  title: uni.value.nameEn,
   // JSON-LD (1A-19): the school itself, plus the trail the visible breadcrumb
   // above the <h1> already draws. `url` is this page, not the school's own site
   // — the entity being described here is our page about it; the school's site
@@ -413,13 +426,6 @@ useHead(() => ({
     }),
   ],
 }));
-useSeoMeta({
-  description: () =>
-    uni.value.shortIntroMn ??
-    `${uni.value.nameEn} — ${uni.value.cityMn}, Солонгос. Элсэлт, зардал, зуучлалын мэдээлэл.`,
-  ogTitle: () => `${uni.value.nameEn} · GKS Edu`,
-  ogType: 'article',
-});
 </script>
 
 <template>
