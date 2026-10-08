@@ -1,25 +1,83 @@
 {
   "slug": "korea-nazarene-university",
   "researchedAt": "2026-10-08",
-  "rounds": [],
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-02",
+      "applicationDeadline": "2027-01-08",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": null,
+      "requirementNote": "Оюутан болон эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3 буюу түүнээс дээш (төгсөхөөс өмнө TOPIK 4), эсвэл англи хэлний оноо (TOEFL iBT 59 / IELTS 5.5). Банкны үлдэгдэл 16,000,000 вон (өөрийн болон эцэг эхийн нэр дээр). Диплом, дүнгийн хуудсыг апостил эсвэл консулын баталгаатай өгнө. Ярилцлага биечлэн эсвэл Zoom-оор. Бүртгэл studyinkorea.go.kr-аар.",
+      "sourceUrl": "https://cms.kornu.ac.kr/pdfviewer/kornueng/41/fileDown1/fileDownload.do",
+      "evidence": "2027 Spring: Application Submission Nov. 2, 2026 (Mon) ~ Jan. 8, 2027 (Fri); Class Begins Mar. 2, 2027 (Tue) (Tentative) / Bank Balance Certificate Undergraduate: Above KRW 16,000,000",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-05-31",
+      "applicationDeadline": "2027-07-09",
+      "classStartDate": "2027-09-01",
+      "admissionFeeKrw": null,
+      "requirementNote": "Оюутан болон эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3 буюу түүнээс дээш (төгсөхөөс өмнө TOPIK 4), эсвэл англи хэлний оноо (TOEFL iBT 59 / IELTS 5.5). Банкны үлдэгдэл 16,000,000 вон (өөрийн болон эцэг эхийн нэр дээр). Диплом, дүнгийн хуудсыг апостил эсвэл консулын баталгаатай өгнө. Ярилцлага биечлэн эсвэл Zoom-оор. Бүртгэл studyinkorea.go.kr-аар.",
+      "sourceUrl": "https://cms.kornu.ac.kr/pdfviewer/kornueng/41/fileDown1/fileDownload.do",
+      "evidence": "Fall Semester: Application Submission May. 31, 2027 (Mon) ~ Jul. 09, 2027 (Fri); Class Begins Sep. 1, 2027 (Wed) (Tentative)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-02",
+      "applicationDeadline": "2027-01-08",
+      "classStartDate": "2027-03-02",
+      "admissionFeeKrw": null,
+      "requirementNote": "Ахлах сургууль төгссөн байх. Банкны үлдэгдэл 10,000,000 вон (өөрийн болон эцэг эхийн нэр дээр). Диплом, дүнгийн хуудсыг апостил эсвэл консулын баталгаатай өгнө. Улирлын сургалтын төлбөр 1,300,000 вон, дотуур байр 600,000 вон. Виз олгох хугацаанаас хамаарч бүртгэл эрт хаагдаж болно. Ярилцлага биечлэн эсвэл Zoom-оор.",
+      "sourceUrl": "https://cms.kornu.ac.kr/pdfviewer/kornueng/40/fileDown1/fileDownload.do",
+      "evidence": "Spring 2027.03.02 ~ 2027.05.07 / Application Submission Nov. 2, 2026 (Mon) ~ Jan. 8, 2027 (Fri) / Language Course: Above KRW 10,000,000",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-02",
+      "applicationDeadline": "2027-04-16",
+      "classStartDate": "2027-05-31",
+      "admissionFeeKrw": null,
+      "requirementNote": "Ахлах сургууль төгссөн байх. Банкны үлдэгдэл 10,000,000 вон (өөрийн болон эцэг эхийн нэр дээр). Диплом, дүнгийн хуудсыг апостил эсвэл консулын баталгаатай өгнө. Улирлын сургалтын төлбөр 1,300,000 вон, дотуур байр 600,000 вон. Виз олгох хугацаанаас хамаарч бүртгэл эрт хаагдаж болно. Ярилцлага биечлэн эсвэл Zoom-оор.",
+      "sourceUrl": "https://cms.kornu.ac.kr/pdfviewer/kornueng/40/fileDown1/fileDownload.do",
+      "evidence": "Summer 2027.05.31 ~ 2027.08.06 / Application Submission Mar. 2, 2027 (Tue) ~ Apr. 16, 2027 (Fri)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-05-31",
+      "applicationDeadline": "2027-07-16",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": null,
+      "requirementNote": "Ахлах сургууль төгссөн байх. Банкны үлдэгдэл 10,000,000 вон (өөрийн болон эцэг эхийн нэр дээр). Диплом, дүнгийн хуудсыг апостил эсвэл консулын баталгаатай өгнө. Улирлын сургалтын төлбөр 1,300,000 вон, дотуур байр 600,000 вон. Виз олгох хугацаанаас хамаарч бүртгэл эрт хаагдаж болно. Ярилцлага биечлэн эсвэл Zoom-оор.",
+      "sourceUrl": "https://cms.kornu.ac.kr/pdfviewer/kornueng/40/fileDown1/fileDownload.do",
+      "evidence": "Fall 2027.08.30 ~ 2027.11.12 / Application Submission May. 31, 2027 (Mon) ~ Jul. 16, 2027 (Fri)",
+      "confidence": "HIGH"
+    }
+  ],
   "notOffered": [
     "MASTER",
     "PHD"
   ],
   "pending": [
     {
-      "level": "BACHELOR",
-      "year": 2027,
-      "month": 3,
-      "reason": "2027 оны элсэлтийн журам (\"2027 Undergraduate Admission Guidelines\") яг 2026.10.02-нд нийтлэгдсэн, гэвч PDF нь зураг хэлбэртэй тул текст гарган авах боломжгүй (OCR шаардлагатай). Огноог тодорхойлж чадсангүй.",
-      "checkUrl": "https://cms.kornu.ac.kr/bbs/io/135/110877/download.do"
-    },
-    {
       "level": "LANGUAGE_PREP",
-      "year": 2027,
-      "month": 3,
-      "reason": "2027 оны хэлний бэлтгэл хөтөлбөрийн журам (\"2027 Korean Language Course Admission Guidelines\") яг 2026.10.02-нд нийтлэгдсэн, гэвч PDF нь зураг хэлбэртэй тул текст гарган авах боломжгүй.",
-      "checkUrl": "https://cms.kornu.ac.kr/bbs/io/135/110878/download.do"
+      "year": 2026,
+      "month": 12,
+      "reason": "Өвлийн улирлын (2026/12) хуваарь гарын авлагад байхгүй; хамгийн ойрын өвлийн улирал 2027.11.29-д эхэлнэ."
     }
   ]
 }
