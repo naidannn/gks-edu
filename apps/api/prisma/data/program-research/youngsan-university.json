@@ -1,0 +1,320 @@
+{
+  "slug": "youngsan-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "LANGUAGE_PREP",
+      "group": "한국어교육센터",
+      "tuitionPerTermKrw": 1200000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": null,
+      "sourceUrl": "https://klec.ysu.ac.kr/klec/CMS/Contents/Contents.do?mCode=MN029",
+      "confidence": "HIGH",
+      "evidence": "학기 봄/여름/가을/겨울 각 1,200,000원, 보험료 6개월 80,000원, 입학금 면제, 첫 입학 시 2학기 등록금(2,400,000원) 납부 필수"
+    }
+  ],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "교육학과",
+      "nameEn": "Education",
+      "nameMn": "Боловсрол судлал",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "부동산학과",
+      "nameEn": "Real Estate",
+      "nameMn": "Үл хөдлөх хөрөнгө судлал",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "한국문화학과",
+      "nameEn": "Korean Culture",
+      "nameMn": "Солонгос соёл судлал",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "호텔관광경영학과",
+      "nameEn": "Hotel & Tourism Management",
+      "nameMn": "Зочид буудал, аялал жуулчлалын менежмент",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "조리예술학과",
+      "nameEn": "Culinary Arts",
+      "nameMn": "Хоол хийх урлаг",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "컴퓨터·정보공학과",
+      "nameEn": "Computer & Information Engineering",
+      "nameMn": "Компьютер, мэдээллийн инженерчлэл",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "게임VR학과",
+      "nameEn": "Game & VR",
+      "nameMn": "Тоглоом ба виртуал бодит байдал",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "미용예술학과",
+      "nameEn": "Beauty Arts",
+      "nameMn": "Гоо сайхны урлаг",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "디자인학과",
+      "nameEn": "Design",
+      "nameMn": "Дизайн",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN027",
+      "confidence": "LOW"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "교육학과",
+      "nameEn": "Education",
+      "nameMn": "Боловсрол судлал",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN081",
+      "confidence": "LOW"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "간호학과",
+      "nameEn": "Nursing",
+      "nameMn": "Сувилахуй",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN081",
+      "confidence": "LOW"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "물리치료학과",
+      "nameEn": "Physical Therapy",
+      "nameMn": "Физик эмчилгээ",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN081",
+      "confidence": "LOW"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "스마트시티에너지공학과",
+      "nameEn": "Smart City Energy Engineering",
+      "nameMn": "Ухаалаг хотын эрчим хүчний инженерчлэл",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Магистр: бакалаврын, доктор: магистрын зэрэгтэй байх. Гадаад оюутны тусгай элсэлт (외국인 특별전형) байдаг. Банкны дансны баталгаа шаардлагатай.",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/UnivOrganMgr/graduorganview.do?mCode=MN081",
+      "confidence": "LOW"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육센터",
+      "nameEn": "Korean Language Education Center (KLEC)",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": "한국어교육센터",
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Жилд 4 улирал (хавар, зун, намар, өвөл). Хоёр улирлын төлбөрийг (2,400,000₩) нэг дор төлж элсэнэ, 입학금 чөлөөлөгдөнө. Эрүүл мэндийн даатгал (6 сар 80,000₩) заавал. Банкны дансны баталгаа $10,000 ба түүнээс дээш.",
+      "sourceUrl": "https://klec.ysu.ac.kr/klec/CMS/Contents/Contents.do?mCode=MN029",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "외국인 특별전형 입학자 수업료 25% 면제",
+      "kind": "ENTRANCE",
+      "percent": 25,
+      "headline": false,
+      "criteria": null,
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/Contents/Contents.do?mCode=MN019",
+      "evidence": "외국인 입학자는 재학 중 매학기 수업료의 25% 면제"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "외국인 특별전형: TOPIK 4급 이상 추가 25% 면제",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "headline": true,
+      "criteria": "TOPIK 4급 ба түүнээс дээш",
+      "sourceUrl": "https://gra.ysu.ac.kr/gra/CMS/Contents/Contents.do?mCode=MN019",
+      "evidence": "외국인 입학자는 재학 중 매학기 수업료의 25% 면제 (단, 토픽(TOPIK) 4등급 이상의 경우 추가 25% 면제)",
+      "noteMn": "Гадаад оюутан бүр суралцах хугацаанд улирал бүр төлбөрийн 25%-ийн хөнгөлөлт авна. TOPIK 4 ба түүнээс дээш бол нэмэлт 25% (нийт 50%). Нийт хугацаанд хамаарна."
+    }
+  ],
+  "excluded": [
+    {
+      "what": "특수대학원 (부동산·사회과학·한국문화·관광경영·구강위생보건·기술창업·컴퓨터공학·미용예술·디자인예술·스포츠산업대학원)",
+      "reason": "Энэ ээлжинд зөвхөн 일반대학원 судална."
+    },
+    {
+      "what": "집중이수제(이중언어과정) 대학원 과정",
+      "reason": "Тэтгэлгийн дүрэм хамаарахгүй, тусгай хөтөлбөр."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалавр: бүх анги ба төлбөр",
+      "reason": "영산대 입학처 (ipsi.ysu.ac.kr) дотоодын элсэлт; гадаад оюутны (외국인) бакалаврын мэдүүлэг, элсэлтийн нэгж, төлбөрийн хүснэгт албан ёсны сайтад олдсонгүй (International Application хуудас зөвхөн бичиг баримтын жагсаалт). Олон улсын оюутны албанаас (051-540-7022, hi_young@ysu.ac.kr) лавлана.",
+      "checkAt": "https://www.ysu.ac.kr/eng/CMS/Contents/Contents.do?mCode=MN039"
+    },
+    {
+      "what": "Магистр, докторын төлбөр",
+      "reason": "일반대학원 외국인 тусгай элсэлтийн төлбөрийн хүснэгт, 입학금 олдсонгүй (сайт дээр зөвхөн тэтгэлгийн хувь). Гадаад оюутны мэргэжлийн жагсаалт нь 일반대학원-ын ангийн жагсаалтаас авсан тул гадаад оюутан авах эсэхийг ангиар баталгаажуулаагүй.",
+      "checkAt": "https://gra.ysu.ac.kr/gra/CMS/Contents/Contents.do?mCode=MN019"
+    },
+    {
+      "what": "Магистр, докторын хэлний шаардлага",
+      "reason": "TOPIK-ийн доод түвшин тодорхойгүй — null.",
+      "checkAt": "https://gra.ysu.ac.kr/gra/CMS/Contents/Contents.do?mCode=MN019"
+    },
+    {
+      "what": "Хэлний бэлтгэлийн төлбөрийн он",
+      "reason": "Хуудсанд он заагаагүй — null.",
+      "checkAt": "https://klec.ysu.ac.kr/klec/CMS/Contents/Contents.do?mCode=MN029"
+    }
+  ]
+}
