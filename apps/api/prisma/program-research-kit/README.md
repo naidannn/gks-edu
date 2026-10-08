@@ -13,6 +13,13 @@ written only by `pnpm programs:import` (`../import-programs.ts`, `--dry`, `--onl
 Үлдсэн 134 сургууль `groups.txt`-д байна: GKS-ийн жагсаалтын дарааллаар, 5-аар бүлэглэсэн 27 бүлэг
 (P01 эхэнд). Файл нь `../data/program-research/`-д байгаа сургууль судлагдсан гэсэн үг.
 
+**Төлөв (2026-10-09):** P01–P27 бүгд гүйцэтгэгдсэн, 128 сургуулийн файл production дээр орсон. Файлгүй үлдсэн 7 сургууль нь
+энэ машинаас сайт нь нээгддэггүй (Солонгосын сүлжээнээс дахин оролдоно): `semyung-university`, `joongbu-university`,
+`kyungwoon-university` (80/443 timeout), `daeshin-university` (DNS), `kwangju-womens-university` (хариу өгөхгүй),
+`myongji-university-seoul` (олон улсын албаны сайт бот хаасан), `dongguk-university-wise` (ipsi/wise.dongguk.ac.kr timeout;
+татах хуудсууд: ipsi.dongguk.ac.kr/page/3, /article/notice/detail/111277, /110728). `jungwon-university` зөвхөн хэлний бэлтгэлтэй,
+бакалавр/магистр дутуу. Гадаад оюутны төлбөр нийтлээгүй сургуулиудын анги `tuitionGroup: null` + `pending`.
+
 **Шинэ chat-д үргэлжлүүлэхдээ** доорх текстийг хуулж өгнө:
 
 > Анги, танхим, төлбөр, тэтгэлгийн судалгааг (1I-10) үргэлжлүүл.
