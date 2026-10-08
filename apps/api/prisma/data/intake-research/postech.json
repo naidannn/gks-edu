@@ -27,5 +27,17 @@
       "reason": "Магистрын хуанлитай ижил.",
       "checkUrl": "https://adm-g.postech.ac.kr/ENG/application01/"
     }
+  ],
+  "planned": [
+    {
+      "level": "MASTER",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "PHD",
+      "year": 2028,
+      "month": 3
+    }
   ]
 }

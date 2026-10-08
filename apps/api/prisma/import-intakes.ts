@@ -100,6 +100,12 @@ interface ResearchFile {
   /** `YYYY-MM-DD` the pages were read. */
   researchedAt: string;
   rounds: ResearchRound[];
+  /**
+   * Rounds the school has not published at all — a draft row (`PLANNED`, no dates) so the
+   * office sees the intake exists and fills it in once the guide comes out. Never public,
+   * and never touches a row that already exists.
+   */
+  planned?: { level: ProgramLevel; year: number; month: number }[];
   /** Levels the school does not run for foreigners — recorded so nobody re-researches them. */
   notOffered?: ProgramLevel[];
   /** Rounds looked for and not yet published, with where to look again. `reason` is in Mongolian for the office. */
@@ -135,6 +141,17 @@ function validate(file: string, data: ResearchFile): void {
     if (typeof pending.reason !== 'string' || !pending.reason.trim()) fail(file, `pending ${pending.level}: reason is required`);
   }
   const seen = new Set<string>();
+  for (const plan of data.planned ?? []) {
+    const id = `planned ${plan.level} ${plan.year}/${plan.month}`;
+    if (!levels.includes(plan.level)) fail(file, `${id}: unknown level`);
+    if (!INTAKE_MONTHS_BY_LEVEL[plan.level].includes(plan.month as 3 | 6 | 9 | 12)) fail(file, `${id}: not an intake month`);
+    if (!Number.isInteger(plan.year) || plan.year < 2025 || plan.year > 2030) fail(file, `${id}: bad year`);
+    if (seen.has(id)) fail(file, `${id} appears twice`);
+    seen.add(id);
+    if (data.rounds.some((r) => r.level === plan.level && r.year === plan.year && r.month === plan.month)) {
+      fail(file, `${id} is also in rounds`);
+    }
+  }
   for (const round of data.rounds) {
     const id = `${round.level} ${round.year}/${round.month}`;
     if (!Object.values(ProgramLevel).includes(round.level)) fail(file, `unknown level ${round.level}`);
@@ -222,7 +239,7 @@ async function main(): Promise<void> {
   const config = await prisma.admissionConfig.findUnique({ where: { id: 'default' } });
   const leadDays = config?.internalLeadDays ?? DEFAULT_INTERNAL_LEAD_DAYS;
   const now = new Date();
-  const counts = { created: 0, updated: 0, keptVerified: 0, records: 0 };
+  const counts = { created: 0, updated: 0, keptVerified: 0, records: 0, planned: 0 };
 
   console.log(`\nInternal deadlines run ${leadDays} day(s) ahead of the school's.`);
 
@@ -296,6 +313,25 @@ async function main(): Promise<void> {
       });
     }
 
+    for (const plan of recordsOnly ? [] : (file.planned ?? [])) {
+      const key = { universityId: university.id, level: plan.level, year: plan.year, month: plan.month };
+      const label = `  ${plan.level.padEnd(13)} ${plan.year}/${String(plan.month).padStart(2)}`;
+      const existing = await prisma.intakeTerm.findUnique({
+        where: { universityId_level_year_month: key },
+        select: { id: true },
+      });
+      if (existing) {
+        console.log(`${label}  planned — row already there, left alone`);
+        continue;
+      }
+      console.log(`${label}  planned — draft, no dates yet`);
+      counts.planned++;
+      if (dryRun) continue;
+      await prisma.intakeTerm.create({
+        data: { ...key, status: IntakeStatus.PLANNED, sourceType: IntakeSource.AI_ASSISTED },
+      });
+    }
+
     for (const level of file.notOffered ?? []) console.log(`  ${level.padEnd(13)} not offered`);
     for (const pending of file.pending ?? []) {
       console.log(`  ${pending.level.padEnd(13)} ${pending.year}/${String(pending.month).padStart(2)}  pending — ${pending.reason}`);
@@ -323,7 +359,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `\n${dryRun ? '[dry] would create' : 'Created'} ${counts.created}, ${dryRun ? 'update' : 'updated'} ${counts.updated}, kept ${counts.keptVerified} verified round(s) across ${files.length} school(s); ${dryRun ? 'would write' : 'wrote'} ${counts.records} research record(s).`,
+    `\n${dryRun ? '[dry] would create' : 'Created'} ${counts.created}, ${dryRun ? 'update' : 'updated'} ${counts.updated}, kept ${counts.keptVerified} verified round(s), ${dryRun ? 'would draft' : 'drafted'} ${counts.planned} planned across ${files.length} school(s); ${dryRun ? 'would write' : 'wrote'} ${counts.records} research record(s).`,
   );
 }
 

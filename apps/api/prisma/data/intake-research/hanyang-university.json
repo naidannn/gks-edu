@@ -98,5 +98,17 @@
       "reason": "2027 намрын докторантурын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
       "checkUrl": "https://oia.hanyang.ac.kr/sub4_01"
     }
+  ],
+  "planned": [
+    {
+      "level": "MASTER",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "PHD",
+      "year": 2028,
+      "month": 3
+    }
   ]
 }

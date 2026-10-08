@@ -98,5 +98,17 @@
       "reason": "2027 намрын докторантурын гадаад иргэний бүртгэлийн хугацаа зарлагдаагүй.",
       "checkUrl": "https://graduate2.korea.ac.kr/admission/schedule.html"
     }
+  ],
+  "planned": [
+    {
+      "level": "MASTER",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "PHD",
+      "year": 2028,
+      "month": 3
+    }
   ]
 }

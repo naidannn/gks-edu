@@ -101,5 +101,17 @@
       "reason": "2027 оны намрын (후기) докторын журам хараахан гараагүй.",
       "checkUrl": "https://isa.ewha.ac.kr"
     }
+  ],
+  "planned": [
+    {
+      "level": "MASTER",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "PHD",
+      "year": 2028,
+      "month": 3
+    }
   ]
 }

@@ -95,5 +95,22 @@
       "reason": "2027 намрын докторын гадаад иргэний элсэлтийн журам хараахан гараагүй.",
       "checkUrl": "https://en.snu.ac.kr/admission/graduate/application"
     }
+  ],
+  "planned": [
+    {
+      "level": "BACHELOR",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "MASTER",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "PHD",
+      "year": 2028,
+      "month": 3
+    }
   ]
 }

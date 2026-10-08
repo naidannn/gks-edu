@@ -60,5 +60,22 @@
       "reason": "Магистрын хуанлитай ижил — 2027 намрын хугацаа TBA.",
       "checkUrl": "https://admission.kaist.ac.kr/intl-graduate/Admission/YearlyTimelines"
     }
+  ],
+  "planned": [
+    {
+      "level": "BACHELOR",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "MASTER",
+      "year": 2028,
+      "month": 3
+    },
+    {
+      "level": "PHD",
+      "year": 2028,
+      "month": 3
+    }
   ]
 }
