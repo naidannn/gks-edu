@@ -1,0 +1,92 @@
+{
+  "slug": "soongsil-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-10-01",
+      "applicationDeadline": "2026-10-20",
+      "classStartDate": "2026-12-07",
+      "requirementNote": "Улирлын сургалтын төлбөр 1,600,000 вон (200 цаг, 10 долоо хоног). Өдөр бүр 4 цаг, 5 хоног.",
+      "sourceUrl": "https://language.ssu.ac.kr/app/html/dep_02/2100.php",
+      "evidence": "겨울 수업기간 2026.12.07.~2027.02.18. 원서접수기간 2026.10.01.~2026.10.20.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2027-01-01",
+      "applicationDeadline": "2027-01-20",
+      "classStartDate": "2027-03-08",
+      "requirementNote": "Улирлын сургалтын төлбөр 1,600,000 вон (200 цаг, 10 долоо хоног). Өдөр бүр 4 цаг, 5 хоног.",
+      "sourceUrl": "https://language.ssu.ac.kr/app/html/dep_02/2100.php",
+      "evidence": "봄 수업기간 2027.03.08.~2027.05.18. 원서접수기간 2027.01.01.~2027.01.20.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-04-01",
+      "applicationDeadline": "2027-04-20",
+      "classStartDate": "2027-06-07",
+      "requirementNote": "Улирлын сургалтын төлбөр 1,600,000 вон (200 цаг, 10 долоо хоног). Өдөр бүр 4 цаг, 5 хоног.",
+      "sourceUrl": "https://language.ssu.ac.kr/app/html/dep_02/2100.php",
+      "evidence": "여름 수업기간 2027.06.07.~2027.08.13. 원서접수기간 2027.04.01.~2027.04.20.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-07-01",
+      "applicationDeadline": "2027-07-20",
+      "classStartDate": "2027-09-06",
+      "requirementNote": "Улирлын сургалтын төлбөр 1,600,000 вон (200 цаг, 10 долоо хоног). Өдөр бүр 4 цаг, 5 хоног.",
+      "sourceUrl": "https://language.ssu.ac.kr/app/html/dep_02/2100.php",
+      "evidence": "가을 수업기간 2027.09.06.~2027.11.19. 원서접수기간 2027.07.01.~2027.07.20.",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-12",
+      "applicationDeadline": "2026-10-16",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-19",
+      "admissionFeeKrw": 90000,
+      "requirementNote": "1-р шат; материалыг 10-р сарын 23-ны 17:00 хүртэл биечлэн эсвэл шуудангаар хүргэнэ (хугацаанд ирээгүй бол унана). Хэлний шаардлага: TOPIK 3+, Суньшил дахь хэлний 3-р түвшин, эсвэл Суньшилын хэлний шалгалт 60+ оноо. Хоёр эцэг эх болон өөрөө гадаад иргэн байх ёстой. Төгсөхөөс өмнө TOPIK 4 авах шаардлагатай.",
+      "sourceUrl": "https://iphak.ssu.ac.kr/upload/SSU(1)_26090184026.pdf",
+      "evidence": "인터넷 원서접수 1차 2026.10.12.(월) 10:00 ~ 16.(금) 17:00 / 심사서류 제출 ~ 23.(금) 17:00 / 합격자 발표 2026.11.19.(목) / 개강 2027.03.02.(화) / 일반 전형 90,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2-р шат: онлайн 2026-11-23 ~ 11-27, материал ~12-04, үр дүн 2027-01-04. 3-р шат: онлайн 2026-12-28 ~ 12-30, материал ~2027-01-04, үр дүн 2027-01-21."
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://iphak.ssu.ac.kr/mojip/req.asp?flag=7&page_no=1_7_2"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны магистрын 2027 оны хаврын элсэлтийн хугацаа албан ёсны хуудсанд нийтлэгдээгүй байна.",
+      "checkUrl": "https://grad.ssu.ac.kr/admission/international/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны докторын 2027 оны хаврын элсэлтийн хугацаа албан ёсны хуудсанд нийтлэгдээгүй байна.",
+      "checkUrl": "https://grad.ssu.ac.kr/admission/international/"
+    }
+  ]
+}

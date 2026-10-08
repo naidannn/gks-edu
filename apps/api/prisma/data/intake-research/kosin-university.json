@@ -1,0 +1,76 @@
+{
+  "slug": "kosin-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-06",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-11-24",
+      "admissionFeeKrw": 60000,
+      "requirementNote": "Өргөдлийг 09:00–17:00 цагт и-мэйлээр (global@kosin.ac.kr) илгээж, эх хувийг шуудан/биечлэн ирүүлнэ. Эцэг эх, өргөдөл гаргагч бүгд гадаад иргэншилтэй байх. Солонгос хэлний чиглэл: TOPIK 2-оос дээш (2-р түвшинтэй бол элссэний дараа 1 жил 300 цагийн хэлний хичээл заавал); англи чиглэл: TOEFL iBT 59 / IELTS 5.5. Ярилцлага (гадаадад байгаа бол утас/видео). Банкны үлдэгдэл батлан даагчийн нэр дээр 16,000,000 вон-оос дээш. Боловсролын баримтыг апостилээр баталгаажуулна. Христийн шашны сургаалыг хүлээн зөвшөөрсөн байх (шашны сургууль).",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/undergraduate",
+      "evidence": "원서 접수 (09:00~17:00) 1차 2026.10.19(월)~11.6(금) | 합격자 발표 (학교 홈페이지) 2026.11.24(화) | 전형료 : 60,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2-р шат: 2027-01-04–01-07 (үр дүн 2027-01-18); 3-р шат: 2027-02-01–02-08 (үр дүн 2027-02-12)."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-11-06",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-11-13",
+      "admissionFeeKrw": 70000,
+      "requirementNote": "Зөвхөн Олон улсын нэгдсэн төсөлт сургууль (5 мэргэжил, дипломын ажилгүй 3 жил). Бакалаврын дипломтой байх; солонгос хэлний чиглэл: TOPIK 3-аас дээш (урлаг/спорт мэргэжилд 2-оос дээш); англи чиглэл: IELTS 5.5 / TOEFL iBT 59. Ярилцлага. Банкны үлдэгдэл 16,000,000 вон-оос дээш. Диплом, дүнгийн хуудсыг апостилээр баталгаажуулна.",
+      "sourceUrl": "https://global.kosin.ac.kr/#/apply/graduate",
+      "evidence": "원서 접수·서류 제출 1차 2026.10.19(월)~11.6(금) | 합격자 발표 2026.11.13(금) | 전형료 : 70,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2-р шат: 2027-01-04–01-07 (үр дүн 2027-01-15); 3-р шат: 2027-02-01–02-08 (үр дүн 2027-02-11)."
+    }
+  ],
+  "notOffered": [
+    "PHD"
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан — өргөдөл 2026.09.07–10.08 (өнөөдөр дууссан).",
+      "checkUrl": "https://global.kosin.ac.kr/#/apply/language"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын улирлын зар одоогоор гараагүй (өргөдөл ~2 сарын өмнөөс эхэлдэг).",
+      "checkUrl": "https://global.kosin.ac.kr/#/apply/language"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зуны улирлын зар одоогоор гараагүй.",
+      "checkUrl": "https://global.kosin.ac.kr/#/apply/language"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам одоогоор гараагүй.",
+      "checkUrl": "https://global.kosin.ac.kr/#/apply/undergraduate"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам одоогоор гараагүй.",
+      "checkUrl": "https://global.kosin.ac.kr/#/apply/graduate"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "slug": "dongguk-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-08",
+      "applicationDeadline": "2026-10-21",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-12-07",
+      "admissionFeeKrw": 130000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш (эсвэл Сежон институт, Донгук Солонгос хэлний төвийн сертификат, Донгукийн солонгос хэлний түвшин тогтоох шалгалт). Онлайн бүртгэлийн дараа бичиг баримтыг 10-р сарын 23-ны дотор шуудангаар эсвэл биечлэн хүргүүлнэ. Монгол оюутанд «Global Diversification» тэтгэлэг олгох улсын жагсаалтад багтдаг.",
+      "sourceUrl": "https://iadmission.dongguk.edu/bbs/board.php?bo_table=dkglobal3_3&wr_id=1",
+      "evidence": "원서접수 2026.10.08.(목) ~ 2026.10.21.(수) 인터넷 접수 / 서류제출 우편 ~10.23.(금) / 합격자 발표 2026.12.07.(월) / 개강 2027.03.02.(화) / 전체학과(미술,연극학부 및 한국음악과 제외) 130,000원 / Global Diversification 장학 대상 국가: ... 몽골 ...",
+      "confidence": "HIGH",
+      "laterRounds": "Файл нэр «2027학년도 1학기(1차)» — 2차 шат хараахан зарлагдаагүй."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-16",
+      "applicationDeadline": "2026-10-29",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-27",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "TOPIK 3 буюу түүнээс дээш, эсвэл TOEFL iBT 71 / IELTS 5.5 / New TEPS 327 (зарим анги чөлөөлөгдөнө; Менежментийн анги: зөвхөн TOPIK 4). Бичиг баримтыг 10-р сарын 30-ны дотор илгээнэ; ярилцлага 11-р сарын 13–14.",
+      "sourceUrl": "https://iadmission.dongguk.edu/bbs/board.php?bo_table=dkglobal3_3_2&wr_id=1",
+      "evidence": "원서접수 2026. 10. 16.(금) ~ 10. 29.(목) / 서류제출 ~ 10. 30.(금) / 면접고사 2026. 11. 13.(금) ~ 11. 14.(토) / 합격자 발표 2026. 11. 27.(금) / 개강 2027. 3. 2.(화) / 전형료 석사 80,000원 박사 90,000원",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-16",
+      "applicationDeadline": "2026-10-29",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-27",
+      "admissionFeeKrw": 90000,
+      "requirementNote": "Магистрын зэрэгтэй (эсвэл 2027 оны 2-р сарын 28-ны дотор авах) байх; TOPIK 3 буюу түүнээс дээш, эсвэл TOEFL iBT 71 / IELTS 5.5 / New TEPS 327 (зарим анги чөлөөлөгдөнө). Бичиг баримтыг 10-р сарын 30-ны дотор илгээнэ; ярилцлага 11-р сарын 13–14.",
+      "sourceUrl": "https://iadmission.dongguk.edu/bbs/board.php?bo_table=dkglobal3_3_2&wr_id=1",
+      "evidence": "Same schedule as MASTER. 전형료 박사 90,000원",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй (2027 оны эхээр гарна).",
+      "checkUrl": "https://iadmission.dongguk.edu/dkglobal3_3/1"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "한국어교육원 өвлийн улирал 2026-12-14-нд эхэлнэ (түвшин тогтоох шалгалт 11.19–11.26), гэхдээ бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://interlang.dongguk.edu/bbs/board.php?bo_table=interlang2_2"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын улирал 2027-03-15-нд эхэлнэ (түвшин тогтоох шалгалт 2027.02.20–02.26), бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://interlang.dongguk.edu/bbs/board.php?bo_table=interlang2_2"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "Зуны улирал 2027-06-14-нд эхэлнэ (түвшин тогтоох шалгалт 2027.05.18–05.26), бүртгэлийн эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://interlang.dongguk.edu/bbs/board.php?bo_table=interlang2_2"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "slug": "daegu-catholic-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн сайт дээр одоогоор 2026 оны намрын (후기) гадаад оюутны журам л байна; 2027 оны хаврын журам хараахан гараагүй.",
+      "checkUrl": "https://ibsi.cu.ac.kr/kor/foreigner/doctrine/view.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://ibsi.cu.ac.kr/kor/foreigner/doctrine/view.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Ерөнхий дээд сургуулийн сайтад хамгийн сүүлийн нь 2026 оны намрын 2-р шат; 2027 оны хаврын (전기) гадаад оюутны журам хараахан гараагүй (өмнөх жилийнх 2025 оны 11-р сард гарсан).",
+      "checkUrl": "https://graduate.cu.ac.kr/sub03/sub02.htm?pageNum=3&left=2"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил — хараахан зарлагдаагүй.",
+      "checkUrl": "https://graduate.cu.ac.kr/sub03/sub02.htm?pageNum=3&left=2"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн албан ёсны сайтаас солонгос хэлний бэлтгэл хөтөлбөрийн (D-4) мэдээлэл олдсонгүй; олдвол дахин шалгана.",
+      "checkUrl": "https://www.cu.ac.kr/plaza/international/intnotice"
+    }
+  ]
+}

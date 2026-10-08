@@ -1,0 +1,54 @@
+{
+  "slug": "hongik-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 оны хаврын элсэлтийн бүртгэл 2026-07-24-нд дууссан (нийтлэгдсэн журамд).",
+      "checkUrl": "https://www.hongik.ac.kr/kr/admission/recruitment-is.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.hongik.ac.kr/kr/admission/recruitment-is.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) аспирантурын журам хараахан гараагүй.",
+      "checkUrl": "https://www.hongik.ac.kr/en/admissions/announcement.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын журам хараахан гараагүй.",
+      "checkUrl": "https://www.hongik.ac.kr/en/admissions/announcement.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Олон улсын хэлний сургуулийн (국제언어교육원) хуанли сайт нь нэвтрэх эрхгүй (403) тул хугацааг уншиж чадсангүй.",
+      "checkUrl": "https://www.hongik.ac.kr/en/academics/language-course.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдах дөхсөн: сургуулийн эцсийн хугацаа 2026-10-12, манай дотоод хугацаа өнгөрсөн тул бүртгэх боломжгүй."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдах дөхсөн: сургуулийн эцсийн хугацаа 2026-10-12, манай дотоод хугацаа өнгөрсөн тул бүртгэх боломжгүй."
+    }
+  ]
+}

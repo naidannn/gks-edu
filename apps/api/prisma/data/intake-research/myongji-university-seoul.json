@@ -1,0 +1,49 @@
+{
+  "slug": "myongji-university-seoul",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Албан сайт (enter.mju.ac.kr) робот шалгалттай тул уншигдсангүй; 2027 оны хуваарь олдсонгүй.",
+      "checkUrl": "https://www.mju.ac.kr/mjukr/134/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хуваарь олдсонгүй (албан сайт робот шалгалттай).",
+      "checkUrl": "https://www.mju.ac.kr/mjukr/134/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журам албан эх сурвалжаас олдсонгүй (элсэлтийн албанд зөвхөн 재외국민 байна; Олон улсын хэлтсийн сайт робот шалгалттай).",
+      "checkUrl": "http://enter.mju.ac.kr/notice/list.php?sMenu=kor22&tname=enter"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам гараагүй.",
+      "checkUrl": "http://enter.mju.ac.kr/notice/list.php?sMenu=kor22&tname=enter"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн гадаад оюутны 2027 оны хаврын журам олдсонгүй.",
+      "checkUrl": "http://enter.mju.ac.kr/notice/list.php?sMenu=kor42&tname=fnotice"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн гадаад оюутны 2027 оны хаврын журам олдсонгүй.",
+      "checkUrl": "http://enter.mju.ac.kr/notice/list.php?sMenu=kor42&tname=fnotice"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "slug": "dongguk-university-wise",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан — 2027 оны 3-р сарын 'гадаад иргэн/тусгай шалгаруулалт' 2026.09.07–09.11-нд явагдсан (хоёр дахь удаа нээгдэх эсэх нь тодорхойгүй).",
+      "checkUrl": "https://ipsi.dongguk.ac.kr/article/notice/detail/111277"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам гараагүй.",
+      "checkUrl": "https://ipsi.dongguk.ac.kr/article/notice/list"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Сургуулийн сайтад (wise.dongguk.ac.kr) хандах боломжгүй байсан тул ерөнхий сургуулийн магистрын гадаад иргэний зарыг уншиж чадсангүй; Гёнжү кампусын зарыг дахин шалгана.",
+      "checkUrl": "https://wise.dongguk.ac.kr/main"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистртай адил — сургуулийн сайтад хандах боломжгүй байсан.",
+      "checkUrl": "https://wise.dongguk.ac.kr/main"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "Одоогоор зарлагдаагүй.",
+      "checkUrl": "https://wise.dongguk.ac.kr/main"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "Одоогоор зарлагдаагүй.",
+      "checkUrl": "https://wise.dongguk.ac.kr/main"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Сургуулийн сайтад хандах боломжгүй байсан тул солонгос хэлний курсийн мэдээллийг баталгаажуулж чадсангүй.",
+      "checkUrl": "https://wise.dongguk.ac.kr/main"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Баталгаажаагүй — сургуулийн сайтыг дахин шалгана.",
+      "checkUrl": "https://wise.dongguk.ac.kr/main"
+    }
+  ]
+}

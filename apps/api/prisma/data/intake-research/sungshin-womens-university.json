@@ -1,0 +1,61 @@
+{
+  "slug": "sungshin-womens-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдсан: 2027 оны хаврын гадаадын оюутны (외국인 특별전형) элсэлтийн бүртгэл дууссан, эцсийн үр дүн зарлагдсан.",
+      "checkUrl": "https://ipsi.sungshin.ac.kr/guide/recruit.htm?ctg_cd=ov_foreign&sub_ctg_cd=foreign"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://ipsi.sungshin.ac.kr/guide/recruit.htm?ctg_cd=ov_foreign&sub_ctg_cd=foreign"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) аспирантурын журам хараахан гараагүй.",
+      "checkUrl": "https://www.sungshin.ac.kr/sites/gras/index.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын (후기) докторын журам хараахан гараагүй.",
+      "checkUrl": "https://www.sungshin.ac.kr/sites/gras/index.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "хаагдсан: өвлийн улирал (2026-12-07 эхлэх) бүртгэл 2026-10-02-нд дууссан.",
+      "checkUrl": "https://www.sungshin.ac.kr/siie_kor/20213/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хаврын 2027 улирлын бүртгэлийн хуанли хараахан нийтлэгдээгүй (зөвхөн 2026 оны хуанли байна). Мөн Монгол зэрэг 21 орны иргэд нэмэлт материалыг консулын баталгаатай илгээнэ.",
+      "checkUrl": "https://www.sungshin.ac.kr/siie_kor/20213/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдах дөхсөн: сургуулийн эцсийн хугацаа 2026-10-15, манай дотоод хугацаа өнгөрсөн тул бүртгэх боломжгүй."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдах дөхсөн: сургуулийн эцсийн хугацаа 2026-10-15, манай дотоод хугацаа өнгөрсөн тул бүртгэх боломжгүй."
+    }
+  ]
+}

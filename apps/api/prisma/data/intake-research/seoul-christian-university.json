@@ -1,0 +1,42 @@
+{
+  "slug": "seoul-christian-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Албан ёсны сайт дээр гадаад оюутны элсэлтийн хугацаа нийтлэгдээгүй байна (Гадаад оюутны зарлалын самбар хоосон).",
+      "checkUrl": "https://www.scu.ac.kr/study/international/admissions"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны сайт дээр гадаад оюутны элсэлтийн хугацаа нийтлэгдээгүй байна (Гадаад оюутны зарлалын самбар хоосон).",
+      "checkUrl": "https://www.scu.ac.kr/study/international/admissions"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны сайт дээр гадаад оюутны элсэлтийн хугацаа нийтлэгдээгүй байна (Гадаад оюутны зарлалын самбар хоосон).",
+      "checkUrl": "https://www.scu.ac.kr/study/international/admissions"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны сайт дээр гадаад оюутны элсэлтийн хугацаа нийтлэгдээгүй байна (Гадаад оюутны зарлалын самбар хоосон).",
+      "checkUrl": "https://www.scu.ac.kr/study/international/admissions"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны сайт дээр гадаад оюутны элсэлтийн хугацаа нийтлэгдээгүй байна (Гадаад оюутны зарлалын самбар хоосон).",
+      "checkUrl": "https://www.scu.ac.kr/study/international/admissions"
+    }
+  ]
+}

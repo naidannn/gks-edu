@@ -1,0 +1,72 @@
+{
+  "slug": "korea-maritime-ocean-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": "2026-10-01",
+      "applicationDeadline": "2026-10-16",
+      "classStartDate": "2026-11-30",
+      "resultAnnouncedAt": null,
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Ахлах сургууль төгссөн байх; оюутан болон эцэг эх Солонгосын иргэн биш. Монгол иргэн нь Хууль зүйн сайдын зарласан 21 улсын жагсаалтад багтдаг (1-р төрөл, D-4 виз шаардлагатай): өргөдлийн маягт, төгссөн гэрчилгээ ба дүнгийн хуудас, ажлын/орлогын тодорхойлолт, банкны хуулга шаардана — бүртгүүлэхээс өмнө сургуулийн албанд заавал лавлана. Сургалтын төлбөр 2 улирал 4,800,000 вон (улирал бүр 2,400,000).",
+      "sourceUrl": "https://www.kmou.ac.kr/global/cm/cntnts/cntntsView.do?mi=2702&cntntsId=2296",
+      "evidence": "2026 4th semester 2026.11.30.~2027.02.11. / Application Period (Document Submission) 1st 2026.09.02.~2026.09.18. 2nd 2026.10.01.~2026.10.16. 3rd (for visa holders only) 2026.11.02.~2026.11.20. / Application Fee 100,000 KRW",
+      "confidence": "MEDIUM",
+      "laterRounds": "3-р шат (2026-11-02 ~ 11-20) зөвхөн Солонгост виз эзэмшигчид."
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2027-01-04",
+      "applicationDeadline": "2027-01-07",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2027-01-27",
+      "admissionFeeKrw": 0,
+      "requirementNote": "Оюутан болон эцэг эх хоёулаа гадаадын иргэн байх. TOPIK 3 буюу түүнээс дээш (эсвэл их сургуулийн хэлний төвд 3-р түвшин төгссөн). Онлайн бүртгэл www.studyinkorea.go.kr дээр; бичиг баримтын эх хувийг 2027 оны 1-р сарын 8-ны дотор хүргүүлнэ. 16 сая воны банкны үлдэгдлийн тодорхойлолт шаардана. Ярилцлага 1-р сарын 18 (гадаадад байгаа бол бичлэг/видео). Далайн ухааны коллеж: эмчийн үзлэгийн тодорхойлолт. Өргөдлийн хураамж байхгүй.",
+      "sourceUrl": "https://www.kmou.ac.kr/global/na/ntt/selectNttInfo.do?nttSn=10378431&mi=3841",
+      "evidence": "Application: Jan. 4, 2027. (Mon) 09:00 ~ Jan. 7, 2027. (Thur) 18:00 / Submission of Original Documents: Jan. 4 ~ Jan. 8, 2027 18:00 / Announcement of Final Admission Decision: Jan. 27, 2027 / Application Fee: None / TOPIK level 3 / Original bank statement with deposits equivalent to 16,000,000 KRW",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) гадаад оюутны элсэлт хараахан зарлагдаагүй (өмнөх жилийн зарлал 2025.11.17-нд гарсан).",
+      "checkUrl": "https://www.kmou.ac.kr/graduate/na/ntt/selectNttList.do?mi=2227&bbsId=10447"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Магистрын хуанлитай ижил — хараахан зарлагдаагүй.",
+      "checkUrl": "https://www.kmou.ac.kr/graduate/na/ntt/selectNttList.do?mi=2227&bbsId=10447"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "한국어교육원-ийн 2027 оны хуанли хараахан гараагүй (2026 оны хаврын бүртгэл 2025.12.01–2026.02.20 байсан).",
+      "checkUrl": "https://www.kmou.ac.kr/global/cm/cntnts/cntntsView.do?mi=2702&cntntsId=2296"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны хуанли хараахан гараагүй.",
+      "checkUrl": "https://www.kmou.ac.kr/global/cm/cntnts/cntntsView.do?mi=2702&cntntsId=2296"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.kmou.ac.kr/global/na/ntt/selectNttList.do?mi=3841&bbsId=10000548"
+    }
+  ]
+}

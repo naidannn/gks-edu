@@ -1,0 +1,77 @@
+{
+  "slug": "sangmyung-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "openAt": null,
+      "applicationDeadline": "2026-10-23",
+      "classStartDate": "2026-12-07",
+      "resultAnnouncedAt": null,
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Ахлах сургууль төгссөн байх. D-4 визтэй бол 2 улирлын (1,500,000 вон × 2) сургалтын төлбөрийг төлнө. Хамгийн багадаа 10,000 ам.доллартай банкны хуулга, эцэг эхийн орлогын тодорхойлолт шаардана. Бичиг баримтыг и-мэйлээр илгээж, шаардлагатай бол ярилцлагад орно.",
+      "sourceUrl": "https://kcr.smu.ac.kr/international/community/notice.do?mode=view&articleNo=767433",
+      "evidence": "Winter 2026.12.07 ~ 2027.02.18 / Placement Test 2026.12.03 / Application Deadline 2026.10.23 / Application fee: KRW 50,000 / Tuition fee: KRW 1,500,000/per term",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-28",
+      "applicationDeadline": "2026-11-04",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-12-15",
+      "admissionFeeKrw": null,
+      "requirementNote": "Гадаад оюутны тусгай элсэлт. Онлайн бүртгэл болон бичиг баримтыг PDF-ээр байршуулна (uwayapply). Яриа/практик шалгалт 11-р сарын 20 эсвэл 21.",
+      "sourceUrl": "https://grad.smu.ac.kr/grad/admission/recruitschedule.do",
+      "evidence": "2027학년도 전기모집 신입생 모집일정 / 일반전형 / 특별전형 : 군위탁생, 외국인 / 원서접수 및 서류(PDF파일 업로드) 제출 2026. 10. 28.(수) 10:00 ~ 11. 4.(수) 17:00 / 구술 및 실기고사 2026. 11. 20.(금), 11.21.(토) / 최초 합격자 발표 2026. 12. 15.(화)",
+      "confidence": "MEDIUM"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-28",
+      "applicationDeadline": "2026-11-04",
+      "classStartDate": null,
+      "resultAnnouncedAt": "2026-12-15",
+      "admissionFeeKrw": null,
+      "requirementNote": "Гадаад оюутны тусгай элсэлт. Онлайн бүртгэл болон бичиг баримтыг PDF-ээр байршуулна (uwayapply). Яриа/практик шалгалт 11-р сарын 20 эсвэл 21.",
+      "sourceUrl": "https://grad.smu.ac.kr/grad/admission/recruitschedule.do",
+      "evidence": "Same schedule as MASTER (일반대학원 모집일정, 특별전형 : 군위탁생, 외국인).",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй (2027 оны эхээр гарна).",
+      "checkUrl": "https://www.smu.ac.kr/oia/admission/recruitment.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "국제언어문화교육원-ийн 2027 оны хаврын улирлын бүртгэл хараахан зарлагдаагүй (өвлийн улирлын зарлал 2026.07.30-нд гарсан).",
+      "checkUrl": "https://kcr.smu.ac.kr/international/community/notice.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны зуны улирлын бүртгэл хараахан зарлагдаагүй.",
+      "checkUrl": "https://kcr.smu.ac.kr/international/community/notice.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "хаагдах дөхсөн: сургуулийн эцсийн хугацаа 2026-10-15, манай дотоод хугацаа өнгөрсөн тул бүртгэх боломжгүй."
+    }
+  ]
+}

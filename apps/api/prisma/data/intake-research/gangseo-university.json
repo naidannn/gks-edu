@@ -1,0 +1,42 @@
+{
+  "slug": "gangseo-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Эцэг эх хоёулаа гадаад иргэн оюутны 2027 оны хаврын хүлээн авалт 2026-09 ~ 2027-02 хооронд (шатаар) гэж зөвхөн төлөвлөгөөнд бичигдсэн; яг хугацаатай мэдүүлэг хараахан гараагүй.",
+      "checkUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "Төлөвлөгөөнд 2027-03 ~ 2027-08 гэж бичигдсэн; яг хугацаатай журам хараахан гараагүй.",
+      "checkUrl": "https://entrance.gangseo.ac.kr/kcui/boardView?menuCode=MC0803&boardNum=1462"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны магистрын журам хараахан гараагүй (хамгийн сүүлийнх нь 2026 оны намрын элсэлт, хаагдсан).",
+      "checkUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0204"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаад оюутны докторын журам хараахан гараагүй.",
+      "checkUrl": "https://graduate.gangseo.ac.kr/kcug/homeService?menuCode=MC0204"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Албан ёсны хуудсан дээр хэлний сургалтын бүртгэлийн мэдээлэл олдсонгүй.",
+      "checkUrl": "https://gangseo.ac.kr/kcua/mainService"
+    }
+  ]
+}

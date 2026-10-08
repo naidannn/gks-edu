@@ -1,0 +1,120 @@
+{
+  "slug": "kwangwoon-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-12-01",
+      "applicationDeadline": "2027-01-04",
+      "classStartDate": "2027-03-08",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Монгол улс виз олголтын хугацаа урт шаардлагатай орны жагсаалтад (고시국가) багтдаг тул эрт хугацаанд бүртгүүлнэ (бусад орон 3 долоо хоногийн дараа). Улирлын сургалтын төлбөр 1,500,000 вон. Бүртгэлийг studyinkorea.go.kr-аар хийнө.",
+      "sourceUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?BoardMode=view&DUID=53370&tpage=1&searchKey=1&srCategoryId=10",
+      "evidence": "2027 봄 수업기간 2027.03.08.~05.19. / 접수시작 2026.12.01. / 접수마감 고시국가 2027.01.04.(월) / 전형료 50,000원 / 고시국가: ... 몽골 ... (모집요강 PDF 한국어과정, 2027 1학기 외국인 전형.zip)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "openAt": "2027-03-08",
+      "applicationDeadline": "2027-04-11",
+      "classStartDate": "2027-06-07",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Монгол улс виз олголтын хугацаа урт шаардлагатай орны жагсаалтад (고시국가) багтдаг тул эрт хугацаанд бүртгүүлнэ (бусад орон 3 долоо хоногийн дараа). Улирлын сургалтын төлбөр 1,500,000 вон. Бүртгэлийг studyinkorea.go.kr-аар хийнө.",
+      "sourceUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?BoardMode=view&DUID=53370&tpage=1&searchKey=1&srCategoryId=10",
+      "evidence": "2027 여름 수업기간 2027.06.07.~08.13. / 접수시작 2027.03.08. / 접수마감 고시국가 2027.04.11.(일) / 전형료 50,000원 / 고시국가: ... 몽골 ... (모집요강 PDF 한국어과정, 2027 1학기 외국인 전형.zip)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "openAt": "2027-06-07",
+      "applicationDeadline": "2027-07-11",
+      "classStartDate": "2027-08-30",
+      "admissionFeeKrw": 50000,
+      "requirementNote": "Монгол улс виз олголтын хугацаа урт шаардлагатай орны жагсаалтад (고시국가) багтдаг тул эрт хугацаанд бүртгүүлнэ (бусад орон 3 долоо хоногийн дараа). Улирлын сургалтын төлбөр 1,500,000 вон. Бүртгэлийг studyinkorea.go.kr-аар хийнө.",
+      "sourceUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?BoardMode=view&DUID=53370&tpage=1&searchKey=1&srCategoryId=10",
+      "evidence": "2027 가을 수업기간 2027.08.30.~11.12. / 접수시작 2027.06.07. / 접수마감 고시국가 2027.07.11.(일) / 전형료 50,000원 / 고시국가: ... 몽골 ... (모집요강 PDF 한국어과정, 2027 1학기 외국인 전형.zip)",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-11-17",
+      "applicationDeadline": "2026-12-03",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2027-01-08",
+      "admissionFeeKrw": 130000,
+      "requirementNote": "2-р шат (1-р шат 10-р сарын 2-нд хаагдсан). Солонгос хэлний хөтөлбөр: TOPIK 3+ эсвэл Квангун дахь хэлний 4-р түвшин бол шалгалтаас чөлөөлөгдөнө, үгүй бол 12-р сарын 16-нд онлайн бичгийн шалгалт. Англи хэлний хөтөлбөр: TOEFL iBT 59 / IELTS 5.5. Банкны дансны үлдэгдэл 20,000,000 вон (өөрийн эсвэл эцэг эхийн). Баримтыг 12-р сарын 3-ны 18:00 хүртэл шуудангаар/биечлэн өгнө. Төгсөхөөс өмнө TOPIK 4 шаардлагатай.",
+      "sourceUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?BoardMode=view&DUID=53370&tpage=1&searchKey=1&srCategoryId=10",
+      "evidence": "2차 Online Application and Document Submission 2026.11.17(Tue)~12.03(Thu) / Admission Exam 2026.12.16 / Final Results 2027.01.08 / Semester Start 2027.03.02 / 전형료 130,000원",
+      "confidence": "HIGH",
+      "laterRounds": "1-р шат 2026-09-21 ~ 10-02 хаагдсан."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-06",
+      "applicationDeadline": "2026-10-16",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-24",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Онлайн бүртгэл studyinkorea.go.kr-аар 10-р сарын 16-ны 18:00 хүртэл; материалыг 10-р сарын 19-ний дотор биечлэн/шуудангаар. Бүх өргөдөл гаргагч ярилцлагад орно (гадаадад байгаа бол онлайн). Банкны дансны үлдэгдэл 20,000,000 вон.",
+      "sourceUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?BoardMode=view&DUID=53381&tpage=1&searchKey=1&srCategoryId=10",
+      "evidence": "1차 온라인 지원 2026. 10. 6(화) ~ 10. 16(금) 18:00 / 서류제출 ~10. 19(월) / 합격자 발표 2026. 11. 24 / 전형료 80,000원",
+      "confidence": "HIGH",
+      "laterRounds": "2-р шат: онлайн 2026-12-07 ~ 12-11, материал ~12-14, үр дүн 2027-01-19."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-06",
+      "applicationDeadline": "2026-10-16",
+      "classStartDate": "2027-03-02",
+      "resultAnnouncedAt": "2026-11-24",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Онлайн бүртгэл studyinkorea.go.kr-аар 10-р сарын 16-ны 18:00 хүртэл; материалыг 10-р сарын 19-ний дотор биечлэн/шуудангаар. Бүх өргөдөл гаргагч ярилцлагад орно (гадаадад байгаа бол онлайн). Банкны дансны үлдэгдэл 20,000,000 вон.",
+      "sourceUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?BoardMode=view&DUID=53381&tpage=1&searchKey=1&srCategoryId=10",
+      "evidence": "1차 온라인 지원 2026. 10. 6(화) ~ 10. 16(금) 18:00 / 서류제출 ~10. 19(월) / 합격자 발표 2026. 11. 24 / 전형료 80,000원 (석사·박사 공통)",
+      "confidence": "HIGH",
+      "laterRounds": "2-р шат: онлайн 2026-12-07 ~ 12-11, материал ~12-14, үр дүн 2027-01-19."
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "2026 оны өвлийн улирлын бүртгэлийн хугацаа энэ хөтөлбөрийн журамд ороогүй; хаагдсан байх магадлалтай.",
+      "checkUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?srCategoryId=10"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?srCategoryId=10"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?srCategoryId=10"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын элсэлтийн журам хараахан гараагүй.",
+      "checkUrl": "https://www.kw.ac.kr/ko/life/notice.jsp?srCategoryId=10"
+    }
+  ]
+}

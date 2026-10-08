@@ -1,0 +1,68 @@
+{
+  "slug": "sungkonghoe-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "applicationDeadline": "2026-12-01",
+      "classStartDate": "2026-12-21",
+      "requirementNote": "Бүртгэлийн хураамж 100,000 вон (буцаагдахгүй), сургалтын төлбөр 1,200,000 вон. Монгол зэрэг Хууль зүйн яамны жагсаасан 21 улсын иргэн Солонгост аялагчийн визтэй байхдаа оюутны виз рүү солих боломжгүй.",
+      "sourceUrl": "https://www.skhu.ac.kr/studykorean/3407/subview.do",
+      "evidence": "2026 겨울 | 수업 기간 2026.12.21. ~ 2027.02.25. | 지원서 및 서류 제출 기간 ~ 2026.12.01. / 입학금: 100,000원 / 수업료 : 1,200,000원",
+      "confidence": "HIGH"
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны улирлын хуваарь гараагүй (2026 оны хуваарь л байна; хавар нь 12-р сарын эхээр нээгддэг гэж бичсэн).",
+      "checkUrl": "https://www.skhu.ac.kr/studykorean/3407/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны улирлын хуваарь гараагүй.",
+      "checkUrl": "https://www.skhu.ac.kr/studykorean/3407/subview.do"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны улирлын хуваарь гараагүй.",
+      "checkUrl": "https://www.skhu.ac.kr/studykorean/3407/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны 2027 оны хаврын журам гараагүй; байгаа журам нь 2026 оны намрын (2026-04-29). Өмнөх жилийн хэв маягаар 12-р сард нээгдэнэ.",
+      "checkUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам гараагүй.",
+      "checkUrl": "https://www.skhu.ac.kr/skhu/5305/subview.do"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) дээд сургуулийн журам гараагүй; зөвхөн 2026 намрын (후기) байна, гадаад иргэнд тусдаа лавлах гэж бичсэн.",
+      "checkUrl": "https://www.skhu.ac.kr/gs/index.do"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) дээд сургуулийн журам гараагүй.",
+      "checkUrl": "https://www.skhu.ac.kr/gs/index.do"
+    }
+  ]
+}

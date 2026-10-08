@@ -1,0 +1,99 @@
+{
+  "slug": "sahmyook-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-20",
+      "applicationDeadline": "2026-11-11",
+      "resultAnnouncedAt": "2026-12-10",
+      "admissionFeeKrw": 100000,
+      "requirementNote": "Бичиг баримтын эх хувийг 2026-11-12-ны 17:00 цагаас өмнө хүргүүлнэ. Солонгос хэлний хөтөлбөрт TOPIK 3-аас дээш (урлаг, спорт 2), англи хэлний хөтөлбөрт TOEFL iBT 71 / IELTS 5.5. Банкны дансны үлдэгдэл 20 сая вонаас дээш. Ярилцлага 2026-12-01 ~ 12-03.",
+      "sourceUrl": "https://iie.syu.ac.kr/pdf/admission/(Kor)2027학년도 3월 외국인 신,편입학 모집요강260928.pdf",
+      "evidence": "2차 입학원서 접수 2026. 10. 20.(화) ~ 2026. 11. 11.(수) / 서류제출 2026. 11. 12.(목) 17:00 까지 / 면접 2026.12.1~12.3 / 합격자 발표 2026.12.10 14:00 예정 / 전형료 100,000원(음악학과:150,000원) / 은행 잔고증명서(통장 잔고KRW 2,000만원 이상)",
+      "confidence": "HIGH",
+      "laterRounds": "3-р шат 2026-12-08 ~ 12-29 (бичиг баримт 12-30, үр дүн 2027-01-21). 1-р шат 2026-09-29 ~ 10-07 хаагдсан."
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-10-28",
+      "resultAnnouncedAt": "2026-12-10",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Бичиг баримтын эх хувийг 2026-10-28-ны 17:00 цагаас өмнө хүргүүлнэ. TOPIK 3-аас дээш (урлагийн чиглэл 2) эсвэл англи хэлний хөтөлбөрт TOEFL iBT 71 / IELTS 5.5. Өөрийн эсвэл эцэг эхийн дансны үлдэгдэл 20 сая вонаас дээш (эсвэл удирдагч багшийн баталгаа). Ярилцлага 2026-11-19. Хими-шинжлэх ухаан, эм зүйн салбарт эхлээд тэнхимтэй холбогдож удирдагч багшийн зөвшөөрөл авна.",
+      "sourceUrl": "https://www.syu.ac.kr/grad/?p=51475",
+      "evidence": "1차 입학원서 접수 2026. 10. 19.(월) ∼ 2026. 10. 28.(수) 17:00 까지 / 면접 2026. 11. 19. / 합격자 발표 2026. 12. 10. / 전형료 석사, 석·박사 통합, 박사 80,000원 (음악·통합예술 100,000원)",
+      "confidence": "HIGH",
+      "laterRounds": "Нэмэлт элсэлт 2026-12-18 ~ 12-30 17:00, ярилцлага 2027-01-11, үр дүн 2027-01-21."
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "openAt": "2026-10-19",
+      "applicationDeadline": "2026-10-28",
+      "resultAnnouncedAt": "2026-12-10",
+      "admissionFeeKrw": 80000,
+      "requirementNote": "Бичиг баримтын эх хувийг 2026-10-28-ны 17:00 цагаас өмнө хүргүүлнэ. TOPIK 3-аас дээш (урлагийн чиглэл 2) эсвэл англи хэлний хөтөлбөрт TOEFL iBT 71 / IELTS 5.5. Дансны үлдэгдэл 20 сая вонаас дээш (эсвэл удирдагч багшийн баталгаа). Ярилцлага 2026-11-19. Хими-шинжлэх ухаан, эм зүйн салбарт эхлээд тэнхимтэй холбогдож удирдагч багшийн зөвшөөрөл авна.",
+      "sourceUrl": "https://www.syu.ac.kr/grad/?p=51475",
+      "evidence": "Same 일반대학원 2027 전기 외국인 schedule as MASTER (석사, 석·박사 통합, 박사 one round).",
+      "confidence": "HIGH",
+      "laterRounds": "Нэмэлт элсэлт 2026-12-18 ~ 12-30 17:00, ярилцлага 2027-01-11, үр дүн 2027-01-21."
+    }
+  ],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Солонгос хэлний сургуулийн өвлийн улирал 2026-12-07-нд эхэлнэ, гэхдээ бүртгэлийн хаах огноо зарлагдаагүй.",
+      "checkUrl": "https://iie.syu.ac.kr/korean-language-school/regular-course"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны улирлын хуваарь болон бүртгэлийн хаах огноо гараагүй.",
+      "checkUrl": "https://iie.syu.ac.kr/korean-language-school/regular-course"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 6,
+      "reason": "2027 оны улирлын хуваарь болон бүртгэлийн хаах огноо гараагүй.",
+      "checkUrl": "https://iie.syu.ac.kr/korean-language-school/regular-course"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны улирлын хуваарь болон бүртгэлийн хаах огноо гараагүй.",
+      "checkUrl": "https://iie.syu.ac.kr/korean-language-school/regular-course"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын гадаад оюутны журам гараагүй.",
+      "checkUrl": "https://iie.syu.ac.kr/admission/undergraduate/admissions-guide"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын дээд сургуулийн журам гараагүй.",
+      "checkUrl": "https://www.syu.ac.kr/grad/"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын дээд сургуулийн журам гараагүй.",
+      "checkUrl": "https://www.syu.ac.kr/grad/"
+    }
+  ]
+}

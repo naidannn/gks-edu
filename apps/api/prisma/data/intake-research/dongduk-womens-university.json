@@ -1,0 +1,35 @@
+{
+  "slug": "dongduk-womens-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын гадаадын оюутны элсэлтийн журам хараахан гараагүй (хамгийн сүүлийнх нь 2026 оны намрын 2-р шатны журам).",
+      "checkUrl": "https://intl.dongduk.ac.kr/bbs/board2"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) аспирантурын гадаадын журам хараахан гараагүй; зөвхөн 2026 оны намрын нэмэлт журам байна.",
+      "checkUrl": "https://intl.dongduk.ac.kr/bbs/board2"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "2027 оны хаврын (전기) докторын гадаадын журам хараахан гараагүй; зөвхөн 2026 оны намрын нэмэлт журам байна.",
+      "checkUrl": "https://intl.dongduk.ac.kr/bbs/board2"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний сургууль нь хүлээн авах хугацааг зөвхөн ойролцоогоор (хавар: 11-р сараас 1-р сар, 3-р сард эхэлнэ) заасан; тодорхой эцсийн хугацаа нийтлэгдээгүй.",
+      "checkUrl": "https://intl.dongduk.ac.kr/page/page23"
+    }
+  ]
+}

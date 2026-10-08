@@ -1,0 +1,56 @@
+{
+  "slug": "hoseo-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2026,
+      "month": 12,
+      "reason": "Хоосэо хэлний төв зөвхөн ерөнхий хуваарь (1-р улирал: 11-р сарын эхээс 12-р сарын дунд хүртэл, 3-р сарын эхээр эхэлнэ) тавьсан; тодорхой огноо байхгүй.",
+      "checkUrl": "http://www.hoseo.ac.kr/Home/Contents.mbz?action=MAPP_1708310218"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Тодорхой огноо байхгүй (ерөнхий хуваарь: 11-р сарын эхээс 12-р сарын дунд, 3-р сарын эхээр эхэлнэ).",
+      "checkUrl": "http://www.hoseo.ac.kr/Home/Contents.mbz?action=MAPP_1708310218"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 9,
+      "reason": "Тодорхой огноо байхгүй (ерөнхий хуваарь: 5-р сарын эхээс 6-р сарын дунд, 9-р сарын эхээр эхэлнэ).",
+      "checkUrl": "http://www.hoseo.ac.kr/Home/Contents.mbz?action=MAPP_1708310218"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаад оюутны (외국인) бакалаврын 2027 оны журам албан сайтаас олдсонгүй (элсэлтийн албаны сайтад зөвхөн 재외국민 хэсэг, гадаад оюутны танилцуулах видео байна; ieec сайт нээгдсэнгүй).",
+      "checkUrl": "https://ipsi.hoseo.ac.kr/submenu.do?menuurl=DnP7U09acR3d3pi41w63Zw%3D%3D"
+    },
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 9,
+      "reason": "2027 оны намрын журам гараагүй.",
+      "checkUrl": "https://ipsi.hoseo.ac.kr/submenu.do?menuurl=DnP7U09acR3d3pi41w63Zw%3D%3D"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн гадаад оюутны хэсэг байгаа ч 2027 оны хаврын тодорхой огноо олдсонгүй.",
+      "checkUrl": "http://gradgate.hoseo.ac.kr/Home/Menu.do?action=MENU_1908120251"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Дээд сургуулийн гадаад оюутны хэсэг байгаа ч 2027 оны хаврын тодорхой огноо олдсонгүй.",
+      "checkUrl": "http://gradgate.hoseo.ac.kr/Home/Menu.do?action=MENU_1908120251"
+    }
+  ]
+}

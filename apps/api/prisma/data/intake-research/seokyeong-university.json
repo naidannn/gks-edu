@@ -1,0 +1,35 @@
+{
+  "slug": "seokyeong-university",
+  "researchedAt": "2026-10-08",
+  "rounds": [],
+  "pending": [
+    {
+      "level": "BACHELOR",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаадын оюутны журамд одоогоор зөвхөн 2026 оны намрын (후기) журам байна; 2027 оны хаврын журам хараахан гараагүй.",
+      "checkUrl": "https://intl.skuniv.ac.kr/admission-guideline"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "year": 2027,
+      "month": 3,
+      "reason": "Хэлний сургуулийн (언어문화교육원) сайтад улирлын бүртгэлийн хуанли нийтлэгдээгүй. Монгол зэрэг 21 орны иргэд гэр бүлийн баримтыг нэмж өгнө.",
+      "checkUrl": "https://lcec.skuniv.ac.kr/korean-course"
+    },
+    {
+      "level": "MASTER",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаадын оюутны сайтаас аспирантур/докторын журам олдсонгүй; 서경대 Олон улсын харилцааны алба (skuuhak@skuniv.ac.kr) лавлах.",
+      "checkUrl": "https://intl.skuniv.ac.kr/admission-guideline"
+    },
+    {
+      "level": "PHD",
+      "year": 2027,
+      "month": 3,
+      "reason": "Гадаадын оюутны сайтаас аспирантур/докторын журам олдсонгүй; 서경대 Олон улсын харилцааны алба (skuuhak@skuniv.ac.kr) лавлах.",
+      "checkUrl": "https://intl.skuniv.ac.kr/admission-guideline"
+    }
+  ]
+}
