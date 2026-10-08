@@ -321,6 +321,8 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
             <a :href="`tel:${lead.phone}`" class="gks-lead__contact-link gks-tnum"><DsIcon name="phone" :size="16" /> {{ lead.phone }}</a>
             <a v-if="lead.email" :href="`mailto:${lead.email}`" class="gks-lead__contact-link"><DsIcon name="mail" :size="16" /> {{ lead.email }}</a>
           </div>
+          <!-- Only appears when a Messenger thread is linked to this lead (2F). -->
+          <FacebookThreadLink :lead-id="lead.id" />
           <!-- Conversion is the point of the funnel; it is offered once, here (1B-10). -->
           <DsButton
             v-if="lead.client"

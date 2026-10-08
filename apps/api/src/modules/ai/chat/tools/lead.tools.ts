@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   AccessLevel,
+  ChatChannel,
   EducationLevel,
   LeadSource,
   ChatOutcome,
@@ -224,7 +225,7 @@ export class LeadTools implements AiToolProvider {
                 leadId: existing.leadId,
                 type: 'CHAT',
                 body: summary,
-                meta: { channel: 'ai_chat', sessionCode: context.session.code },
+                meta: { channel: channelKey(context), sessionCode: context.session.code },
               },
             });
           }
@@ -265,7 +266,9 @@ export class LeadTools implements AiToolProvider {
         } as unknown as CreatePublicLeadDto;
 
         const result = await this.leads.createFromPublicForm(dto, {}, {
-          source: LeadSource.AI_CHAT,
+          // A lead the assistant took on Messenger is a Facebook lead — that
+          // is the channel the office will want to count it under (2F).
+          source: context.session.channel === ChatChannel.FACEBOOK ? LeadSource.SOCIAL : LeadSource.AI_CHAT,
           userId: context.userId,
         });
 
@@ -338,6 +341,10 @@ export class LeadTools implements AiToolProvider {
 
     return merged;
   }
+}
+
+function channelKey(context: ToolContext): string {
+  return context.session.channel === ChatChannel.FACEBOOK ? 'facebook_messenger' : 'ai_chat';
 }
 
 /** The six fields §6.2 asks for, minus the ones already known. */

@@ -1,5 +1,13 @@
-import type { ConversationStatus, ConversationTopic } from '@gks/shared';
-import { formatLongDate, formatTime, monthNameMn, weekdayNameMn } from './date';
+import type {
+  ConversationStatus,
+  ConversationTopic,
+  FacebookAiMode,
+  FacebookCommentStatus,
+  FacebookSender,
+  FacebookThreadItem,
+  FacebookThreadScope,
+} from '@gks/shared';
+import { formatDayMonthTime, formatLongDate, formatTime, monthNameMn, weekdayNameMn } from './date';
 import type { BadgeTone } from './labels';
 
 /**
@@ -59,6 +67,95 @@ export const CONVERSATION_STATUS_TONE: Record<ConversationStatus, BadgeTone> = {
   OPEN: 'info',
   RESOLVED: 'success',
 };
+
+// ── Facebook Page inbox (2F) ────────────────────────────────────────────────
+// Same file as the portal messenger's labels because it is the same kind of
+// screen; kept apart in name so nobody mistakes one inbox's enums for the other's.
+
+/** Who wrote a line in a Messenger thread, as the bubble labels it. */
+export const FACEBOOK_SENDER_LABELS: Record<FacebookSender, string> = {
+  CONTACT: 'Харилцагч',
+  AI: 'AI туслах',
+  STAFF: 'Ажилтан',
+  // Somebody answered from Meta's own tools — still us, but not through this screen.
+  PAGE: 'Meta Business Suite',
+};
+
+export const FACEBOOK_COMMENT_STATUS_LABELS: Record<FacebookCommentStatus, string> = {
+  NEW: 'Шинэ',
+  AI_REPLIED: 'AI хариулсан',
+  STAFF_REPLIED: 'Ажилтан хариулсан',
+  IGNORED: 'Алгассан',
+  FAILED: 'Алдаа гарсан',
+};
+
+export const FACEBOOK_COMMENT_STATUS_TONE: Record<FacebookCommentStatus, BadgeTone> = {
+  NEW: 'warning',
+  AI_REPLIED: 'info',
+  STAFF_REPLIED: 'success',
+  IGNORED: 'neutral',
+  FAILED: 'danger',
+};
+
+export const FACEBOOK_AI_MODE_LABELS: Record<FacebookAiMode, string> = {
+  AUTO: 'Автоматаар хариулна',
+  OFF: 'Унтраалттай',
+};
+
+export const FACEBOOK_WINDOW_LABELS: Record<FacebookThreadItem['window'], string> = {
+  OPEN: '24 цагийн цонх нээлттэй',
+  HUMAN_AGENT: 'Зөвхөн ажилтан (7 хоног)',
+  CLOSED: 'Цонх хаагдсан',
+};
+
+export const FACEBOOK_WINDOW_TONE: Record<FacebookThreadItem['window'], BadgeTone> = {
+  OPEN: 'success',
+  HUMAN_AGENT: 'warning',
+  CLOSED: 'danger',
+};
+
+export const FACEBOOK_SCOPE_LABELS: Record<FacebookThreadScope, string> = {
+  NEEDS_STAFF: 'Ажилтан хэрэгтэй',
+  ALL: 'Бүгд',
+  AI: 'AI хариулж буй',
+  UNLINKED: 'Холбоогүй',
+};
+
+/**
+ * What the assistant will do with the next message in a thread. Four states,
+ * not the two `aiMode` holds: a staff reply pauses it for a while, and an
+ * AUTO thread can still be silent because the Page-wide switch is off.
+ */
+export type FacebookAiState = 'ACTIVE' | 'PAUSED' | 'OFF' | 'IDLE';
+
+export function facebookAiState(thread: Pick<FacebookThreadItem, 'aiMode' | 'aiPausedUntil' | 'aiActive'>): FacebookAiState {
+  if (thread.aiMode === 'OFF') return 'OFF';
+  if (thread.aiPausedUntil && new Date(thread.aiPausedUntil).getTime() > Date.now()) return 'PAUSED';
+  return thread.aiActive ? 'ACTIVE' : 'IDLE';
+}
+
+export const FACEBOOK_AI_STATE_LABELS: Record<FacebookAiState, string> = {
+  ACTIVE: 'Идэвхтэй',
+  PAUSED: 'Түр зогссон',
+  OFF: 'Унтраалттай',
+  IDLE: 'Идэвхгүй',
+};
+
+export const FACEBOOK_AI_STATE_TONE: Record<FacebookAiState, BadgeTone> = {
+  ACTIVE: 'success',
+  PAUSED: 'warning',
+  OFF: 'neutral',
+  IDLE: 'neutral',
+};
+
+/** "Түр зогссон 16:40 хүртэл" — the clock alone today, with the date after midnight. */
+export function facebookPauseLabel(until: string | null): string {
+  if (!until) return FACEBOOK_AI_STATE_LABELS.PAUSED;
+  const date = new Date(until);
+  if (Number.isNaN(date.getTime())) return FACEBOOK_AI_STATE_LABELS.PAUSED;
+  const sameDay = date.toDateString() === new Date().toDateString();
+  return `${FACEBOOK_AI_STATE_LABELS.PAUSED} ${sameDay ? formatTime(date) : formatDayMonthTime(date)} хүртэл`;
+}
 
 /**
  * The clock on a bubble. Today is a time, this week is a weekday, older is a

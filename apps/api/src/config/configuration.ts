@@ -171,6 +171,20 @@ export interface AppConfig {
     /** Forces the log-instead-of-send path even when a token is present. */
     mock: boolean;
   };
+  facebook: {
+    /** 2F — the Page whose Messenger and comments we answer. */
+    pageId: string;
+    /** A Page access token with pages_messaging + pages_manage_engagement.
+     *  Empty = log instead of send, so the inbox runs in dev without a Page. */
+    pageAccessToken: string;
+    /** The Meta app's secret — it signs every webhook (`X-Hub-Signature-256`). */
+    appSecret: string;
+    /** The Meta app id. A Page echo carrying it was sent by us, not by a person. */
+    appId: string;
+    /** Our half of the webhook handshake; any string, set in the app dashboard too. */
+    verifyToken: string;
+    timeoutMs: number;
+  };
   storage: {
     /**
      * `local` writes to disk (dev default); `s3` is production (0-08);
@@ -284,6 +298,14 @@ export const configuration = (): AppConfig => ({
     testEventCode: process.env.META_TEST_EVENT_CODE ?? '',
     timeoutMs: Number.parseInt(process.env.META_CAPI_TIMEOUT_MS ?? '10000', 10),
     mock: (process.env.META_CAPI_MOCK ?? 'false') === 'true',
+  },
+  facebook: {
+    pageId: process.env.FB_PAGE_ID ?? '',
+    pageAccessToken: process.env.FB_PAGE_ACCESS_TOKEN ?? '',
+    appSecret: process.env.FB_APP_SECRET ?? '',
+    appId: process.env.FB_APP_ID ?? '',
+    verifyToken: process.env.FB_WEBHOOK_VERIFY_TOKEN ?? '',
+    timeoutMs: Number.parseInt(process.env.FB_GRAPH_TIMEOUT_MS ?? '15000', 10),
   },
   storage: {
     driver: storageDriverName(process.env.STORAGE_DRIVER),

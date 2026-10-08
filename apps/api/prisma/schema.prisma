@@ -112,6 +112,8 @@ model User {
   chatSessions       ChatSession[]
   assignedGaps       KnowledgeGap[]
   aiAssistantConfigs AiAssistantConfig[]
+  facebookMessages   FacebookMessage[]   @relation("FacebookMessageStaff")
+  facebookComments   FacebookComment[]   @relation("FacebookCommentStaff")
 
   marketingTemplates MarketingTemplate[] @relation("MarketingTemplateAuthor")
   emailCampaigns     EmailCampaign[]     @relation("EmailCampaignAuthor")
@@ -251,8 +253,10 @@ model KnowledgeDocument {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chunks       KnowledgeChunk[]
-  answeredGaps KnowledgeGap[]
+  chunks           KnowledgeChunk[]
+  answeredGaps     KnowledgeGap[]
+  /// 2F — staff replies on Facebook this answer card was drafted from.
+  facebookMessages FacebookMessage[]
 
   @@index([status, accessLevel])
   @@index([universityId])
@@ -1030,6 +1034,7 @@ model Lead {
   notifications      Notification[]
   chatSessions       ChatSession[]
   campaignRecipients EmailCampaignRecipient[]
+  facebookThreads    FacebookThread[]
   /// Set once staff convert this lead into a client (1B-10) — the lead row stays as history.
   client             Client?
 
@@ -1163,6 +1168,7 @@ model Client {
   updatedAt DateTime @updatedAt
 
   campaignRecipients EmailCampaignRecipient[]
+  facebookThreads    FacebookThread[]
 
   @@index([status])
   @@index([assignedConsultantId])
@@ -2687,6 +2693,8 @@ enum ChatChannel {
   PORTAL
   /// The staff copilot (2D).
   ADMIN_COPILOT
+  /// A Facebook Messenger thread or a post comment answered on the Page (2F).
+  FACEBOOK
 }
 
 enum ChatSessionStatus {
@@ -2752,6 +2760,8 @@ model ChatSession {
   createdAt     DateTime @default(now())
 
   messages ChatMessage[]
+
+  facebookThread FacebookThread?
 
   @@index([userId, lastMessageAt])
   @@index([anonymousId])
@@ -2904,6 +2914,17 @@ model AiAssistantConfig {
   handoffHours Json @default("{\"mon-fri\":[\"09:00\",\"18:00\"],\"sat\":[\"10:00\",\"14:00\"]}")
 
   copilotEnabled Boolean @default(true)
+
+  /// 2F — the assistant answers Messenger threads on the Page. Off until the
+  /// office has connected the Page; `enabled` above still overrides it.
+  facebookEnabled         Boolean @default(false)
+  /// 2F — the assistant answers post comments: a fixed public line under the
+  /// comment, the real answer in a private reply. Prices never go public.
+  facebookCommentsEnabled Boolean @default(false)
+  /// The public line left under a comment the assistant answered privately.
+  facebookCommentReply    String  @default("Сайн байна уу! Дэлгэрэнгүй мэдээллийг inbox-оор илгээлээ 🙂")
+  /// How long the assistant stays quiet in a thread after a person wrote in it.
+  facebookStaffPauseHours Int     @default(12)
 
   updatedAt   DateTime @updatedAt
   updatedById String?  @db.Uuid
@@ -3278,4 +3299,193 @@ model EmailCampaignRecipient {
   @@unique([campaignId, email])
   @@index([campaignId, status])
   @@map("email_campaign_recipients")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Facebook Page — Messenger and post comments (2F, AI-ASSISTANT.md §16).
+//
+// The Page's own record of what was said, kept separately from the AI's
+// ledger (`ChatSession`/`ChatMessage`). The two answer different questions:
+// this one is "what did this person and the Page say to each other" — every
+// message, whoever wrote it, including staff typing in Meta Business Suite —
+// and the AI's is "what did the assistant answer, from what, at what cost".
+// A thread the assistant never touched has no session at all.
+//
+// Every row that came from Meta carries Meta's own id (`mid`, `commentId`)
+// under a unique index. Meta retries a webhook it did not see acknowledged,
+// and echoes back every message the Page sends; the unique index is what turns
+// both into no-ops instead of duplicates.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum FacebookAiMode {
+  /// The assistant answers, except while `aiPausedUntil` is in the future.
+  AUTO
+  /// Staff switched it off for this thread; only a person answers.
+  OFF
+}
+
+enum FacebookSender {
+  /// The person writing to the Page.
+  CONTACT
+  /// The assistant, through us.
+  AI
+  /// A staff member, through `/admin/facebook`.
+  STAFF
+  /// The Page, from somewhere other than us — Meta Business Suite, the
+  /// Facebook app. Seen only as an echo; it means a person has taken over.
+  PAGE
+}
+
+enum FacebookDeliveryStatus {
+  /// Inbound, or outbound and accepted by the Send API.
+  SENT
+  FAILED
+}
+
+enum FacebookCommentStatus {
+  /// Stored, nobody has answered it yet.
+  NEW
+  /// Answered by the assistant (public line + private reply).
+  AI_REPLIED
+  /// Answered by staff from `/admin/facebook`.
+  STAFF_REPLIED
+  /// Not a question — an emoji, a tag, the Page's own comment — or dismissed by staff.
+  IGNORED
+  /// The assistant tried and Meta refused; the error is on the row.
+  FAILED
+}
+
+/// One person ↔ the Page. Messenger has exactly one conversation per
+/// page-scoped id, so this is keyed on it.
+model FacebookThread {
+  id   String @id @default(uuid()) @db.Uuid
+  /// Page-scoped user id. Stable for this Page, meaningless anywhere else.
+  psid String @unique
+
+  name       String?
+  /// Meta's CDN link — it expires, so it is refreshed, never relied on.
+  profilePic String?
+
+  /// Who this person is in the CRM, once somebody (or the assistant) knows.
+  leadId   String? @db.Uuid
+  lead     Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  clientId String? @db.Uuid
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  aiMode        FacebookAiMode @default(AUTO)
+  /// Set whenever a person writes in the thread — ours or Business Suite's.
+  aiPausedUntil DateTime?
+  /// The assistant's ledger for this thread. Rotated when it runs out of room.
+  chatSessionId String?        @unique @db.Uuid
+  chatSession   ChatSession?   @relation(fields: [chatSessionId], references: [id], onDelete: SetNull)
+
+  /// True when the last word is the contact's and nobody — human or assistant —
+  /// is going to answer it on their own. What the inbox's first tab counts.
+  needsStaff  Boolean @default(false)
+  /// Contact messages staff have not opened yet.
+  unreadCount Int     @default(0)
+
+  /// The last time the contact wrote. Meta's 24-hour window runs from here,
+  /// and outside it only a human-agent tagged message may be sent (7 days).
+  lastInboundAt      DateTime?
+  lastMessageAt      DateTime        @default(now())
+  lastMessagePreview String?
+  lastSender         FacebookSender?
+
+  /// The first ad or link that opened the thread (`referral` in the webhook):
+  /// ad_id, source, ref. First touch, like `Lead.utm`.
+  referral Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages FacebookMessage[]
+  comments FacebookComment[]
+
+  @@index([lastMessageAt])
+  @@index([needsStaff, lastMessageAt])
+  @@index([leadId])
+  @@index([clientId])
+  @@map("facebook_threads")
+}
+
+model FacebookMessage {
+  id       String         @id @default(uuid()) @db.Uuid
+  threadId String         @db.Uuid
+  thread   FacebookThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  /// Meta's message id. Null only for an outbound message Meta refused.
+  mid    String?        @unique
+  sender FacebookSender
+
+  staffId String? @db.Uuid
+  staff   User?   @relation("FacebookMessageStaff", fields: [staffId], references: [id], onDelete: SetNull)
+
+  text        String?
+  /// `[{type: "image"|"video"|"audio"|"file"|"sticker", url}]` — Meta's URLs, which expire.
+  attachments Json    @default("[]")
+
+  /// The comment whose private reply opened or continued this thread.
+  commentId String?
+
+  status FacebookDeliveryStatus @default(SENT)
+  error  String?
+
+  /// The assistant's stored answer this message delivered, for the transcript link.
+  chatMessageId String? @db.Uuid
+
+  /// Set when staff turned this reply into a draft answer card (2F-08).
+  knowledgeDocumentId String?            @db.Uuid
+  knowledgeDocument   KnowledgeDocument? @relation(fields: [knowledgeDocumentId], references: [id], onDelete: SetNull)
+
+  /// Meta's timestamp for inbound and echoed rows, ours for the rest.
+  createdAt DateTime @default(now())
+
+  @@index([threadId, createdAt])
+  @@index([staffId])
+  @@index([knowledgeDocumentId])
+  @@map("facebook_messages")
+}
+
+model FacebookComment {
+  id        String  @id @default(uuid()) @db.Uuid
+  commentId String  @unique
+  postId    String
+  /// Set when this is a reply under another comment.
+  parentId  String?
+
+  /// The commenter's id as the comment shows it. Not a PSID — the two are
+  /// joined only by the private reply, whose response names the PSID.
+  fromId   String
+  fromName String?
+  text     String
+
+  /// The post's own text, read once, so the assistant knows what was asked about.
+  postMessage   String?
+  postPermalink String?
+
+  status FacebookCommentStatus @default(NEW)
+  error  String?
+
+  /// Our public reply under the comment.
+  publicReplyId    String?
+  publicReplyText  String?
+  /// A comment may be answered privately once, within seven days.
+  privateRepliedAt DateTime?
+
+  /// The Messenger thread the private reply landed in.
+  threadId String?         @db.Uuid
+  thread   FacebookThread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+
+  repliedById String? @db.Uuid
+  repliedBy   User?   @relation("FacebookCommentStaff", fields: [repliedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([postId])
+  @@index([threadId])
+  @@index([repliedById])
+  @@map("facebook_comments")
 }

@@ -57,6 +57,8 @@ const target = computed(() => {
       </div>
 
       <div class="gks-clienthead__actions">
+        <!-- Only appears when a Messenger thread is linked to this client (2F). -->
+        <FacebookThreadLink :client-id="client.id" />
         <DsButton variant="secondary" size="sm" icon-left="pencil" @click="emit('edit')">Мэдээлэл засах</DsButton>
       </div>
     </div>

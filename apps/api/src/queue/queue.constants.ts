@@ -127,3 +127,30 @@ export const MARKETING_QUEUE = 'marketing';
 export const MARKETING_SEND_JOB = 'send-campaign';
 /** Between batches — well inside Brevo's transactional rate limit. */
 export const MARKETING_BATCH_DELAY_MS = 2_000;
+
+/**
+ * Facebook Page webhook intake (2F). The webhook answers Meta the moment the
+ * signature checks out and hands the payload here: Meta waits twenty seconds at
+ * most, retries what it did not see acknowledged, and eventually unsubscribes a
+ * Page whose endpoint keeps failing — so nothing slower than an enqueue may sit
+ * between the request and its 200. Storing is idempotent on Meta's ids, which
+ * is what makes a retried job (or a retried webhook) harmless.
+ */
+export const FACEBOOK_INBOUND_QUEUE = 'facebook-inbound';
+export const FACEBOOK_INBOUND_JOB = 'ingest-entry';
+
+/**
+ * The assistant's Facebook work (2F): one job per thread for a Messenger reply,
+ * one per comment. Separate from intake because a turn takes seconds and
+ * webhooks must not queue behind it.
+ */
+export const FACEBOOK_ASSISTANT_QUEUE = 'facebook-assistant';
+export const FACEBOOK_REPLY_JOB = 'reply-thread';
+export const FACEBOOK_COMMENT_JOB = 'answer-comment';
+/**
+ * People type in bursts — "сайн байна уу", "асуух юм байна", "GKS-ийн хугацаа
+ * хэзээ вэ" — three messages, one question. The reply waits this long after the
+ * first of them and then answers everything unanswered at once, rather than
+ * greeting the greeting.
+ */
+export const FACEBOOK_REPLY_DEBOUNCE_MS = 4_000;

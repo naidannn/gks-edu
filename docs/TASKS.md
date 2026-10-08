@@ -257,6 +257,22 @@
 | `2E-09` | Мониторинг: latency p50/p95, провайдерийн алдаа, fallback тоо, өдрийн өртөг, `grounded=false` % — `/health`-д `ai` мөр, Slack сэрэмжлүүлэг | todo | S | 2B-01 |
 | `2E-10` | Ажилтны гарын авлага: мэдлэгийн сан хэрхэн бичих (1 баримт = 1 сэдэв, огноотой, түвшинтэй, тоо файлд биш), цоорхойд хэрхэн хариулах, copilot-ыг хэрхэн ашиглах | todo | S | 2E-01 |
 
+### 2F — Facebook Page: Messenger ба сэтгэгдэл
+
+2026-10-09. Архитектур: [`AI-ASSISTANT.md`](AI-ASSISTANT.md) §16. Код бэлэн, локал дээр webhook → AI → mock илгээлт хүртэл шалгасан; Meta app холбож, deploy хийгээгүй.
+
+| ID | Таск | Төлөв | Хэмжээ | Хамаарал |
+| --- | --- | --- | --- | --- |
+| `2F-01` | Өгөгдөл: `FacebookThread` (PSID, сэжим/үйлчлүүлэгч холбоос, AI горим/зогсолт, 24ц цонх, referral), `FacebookMessage` (Meta `mid` unique), `FacebookComment`; `ChatChannel.FACEBOOK`; `AiAssistantConfig.facebook*` | wip | M | 2B-02 |
+| `2F-02` | Webhook `/facebook/webhook`: GET handshake, POST `X-Hub-Signature-256` (raw body) → BullMQ `facebook-inbound`; echo-г манайх/Business Suite гэж ялгах, давхардал `mid`-ээр | wip | M | 2F-01 |
+| `2F-03` | Messenger дээр AI: 4 секундын debounce-оор бөөн мессежийг нэг асуулт болгох, түүх нь thread-ээс (ажилтны хариутай), Messenger текст (markdown/[K1] хасах, 2000 тэмдэгтээр хуваах), ажилтан бичихэд `facebookStaffPauseHours` зогсох, амжилтгүй бол чимээгүй + «ажилтан хэрэгтэй» | wip | L | 2F-02, 2B-04 |
+| `2F-04` | Сэтгэгдэл: хоосон/emoji-г алгасах, AI хариуг private reply-аар, амжилтын дараа тогтмол нийтийн мөр (`facebookCommentReply`); постны текстийг контекст болгох | wip | M | 2F-03 |
+| `2F-05` | `/admin/facebook`: Messenger inbox (шүүлтүүр, хайлт, polling), ажилтан шууд бичих (24ц / HUMAN_AGENT 7 хоног / хаалттай), AI асаах/унтраах/зогсолт цуцлах, сэтгэгдлийн таб, тохиргоо (ADMIN) | wip | L | 2F-02 |
+| `2F-06` | CRM холбоос: thread ↔ `Lead`/`Client` холбох/салгах, чатаас сэжим үүсгэх (`SOCIAL`), AI-ийн үүсгэсэн сэжмийг thread-д авах, сэжим/үйлчлүүлэгчийн дэлгэц дээр «Facebook чат» товч | wip | M | 2F-05 |
+| `2F-07` | Ажилтны хариултаас мэдлэгийн сангийн `ENTRY` ноорог (асуулт = харилцагчийн өмнөх мессеж) — нийтлэхээс өмнө `/admin/ai/knowledge`-д уншина | wip | S | 2F-05, 2A-08 |
+| `2F-08` | Meta тохиргоо: Messenger бүтээгдэхүүнтэй app, Page-ийг `messages`, `message_echoes`, `messaging_postbacks`, `messaging_referrals`, `feed`-д subscribe; урт хугацааны Page token; `FB_*` утгууд `deploy/.env.production`-д; App Review (`pages_messaging`, `pages_manage_engagement`, `pages_read_user_content`, Human Agent) + бизнес баталгаажуулалт | todo | M | 2F-02 |
+| `2F-09` | Production-д асаах: migration, `facebookEnabled` эхлээд зөвхөн Messenger-т, хэдэн өдөр транскрипт уншаад сэтгэгдлийг асаах | todo | S | 2F-08 |
+
 ---
 
 ## Үе шат 3 — AI материал бүрдүүлэлтийн туслах

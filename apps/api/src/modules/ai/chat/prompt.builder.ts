@@ -1,10 +1,12 @@
-import { AccessLevel } from '../../../prisma/client.js';
+import { AccessLevel, ChatChannel } from '../../../prisma/client.js';
 import type { RetrievalHit } from '../knowledge/retrieval.service.js';
 import { levelPrompt, POLICY_PROMPT, todayPrompt } from './policy.prompt.js';
 
 export interface PromptContext {
   persona: string;
   level: AccessLevel;
+  /** Where the answer will be read — Messenger cannot render what the widget can. */
+  channel?: ChatChannel;
   /** Retrieved chunks, in rank order — they become `[K1]`…`[Kn]`. */
   hits: RetrievalHit[];
   /** What the session has learnt about the visitor so far (§6.2). */
@@ -78,6 +80,10 @@ export function buildSystemPrompt(context: PromptContext): BuiltPrompt {
     todayPrompt(context.now),
   ];
 
+  if (context.channel === ChatChannel.FACEBOOK) {
+    layers.push(FACEBOOK_LAYER);
+  }
+
   if (context.profile && Object.keys(context.profile).length > 0) {
     layers.push(`## Хэрэглэгчийн талаар мэдэж байгаа зүйл\n\n${describeProfile(context.profile)}`);
   }
@@ -111,6 +117,23 @@ export function buildSystemPrompt(context: PromptContext): BuiltPrompt {
 
   return { system: layers.join('\n\n'), sources };
 }
+
+/**
+ * What changes when the answer goes out on Facebook Messenger (2F).
+ *
+ * Messenger shows plain text: markdown arrives as literal asterisks, and the
+ * cards the widget draws beside an answer do not exist there — so a figure a
+ * tool returned has to be in the sentence itself, still cited, or the reader
+ * never sees it. The citation markers are stripped before sending; they stay
+ * in the stored answer, which is what the guard and the transcript read.
+ */
+const FACEBOOK_LAYER = `## Суваг: Facebook Messenger
+
+Хариулт Facebook Messenger-ээр очно. Тиймээс:
+- Энгийн текстээр бич: **тод**, # гарчиг, хүснэгт, markdown линк бүү хэрэглэ. Жагсаалт хэрэгтэй бол "• " эсвэл "1." ашигла.
+- Хажууд нь карт харагдахгүй. Хэрэгслээс авсан гол тоо, огноог өгүүлбэр дотроо шууд бич ([T1] тэмдэглэгээтэйгээр).
+- Линк өгөх бол бүтэн хаягаар нь бич: https://gksedu.mn/...
+- Мессенжерт урт текст уншихад хэцүү — 2-5 өгүүлбэр, нэг дараагийн алхам.`;
 
 /**
  * How to use the tools, and how to cite what they return.

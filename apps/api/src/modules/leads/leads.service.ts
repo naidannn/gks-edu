@@ -23,12 +23,12 @@ import type { UpdateLeadDto } from './dto/update-lead.dto.js';
 const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /**
- * What differs between the three ways a person reaches the public intake path:
- * the website form, the assistant (2C-06), and the QR code on the office wall
- * (1B-21). Everything else — dedupe, the staff page, the Slack line — is shared.
+ * What differs between the ways a person reaches the public intake path: the
+ * website form, the assistant on the site (2C-06) or on Facebook Messenger (2F),
+ * and the QR code on the office wall (1B-21). Everything else — dedupe, the staff page, the Slack line — is shared.
  */
 interface IntakeChannel {
-  key: 'website_form' | 'ai_chat' | 'office_qr';
+  key: 'website_form' | 'ai_chat' | 'facebook_messenger' | 'office_qr';
   activityType: LeadActivityType;
   /** The opening (or repeat) timeline entry. */
   body: (note: string | undefined, repeat: boolean) => string;
@@ -49,6 +49,17 @@ function channelOf(source: LeadSource): IntakeChannel {
         key: 'ai_chat',
         activityType: LeadActivityType.CHAT,
         body: (note, repeat) => note ?? (repeat ? 'AI туслахтай яриа' : 'AI туслахтай ярианаас үүссэн хүсэлт'),
+        isAdConversion: true,
+        initialStage: LeadStage.NEW,
+      };
+    case LeadSource.SOCIAL:
+      // 2F — taken on the Facebook Page, by the assistant in Messenger or by
+      // staff from `/admin/facebook`. An ad conversion: Messenger is where the
+      // Page's ads send people.
+      return {
+        key: 'facebook_messenger',
+        activityType: LeadActivityType.CHAT,
+        body: (note, repeat) => note ?? (repeat ? 'Facebook Messenger-ээр дахин бичсэн' : 'Facebook Messenger-ээс үүссэн хүсэлт'),
         isAdConversion: true,
         initialStage: LeadStage.NEW,
       };

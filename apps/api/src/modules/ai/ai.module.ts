@@ -98,6 +98,8 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     ContentSyncService,
     ChatSessionService,
     ToolRegistry,
+    // 2F: the Facebook Page runs the same turn the widget does.
+    TurnOrchestrator,
   ],
 })
 export class AiModule {}

@@ -10,7 +10,9 @@ import { AppModule } from './app.module.js';
 import { VALIDATION_PIPE_OPTIONS } from './common/validation/validation-pipe.options.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
+  // `rawBody` keeps the unparsed bytes beside `req.body`: Meta signs the exact
+  // bytes it sent (2F), and a re-serialised JSON object is not those bytes.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true, rawBody: true });
   const config = app.get(ConfigService);
 
   const port = config.getOrThrow<number>('port');

@@ -228,6 +228,31 @@ class EnvironmentVariables {
   @IsOptional()
   META_CAPI_MOCK?: string;
 
+  /** 2F — the Facebook Page (Messenger + comments). All optional: unset logs instead of sending. */
+  @IsString()
+  @IsOptional()
+  FB_PAGE_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  FB_PAGE_ACCESS_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  FB_APP_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  FB_APP_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  FB_WEBHOOK_VERIFY_TOKEN?: string;
+
+  @IsString()
+  @IsOptional()
+  FB_GRAPH_TIMEOUT_MS?: string;
+
   @IsString()
   @IsOptional()
   STORAGE_DRIVER?: string;

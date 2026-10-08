@@ -25,6 +25,10 @@ const SELECT = {
   ctaRules: true,
   handoffHours: true,
   copilotEnabled: true,
+  facebookEnabled: true,
+  facebookCommentsEnabled: true,
+  facebookCommentReply: true,
+  facebookStaffPauseHours: true,
   updatedAt: true,
   updatedBy: { select: { id: true, name: true } },
 } as const;

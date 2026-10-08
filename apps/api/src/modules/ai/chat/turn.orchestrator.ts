@@ -81,6 +81,15 @@ export class TurnOrchestrator {
     session: ChatSession;
     level: AccessLevel;
     message: string;
+    /**
+     * The conversation so far, ending with this turn's question, when it lives
+     * somewhere other than this session's own rows. A Facebook thread is the
+     * case (2F): what the contact and the office's staff said to each other is
+     * in `facebook_messages`, and an assistant that only remembered its own
+     * turns would answer as if the consultant's reply ten minutes ago had
+     * never been written.
+     */
+    history?: LlmMessage[];
     signal?: AbortSignal;
   }): AsyncGenerator<TurnEvent> {
     const config = await this.aiConfig.get();
@@ -131,11 +140,12 @@ export class TurnOrchestrator {
 
     const toolDefinitions = this.tools.definitions(params.level);
 
-    const history = await this.sessions.history(params.session.id);
+    const history = params.history ?? (await this.sessions.history(params.session.id));
     const profile = (params.session.profile as Record<string, unknown>) ?? {};
     const { system, sources } = buildSystemPrompt({
       persona: config.persona,
       level: params.level,
+      channel: params.session.channel,
       hits,
       playbooks,
       profile,

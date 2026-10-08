@@ -36,6 +36,7 @@ import { ReportsModule } from './modules/reports/reports.module.js';
 import { SavedUniversitiesModule } from './modules/saved-universities/saved-universities.module.js';
 import { AdmissionsModule } from './modules/admissions/admissions.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
+import { FacebookModule } from './modules/facebook/facebook.module.js';
 import { UniversitiesModule } from './modules/universities/universities.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { VisaModule } from './modules/visa/visa.module.js';
@@ -95,6 +96,7 @@ import { StorageModule } from './storage/storage.module.js';
     BannersModule,
     ReportsModule,
     AiModule,
+    FacebookModule,
   ],
   providers: [
     // Everything is authenticated unless a route opts out with @Public().

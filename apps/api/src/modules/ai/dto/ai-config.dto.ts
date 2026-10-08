@@ -139,4 +139,28 @@ export class UpdateAiConfigDto {
   @IsBoolean()
   @IsOptional()
   copilotEnabled?: boolean;
+
+  @ApiPropertyOptional({ description: '2F — answer Messenger threads on the Page' })
+  @IsBoolean()
+  @IsOptional()
+  facebookEnabled?: boolean;
+
+  @ApiPropertyOptional({ description: '2F — answer post comments (public line + private reply)' })
+  @IsBoolean()
+  @IsOptional()
+  facebookCommentsEnabled?: boolean;
+
+  @ApiPropertyOptional({ description: 'The public line left under an answered comment' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(300)
+  @IsOptional()
+  facebookCommentReply?: string;
+
+  @ApiPropertyOptional({ description: 'Hours the assistant stays quiet after a person wrote', minimum: 1, maximum: 168 })
+  @IsInt()
+  @Min(1)
+  @Max(168)
+  @IsOptional()
+  facebookStaffPauseHours?: number;
 }
