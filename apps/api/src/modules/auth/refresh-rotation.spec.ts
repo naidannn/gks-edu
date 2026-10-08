@@ -6,6 +6,7 @@ import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { NotificationsService } from '../notifications/notifications.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
 import type { MetaEventsService } from '../meta/meta-events.service.js';
+import type { AccountClaimService } from '../users/account-claim.service.js';
 import { AuthService } from './auth.service.js';
 
 /**
@@ -54,6 +55,7 @@ function serviceStub(options: {
     { dispatch: vi.fn() } as unknown as NotificationsService,
     { notify: vi.fn() } as unknown as SlackService,
     { track: vi.fn() } as unknown as MetaEventsService,
+    { inviteQuietly: vi.fn() } as unknown as AccountClaimService,
   );
 
   return { service, prisma };

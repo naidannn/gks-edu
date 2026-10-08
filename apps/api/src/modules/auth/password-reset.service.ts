@@ -81,7 +81,15 @@ export class PasswordResetService {
   async reset(token: string, password: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { passwordResetTokenHash: sha256(token) },
-      select: { id: true, email: true, name: true, passwordResetExpiresAt: true, isActive: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true,
+        claimedAt: true,
+        passwordResetExpiresAt: true,
+        isActive: true,
+      },
     });
 
     // One message for a wrong token and an expired one — see AccountClaimService.
@@ -96,9 +104,13 @@ export class PasswordResetService {
           password: await hashPassword(password),
           passwordResetTokenHash: null,
           passwordResetExpiresAt: null,
-          // A reset settles an outstanding invitation too (1B-17).
+          // A reset settles an outstanding invitation too (1B-17) — and on an
+          // office-created row that never had a password it *is* the
+          // activation, so the client card says "activated" rather than
+          // "not invited" (the invitation it replaced is gone).
           claimTokenHash: null,
           claimTokenExpiresAt: null,
+          ...(!user.password && !user.claimedAt ? { claimedAt: new Date() } : {}),
         },
       }),
       this.prisma.refreshToken.updateMany({

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
-import { NotificationEvent, type Role, type User } from '../../prisma/client.js';
+import { NotificationEvent, Role, type User } from '../../prisma/client.js';
 import { compare } from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
@@ -18,12 +18,30 @@ import { SlackService } from '../notifications/slack.service.js';
 import type { MetaTrackingDto } from '../meta/dto/meta-tracking.dto.js';
 import { MetaEventsService } from '../meta/meta-events.service.js';
 import type { MetaRequestContext } from '../meta/request-context.js';
+import { AccountClaimService } from '../users/account-claim.service.js';
 import type { ChangePasswordDto } from './dto/password-reset.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 
 /** One wording for every "your session is over" case — see {@link AuthService.refresh}. */
 const SESSION_OVER = 'Сесс дууссан эсвэл хүчингүй байна. Дахин нэвтэрнэ үү';
+
+/**
+ * An account the office opened (1B-14) and nobody has activated yet. Registering
+ * on its address re-sends the activation link to that address.
+ */
+const UNCLAIMED_ACCOUNT =
+  'Таны и-мэйлээр манай оффис бүртгэл нээсэн байна. Бүртгэлээ идэвхжүүлэх холбоосыг таны и-мэйл рүү '
+  + 'дахин илгээлээ — холбоосоор орж нууц үгээ тохируулна уу. Спам хавтсаа ч шалгаарай.';
+
+/** The same account at the login form, where nothing is sent automatically. */
+const UNCLAIMED_LOGIN =
+  'Энэ бүртгэлд нууц үг тохируулаагүй байна. И-мэйлээр ирсэн урилгын холбоосоор эсвэл '
+  + '"Нууц үгээ мартсан уу?" холбоосоор нууц үгээ тохируулна уу';
+
+function isUnclaimed(user: Pick<User, 'password' | 'googleId' | 'role' | 'isActive'>): boolean {
+  return !user.password && !user.googleId && user.role === Role.USER && user.isActive;
+}
 
 /** `expiresIn` is typed as the `ms` literal union ("15m", "7d", …), not `string`. */
 type ExpiresIn = JwtSignOptions['expiresIn'];
@@ -46,12 +64,28 @@ export class AuthService {
     private readonly notifications: NotificationsService,
     private readonly slack: SlackService,
     private readonly meta: MetaEventsService,
+    private readonly claims: AccountClaimService,
   ) {}
 
   async register(dto: RegisterDto, request: MetaRequestContext = {}): Promise<AuthSession> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) {
-      throw new ConflictException('Энэ и-мэйлээр бүртгэл аль хэдийн үүссэн байна');
+      if (isUnclaimed(existing)) {
+        // The office registered this person (or converted their lead) before
+        // they ever opened the site. The address is theirs and so is the
+        // account — it holds their case and contract — but typing a password
+        // here proves nothing about the inbox, so the password is not taken.
+        // The activation link goes to that inbox instead, and the answer says
+        // so: "already registered" alone sent people round in a circle between
+        // this form and a login that has no password to accept.
+        await this.claims.inviteQuietly(existing.id, { kind: 'invite' });
+        throw new ConflictException(UNCLAIMED_ACCOUNT);
+      }
+      throw new ConflictException(
+        existing.googleId && !existing.password
+          ? 'Энэ и-мэйлээр Google-ээр нэвтэрдэг бүртгэл байна. "Google-ээр нэвтрэх" товчийг ашиглана уу'
+          : 'Энэ и-мэйлээр бүртгэл аль хэдийн үүссэн байна. Нэвтрэх хэсгээс орно уу — нууц үгээ мартсан бол сэргээж болно',
+      );
     }
 
     const user = await this.prisma.user.create({
@@ -77,6 +111,18 @@ export class AuthService {
       : await compare(dto.password, '$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidin');
 
     if (!user || !passwordMatches || !user.isActive) {
+      // A row with no password can never match, and the person holding it is
+      // usually not mistyping — they have never had a password. Registration
+      // already answers "this address has an account" to anyone who asks, so
+      // saying which kind of account it is gives nothing further away, and it
+      // is the difference between a way in and a dead end.
+      if (user?.isActive && !user.password) {
+        throw new UnauthorizedException(
+          user.googleId
+            ? 'Энэ бүртгэл Google-ээр нэвтэрдэг. "Google-ээр нэвтрэх" товчийг ашиглана уу'
+            : UNCLAIMED_LOGIN,
+        );
+      }
       throw new UnauthorizedException('И-мэйл эсвэл нууц үг буруу байна');
     }
 

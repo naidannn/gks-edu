@@ -18,6 +18,14 @@ export const useAuthStore = defineStore('auth', () => {
   const isStaff = computed(() => user.value?.role === 'ADMIN' || user.value?.role === 'CONSULTANT');
   /** Paperwork access: the document officer works materials but not the CRM (ARCHITECTURE.md §11). */
   const isDocStaff = computed(() => isStaff.value || user.value?.role === 'DOC_OFFICER');
+  /**
+   * Where a signed-in person starts. A document officer is staff but not CRM
+   * staff — `/admin` itself 403s them — so their start is the materials queue;
+   * sending them to `/app` dropped them in an empty client cabinet.
+   */
+  const homePath = computed(() =>
+    isStaff.value ? '/admin' : isDocStaff.value ? '/admin/documents' : '/app',
+  );
 
   /** Tokens live in localStorage, so this is a no-op during SSR. */
   function persist(): void {
@@ -157,6 +165,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     isStaff,
     isDocStaff,
+    homePath,
     apply,
     login,
     register,

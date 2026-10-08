@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth';
 import { ApiError } from '~/utils/api-error';
 
 /**
@@ -28,7 +29,16 @@ const props = defineProps<{
   deadTokenText: string;
   /** Where "get me a new link" goes. */
   retry: { label: string; to: string };
+  /**
+   * The endpoint answers with the account's `email`, and the person is signed
+   * straight in with the password they just chose. The claim link is a
+   * client's first visit to their cabinet (1B-17); ending it on a login form
+   * that asks for the same password again lost people at the last step.
+   */
+  signIn?: boolean;
 }>();
+
+const auth = useAuthStore();
 
 const api = useApi();
 const route = useRoute();
@@ -57,7 +67,19 @@ async function submit() {
 
   pending.value = true;
   try {
-    await api.post(props.endpoint, { token: token.value, password: password.value });
+    const result = await api.post<{ email?: string | null } | undefined>(props.endpoint, {
+      token: token.value,
+      password: password.value,
+    });
+    if (props.signIn && result?.email) {
+      // The password is already set; a failed sign-in here only means the
+      // person types it once more on the success screen's login button.
+      const signedIn = await auth.login(result.email, password.value).then(() => true, () => false);
+      if (signedIn) {
+        await navigateTo(auth.homePath);
+        return;
+      }
+    }
     done.value = true;
   } catch (err) {
     // 400 is the one answer the form cannot recover from: the link is spent.

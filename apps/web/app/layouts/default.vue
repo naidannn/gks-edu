@@ -316,7 +316,7 @@ async function onLogout() {
               </button>
               <div v-show="openGroup === ACCOUNT_MENU" class="gks-appbar__menu gks-appbar__menu--end">
                 <p class="gks-appbar__menu-email gks-tnum">{{ auth.user?.email }}</p>
-                <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__menu-link">CRM</NuxtLink>
+                <NuxtLink v-if="auth.isDocStaff" :to="auth.homePath" class="gks-appbar__menu-link">CRM</NuxtLink>
                 <button type="button" class="gks-appbar__menu-link gks-appbar__menu-logout" @click="onLogout">
                   <DsIcon name="log-out" :size="16" /> Гарах
                 </button>
@@ -378,7 +378,7 @@ async function onLogout() {
       >
         {{ item.label }}
       </NuxtLink>
-      <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-appbar__panel-link" @click="closeMenus">
+      <NuxtLink v-if="auth.isDocStaff" :to="auth.homePath" class="gks-appbar__panel-link" @click="closeMenus">
         CRM
       </NuxtLink>
       <button v-if="auth.isAuthenticated" type="button" class="gks-appbar__panel-link gks-appbar__panel-logout" @click="onLogout">

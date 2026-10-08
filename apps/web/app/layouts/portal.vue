@@ -118,7 +118,7 @@ async function onLogout() {
         <ClientOnly>
           <NotificationsBell class="gks-portal__bell" />
         </ClientOnly>
-        <NuxtLink v-if="auth.isStaff" to="/admin" class="gks-portal__crm-link">CRM</NuxtLink>
+        <NuxtLink v-if="auth.isDocStaff" :to="auth.homePath" class="gks-portal__crm-link">CRM</NuxtLink>
         <button
           type="button"
           class="gks-portal__icon-btn gks-portal__mobile-only"

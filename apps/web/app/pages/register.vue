@@ -77,7 +77,9 @@ async function submitGoogle(idToken: string) {
   pending.value = true;
   try {
     await auth.loginWithGoogle(idToken, trackingPayload(meta.newEventId()));
-    await navigateTo(safeRedirectPath(route.query.redirect, '/app/cases'));
+    // "Known address" includes staff pressing the wrong button.
+    const home = auth.homePath === '/app' ? '/app/cases' : auth.homePath;
+    await navigateTo(safeRedirectPath(route.query.redirect, home));
   } catch (err) {
     error.value = apiErrorMessage(err, 'Google-ээр бүртгүүлж чадсангүй');
   } finally {

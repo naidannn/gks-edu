@@ -5,9 +5,12 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordResetService } from './password-reset.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
+import { UsersModule } from '../users/users.module.js';
 
 @Module({
-  imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({})],
+  // UsersModule: registering on an address the office already holds re-sends
+  // that account's activation link instead of dead-ending on a 409.
+  imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({}), UsersModule],
   controllers: [AuthController],
   providers: [AuthService, PasswordResetService, JwtStrategy],
   exports: [AuthService],

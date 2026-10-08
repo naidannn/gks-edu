@@ -141,7 +141,7 @@ async function onLogout() {
   >
     <aside class="gks-admin__sidebar">
       <div class="gks-admin__brand">
-        <NuxtLink to="/admin" class="gks-admin__brand-link" :title="rail ? 'GKS CRM' : undefined">
+        <NuxtLink :to="auth.homePath" class="gks-admin__brand-link" :title="rail ? 'GKS CRM' : undefined">
           <img src="~/assets/img/gks-logo-mark.png" alt="" class="gks-admin__logo">
           <span class="gks-admin__brand-text">CRM</span>
         </NuxtLink>

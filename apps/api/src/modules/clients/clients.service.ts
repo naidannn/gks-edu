@@ -25,6 +25,7 @@ import {
 import { ContractsService } from '../contracts/contracts.service.js';
 import { SETTLED_STATUSES } from '../documents/document-status.js';
 import { AccountClaimService } from '../users/account-claim.service.js';
+import { SlackService } from '../notifications/slack.service.js';
 import { activeStaffWhere, STAFF_ROLES } from '../../common/constants/roles.js';
 import { officeDateRange } from '../reports/report-period.js';
 import { absorbLogin, findLoginToAbsorb } from './absorb-login.js';
@@ -154,6 +155,7 @@ export class ClientsService {
     private readonly cases: CasesService,
     private readonly claims: AccountClaimService,
     private readonly contracts: ContractsService,
+    private readonly slack: SlackService,
   ) {}
 
   // ─── Create ───────────────────────────────────────────────────────────────
@@ -257,7 +259,9 @@ export class ClientsService {
     const choices = this.resolveChoices(merged);
     this.assertGuardianPresent(new Date(merged.birthDate), merged);
     await this.assertRegisterFree(merged.registerNumber);
-    const existingAccount = await this.accountToAdopt(merged.email);
+    // A lead the assistant took from a signed-in visitor already names their
+    // account; the address on the lead may be a different one, or none.
+    const existingAccount = await this.accountToAdopt(merged.email, lead.userId);
     if (merged.assignedConsultantId) await this.assertStaff(merged.assignedConsultantId);
 
     const created = await this.prisma.$transaction(async (tx) => {
@@ -522,9 +526,9 @@ export class ClientsService {
     this.assertGuardianPresent(birthDate, dto);
 
     if (dto.registerNumber !== existing?.registerNumber) {
-      await this.assertRegisterFree(dto.registerNumber, existing?.id);
+      await this.assertOwnRegisterFree(userId, dto, existing?.id);
     }
-    if (dto.email && dto.email !== existing?.email) await this.assertEmailFree(dto.email, userId);
+    if (dto.email && dto.email !== existing?.email) await this.assertOwnEmailFree(userId, dto);
 
     // `undefined` keys are skipped by Prisma, which is exactly what the two
     // office-owned columns need: the client never sets or resets them.
@@ -821,20 +825,38 @@ export class ClientsService {
    * A genuine duplicate is still a 409, now saying which: the address is on a
    * client we already have, or on a member of staff.
    */
-  private async accountToAdopt(email: string | undefined): Promise<{ id: string; hasLogin: boolean } | null> {
+  private async accountToAdopt(
+    email: string | undefined,
+    leadUserId?: string | null,
+  ): Promise<{ id: string; hasLogin: boolean } | null> {
+    const select = {
+      id: true,
+      role: true,
+      password: true,
+      googleId: true,
+      client: { select: { code: true } },
+    } satisfies Prisma.UserSelect;
+
+    // The account a lead was captured under wins over the address typed on it.
+    // A signed-in visitor who told the assistant a second address — or none —
+    // used to get a fresh passwordless row here, and the service opened on an
+    // account they could never log into while their own cabinet stayed empty.
+    // A lead of a staff member (testing the assistant) is not a client's
+    // account, so that one falls back to the address as before.
+    if (leadUserId) {
+      const owner = await this.prisma.user.findUnique({ where: { id: leadUserId }, select });
+      if (owner?.client) {
+        throw new ConflictException(`Энэ сэжмийн бүртгэлээр ${owner.client.code} үйлчлүүлэгч бүртгэлтэй байна`);
+      }
+      if (owner && owner.role === Role.USER) {
+        return { id: owner.id, hasLogin: Boolean(owner.password ?? owner.googleId) };
+      }
+    }
+
     const address = email?.trim().toLowerCase();
     if (!address) return null;
 
-    const user = await this.prisma.user.findUnique({
-      where: { email: address },
-      select: {
-        id: true,
-        role: true,
-        password: true,
-        googleId: true,
-        client: { select: { code: true } },
-      },
-    });
+    const user = await this.prisma.user.findUnique({ where: { email: address }, select });
     if (!user) return null;
 
     if (user.client) {
@@ -950,13 +972,74 @@ export class ClientsService {
     }
   }
 
-  private async assertEmailFree(email: string | undefined, ownUserId?: string): Promise<void> {
-    if (!email) return;
-    const clash = await this.prisma.user.findUnique({
-      where: { email: email.trim().toLowerCase() },
-      select: { id: true },
+  /**
+   * The portal's side of {@link assertRegisterFree}. A register number already
+   * on file here is, almost always, the same person: the office registered
+   * them (or converted their lead) and they then opened a site account of
+   * their own — under a different address, or before anyone told them one
+   * existed. Their service sits on the office's record and this login owns
+   * nothing (the KH-2026-0009 shape, reached from the other end).
+   *
+   * The register number is printed on documents and proves nothing, so the
+   * two are not joined here — that stays a staff call, made by correcting the
+   * address on the client card (1B-23). What changes is that the client is told
+   * what is going on instead of being shown another client's code, and the
+   * office hears about it the moment it happens rather than on the phone.
+   */
+  private async assertOwnRegisterFree(
+    userId: string,
+    dto: Pick<SelfServiceClientInput, 'registerNumber' | 'lastName' | 'firstName' | 'phone'>,
+    ownClientId?: string,
+  ): Promise<void> {
+    const clash = await this.prisma.client.findUnique({
+      where: { registerNumber: dto.registerNumber },
+      select: { id: true, code: true },
     });
-    if (clash && clash.id !== ownUserId) throw new ConflictException('Энэ имэйлээр бүртгэл үүссэн байна');
+    if (!clash || clash.id === ownClientId) return;
+    await this.refuseAsOfficeRecord(userId, dto, clash);
+  }
+
+  /**
+   * The same situation found through the address: the email the client typed
+   * on their profile is the login of a client record the office holds.
+   */
+  private async assertOwnEmailFree(
+    userId: string,
+    dto: Pick<SelfServiceClientInput, 'email' | 'lastName' | 'firstName' | 'phone'>,
+  ): Promise<void> {
+    const clash = await this.prisma.user.findUnique({
+      where: { email: dto.email!.trim().toLowerCase() },
+      select: { id: true, client: { select: { id: true, code: true } } },
+    });
+    if (!clash || clash.id === userId) return;
+    if (clash.client) await this.refuseAsOfficeRecord(userId, dto, clash.client);
+    throw new ConflictException('Энэ имэйлээр өөр бүртгэл үүссэн байна. Нэвтэрсэн и-мэйлээ эсвэл өөр хаяг оруулна уу');
+  }
+
+  private async refuseAsOfficeRecord(
+    userId: string,
+    dto: Pick<SelfServiceClientInput, 'lastName' | 'firstName' | 'phone'>,
+    clash: { id: string; code: string },
+  ): Promise<never> {
+    const account = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+    await this.slack.notify({
+      emoji: '🔗',
+      title: 'Харилцагч кабинетаа холбуулах шаардлагатай',
+      fields: [
+        { label: 'Нэр', value: `${dto.lastName} ${dto.firstName}`.trim() },
+        { label: 'Утас', value: dto.phone },
+        { label: 'Нэвтэрсэн и-мэйл', value: account?.email },
+        { label: 'Бүртгэлтэй харилцагч', value: clash.code },
+        // The fix is the 1B-23 merge: staff type this login's address onto the card.
+        { label: 'Засах', value: 'Харилцагчийн картын и-мэйлийг дээрх нэвтэрсэн и-мэйлээр солиход кабинет нэгтгэгдэнэ' },
+      ],
+      link: { label: 'Харилцагчийг нээх', path: `/admin/clients/${clash.id}` },
+    });
+
+    throw new ConflictException(
+      'Таны мэдээлэл манай оффист бүртгэлтэй байна. Кабинетыг тань тэр бүртгэлтэй холбох хэрэгтэй тул '
+        + 'хариуцсан зөвлөхтэйгөө холбогдоно уу — бид мэдэгдэл хүлээн авлаа.',
+    );
   }
 
   private async assertStaff(userId: string): Promise<void> {

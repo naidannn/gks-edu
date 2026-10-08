@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { CaseChoiceTrack, ClientStatus, LeadSource, LeadStage, Role, ServiceType } from '../../prisma/client.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import type { CasesService } from '../cases/cases.service.js';
+import type { SlackService } from '../notifications/slack.service.js';
 import type { ContractsService } from '../contracts/contracts.service.js';
 import type { AccountClaimService } from '../users/account-claim.service.js';
 import { ClientsService } from './clients.service.js';
@@ -47,7 +48,9 @@ function siteAccount(overrides: Partial<AccountRow> = {}): AccountRow {
   return { id: 'user-9', role: Role.USER, password: 'hashed', googleId: null, client: null, ...overrides };
 }
 
-function prismaStub(overrides: { registerTaken?: boolean; account?: AccountRow; lead?: unknown } = {}) {
+function prismaStub(
+  overrides: { registerTaken?: boolean; account?: AccountRow; leadAccount?: AccountRow; lead?: unknown } = {},
+) {
   const created = { id: 'client-1', code: 'KH-2026-0001', userId: 'user-1' };
 
   const tx = {
@@ -75,8 +78,12 @@ function prismaStub(overrides: { registerTaken?: boolean; account?: AccountRow; 
     user: {
       // `accountToAdopt` looks an address up; `invitePortal` looks the assigned
       // consultant up by id, and must not see the client's own account.
-      findUnique: vi.fn().mockImplementation(({ where }: { where: { email?: string } }) =>
-        where.email ? (overrides.account ?? null) : null),
+      findUnique: vi.fn().mockImplementation(({ where }: { where: { email?: string; id?: string } }) =>
+        where.email
+          ? (overrides.account ?? null)
+          : where.id && where.id === overrides.leadAccount?.id
+            ? overrides.leadAccount
+            : null),
       findFirst: vi.fn(),
     },
     lead: { findUnique: vi.fn().mockResolvedValue(overrides.lead ?? null) },
@@ -92,10 +99,12 @@ const contractsStub = {
   refreshUnsignedForUser: vi.fn().mockResolvedValue({ refreshed: 0, locked: 0 }),
 } as unknown as ContractsService;
 
+const slackStub = { notify: vi.fn().mockResolvedValue(undefined) } as unknown as SlackService;
+
 describe('ClientsService.create (1B-14)', () => {
   it('opens the account row and the first case in one transaction', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     // `findOne` re-reads the row; the write path is what this test is about.
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
 
@@ -114,7 +123,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('leaves the case unopened when the form says so', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (casesStub.createWithin as ReturnType<typeof vi.fn>).mockClear();
 
@@ -126,7 +135,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('hands the whole school list to the case and keeps the first as the client`s own (§5.1)', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (casesStub.createWithin as ReturnType<typeof vi.fn>).mockClear();
 
@@ -159,7 +168,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('refuses extra schools when no case is opened — they would have nowhere to live', async () => {
     const { prisma } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
       service.create(
@@ -171,7 +180,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('refuses a minor without a guardian — they cannot sign the contract (§6.2)', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(service.create(adultDto({ birthDate: birthDateYearsAgo(16) }), 'staff-1')).rejects.toThrow(
       BadRequestException,
@@ -181,7 +190,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('accepts a minor once the guardian block is complete', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
 
     await service.create(
@@ -199,7 +208,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('registers onto the account the client already opened on the site, and opens the case there (1B-20)', async () => {
     const { prisma, tx } = prismaStub({ account: siteAccount() });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
     (casesStub.createWithin as ReturnType<typeof vi.fn>).mockClear();
@@ -222,7 +231,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('still invites an account that has no login of its own', async () => {
     const { prisma } = prismaStub({ account: siteAccount({ password: null }) });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
 
@@ -233,7 +242,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('refuses an address that is already a client, and names the record', async () => {
     const { prisma } = prismaStub({ account: siteAccount({ client: { code: 'KH-2026-0009' } }) });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(service.create(adultDto({ email: 'tuvshin@example.mn' }), 'staff-1')).rejects.toThrow(
       /KH-2026-0009/,
@@ -242,7 +251,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('refuses to turn a staff account into a client', async () => {
     const { prisma } = prismaStub({ account: siteAccount({ role: Role.CONSULTANT }) });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(service.create(adultDto({ email: 'bold@gksedu.mn' }), 'staff-1')).rejects.toBeInstanceOf(
       ConflictException,
@@ -251,7 +260,7 @@ describe('ClientsService.create (1B-14)', () => {
 
   it('rejects a register number that is already on file', async () => {
     const { prisma, tx } = prismaStub({ registerTaken: true });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(service.create(adultDto(), 'staff-1')).rejects.toThrow(ConflictException);
     expect(tx.client.create).not.toHaveBeenCalled();
@@ -282,7 +291,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
 
   it('copies the lead, links the two, and leaves the lead as WON history', async () => {
     const { prisma, tx } = prismaStub({ lead });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
 
     await service.createFromLead(
@@ -311,7 +320,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
 
   it('will not convert the same lead twice', async () => {
     const { prisma, tx } = prismaStub({ lead: { ...lead, client: { id: 'client-9', code: 'KH-2026-0009' } } });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
       service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
@@ -321,11 +330,49 @@ describe('ClientsService.createFromLead (1B-10)', () => {
 
   it('demands a service type when the lead never named one', async () => {
     const { prisma } = prismaStub({ lead: { ...lead, interestedServices: [] } });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
       service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  /**
+   * A lead the assistant took from a signed-in visitor names their account.
+   * The address on the lead may be another one or none, and converting used to
+   * open the service on a fresh passwordless row — an empty cabinet for the
+   * client, a login nobody could use for the office.
+   */
+  it("opens the service on the lead's own account, not a new one", async () => {
+    const { prisma, tx } = prismaStub({
+      lead: { ...lead, email: null, userId: 'user-7' },
+      leadAccount: siteAccount({ id: 'user-7' }),
+    });
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+    (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
+
+    await service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1');
+
+    expect(tx.user.create).not.toHaveBeenCalled();
+    expect(tx.client.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ userId: 'user-7' }) }),
+    );
+    // They log in already; a "set your password" mail would only confuse them.
+    expect(claimsStub.inviteQuietly).not.toHaveBeenCalled();
+  });
+
+  it("refuses when the lead's account is already a client", async () => {
+    const { prisma, tx } = prismaStub({
+      lead: { ...lead, userId: 'user-7' },
+      leadAccount: siteAccount({ id: 'user-7', client: { code: 'KH-2026-0003' } }),
+    });
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+
+    await expect(
+      service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
+    ).rejects.toThrow(ConflictException);
+    expect(tx.client.create).not.toHaveBeenCalled();
   });
 
   /**
@@ -336,7 +383,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
    */
   it('refuses to convert a lead that was merged away', async () => {
     const { prisma, tx } = prismaStub({ lead: { ...lead, mergedIntoId: 'lead-2' } });
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
       service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
@@ -378,6 +425,7 @@ describe('ClientsService.update — where a client came from (1N-36)', () => {
       casesStub,
       claimsStub,
       contractsStub,
+      slackStub,
     );
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     return { service, tx };
@@ -406,7 +454,7 @@ describe('ClientsService.update — where a client came from (1N-36)', () => {
 
   it('stamps the office only when a client is registered with no lead behind them', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
 
     await service.create(adultDto(), 'staff-1');
@@ -420,7 +468,7 @@ describe('ClientsService.update — where a client came from (1N-36)', () => {
 describe('ClientsService status defaults', () => {
   it('registers a client as ACTIVE unless told otherwise', async () => {
     const { prisma, tx } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
 
     await service.create(adultDto({ status: ClientStatus.INACTIVE }), 'staff-1');
@@ -434,7 +482,7 @@ describe('ClientsService status defaults', () => {
 describe('ClientsService portal invitation (1B-19)', () => {
   it('mails the welcome invitation as part of registering a client with an address', async () => {
     const { prisma } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
 
@@ -445,7 +493,7 @@ describe('ClientsService portal invitation (1B-19)', () => {
 
   it('sends nothing when there is no address to send to', async () => {
     const { prisma } = prismaStub();
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
 
@@ -459,7 +507,7 @@ describe('ClientsService portal invitation (1B-19)', () => {
     prisma.user.findFirst.mockResolvedValue({ id: 'staff-2' });
     prisma.user.findUnique.mockImplementation(({ where }: { where: { id?: string; email?: string } }) =>
       where.id === 'staff-2' ? { name: 'Зөвлөх Болд' } : null);
-    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub);
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
 
@@ -469,5 +517,39 @@ describe('ClientsService portal invitation (1B-19)', () => {
       'user-1',
       expect.objectContaining({ consultantName: 'Зөвлөх Болд' }),
     );
+  });
+});
+
+/**
+ * A site login filling in a profile whose register number the office already
+ * holds — the same person, registered by the office under another address.
+ * Showing them another client's code was a dead end; the office now hears
+ * about it, and the client is told who to call.
+ */
+describe('ClientsService.upsertOwn — the office already has this person', () => {
+  it('pings the office and explains, without joining the two', async () => {
+    const tx = { client: { create: vi.fn(), update: vi.fn() }, user: { update: vi.fn() } };
+    const prisma = {
+      client: {
+        findUnique: vi.fn().mockImplementation(({ where }: { where: { userId?: string; registerNumber?: string } }) =>
+          where.registerNumber ? { id: 'client-9', code: 'KH-2026-0009' } : null),
+      },
+      user: { findUnique: vi.fn().mockResolvedValue({ email: 'bat@gmail.com' }) },
+      $transaction: vi.fn().mockImplementation((fn: (client: typeof tx) => unknown) => fn(tx)),
+    };
+    const slack = { notify: vi.fn().mockResolvedValue(undefined) };
+    const service = new ClientsService(
+      prisma as unknown as PrismaService,
+      casesStub,
+      claimsStub,
+      contractsStub,
+      slack as unknown as SlackService,
+    );
+
+    await expect(service.upsertOwn('user-2', adultDto() as never)).rejects.toThrow(/оффист бүртгэлтэй/);
+    expect(slack.notify).toHaveBeenCalledWith(
+      expect.objectContaining({ link: expect.objectContaining({ path: '/admin/clients/client-9' }) }),
+    );
+    expect(tx.client.create).not.toHaveBeenCalled();
   });
 });

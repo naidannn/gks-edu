@@ -31,8 +31,8 @@ async function submit() {
   try {
     await auth.login(parsed.data.email, parsed.data.password);
     // An explicit redirect (bounced off a guarded page) wins; otherwise staff
-    // land in the CRM and clients in their own cabinet.
-    await navigateTo(safeRedirectPath(route.query.redirect, auth.isStaff ? '/admin' : '/app'));
+    // land in their own work area and clients in their cabinet.
+    await navigateTo(safeRedirectPath(route.query.redirect, auth.homePath));
   } catch (err) {
     error.value = apiErrorMessage(err, 'И-мэйл эсвэл нууц үг буруу байна');
   } finally {
@@ -49,7 +49,7 @@ async function submitGoogle(idToken: string) {
     // which the API reports as a `CompleteRegistration`; the click context has
     // to travel with it or that conversion matches nobody (1A-38).
     await auth.loginWithGoogle(idToken, trackingPayload(newEventId()));
-    await navigateTo(safeRedirectPath(route.query.redirect, auth.isStaff ? '/admin' : '/app'));
+    await navigateTo(safeRedirectPath(route.query.redirect, auth.homePath));
   } catch (err) {
     error.value = apiErrorMessage(err, 'Google-ээр нэвтэрч чадсангүй');
   } finally {

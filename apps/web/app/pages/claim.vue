@@ -6,15 +6,17 @@
 definePageMeta({ layout: 'default' });
 
 /**
- * The invitation lives for seven days (1B-19). After that the only way back in
- * is a human re-sending it from the CRM, so the dead end names who to ask and
- * what number to ring rather than offering a self-service link that does not
- * exist for this flow.
+ * The invitation lives for seven days (1B-19). An expired one is not a dead
+ * end: the reset flow sets a first password on an office-created account just
+ * as well — it needs only the inbox the invitation went to — so the way
+ * forward is self-service, with the consultant as the fallback when the
+ * address itself is wrong.
  */
 const DEAD_TEXT =
   `Кабинет идэвхжүүлэх холбоос 7 хоног хүчинтэй байсан бөгөөд хугацаа нь дууссан эсвэл өмнө нь `
-  + `ашиглагдсан байна. Хариуцсан зөвлөхтэйгээ эсвэл ${COMPANY.phoneLabel} дугаараар холбогдоход `
-  + `шинэ урилгыг тань даруй илгээнэ. Бүртгэлээ аль хэдийн идэвхжүүлсэн бол шууд нэвтэрнэ үү.`;
+  + `ашиглагдсан байна. Доорх холбоосоор и-мэйлээ оруулбал нууц үг тохируулах шинэ холбоос шууд очно. `
+  + `И-мэйл ирэхгүй бол хариуцсан зөвлөхтэйгээ эсвэл ${COMPANY.phoneLabel} дугаараар холбогдоно уу. `
+  + `Бүртгэлээ аль хэдийн идэвхжүүлсэн бол шууд нэвтэрнэ үү.`;
 
 useHead({ title: 'Бүртгэл идэвхжүүлэх' });
 useNoIndex();
@@ -28,9 +30,10 @@ useNoIndex();
     submit-label="Бүртгэлээ идэвхжүүлэх"
     success-title="Бүртгэл идэвхжлээ"
     success-text="Одоо имэйл хаяг болон шинэ нууц үгээрээ нэвтэрнэ үү."
+    sign-in
     missing-token-text="Энэ хаяг урилгын түлхүүргүй байна. Имэйл дэх холбоосыг бүтнээр нь дарж орно уу."
     dead-token-title="Урилгын хугацаа дууссан"
     :dead-token-text="DEAD_TEXT"
-    :retry="{ label: 'Холбоо барих', to: '/contact' }"
+    :retry="{ label: 'Шинэ холбоос авах', to: '/forgot-password' }"
   />
 </template>
