@@ -14,7 +14,7 @@ import { ChatSessionService } from '../ai/chat/chat-session.service.js';
 import { TurnOrchestrator } from '../ai/chat/turn.orchestrator.js';
 import type { LlmMessage } from '../ai/llm/llm.types.js';
 import { FacebookGraphError, FacebookGraphService } from './facebook-graph.service.js';
-import { FacebookIntakeService } from './facebook-intake.service.js';
+import { FacebookIntakeService, isAutomatedEcho } from './facebook-intake.service.js';
 import {
   assistantActive,
   messagingWindow,
@@ -122,13 +122,32 @@ export class FacebookAssistantService {
     if (later > 0) await this.intake.queueReply(thread.id, 1_000);
   }
 
-  /** The contact's messages since anybody last answered — the question to reply to. */
+  /**
+   * The contact's messages since anybody last answered — the question to reply to.
+   *
+   * Business Suite's own greeting does not count as an answer. It goes out a few
+   * seconds after the first message of every conversation, usually just before
+   * this job runs, and counted as one it would leave the person's actual
+   * question looking answered by "GKS EDU-тэй холбогдсонд баярлалаа".
+   */
   private async unanswered(threadId: string) {
-    const lastAnswer = await this.prisma.facebookMessage.findFirst({
-      where: { threadId, sender: { not: FacebookSender.CONTACT }, status: 'SENT' },
+    const recent = await this.prisma.facebookMessage.findMany({
+      where: { threadId, status: 'SENT' },
       orderBy: { createdAt: 'desc' },
-      select: { createdAt: true },
+      take: 30,
+      select: { sender: true, createdAt: true },
     });
+
+    let lastAnswer: { createdAt: Date } | undefined;
+    for (const [index, row] of recent.entries()) {
+      if (row.sender === FacebookSender.CONTACT) continue;
+      if (row.sender === FacebookSender.PAGE) {
+        const previousContact = recent.slice(index + 1).find((older) => older.sender === FacebookSender.CONTACT);
+        if (isAutomatedEcho(previousContact?.createdAt ?? null, row.createdAt)) continue;
+      }
+      lastAnswer = row;
+      break;
+    }
 
     const rows = await this.prisma.facebookMessage.findMany({
       where: {

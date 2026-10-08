@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { FacebookAssistantService, commentQuestion } from './facebook-assistant.service.js';
 import type { TurnEvent } from '../ai/chat/turn.orchestrator.js';
+import { isAutomatedEcho } from './facebook-intake.service.js';
 
 const NOW = Date.now();
 
@@ -35,6 +36,8 @@ function setup(opts: {
   events?: TurnEvent[];
   stored?: string;
   pending?: { text: string | null; createdAt: Date }[];
+  /** Newest first — what `unanswered` scans for the last real answer. */
+  recent?: { sender: string; createdAt: Date }[];
 }) {
   const threads = [...(opts.threads ?? [thread(), thread()])];
   const pending = opts.pending ?? [
@@ -49,10 +52,11 @@ function setup(opts: {
       updateMany: vi.fn(async () => ({ count: 0 })),
     },
     facebookMessage: {
-      findFirst: vi.fn(async () => ({ createdAt: new Date(NOW - 3_600_000) })),
-      // First call: the unanswered burst (newest first); second: history.
+      // First call: the recent rows scanned for the last answer; second: the
+      // unanswered burst (newest first); third: history.
       findMany: vi
         .fn()
+        .mockResolvedValueOnce(opts.recent ?? [{ sender: 'STAFF', createdAt: new Date(NOW - 3_600_000) }])
         .mockResolvedValueOnce([...pending].reverse())
         .mockResolvedValueOnce([
           { sender: 'CONTACT', text: 'Үнэ хэд вэ?' },
@@ -154,6 +158,23 @@ describe('FacebookAssistantService.replyToThread', () => {
     expect(graph.sendText).not.toHaveBeenCalled();
   });
 
+  it('does not count Business Suite\'s instant greeting as the answer', async () => {
+    const asked = new Date(NOW - 8_000);
+    const { service, prisma } = setup({
+      recent: [
+        { sender: 'PAGE', createdAt: new Date(asked.getTime() + 4_000) },
+        { sender: 'CONTACT', createdAt: asked },
+        { sender: 'AI', createdAt: new Date(NOW - 86_400_000) },
+      ],
+    });
+
+    await service.replyToThread('T1');
+
+    // The pending query starts after the AI's day-old answer, not after the greeting.
+    const pendingQuery = prisma.facebookMessage.findMany.mock.calls[1]![0] as { where: { createdAt: { gt: Date } } };
+    expect(pendingQuery.where.createdAt.gt).toEqual(new Date(NOW - 86_400_000));
+  });
+
   it('leaves a photo with no words to staff', async () => {
     const { service, run, prisma } = setup({ pending: [{ text: null, createdAt: new Date(NOW - 1_000) }] });
 
@@ -161,6 +182,19 @@ describe('FacebookAssistantService.replyToThread', () => {
 
     expect(run).not.toHaveBeenCalled();
     expect(prisma.facebookThread.update).toHaveBeenCalledWith({ where: { id: 'T1' }, data: { needsStaff: true } });
+  });
+});
+
+describe('isAutomatedEcho', () => {
+  const asked = new Date('2026-10-09T08:00:00Z');
+  it.each([
+    [null, 1_000, false],
+    [asked, 4_500, true],
+    [asked, 10_000, true],
+    [asked, 10_001, false],
+    [asked, -500, false],
+  ])('last inbound %s, echo after %ims → %s', (lastInboundAt, gap, expected) => {
+    expect(isAutomatedEcho(lastInboundAt as Date | null, new Date(asked.getTime() + gap))).toBe(expected);
   });
 });
 

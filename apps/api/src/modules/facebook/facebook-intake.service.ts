@@ -24,6 +24,16 @@ import { pageEvents, type PageEntry, type PageEvent } from './facebook-webhook.j
 const HOUR_MS = 60 * 60 * 1000;
 
 /**
+ * A Page echo this soon after the contact wrote is Business Suite's own
+ * automation — an instant reply, a greeting, an away message — not a person.
+ * Nobody reads a message and types an answer in ten seconds; Meta's automated
+ * responses go out in one to five. Treated as a human, the greeting the Page
+ * already sends to every new conversation paused the assistant on the very
+ * first message of every thread.
+ */
+const AUTOMATED_ECHO_WINDOW_MS = 10_000;
+
+/**
  * Stores what the Page webhook reported, and decides who answers it (2F).
  *
  * Every write is keyed on Meta's own id, so the same entry processed twice — a
@@ -130,7 +140,9 @@ export class FacebookIntakeService {
    * returned — so the echo is a no-op. One we did not send was typed by a
    * person in Business Suite or the Facebook app, and that is a human taking
    * the conversation: it is stored so the inbox and the assistant both see it,
-   * and the assistant steps back for the configured pause.
+   * and the assistant steps back for the configured pause — unless it came
+   * within seconds of the contact's message, which makes it Business Suite's
+   * automation (`isAutomatedEcho`), shown in the thread but pausing nothing.
    */
   private async echo(event: Extract<PageEvent, { kind: 'echo' }>): Promise<void> {
     if (event.ours) return;
@@ -146,6 +158,7 @@ export class FacebookIntakeService {
     });
     if (!stored) return;
 
+    const automated = isAutomatedEcho(thread.lastInboundAt, event.at);
     const config = await this.aiConfig.get();
     await this.prisma.facebookThread.update({
       where: { id: thread.id },
@@ -157,8 +170,12 @@ export class FacebookIntakeService {
               lastSender: FacebookSender.PAGE,
             }
           : {}),
-        needsStaff: false,
-        aiPausedUntil: new Date(event.at.getTime() + config.facebookStaffPauseHours * HOUR_MS),
+        ...(automated
+          ? {}
+          : {
+              needsStaff: false,
+              aiPausedUntil: new Date(event.at.getTime() + config.facebookStaffPauseHours * HOUR_MS),
+            }),
       },
     });
   }
@@ -264,6 +281,13 @@ export class FacebookIntakeService {
 
 function laterOf(current: Date | null, next: Date): Date {
   return current && current.getTime() > next.getTime() ? current : next;
+}
+
+/** Whether a Page echo is Business Suite's automation rather than a person (see the window above). */
+export function isAutomatedEcho(lastInboundAt: Date | null, at: Date): boolean {
+  if (!lastInboundAt) return false;
+  const gap = at.getTime() - lastInboundAt.getTime();
+  return gap >= 0 && gap <= AUTOMATED_ECHO_WINDOW_MS;
 }
 
 /** Webhooks can arrive out of order; only a newer message moves the preview. */
