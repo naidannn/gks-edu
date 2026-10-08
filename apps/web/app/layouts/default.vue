@@ -50,9 +50,9 @@ const NAV: NavItem[] = [
 
 /**
  * The ≤900px bottom tab bar. Most of our traffic is a phone, and a burger
- * costs one tap before anyone sees where they can go — so the four pages
+ * costs one tap before anyone sees where they can go — so the three pages
  * people actually come for sit on the bottom edge, within thumb reach, and
- * the fifth tab opens the rest of `NAV` as a sheet above it.
+ * the last tab opens the rest of `NAV` as a sheet above it.
  *
  * `label` is tab wording, not appbar wording: a fifth-of-a-screen tab cannot
  * carry "Их сургуулиуд". Five is the ceiling, the same one the portal shell
@@ -66,14 +66,14 @@ const TABS = [
   { to: '/', label: 'Нүүр', icon: 'house', match: null },
   { to: '/universities', label: 'Сургууль', icon: 'graduation-cap', match: '/universities' },
   { to: '/admissions', label: 'Элсэлт', icon: 'calendar-days', match: '/admissions' },
-  { to: '/plan', label: 'Төлөвлөгөө', icon: 'route', match: '/plan' },
 ];
 
 /**
  * The rest of the site, for the sheet only. These pages have always lived in
  * the footer, which is fine on a desktop and useless on a phone — the footer
  * is a scroll away, the sheet is one tap. The appbar itself stays at five
- * entries; this list never reaches it.
+ * entries; this list never reaches it. The planner left the bar on purpose:
+ * on a phone it is reached from the sheet, where `isTabbed` no longer hides it.
  */
 const MORE: NavLink[] = [
   { to: '/blog', label: 'Мэдээ' },
@@ -813,7 +813,7 @@ async function onLogout() {
 .gks-footer__bottom-link:hover { color: var(--n-000); }
 
 /* ---- Mobile bottom tabs (≤900px) ----
-   Four destinations plus the sheet. Same shape as the portal shell's bar, so
+   Three destinations plus the sheet. Same shape as the portal shell's bar, so
    a client crossing between /universities and /app does not relearn the
    bottom edge of the screen. */
 .gks-tabbar {
