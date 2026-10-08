@@ -4,6 +4,36 @@
   "campus": "Коян (Кёнгидо) кампус.",
   "tuitionTables": [
     {
+      "level": "BACHELOR",
+      "group": "국제교류학부",
+      "tuitionPerTermKrw": 4580000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2025,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH",
+      "evidence": "8. 나. 등록금(2025학년도 2학기 기준), 신입: 국제교류학부 서비스경영·항공교통물류·항공경영 전공 4,580,000원/학기 (표를 이미지로 확인)"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "항공·경영대학",
+      "tuitionPerTermKrw": 4252000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2025,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH",
+      "evidence": "8. 나. 등록금(2025학년도 2학기 기준), 신입: 항공경영대학 4,252,000원/학기 (표를 이미지로 확인)"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학·AI융합",
+      "tuitionPerTermKrw": 5032000,
+      "admissionFeeKrw": null,
+      "tuitionYear": 2025,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH",
+      "evidence": "8. 나. 등록금(2025학년도 2학기 기준), 신입: 공과대학·AI융합대학·스마트드론공학과·AI자율주행시스템공학과·항공운항학과 5,032,000원/학기 (표를 이미지로 확인)"
+    },
+    {
       "level": "MASTER",
       "group": "공학",
       "tuitionPerTermKrw": 6829000,
@@ -94,8 +124,164 @@
       "evidence": "등록금 학기당 2,600,000원; 입학금 50,000원 (환불 불가); 1학기 16주, 총 360시간"
     }
   ],
-  "faculties": [],
+  "faculties": [
+    {
+      "nameKo": "국제교류학부",
+      "nameEn": "Division of International Exchange",
+      "nameMn": "Олон улсын солилцооны тэнхим"
+    },
+    {
+      "nameKo": "공과대학",
+      "nameEn": "College of Engineering",
+      "nameMn": "Инженерийн танхим"
+    },
+    {
+      "nameKo": "AI융합대학",
+      "nameEn": "College of AI Convergence",
+      "nameMn": "Хиймэл оюун ухааны нэгдсэн танхим"
+    },
+    {
+      "nameKo": "항공·경영대학",
+      "nameEn": "College of Aviation and Business",
+      "nameMn": "Агаарын тээвэр, менежментийн танхим"
+    }
+  ],
   "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "국제교류학부",
+      "nameKo": "국제교류학부 서비스경영전공",
+      "nameEn": "Service Management (Division of International Exchange)",
+      "nameMn": "Үйлчилгээний менежмент",
+      "tuitionGroup": "국제교류학부",
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": 3,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Гадаад оюутанд зориулсан анги. Солонгос эсвэл англи хэлний аль нэгээр элсэнэ: TOPIK 3+ (эсвэл солонгос хэлний ярилцлага), эсвэл TOEFL iBT 71 / IELTS 5.5+. Онлайн ярилцлага өгнө.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제교류학부",
+      "nameKo": "국제교류학부 항공교통물류전공",
+      "nameEn": "Air Transport and Logistics (Division of International Exchange)",
+      "nameMn": "Агаарын тээвэр, логистик",
+      "tuitionGroup": "국제교류학부",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Гадаад оюутанд зориулсан англи хэлний анги. TOEFL iBT 71 / IELTS 5.5 буюу түүнээс дээш, эсвэл түүнтэй адил англи хэлний чадвартай гэж үнэлэгдсэн байх. Онлайн ярилцлага өгнө.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "국제교류학부",
+      "nameKo": "국제교류학부 항공경영전공",
+      "nameEn": "Aviation Management (Division of International Exchange)",
+      "nameMn": "Агаарын тээврийн менежмент",
+      "tuitionGroup": "국제교류학부",
+      "durationYears": 4,
+      "language": "ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Гадаад оюутанд зориулсан англи хэлний анги. TOEFL iBT 71 / IELTS 5.5 буюу түүнээс дээш, эсвэл түүнтэй адил англи хэлний чадвартай гэж үнэлэгдсэн байх. Онлайн ярилцлага өгнө.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공과대학",
+      "nameKo": "공과대학",
+      "nameEn": "College of Engineering (admitted as one unit)",
+      "nameMn": "Инженерийн танхим (танхимаар элсэнэ)",
+      "tuitionGroup": "공학·AI융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Танхимаар элсэж, 2-р курсэд мэргэжлээ сонгоно (сансар судлал, нисэхийн инженерчлэл, машин, нисэхийн MRO, шинэ материал, хагас дамжуулагчийн материал). TOPIK 3 буюу түүнээс дээш, эсвэл солонгос хэлний чадвараа баталгаажуулсан бусад бичиг баримт. Хэлний шаардлага хангаагүй бол элсэлтийн дараа сургуулийн Солонгос хэлний төвд заавал суралцана.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "AI융합대학",
+      "nameKo": "AI융합대학",
+      "nameEn": "College of AI Convergence (admitted as one unit)",
+      "nameMn": "Хиймэл оюун ухааны нэгдсэн танхим (танхимаар элсэнэ)",
+      "tuitionGroup": "공학·AI융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Танхимаар элсэж, 2-р курсэд мэргэжлээ сонгоно (хиймэл оюун ухаан, компьютерийн инженерчлэл, хагас дамжуулагчийн систем, электроник ба нисэхийн электроник, хиймэл оюуны нэгдсэн ICT). TOPIK 3 буюу түүнээс дээш, эсвэл солонгос хэлний чадвараа баталгаажуулсан бусад бичиг баримт. Хэлний шаардлага хангаагүй бол элсэлтийн дараа сургуулийн Солонгос хэлний төвд заавал суралцана.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "항공·경영대학",
+      "nameKo": "항공·경영대학",
+      "nameEn": "College of Aviation and Business (admitted as one unit)",
+      "nameMn": "Агаарын тээвэр, менежментийн танхим (танхимаар элсэнэ)",
+      "tuitionGroup": "항공·경영대학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Танхимаар элсэж, 2-р курсэд мэргэжлээ сонгоно (агаарын тээвэр, логистик, менежмент, агаарын тээврийн менежмент). TOPIK 3 буюу түүнээс дээш, эсвэл солонгос хэлний чадвараа баталгаажуулсан бусад бичиг баримт. Хэлний шаардлага хангаагүй бол элсэлтийн дараа сургуулийн Солонгос хэлний төвд заавал суралцана.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "스마트드론공학과",
+      "nameEn": "Smart Drone Engineering",
+      "nameMn": "Ухаалаг дроны инженерчлэл",
+      "tuitionGroup": "공학·AI융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3 буюу түүнээс дээш, эсвэл солонгос хэлний чадвараа баталгаажуулсан бусад бичиг баримт. Хэлний шаардлага хангаагүй бол элсэлтийн дараа сургуулийн Солонгос хэлний төвд заавал суралцана.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "AI자율주행시스템공학과",
+      "nameEn": "AI Autonomous Driving Systems Engineering",
+      "nameMn": "Хиймэл оюуны өөрөө жолооддог системийн инженерчлэл",
+      "tuitionGroup": "공학·AI융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3 буюу түүнээс дээш, эсвэл солонгос хэлний чадвараа баталгаажуулсан бусад бичиг баримт. Хэлний шаардлага хангаагүй бол элсэлтийн дараа сургуулийн Солонгос хэлний төвд заавал суралцана.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "항공운항학과",
+      "nameEn": "Aviation Operations",
+      "nameMn": "Нисэхийн ажиллагаа (нисгэгч бэлтгэл)",
+      "tuitionGroup": "공학·AI융합",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "TOPIK 3 буюу түүнээс дээш, эсвэл солонгос хэлний чадвараа баталгаажуулсан бусад бичиг баримт. Хэлний шаардлага хангаагүй бол элсэлтийн дараа сургуулийн Солонгос хэлний төвд заавал суралцана. Өргөдөл өгөхдөө нисэхийн эрүүл мэндийн 1-р зэргийн гэрчилгээ заавал бүрдүүлнэ.",
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "confidence": "HIGH"
+    },
     {
       "level": "MASTER",
       "faculty": null,
@@ -505,6 +691,133 @@
   "scholarships": [
     {
       "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "한국어 성적 우수자 입학장학 (TOPIK 6급)",
+      "percent": 70,
+      "headline": false,
+      "criteria": "Korean track — TOPIK 6급 첫학기 등록금의 70%",
+      "evidence": "8. 가. 입학장학: TOPIK 6급 첫학기 등록금의 70%; 별도 신청 없이 자동 지급",
+      "noteMn": null,
+      "groups": [
+        "공학·AI융합",
+        "항공·경영대학",
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "한국어 성적 우수자 입학장학 (TOPIK 5급)",
+      "percent": 50,
+      "headline": true,
+      "criteria": "Korean track — TOPIK 5급 첫학기 등록금의 50%",
+      "evidence": "8. 가. 입학장학: TOPIK 5급 첫학기 등록금의 50%; 별도 신청 없이 자동 지급",
+      "noteMn": "Солонгос хэлний замаар элсэгч TOPIK 5 бол эхний улирлын төлбөрийн 50%, TOPIK 6 бол 70%-ийг хөнгөлнө (TOPIK 4 бол 30%, TOPIK 3 бол 20%). Тусдаа өргөдөл шаардахгүй. 100%-ийн хөнгөлөлт зөвхөн англи хэлний замаар (TOEFL iBT 96+ / IELTS 7.0+) олгогдох ба зөвхөн эхний улиралд үйлчилнэ.",
+      "groups": [
+        "공학·AI융합",
+        "항공·경영대학",
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "한국어 성적 우수자 입학장학 (TOPIK 4급)",
+      "percent": 30,
+      "headline": false,
+      "criteria": "Korean track — TOPIK 4급 첫학기 등록금의 30%",
+      "evidence": "8. 가. 입학장학: TOPIK 4급 첫학기 등록금의 30%",
+      "noteMn": null,
+      "groups": [
+        "공학·AI융합",
+        "항공·경영대학",
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "한국어 성적 우수자 입학장학 (TOPIK 3급)",
+      "percent": 20,
+      "headline": false,
+      "criteria": "Korean track — TOPIK 3급 첫학기 등록금의 20%",
+      "evidence": "8. 가. 입학장학: TOPIK 3급 첫학기 등록금의 20%",
+      "noteMn": null,
+      "groups": [
+        "공학·AI융합",
+        "항공·경영대학",
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "영어 성적 우수자 입학장학 (TOEFL 96 / IELTS 7.0)",
+      "percent": 100,
+      "headline": false,
+      "criteria": "English track — TOEFL iBT 96 이상 또는 IELTS 7.0 이상 첫학기 등록금의 100%",
+      "evidence": "8. 가. 입학장학: TOEFL iBT 96 이상 또는 IELTS 7.0 이상 첫학기 등록금의 100%",
+      "noteMn": null,
+      "groups": [
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "영어 성적 우수자 입학장학 (TOEFL 90 / IELTS 6.5)",
+      "percent": 50,
+      "headline": true,
+      "criteria": "English track — TOEFL iBT 90 이상 또는 IELTS 6.5 이상 첫학기 등록금의 50%",
+      "evidence": "8. 가. 입학장학: TOEFL iBT 90 이상 또는 IELTS 6.5 이상 첫학기 등록금의 50%",
+      "noteMn": "Англи хэлний замаар элсэгч IELTS 6.5 (TOEFL iBT 90) бол эхний улирлын төлбөрийн 50%-ийг хөнгөлнө; IELTS 7.0+ (TOEFL iBT 96+) бол 100% (зөвхөн эхний улирал), IELTS 6.0 бол 20%. Тусдаа өргөдөл шаардахгүй.",
+      "groups": [
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "kind": "ENTRANCE",
+      "semesters": 1,
+      "sourceUrl": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf",
+      "name": "영어 성적 우수자 입학장학 (TOEFL 81 / IELTS 6.0)",
+      "percent": 20,
+      "headline": false,
+      "criteria": "English track — TOEFL iBT 81 이상 또는 IELTS 6.0 이상 첫학기 등록금의 20%",
+      "evidence": "8. 가. 입학장학: TOEFL iBT 81 이상 또는 IELTS 6.0 이상 첫학기 등록금의 20%",
+      "noteMn": null,
+      "groups": [
+        "국제교류학부"
+      ]
+    },
+    {
+      "levels": [
         "MASTER",
         "PHD"
       ],
@@ -553,16 +866,11 @@
       "reason": "Тусдаа түвшин биш."
     },
     {
-      "what": "학부 (순수외국인전형)",
-      "reason": "Дээрх pending-д бичсэн."
+      "what": "학부 편입학 (3·4학년)",
+      "reason": "Шилжих элсэлт тусдаа журамтай; зөвхөн шинээр элсэх (신입학) ангиудыг оруулав."
     }
   ],
   "pending": [
-    {
-      "what": "Бакалаврын бүх анги, төлбөр, тэтгэлэг (Корея Агаарын Сургууль)",
-      "reason": "2027 оны хаврын гадаадын оюутны бакалаврын журам албан сайтад хараахан нийтлэгдээгүй. Нийтлэгдсэн хамгийн сүүлийнх нь 2026 оны журам; түүний төлбөрийн хүснэгт 2025 оны 2-р улирлынх бөгөөд PDF-ээс анги бүрийн төлбөрийн харгалзаа мөр алдагдсан. Хуучин тоо шилжүүлэхгүй, таамаглахгүй тул оруулсангүй.",
-      "checkAt": "http://ibhak.kau.ac.kr/admission/html/international/guide.asp"
-    },
     {
       "what": "Магистр/докторын хөтөлбөрийн хугацаа",
       "reason": "Журамд жилийн хугацаа заагаагүй тул durationYears = null.",
@@ -577,6 +885,21 @@
       "what": "2027 оны сургалтын төлбөр (магистр, доктор)",
       "reason": "Сургууль 2026 оны хүснэгтийг нийтэлсэн, нэмэгдвэл нэмэлт төлбөр төлж болно гэж бичсэн.",
       "checkAt": "https://grad.kau.ac.kr/download/2027%20%EC%A0%84%EA%B8%B0%20%EC%9D%BC%EB%B0%98%EB%8C%80%ED%95%99%EC%9B%90%20%EC%99%B8%EA%B5%AD%EC%9D%B8%20%EC%8B%A0%EC%9E%85%EC%83%9D%20%EB%AA%A8%EC%A7%91%EC%9A%94%EA%B0%95(%ED%95%9C%EA%B8%80).pdf"
+    },
+    {
+      "what": "2027 оны бакалаврын төлбөр ба журам",
+      "reason": "2027 оны гадаадын оюутны бакалаврын журам хараахан нийтлэгдээгүй; хамгийн сүүлийн 2026 оны журмын төлбөр 2025 оны 2-р улирлынх (tuitionYear = 2025). Журам гарахад шинэчилнэ.",
+      "checkAt": "http://ibhak.kau.ac.kr/admission/html/international/guide.asp"
+    },
+    {
+      "what": "Бакалаврын 입학금 (элсэлтийн хураамж)",
+      "reason": "Журамд бакалаврын 입학금-ийн дүн заагаагүй тул null.",
+      "checkAt": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf"
+    },
+    {
+      "what": "Бакалаврын мэргэжил сонголт (танхимаар элсэх анги)",
+      "reason": "Инженер, AI нэгдсэн, агаарын тээвэр-менежментийн танхимд танхимаар элсэж, 2-р курсэд мэргэжил сонгодог тул танхим бүрийг нэг анги болгон оруулав; мэргэжил тус бүрийн тусдаа төлбөр байхгүй.",
+      "checkAt": "http://ibhak.kau.ac.kr/upload/GUIDES/20250909162225003.pdf"
     }
   ]
 }

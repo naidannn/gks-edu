@@ -54,6 +54,12 @@ Mongolian Cyrillic, never "AI", "эх сурвалж", "таамагласан".
 - Read with `../intake-research-kit/fetch.sh "<url>" <prefix>-<name>` (see that kit's README for the
   venv). A list that comes back empty is usually loaded by JavaScript: find the page's `$.post` /
   `fetch` endpoint in the raw HTML and `curl` it.
+- **Image-only / scanned PDF, or a table whose blank cells vanished in the text** (석사 vs 박사
+  columns, ○/● marks, a fee table scrambled across rows, a percent printed inside a picture): the
+  raw download stays in `/tmp/intake-research/raw-<name>`. Render the pages and look at them with
+  the Read tool: `swift ../intake-research-kit/pdfimg.swift /tmp/intake-research/raw-<name> <first> <last> $TMPDIR/<name>`
+  → `<name>-<n>.png` (1-based pages, 2x; pages are large, render only the ones you need). A `.png`/`.jpg`
+  linked from a school page: `curl` it and Read it the same way. Do not infer a cell from its neighbours.
 - Do NOT use the Chrome browser tools.
 
 ## Validate before you finish

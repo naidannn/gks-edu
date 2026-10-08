@@ -66,3 +66,10 @@ university domains, and parallel agents would fight over its tabs.
 The dev Supabase is gone. Use the docker-compose Postgres (`docker compose --profile local-db up -d
 postgres`, credentials from the repo-root `.env`'s `POSTGRES_*`), then
 `pnpm exec tsx prisma/import-programs.ts --only <slug>`.
+
+### Reading images and cell-losing PDFs
+
+`../intake-research-kit/pdfimg.swift` (PDFKit, macOS) renders PDF pages to PNG so an agent can read a
+scanned table, a ○/● matrix or a percent printed inside a picture with the Read tool. `BRIEF.md` tells
+agents when to use it. 2026-10-08 it was added after wave 1 left gaps: JBNU grad (석사/박사 columns),
+KAU bachelor (fee rows scrambled), CAU bachelor TOPIK 6 scholarship (in an image).
