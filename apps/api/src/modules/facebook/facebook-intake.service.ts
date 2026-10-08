@@ -106,6 +106,10 @@ export class FacebookIntakeService {
     });
     if (!stored) return;
 
+    // A thread made while Meta would not say who this is gets another try on
+    // each message until it does — cheap, and the inbox stops saying "Нэргүй".
+    const profile = thread.name ? null : await this.graph.profile(event.psid);
+
     const config = await this.aiConfig.get();
     const answerable = Boolean(event.text?.trim());
     // The assistant reads words. A photo of a transcript or a voice note is a
@@ -127,6 +131,8 @@ export class FacebookIntakeService {
         unreadCount: { increment: 1 },
         needsStaff: !assistantWillAnswer,
         ...(event.referral && !thread.referral ? { referral: event.referral } : {}),
+        ...(profile?.name ? { name: profile.name } : {}),
+        ...(profile?.profilePic ? { profilePic: profile.profilePic } : {}),
       },
     });
 

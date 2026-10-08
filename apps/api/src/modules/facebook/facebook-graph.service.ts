@@ -102,7 +102,16 @@ export class FacebookGraphService {
     }
   }
 
-  /** Name and picture. Null when Meta will not say — a private profile is common. */
+  /**
+   * Name and picture. Null when Meta will not say.
+   *
+   * The user-profile read needs the Business Asset User Profile Access feature
+   * at Advanced Access — App Review — for anybody without a role on the app,
+   * so on a published app without it every real customer comes back
+   * "does not exist" (code 100/33). The conversation's participant list needs
+   * nothing beyond what messaging already has and still carries the name, so
+   * it is the fallback: a name without a picture beats "Нэргүй харилцагч".
+   */
   async profile(psid: string): Promise<{ name: string | null; profilePic: string | null } | null> {
     if (this.mock) return null;
     try {
@@ -113,7 +122,23 @@ export class FacebookGraphService {
       const name = data.name ?? [data.first_name, data.last_name].filter(Boolean).join(' ');
       return { name: name || null, profilePic: data.profile_pic ?? null };
     } catch (error) {
+      const name = await this.participantName(psid);
+      if (name) return { name, profilePic: null };
       this.logger.warn(`Facebook профайл уншигдсангүй: ${describe(error)}`);
+      return null;
+    }
+  }
+
+  /** The contact's name as the Page's conversation with them lists it. */
+  private async participantName(psid: string): Promise<string | null> {
+    try {
+      const data = await this.get<{ data?: { participants?: { data?: { id?: string; name?: string }[] } }[] }>(
+        `/${this.pageId}/conversations`,
+        { platform: 'messenger', user_id: psid, fields: 'participants' },
+      );
+      const participant = data.data?.[0]?.participants?.data?.find((person) => person.id === psid);
+      return participant?.name?.trim() || null;
+    } catch {
       return null;
     }
   }
