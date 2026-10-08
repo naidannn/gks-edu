@@ -36,3 +36,6 @@ apps/api/tmp/
 
 # Local data dumps taken before a destructive maintenance script.
 .backups/
+
+# Anonymised Facebook chat corpus (scripts/facebook-chats-import.mjs) — customer text, never committed.
+data/chat-corpus/

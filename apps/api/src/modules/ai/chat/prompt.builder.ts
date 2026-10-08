@@ -1,6 +1,7 @@
 import { AccessLevel, ChatChannel } from '../../../prisma/client.js';
 import type { RetrievalHit } from '../knowledge/retrieval.service.js';
 import { levelPrompt, POLICY_PROMPT, todayPrompt } from './policy.prompt.js';
+import { salesPrompt } from './sales.prompt.js';
 
 export interface PromptContext {
   persona: string;
@@ -79,6 +80,11 @@ export function buildSystemPrompt(context: PromptContext): BuiltPrompt {
     levelPrompt(context.level),
     todayPrompt(context.now),
   ];
+
+  const sales = salesPrompt(context.level, context.now);
+  if (sales) {
+    layers.push(sales);
+  }
 
   if (context.channel === ChatChannel.FACEBOOK) {
     layers.push(FACEBOOK_LAYER);
