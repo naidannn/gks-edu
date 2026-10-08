@@ -1,0 +1,388 @@
+{
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "신입학 1학년(무전공)",
+      "tuitionPerTermKrw": 4023000,
+      "admissionFeeKrw": null,
+      "tuitionYear": null,
+      "sourceUrl": "https://www.handong.edu/ext/bbs/download.dcp?id=16398",
+      "confidence": "HIGH",
+      "evidence": "2027학년도 외국인(부모 모두 외국인) 신편입학 모집요강 09 등록금 안내: 신입학 1학년 1학기 4,023,000원 / 2학기 3,843,000원 (GLS, 전공 계열 무관 공통). 입학금 기재 없음. 표에 학년도 표기 없음."
+    },
+    {
+      "level": "MASTER",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 4074000,
+      "admissionFeeKrw": 900000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH",
+      "evidence": "2027학년도 전기 일반대학원 모집요강 종합안내 (2026년 2학기 기준): 입학금 900,000원, 수업료 인문사회계열 4,074,000원"
+    },
+    {
+      "level": "MASTER",
+      "group": "이공",
+      "tuitionPerTermKrw": 5646000,
+      "admissionFeeKrw": 900000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH",
+      "evidence": "종합안내 (2026년 2학기 기준): 수업료 이공계열 5,646,000원 (이학·공학 모두 이공계열), 입학금 900,000원"
+    },
+    {
+      "level": "PHD",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 4074000,
+      "admissionFeeKrw": 900000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH",
+      "evidence": "종합안내 (2026년 2학기 기준): 인문사회계열 4,074,000원, 입학금 900,000원 (본교 석사 졸업자는 입학금 전액 장학)"
+    },
+    {
+      "level": "PHD",
+      "group": "이공",
+      "tuitionPerTermKrw": 5646000,
+      "admissionFeeKrw": 900000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH",
+      "evidence": "종합안내 (2026년 2학기 기준): 이공계열 5,646,000원, 입학금 900,000원"
+    }
+  ],
+  "faculties": [],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "무전공 입학 (GLS)",
+      "nameEn": "Undeclared major admission (GLS)",
+      "nameMn": "Мэргэжил сонгоогүй элсэлт (GLS)",
+      "tuitionGroup": "신입학 1학년(무전공)",
+      "durationYears": 4,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Элсэхдээ мэргэжил сонгохгүй, эхний жил бүх мэргэжлээр танилцаад 2-р курсээс мэргэжлээ сонгоно (олон мэргэжил хослуулдаг). Солонгос эсвэл англи хэлний оноо заавал биш, оноогүй бол ярилцлагаар шалгана. Хэд хэдэн мэргэжил зөвхөн англиар заадаг.",
+      "sourceUrl": "https://www.handong.edu/ext/bbs/download.dcp?id=16398",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "심리학과",
+      "nameEn": "Psychology",
+      "nameMn": "Сэтгэл судлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "법학과",
+      "nameEn": "Law",
+      "nameMn": "Хууль зүй",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "생명과학과",
+      "nameEn": "Life Science",
+      "nameMn": "Амьдрал шинжлэх ухаан",
+      "tuitionGroup": "이공",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "공간설계공학과",
+      "nameEn": "Spatial Design and Engineering",
+      "nameMn": "Орон зайн дизайн, инженерчлэл",
+      "tuitionGroup": "이공",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "기계제어공학과",
+      "nameEn": "Mechanical and Control System Engineering",
+      "nameMn": "Машин, удирдлагын системийн инженерчлэл",
+      "tuitionGroup": "이공",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "문화미디어디자인학과",
+      "nameEn": "Culture and Media Design",
+      "nameMn": "Соёл, медиа дизайн",
+      "tuitionGroup": "이공",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "AI컴퓨터전자공학과",
+      "nameEn": "AI Computer Science and Electronic Engineering",
+      "nameMn": "Хиймэл оюун, компьютер, электроникийн инженерчлэл",
+      "tuitionGroup": "이공",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "휴먼&테크 AI융합학과",
+      "nameEn": "Human and Tech AI Convergence",
+      "nameMn": "Хүн ба технологи, хиймэл оюун интеграц",
+      "tuitionGroup": "이공",
+      "durationYears": 2,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "심리학과",
+      "nameEn": "Psychology",
+      "nameMn": "Сэтгэл судлал",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "법학과",
+      "nameEn": "Law",
+      "nameMn": "Хууль зүй",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "기계제어공학과",
+      "nameEn": "Mechanical and Control System Engineering",
+      "nameMn": "Машин, удирдлагын системийн инженерчлэл",
+      "tuitionGroup": "이공",
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "AI컴퓨터전자공학과",
+      "nameEn": "AI Computer Science and Electronic Engineering",
+      "nameMn": "Хиймэл оюун, компьютер, электроникийн инженерчлэл",
+      "tuitionGroup": "이공",
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "휴먼&테크 AI융합학과",
+      "nameEn": "Human and Tech AI Convergence",
+      "nameMn": "Хүн ба технологи, хиймэл оюун интеграц",
+      "tuitionGroup": "이공",
+      "durationYears": 3,
+      "language": "KOREAN_ENGLISH",
+      "topikLevel": null,
+      "ieltsScore": 5.5,
+      "otherRequirements": "Өргөдөл гаргагч болон эцэг эх хоёулаа гадаад иргэн байх. Англи хэлний оноо шаардлагатай (TOEFL iBT 80, IELTS 5.5 гэх мэт; бүрэн англи хэлээр суралцсан бол чөлөөлнө). Баримт бичгийн үнэлгээ, дараа нь ярилцлага.",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "confidence": "HIGH"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 입학 장학금 (TOPIK 4급 이상)",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "headline": true,
+      "criteria": "TOPIK 4급 이상 (F-4 비자 제외) 또는 TOEFL iBT 85 / IELTS 5.5 / New TEPS 285 이상",
+      "sourceUrl": "https://www.handong.edu/ext/bbs/download.dcp?id=16398",
+      "evidence": "외국인 입학 장학금: TOPIK 4급 이상 등록금 50%, TOPIK 6급 100%, 영어 TOEFL iBT 85/IELTS 5.5/New TEPS 285 등록금 50%. 입학 첫 학기에만 적용. 최대 장학금 1개만 적용.",
+      "noteMn": "Солонгос хэлний TOPIK 4-өөс дээш оноотой бол төлбөрийн 50% хөнгөлнө; TOPIK 6 бол 100%. Зөвхөн элссэн эхний улиралд хамаарна. Англи хэлний оноо (TOEFL iBT 85, IELTS 5.5) -той бол мөн 50%."
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인 입학 우수장학금",
+      "kind": "ENTRANCE",
+      "percent": 50,
+      "headline": false,
+      "criteria": "합격생 상위 10%",
+      "sourceUrl": "https://www.handong.edu/ext/bbs/download.dcp?id=16398",
+      "evidence": "상위 10%의 합격생에게 등록금 50% 감면, 정규학기(신입 8학기)"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "학업수행 장학금 (재학생)",
+      "kind": "CONTINUING",
+      "percent": 100,
+      "headline": false,
+      "criteria": "직전학기 GPA 4.30~4.50 → 100%, 3.50~4.29 → 50% (TOPIK 4급 이상 또는 영어 성적 필수, 15학점 이상)",
+      "sourceUrl": "https://www.handong.edu/ext/bbs/download.dcp?id=16398",
+      "evidence": "재학생 장학금 학업수행 장학금"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "일반 면학장학금 (65%)",
+      "kind": "ENTRANCE",
+      "percent": 65,
+      "headline": true,
+      "criteria": "일반전형 합격자, 재학 중 평점 B0 이상",
+      "sourceUrl": "https://www.handong.edu/kor/admission/gradschool/general/general/",
+      "evidence": "일반전형합격자는 일반면학장학금을 신청하여 수업료의 65% 지급 (석사 최대 4개 학기, 박사 최대 4개 학기, 평균평점 B0 이상). 영문 페이지: average of 65% for 2 years.",
+      "noteMn": "Элссэн бүх оюутан суралцах хугацаандаа төлбөрийн 65%-ийн хөнгөлөлт авна (магистр, доктор тус бүр 4 улирал; голч B0-оос дээш). Бодит төлбөр: хүмүүнлэг-нийгэм 1,425,900₩, байгалийн-инженер 1,976,100₩. 100%-ийн тусгай тэтгэлэг байхгүй."
+    }
+  ],
+  "excluded": [
+    {
+      "what": "Бакалаврын нэр бүхий мэргэжлүүд (경영학, 컴퓨터공학 гэх мэт)",
+      "reason": "Элсэлт 무전공 (мэргэжил сонгохгүй), мэргэжил 2-р курсээс сонгогддог тул тусдаа анги болгоогүй."
+    },
+    {
+      "what": "Handong International Law School, Global Management and Leadership, Global Development and Entrepreneurship, Counseling, Education, Interpretation and Translation graduate schools",
+      "reason": "Тусгай/мэргэжлийн аспирантур — зөвхөн 일반대학원."
+    },
+    {
+      "what": "Доктор: 생명과학, 공간설계공학, 문화미디어디자인",
+      "reason": "Докторын хөтөлбөрт зөвхөн 심리학·법학·사회복지학·기계제어공학·AI컴퓨터전자공학·휴먼&테크 AI융합학과 элсүүлнэ."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Хэлний бэлтгэл (한국어교육원)",
+      "reason": "Handong-ийн албан ёсны сайтад гадаад оюутны хэлний бэлтгэлийн хөтөлбөр, төлбөр олдсонгүй.",
+      "checkAt": "https://www.handong.edu/eng/global/programs/"
+    },
+    {
+      "what": "Бакалаврын 2-р курсээс хойших төлбөр (мэргэжлийн хослолоор)",
+      "reason": "Хүмүүнлэг-нийгэм 3,171,000₩, инженер-урлаг 4,068,000₩, хосолсон 3,618,000₩ — сонгосон мэргэжлээс хамаарах тул анги бүрт оноогоогүй.",
+      "checkAt": "https://www.handong.edu/eng/admission/undergraduate/tuition/"
+    },
+    {
+      "what": "Бакалаврын 입학금, төлбөрийн он",
+      "reason": "Журамд заагдаагүй — null.",
+      "checkAt": "https://www.handong.edu/ext/bbs/download.dcp?id=16398"
+    },
+    {
+      "what": "Монгол улс 코너스톤 장학금 (100%)-ийн KOICA жагсаалтад орох эсэх",
+      "reason": "Хөгжиж буй орны иргэдэд зориулсан 100% тэтгэлэг; Монгол жагсаалтад орох эсэхийг сургуулиас лавлах.",
+      "checkAt": "https://www.handong.edu/ext/bbs/download.dcp?id=16398"
+    }
+  ],
+  "slug": "handong-global-university",
+  "researchedAt": "2026-10-08"
+}

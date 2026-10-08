@@ -1,0 +1,707 @@
+{
+  "slug": "kangnam-university",
+  "researchedAt": "2026-10-08",
+  "tuitionTables": [
+    {
+      "level": "BACHELOR",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 3847000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice&mode=view&bltn_seq=39284",
+      "confidence": "MEDIUM",
+      "evidence": "2026 학년도 1 학기 신편입생 대학 등록금 안내 인문사회 3,847,000 (학교는 외국인 전용 표를 따로 게시하지 않음)"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "체육학과",
+      "tuitionPerTermKrw": 4487000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice&mode=view&bltn_seq=39284",
+      "confidence": "MEDIUM",
+      "evidence": "체육학과 4,487,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "공학",
+      "tuitionPerTermKrw": 4835000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice&mode=view&bltn_seq=39284",
+      "confidence": "MEDIUM",
+      "evidence": "공학 4,835,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "예체능",
+      "tuitionPerTermKrw": 5098000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice&mode=view&bltn_seq=39284",
+      "confidence": "MEDIUM",
+      "evidence": "음악학과 디자인학과 5,098,000"
+    },
+    {
+      "level": "BACHELOR",
+      "group": "자유전공학부",
+      "tuitionPerTermKrw": 4835000,
+      "admissionFeeKrw": 0,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice&mode=view&bltn_seq=39284",
+      "confidence": "MEDIUM",
+      "evidence": "자유전공학부 4,835,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 4467000,
+      "admissionFeeKrw": 875000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH",
+      "evidence": "7. 등록금 (2026학년도 기준) 일반대학원 석사 인문사회 수업료 4,467,000 입학금 875,000"
+    },
+    {
+      "level": "MASTER",
+      "group": "공학",
+      "tuitionPerTermKrw": 4826000,
+      "admissionFeeKrw": 875000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH",
+      "evidence": "일반대학원 석사 공학 수업료 4,826,000 입학금 875,000"
+    },
+    {
+      "level": "PHD",
+      "group": "인문사회",
+      "tuitionPerTermKrw": 5045000,
+      "admissionFeeKrw": 875000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH",
+      "evidence": "일반대학원 박사 인문사회 수업료 5,045,000 입학금 875,000"
+    },
+    {
+      "level": "PHD",
+      "group": "공학",
+      "tuitionPerTermKrw": 5447000,
+      "admissionFeeKrw": 875000,
+      "tuitionYear": 2026,
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH",
+      "evidence": "일반대학원 박사 공학 수업료 5,447,000 입학금 875,000"
+    }
+  ],
+  "faculties": [
+    {
+      "nameKo": "복지융합대학",
+      "nameEn": "College of Welfare Convergence",
+      "nameMn": "Нийгмийн халамжийн танхим"
+    },
+    {
+      "nameKo": "경영관리대학",
+      "nameEn": "College of Business Administration",
+      "nameMn": "Бизнес удирдлагын танхим"
+    },
+    {
+      "nameKo": "글로벌문화콘텐츠대학",
+      "nameEn": "College of Global Culture and Contents",
+      "nameMn": "Дэлхийн соёл, контентын танхим"
+    },
+    {
+      "nameKo": "공과대학",
+      "nameEn": "College of Engineering",
+      "nameMn": "Инженерийн танхим"
+    }
+  ],
+  "programs": [
+    {
+      "level": "BACHELOR",
+      "faculty": "복지융합대학",
+      "nameKo": "사회복지학부",
+      "nameEn": "School of Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "복지융합대학",
+      "nameKo": "시니어비즈니스학과",
+      "nameEn": "Senior Business",
+      "nameMn": "Ахмадын бизнес",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "경영관리대학",
+      "nameKo": "상경학부",
+      "nameEn": "School of Business and Economics",
+      "nameMn": "Бизнес, эдийн засаг",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "경영관리대학",
+      "nameKo": "법행정세무학부",
+      "nameEn": "School of Law, Public Administration and Taxation",
+      "nameMn": "Хууль, засаг захиргаа, татвар",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌문화콘텐츠대학",
+      "nameKo": "문화콘텐츠학과",
+      "nameEn": "Cultural Contents",
+      "nameMn": "Соёлын контент",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌문화콘텐츠대학",
+      "nameKo": "국제지역학과",
+      "nameEn": "International Area Studies",
+      "nameMn": "Олон улсын бүс нутгийн судалгаа",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌문화콘텐츠대학",
+      "nameKo": "중국콘텐츠비즈니스학과",
+      "nameEn": "Chinese Contents Business",
+      "nameMn": "Хятадын контент бизнес",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "글로벌문화콘텐츠대학",
+      "nameKo": "기독교커뮤니케이션학과",
+      "nameEn": "Christian Communication",
+      "nameMn": "Христийн харилцаа холбоо",
+      "tuitionGroup": "인문사회",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공과대학",
+      "nameKo": "컴퓨터공학부",
+      "nameEn": "School of Computer Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공과대학",
+      "nameKo": "인공지능융합공학부",
+      "nameEn": "School of AI Convergence Engineering",
+      "nameMn": "Хиймэл оюун ухааны нэгдсэн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공과대학",
+      "nameKo": "전자반도체공학부",
+      "nameEn": "School of Electronic and Semiconductor Engineering",
+      "nameMn": "Электроник, хагас дамжуулагч",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": "공과대학",
+      "nameKo": "부동산건설학부",
+      "nameEn": "School of Real Estate and Construction",
+      "nameMn": "Үл хөдлөх хөрөнгө, барилга",
+      "tuitionGroup": "공학",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "BACHELOR",
+      "faculty": null,
+      "nameKo": "자유전공학부",
+      "nameEn": "School of Liberal Majors",
+      "nameMn": "Чөлөөт мэргэжлийн сургууль",
+      "tuitionGroup": "자유전공학부",
+      "durationYears": 4,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш (эсвэл түүнтэй адилтгах гэрчилгээ). Бүрэн 12 жилийн сургалтыг гадаадад төгссөн, эцэг эх хоёулаа гадаад иргэн байх.",
+      "sourceUrl": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "신학과",
+      "nameEn": "Theology",
+      "nameMn": "Теологи",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "사회복지학과",
+      "nameEn": "Social Welfare",
+      "nameMn": "Нийгмийн халамж",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "경영학과",
+      "nameEn": "Business Administration",
+      "nameMn": "Бизнесийн удирдлага",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "교육학과",
+      "nameEn": "Education",
+      "nameMn": "Боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "교육학과",
+      "nameEn": "Education",
+      "nameMn": "Боловсрол",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "시스템및반도체융합공학과",
+      "nameEn": "System and Semiconductor Convergence Engineering",
+      "nameMn": "Систем ба хагас дамжуулагчийн нэгдсэн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "시스템및반도체융합공학과",
+      "nameEn": "System and Semiconductor Convergence Engineering",
+      "nameMn": "Систем ба хагас дамжуулагчийн нэгдсэн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "컴퓨터공학과",
+      "nameEn": "Computer Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "컴퓨터공학과",
+      "nameEn": "Computer Engineering",
+      "nameMn": "Компьютерийн инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "PHD",
+      "faculty": null,
+      "nameKo": "건축공학과",
+      "nameEn": "Architectural Engineering",
+      "nameMn": "Архитектурын инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 3,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "건축공학과",
+      "nameEn": "Architectural Engineering",
+      "nameMn": "Архитектурын инженерчлэл",
+      "tuitionGroup": "공학",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "부동산학과",
+      "nameEn": "Real Estate",
+      "nameMn": "Үл хөдлөх хөрөнгө",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "국제통상학과",
+      "nameEn": "International Trade",
+      "nameMn": "Олон улсын худалдаа",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "MASTER",
+      "faculty": null,
+      "nameKo": "수화언어통번역학과",
+      "nameEn": "Sign Language Interpretation and Translation",
+      "nameMn": "Дохионы хэлний орчуулга",
+      "tuitionGroup": "인문사회",
+      "durationYears": 2,
+      "language": "KOREAN",
+      "topikLevel": 3,
+      "ieltsScore": null,
+      "otherRequirements": "Солонгос хэлний TOPIK 3-аас дээш, эсвэл F-4/F-5 визтэй. Эцэг эх хоёулаа гадаад иргэн байх. Элсэлтийн ярилцлага онлайн (Zoom) явагдана.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "confidence": "HIGH"
+    },
+    {
+      "level": "LANGUAGE_PREP",
+      "faculty": null,
+      "nameKo": "한국어교육원 정규과정",
+      "nameEn": "Korean Language Program",
+      "nameMn": "Солонгос хэлний бэлтгэл",
+      "tuitionGroup": null,
+      "durationYears": null,
+      "language": "KOREAN",
+      "topikLevel": null,
+      "ieltsScore": null,
+      "otherRequirements": null,
+      "sourceUrl": "https://oia.kangnam.ac.kr/menu/ea690a34cff385b63a6a70de649bda6e.do",
+      "confidence": "LOW"
+    }
+  ],
+  "scholarships": [
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인유학생 외국어장학금 A급 (TOPIK 6)",
+      "kind": "ENTRANCE",
+      "percent": 100,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 당시 TOPIK 6급 취득자 (신·편입학 첫학기)",
+      "noteMn": "Элсэлтийн үеийн TOPIK 6 гэрчилгээтэй бол эхний улиралд сургалтын төлбөр 100% чөлөөлнө.",
+      "sourceUrl": "https://web.kangnam.ac.kr/menu/062e41fba927c0c76d1c0e929f931016.do",
+      "evidence": "A급: 입학 당시 TOPIK 6급 취득자 - 수업료 전액"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인유학생 외국어장학금 B급 (TOPIK 5)",
+      "kind": "ENTRANCE",
+      "percent": 60,
+      "semesters": 1,
+      "headline": false,
+      "criteria": "입학 당시 TOPIK 5급 취득자 (첫학기)",
+      "noteMn": "Элсэлтийн үеийн TOPIK 5 гэрчилгээтэй бол эхний улиралд сургалтын төлбөр 60% чөлөөлнө.",
+      "sourceUrl": "https://web.kangnam.ac.kr/menu/062e41fba927c0c76d1c0e929f931016.do",
+      "evidence": "B급: 입학 당시 TOPIK 5급 취득자 - 수업료 60%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인유학생 외국어장학금 C급 (TOPIK 3+)",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": 1,
+      "headline": true,
+      "criteria": "TOPIK 3급 이상, 본교 어학교육원 3급 이상 수료, 또는 IELTS 5.5 이상 (첫학기)",
+      "noteMn": "TOPIK 3 ба түүнээс дээш (эсвэл IELTS 5.5) бол эхний улиралд сургалтын төлбөр 40% чөлөөлнө. TOPIK 6 бол 100%, TOPIK 5 бол 60% (мөн зөвхөн эхний улирал). Эцэг эх хоёулаа гадаад иргэн байх шаардлагатай.",
+      "sourceUrl": "https://web.kangnam.ac.kr/menu/062e41fba927c0c76d1c0e929f931016.do",
+      "evidence": "C급: ① TOPIK 3급 이상 ② 본교 어학교육원 한국어 교육과정 3급이상 수료자 ③ IELTS 5.5 이상 - 수업료 40%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인유학생 성적장학금 A급",
+      "kind": "MERIT",
+      "percent": 60,
+      "semesters": null,
+      "headline": false,
+      "criteria": "외국인 전형 입학생 중 성적 상위 30% 이내 및 TOPIK 3급 이상, 평점 3.5 이상, 직전학기 16학점 이상",
+      "noteMn": "",
+      "sourceUrl": "https://web.kangnam.ac.kr/menu/062e41fba927c0c76d1c0e929f931016.do",
+      "evidence": "A급: 상위 30% 이내 및 TOPIK 3급 이상 취득자 3.5이상 수업료 60%"
+    },
+    {
+      "levels": [
+        "BACHELOR"
+      ],
+      "name": "외국인유학생 성적장학금 B급",
+      "kind": "MERIT",
+      "percent": 30,
+      "semesters": null,
+      "headline": false,
+      "criteria": "외국인 전형 입학생 중 성적 상위 30% 이내, 평점 3.5 이상, 직전학기 16학점 이상",
+      "noteMn": "",
+      "sourceUrl": "https://web.kangnam.ac.kr/menu/062e41fba927c0c76d1c0e929f931016.do",
+      "evidence": "B급: 상위 30% 이내인 자 3.5이상 수업료 30%"
+    },
+    {
+      "levels": [
+        "MASTER",
+        "PHD"
+      ],
+      "name": "대학원 외국인 학생 고정장학금",
+      "kind": "ENTRANCE",
+      "percent": 40,
+      "semesters": null,
+      "headline": true,
+      "criteria": "외국인(해외교포 포함), 입학서류 여권 사본으로 처리",
+      "noteMn": "Гадаад оюутан бүр сургалтын төлбөрийн 40%-ийн хөнгөлөлтийг элсэх үед автоматаар авна, тусдаа өргөдөл шаардахгүй. Мөн бусад хөнгөлөлттэй давхардахгүй.",
+      "sourceUrl": "https://grd.kangnam.ac.kr/comm/cmnFile/download.do?encFileGrpSeq=5c456de9e776bdae0b0b7412eab2ca7b&encFileSeq=b5ada72304b698d4600a886e625279ae",
+      "evidence": "전체 외국인 학생 ㆍ외국인(해외교포 포함) 40% 선감면"
+    }
+  ],
+  "excluded": [
+    {
+      "what": "예체능대학 (디자인학과, 체육학과, 음악학과) 및 사범대학 (교육학과, 유아교육과, 초등특수교육과, 중등특수교육과)",
+      "reason": "2027 외국인 특별전형 모집요강에서 모집인원이 '미선발' — гадаад оюутан авахгүй."
+    },
+    {
+      "what": "야간 학부 (사회복지학부(야), 상경학부(야), 법행정세무학부(야))",
+      "reason": "Орой ангийн хөтөлбөр; ерөнхий элсэлтээс тусдаа тул оруулсангүй."
+    },
+    {
+      "what": "한국어문학과(외국인정원외)",
+      "reason": "Гадаад оюутанд зориулсан тусгай тэнхим, элсэлтийн мэдээлэл олдсонгүй."
+    },
+    {
+      "what": "세무전문대학원 세무학과, 융복합대학원 (사회복지, 실버산업, 미술치료, 목회영성리더쉽, 직업재활, 음악공연융합), 국제대학원 외국어사용과정 (국제경영, 국제경제무역(중국어), 경영학(영어·베트남어), 음악학(중국어))",
+      "reason": "Тусгай/мэргэжлийн сургууль эсвэл гадаад хэлээр явагдах хөтөлбөр — энэ ээлжинд зөвхөн 일반대학원."
+    }
+  ],
+  "pending": [
+    {
+      "what": "Бакалаврын гадаад оюутны төлбөр",
+      "reason": "Сургууль гадаад оюутанд зориулсан тусдаа төлбөрийн хүснэгт нийтлээгүй; 2026 оны шинэ/шилжин ирэгчдийн нийтлэг хүснэгтийг ашигласан. Гадаад оюутан ялгаатай төлбөр төлөх эсэхийг офис баталгаажуулна.",
+      "checkAt": "https://admission.kangnam.ac.kr/doumi/notice.htm?bbsid=notice&mode=view&bltn_seq=39284"
+    },
+    {
+      "what": "Хэлний бэлтгэл (어학교육원) төлбөр ба 입학금",
+      "reason": "Албан ёсны хуудсанд төлбөр олдсонгүй; tuitionGroup хоосон.",
+      "checkAt": "https://oia.kangnam.ac.kr/menu/ea690a34cff385b63a6a70de649bda6e.do"
+    },
+    {
+      "what": "Бакалаврын TOPIK-ийн доод шаардлага",
+      "reason": "Мэдүүлгийн PDF-ийн текст эвдэрсэн тул TOPIK 3-ыг 전 교육과정 이수자 хэсгээс авсан; 2% тэргүүн хэсгийн шаардлагыг бүрэн баталгаажуулаагүй.",
+      "checkAt": "https://admission.kangnam.ac.kr/bbs/filedown.php?bbsid=paper&file_seq=4163"
+    }
+  ]
+}
