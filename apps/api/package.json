@@ -24,6 +24,7 @@
     "accreditation:import": "tsx prisma/import-accreditation.ts",
     "language-prep:import": "tsx prisma/import-language-prep.ts",
     "intakes:import": "tsx prisma/import-intakes.ts",
+    "programs:import": "tsx prisma/import-programs.ts",
     "clients:import": "tsx prisma/import-clients.ts",
     "contract:template:import": "tsx prisma/import-contract-template.ts",
     "postinstall": "prisma generate",
