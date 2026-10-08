@@ -76,7 +76,8 @@ describe('salesPrompt', () => {
     const text = salesPrompt(AccessLevel.PUBLIC)!;
 
     expect(text).toContain('Эхлээд асуултад нь хариул');
-    expect(text).toContain('Хоёр алхам, хоёр асуултыг хамт бүү тавь');
+    expect(text).toContain('нэгийг л');
+    expect(text).toContain('Хоёрыг хамт бүү тавь');
   });
 
   it('guides a visitor who knows nothing instead of quizzing them', () => {
@@ -165,5 +166,54 @@ describe('inside the full prompt', () => {
 
   it('is absent for a contracted client', () => {
     expect(build(AccessLevel.CONTRACTED)).not.toContain('Борлуулалтын зан төлөв');
+  });
+});
+
+/**
+ * Rules that live in two layers can contradict each other, and a model handed
+ * contradicting rules picks one at random. These pin the four contradictions
+ * found on 2026-10-09 so a later edit to either side fails here first.
+ */
+describe('layers that must agree', () => {
+  const build = (
+    capture: { turns: number; askAfter: number; contactSettled: boolean },
+    channel?: 'FACEBOOK',
+  ) =>
+    buildSystemPrompt({
+      persona: 'Чи GKS EDU-ийн туслах.',
+      level: AccessLevel.PUBLIC,
+      hits: [],
+      toolNames: ['save_visitor_profile', 'create_consultation_request'],
+      capture,
+      ...(channel ? { channel: channel as never } : {}),
+    }).system;
+
+  it('has one length rule, in the policy, and no competing numbers', () => {
+    const system = build({ turns: 4, askAfter: 3, contactSettled: false });
+
+    expect(system).toContain('2-5 өгүүлбэр');
+    expect(system).not.toContain('3-6 өгүүлбэр');
+    expect(system).not.toContain('2–4 өгүүлбэр');
+  });
+
+  it('lets the sales layer steer with a choice before the capture threshold', () => {
+    const system = build({ turns: 1, askAfter: 3, contactSettled: false });
+
+    // The ban is on personal details, not on "bachelor or master?".
+    expect(system).toContain('хувийн мэдээллийг');
+    expect(system).toContain('чиглүүлэх сонголтын асуулт');
+    expect(system).not.toContain('юу ч бүү асуу');
+  });
+
+  it('asks for one thing per turn once capture opens', () => {
+    expect(build({ turns: 4, askAfter: 3, contactSettled: false })).toContain('нэг л хүсэлт');
+  });
+
+  it('does not ask for a phone number again while still confirming a visit', () => {
+    const system = build({ turns: 6, askAfter: 3, contactSettled: true });
+
+    expect(system).toContain('Дугаар дахин **бүү** асуу');
+    expect(system).toContain('өгсөн дугаарыг нь ашиглаж');
+    expect(system).toContain('аль хэдийн өгсөн бол дахин бүү асуу');
   });
 });

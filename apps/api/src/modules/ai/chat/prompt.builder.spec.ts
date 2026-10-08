@@ -10,7 +10,10 @@ import { buildSystemPrompt } from './prompt.builder.js';
  * anything, too late and nobody is ever asked. These assert the three
  * transitions rather than the wording, which the office will want to tune.
  */
-function prompt(capture: { turns: number; askAfter: number; contactSettled: boolean }, profile = {}) {
+function prompt(
+  capture: { turns: number; askAfter: number; contactSettled: boolean },
+  profile = {},
+) {
   return buildSystemPrompt({
     persona: 'Чи GKS EDU-ийн зөвлөх туслах.',
     level: AccessLevel.PUBLIC,
@@ -25,7 +28,7 @@ describe('the capture layer', () => {
   it('forbids asking before the office’s threshold', () => {
     const system = prompt({ turns: 1, askAfter: 3, contactSettled: false });
 
-    expect(system).toContain('юу ч бүү асуу');
+    expect(system).toContain('хувийн мэдээллийг');
     // And the phone must not even be mentioned yet.
     expect(system).not.toContain('create_consultation_request`-ыг дууд');
   });
@@ -38,7 +41,10 @@ describe('the capture layer', () => {
   });
 
   it('names only the fields still missing', () => {
-    const system = prompt({ turns: 4, askAfter: 3, contactSettled: false }, { educationLevel: 'BACHELOR', gpa: 3.5 });
+    const system = prompt(
+      { turns: 4, askAfter: 3, contactSettled: false },
+      { educationLevel: 'BACHELOR', gpa: 3.5 },
+    );
 
     expect(system).toContain('koreanLevel, goalLevel, budget, timing');
     expect(system).not.toContain('educationLevel, gpa');
@@ -52,14 +58,17 @@ describe('the capture layer', () => {
   });
 
   it('says the profile is complete rather than listing nothing', () => {
-    const system = prompt({ turns: 8, askAfter: 3, contactSettled: true }, {
-      educationLevel: 'BACHELOR',
-      gpa: 3.5,
-      koreanLevel: 'TOPIK 4',
-      goalLevel: 'MASTER',
-      budget: 'UPTO_20M',
-      timing: 'NEXT_YEAR',
-    });
+    const system = prompt(
+      { turns: 8, askAfter: 3, contactSettled: true },
+      {
+        educationLevel: 'BACHELOR',
+        gpa: 3.5,
+        koreanLevel: 'TOPIK 4',
+        goalLevel: 'MASTER',
+        budget: 'UPTO_20M',
+        timing: 'NEXT_YEAR',
+      },
+    );
 
     expect(system).toContain('Профайл бүрэн');
   });

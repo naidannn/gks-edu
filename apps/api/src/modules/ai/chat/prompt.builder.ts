@@ -113,10 +113,10 @@ export function buildSystemPrompt(context: PromptContext): BuiltPrompt {
   // Playbooks are behaviour, not material: they are stated as instructions and
   // carry no reference, so there is nothing for the model to cite them by.
   if (context.playbooks?.length && context.level === AccessLevel.INTERNAL) {
-    const guidance = context.playbooks.map((playbook) => `- ${playbook.title}: ${playbook.body}`).join('\n');
-    layers.push(
-      `## Дотоод заавар (хэрэглэгчид харагдахгүй, ишлэхгүй)\n\n${guidance}`,
-    );
+    const guidance = context.playbooks
+      .map((playbook) => `- ${playbook.title}: ${playbook.body}`)
+      .join('\n');
+    layers.push(`## Дотоод заавар (хэрэглэгчид харагдахгүй, ишлэхгүй)\n\n${guidance}`);
   }
 
   layers.push(sourcesLayer(context.hits, sources));
@@ -139,7 +139,7 @@ const FACEBOOK_LAYER = `## Суваг: Facebook Messenger
 - Энгийн текстээр бич: **тод**, # гарчиг, хүснэгт, markdown линк бүү хэрэглэ. Жагсаалт хэрэгтэй бол "• " эсвэл "1." ашигла.
 - Хажууд нь карт харагдахгүй. Хэрэгслээс авсан гол тоо, огноог өгүүлбэр дотроо шууд бич ([T1] тэмдэглэгээтэйгээр).
 - Линк өгөх бол бүтэн хаягаар нь бич: https://gksedu.mn/...
-- Мессенжерт урт текст уншихад хэцүү — 2-5 өгүүлбэр, нэг дараагийн алхам.`;
+- Мессенжерт урт текст уншихад хэцүү — ердийнхөөс ч товч (2-4 өгүүлбэр), нэг дараагийн алхам.`;
 
 /**
  * How to use the tools, and how to cite what they return.
@@ -205,15 +205,19 @@ function captureLayer(capture: CaptureState, profile: Record<string, unknown>): 
     lines.push(
       '',
       `Одоогоор ${capture.turns} ээлж болсон. ${capture.askAfter} ээлжид хүрэх хүртэл өөрөөс нь`,
-      'юу ч бүү асуу — эхлээд асуултад нь бүрэн хариул. Хэрэглэгч өөрөө хэлсэн зүйлийг',
-      'тэмдэглэх нь энэ хязгаарт хамаарахгүй.',
+      'хувийн мэдээллийг (голч, төсөв, төгсөх жил, нэр, утас) бүү асуу — эхлээд асуултад нь бүрэн',
+      'хариул. Хариултыг нь чиглүүлэх сонголтын асуулт ("Бакалавр уу, магистр уу?", "Аль чиглэл',
+      'ойр вэ?") энэ хязгаарт хамаарахгүй: тэр нь хариултын нэг хэсэг. Хэрэглэгч өөрөө хэлсэн',
+      'зүйлийг тэмдэглэх нь мөн хамаарахгүй.',
     );
   }
 
   if (capture.contactSettled) {
     lines.push(
       '',
-      'Утасны асуудал шийдэгдсэн. Дугаар дахин **бүү** асуу, зөвлөгөөний хүсэлт үүсгэхийг бүү санал болго.',
+      'Утасны асуудал шийдэгдсэн. Дугаар дахин **бүү** асуу, шинэ зөвлөгөөний хүсэлт үүсгэхийг бүү',
+      'санал болго. Хэрэглэгч өөрөө уулзалтын цаг сонговол өгсөн дугаарыг нь ашиглаж, цагийг давтан',
+      'баталгаажуул — дугаараа дахин асуухгүй.',
     );
   } else if (capture.turns >= capture.askAfter) {
     lines.push(
@@ -222,6 +226,13 @@ function captureLayer(capture: CaptureState, profile: Record<string, unknown>): 
       '"Зөвлөх залгаад дэлгэрүүлж тайлбарлах уу?" гэж асууж болно. Зөвшөөрч дугаараа өгвөл',
       '`create_consultation_request`-ыг дууд. Татгалзвал `save_visitor_profile`-д',
       '`contactDeclined: true` гэж тэмдэглээд дахин бүү асуу. Дугаарыг хэзээ ч өөрөө бүү зохио.',
+    );
+  }
+
+  if (missing.length > 0 && !capture.contactSettled && capture.turns >= capture.askAfter) {
+    lines.push(
+      '',
+      'Нэг ээлжид **нэг л хүсэлт**: профайлын асуулт эсвэл утасны санал — хоёрыг хамт бүү тавь.',
     );
   }
 
