@@ -111,9 +111,20 @@ function rate(
   flex-direction: column;
   max-width: 760px;
   margin: 0 auto;
-  /* The thread scrolls inside itself, so the page must not scroll too — two
-     scrollbars racing each other is how "jump to the latest" stops working. */
-  min-height: calc(100dvh - 260px);
+  /* The thread scrolls inside itself, so the column needs a real height — a
+     minimum lets the thread grow with every message, the window scrolls
+     instead, and following the latest answer silently stops working. The
+     height is the viewport less the sticky app bar (68px), the layout's top
+     padding and a little air under the composer. */
+  height: calc(100dvh - 68px - var(--sp-8) - var(--sp-6));
+  min-height: 420px;
+}
+/* Below 900px the fixed tab bar takes the bottom 58px as well. */
+@media (max-width: 900px) {
+  .gks-chat-page { height: calc(100dvh - 68px - var(--sp-8) - var(--sp-4) - 58px - env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-width: 640px) {
+  .gks-chat-page { height: calc(100dvh - 68px - var(--sp-6) - var(--sp-4) - 58px - env(safe-area-inset-bottom, 0px)); }
 }
 
 .gks-chat-page__head {

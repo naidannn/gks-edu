@@ -31,7 +31,9 @@ const scroller = ref<HTMLElement | null>(null);
  *
  * Somebody who has scrolled up to re-read an earlier answer is reading it;
  * yanking them back down every 40ms while tokens arrive makes the transcript
- * unusable exactly when it is most worth reading.
+ * unusable exactly when it is most worth reading. Sending a message is the
+ * exception: whoever just pressed send wants to see the reply, wherever they
+ * had scrolled to.
  */
 const pinned = ref(true);
 
@@ -41,7 +43,8 @@ function onScroll(): void {
   pinned.value = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
 }
 
-function scrollToEnd(): void {
+function scrollToEnd(force = false): void {
+  if (force) pinned.value = true;
   if (!pinned.value) return;
   nextTick(() => {
     const el = scroller.value;
@@ -49,13 +52,28 @@ function scrollToEnd(): void {
   });
 }
 
+// Everything that can grow the bottom of the list: a new bubble, the next
+// token, the dots giving way to text, the sources and rating row that appear
+// once an answer completes, and the tool-activity line.
 watch(
-  () => [props.messages.length, props.messages[props.messages.length - 1]?.content] as const,
-  scrollToEnd,
+  () => {
+    const last = props.messages[props.messages.length - 1];
+    return [
+      props.messages.length,
+      last?.content,
+      last?.pending,
+      last?.sources.length,
+      props.activity?.label,
+    ] as const;
+  },
+  ([length], previous) => {
+    const last = props.messages[props.messages.length - 1];
+    scrollToEnd(length !== previous?.[0] && last?.role === 'USER');
+  },
   { flush: 'post' },
 );
 
-onMounted(scrollToEnd);
+onMounted(() => scrollToEnd(true));
 
 defineExpose({ scrollToEnd });
 </script>
@@ -95,6 +113,16 @@ defineExpose({ scrollToEnd });
       <DsIcon name="loader-circle" :size="14" />
       {{ activity.label }}
     </p>
+
+    <button
+      v-if="!pinned && messages.length"
+      type="button"
+      class="gks-chat-jump"
+      aria-label="Сүүлийн мессеж рүү очих"
+      @click="scrollToEnd(true)"
+    >
+      <DsIcon name="arrow-down" :size="16" />
+    </button>
   </div>
 </template>
 
@@ -107,6 +135,9 @@ defineExpose({ scrollToEnd });
   overscroll-behavior: contain;
   padding: var(--sp-4);
   flex: 1;
+  /* A flex child's minimum height is its content's by default, so without this
+     the list grows instead of scrolling and `scrollTop` has nothing to move. */
+  min-height: 0;
 }
 .gks-chat-thread--wide { padding: var(--sp-6) 0; gap: var(--sp-5); }
 
@@ -157,6 +188,26 @@ defineExpose({ scrollToEnd });
 }
 @media (prefers-reduced-motion: reduce) {
   .gks-chat-typing i { animation: none; opacity: .6; }
+}
+
+/* Sticky inside the scroller, so it rides the bottom edge of whatever is
+   visible rather than the bottom of the transcript. */
+.gks-chat-jump {
+  position: sticky;
+  bottom: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: var(--border-hair) solid var(--line-soft);
+  border-radius: 50%;
+  background: var(--surface-card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  color: var(--text-strong);
+  cursor: pointer;
 }
 
 .gks-chat-activity {
