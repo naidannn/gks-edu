@@ -10,7 +10,7 @@ LINES="${2:-100}"
 case "${1:-all}" in
   api)   remote_node "pm2 logs $PM2_API --lines $LINES" ;;
   web)   remote_node "pm2 logs $PM2_WEB --lines $LINES" ;;
-  nginx) remote "sudo tail -n $LINES -f /var/log/nginx/error.log" ;;
+  nginx) remote "sudo tail -n $LINES -f /var/log/nginx/$DOMAIN.error.log" ;;
   all)   remote_node "pm2 logs $PM2_API $PM2_WEB --lines $LINES" ;;
   *)     die "usage: logs.sh [api|web|nginx|all] [lines]" ;;
 esac

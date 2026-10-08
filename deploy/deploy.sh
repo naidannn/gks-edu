@@ -40,9 +40,9 @@ fi
 # --------------------------------------------------------------- env + dirs
 log "Syncing environment and directories"
 remote "mkdir -p $API_DIR $WEB_DIR $STORAGE_DIR $APP_DIR/logs"
-scp -q -i "$SSH_KEY" "$ENV_FILE"                       "$SSH_USER@$SSH_HOST:$REMOTE_ENV"
-scp -q -i "$SSH_KEY" "$DEPLOY_DIR/ecosystem.config.cjs" "$SSH_USER@$SSH_HOST:$APP_DIR/ecosystem.config.cjs"
+scp -q -i "$SSH_KEY" "$ENV_FILE" "$SSH_USER@$SSH_HOST:$REMOTE_ENV"
 remote "chmod 600 $REMOTE_ENV"
+# PM2 definitions live in the server's shared $ECOSYSTEM, not in this repo.
 ok "Environment in place"
 
 # ---------------------------------------------------------------------- API
@@ -90,15 +90,11 @@ TARGETS=""
 [[ $DO_WEB -eq 1 ]] && TARGETS="$TARGETS $PM2_WEB"
 
 for name in $TARGETS; do
-  if remote "pm2 describe $name >/dev/null 2>&1"; then
-    # `reload` on a fork-mode process is a restart, but it re-reads the
-    # ecosystem file, which is what we want after an env change.
-    remote_node "pm2 reload $APP_DIR/ecosystem.config.cjs --only $name --update-env" >/dev/null
-    ok "reloaded $name"
-  else
-    remote_node "pm2 start $APP_DIR/ecosystem.config.cjs --only $name" >/dev/null
-    ok "started $name"
-  fi
+  # `startOrReload` on a fork-mode process is a restart, but it re-reads the
+  # ecosystem file (and with it $REMOTE_ENV), which is what we want after an
+  # env change.
+  remote_node "pm2 startOrReload $ECOSYSTEM --only $name --update-env" >/dev/null
+  ok "reloaded $name"
 done
 remote_node "pm2 save" >/dev/null 2>&1 || warn "pm2 save failed (processes are running, but may not survive a reboot)"
 

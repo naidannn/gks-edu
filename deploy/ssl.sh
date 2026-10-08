@@ -10,6 +10,7 @@
 #   ./deploy/ssl.sh --dry-run    ask Let's Encrypt's staging path first
 
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+not_on_contabo
 require_key
 
 DRY=""

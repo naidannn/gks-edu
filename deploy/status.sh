@@ -12,7 +12,7 @@ remote "for s in nginx postgresql@17-main redis-server; do printf '  %-22s %s\n'
 log "Ports"
 remote "ss -tln | grep -E ':($API_PORT|$WEB_PORT) ' | sed 's/^/  /' || echo '  neither port is listening'"
 
-log "Resources (shared with 10 other apps)"
+log "Resources (shared with the other /srv/apps projects)"
 remote "free -h | head -2 | sed 's/^/  /'; df -h / | tail -1 | sed 's/^/  /'; uptime | sed 's/^/  /'"
 
 log "Database"

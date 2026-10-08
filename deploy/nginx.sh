@@ -11,6 +11,7 @@
 # nginx is *reloaded*, not restarted, so no live connection is dropped.
 
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+not_on_contabo
 require_key
 
 SITE="/etc/nginx/sites-available/$DOMAIN"

@@ -14,6 +14,7 @@
 # package another app depends on.
 
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+not_on_contabo
 require_key
 
 log "Provisioning $SSH_HOST"

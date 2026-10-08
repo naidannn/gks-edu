@@ -9,6 +9,7 @@ case "${1:-all}" in
   *)   die "usage: restart.sh [api|web|all]" ;;
 esac
 for n in $TARGETS; do
-  remote_node "pm2 restart $n --update-env" >/dev/null && ok "restarted $n"
+  # reload from the shared ecosystem so .env edits on the server are picked up
+  remote_node "pm2 reload $ECOSYSTEM --only $n --update-env" >/dev/null && ok "restarted $n"
 done
 remote_node "pm2 list" | grep -E "gksedu|name" || true

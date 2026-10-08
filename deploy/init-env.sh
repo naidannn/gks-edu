@@ -43,7 +43,7 @@ REDIS_URL="redis://127.0.0.1:6379/0"
 # --- API --------------------------------------------------------------------
 NODE_ENV=production
 API_PORT=$API_PORT
-# Nitro's listen port for the Nuxt server; read by deploy/ecosystem.config.cjs.
+# Nitro's listen port for the Nuxt server; read by the server's /srv/apps/ecosystem.config.js.
 WEB_PORT=$WEB_PORT
 API_PREFIX=api
 CORS_ORIGIN=https://$DOMAIN,https://$WWW_DOMAIN

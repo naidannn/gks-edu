@@ -34,7 +34,8 @@
       "Bash(node_modules/.bin/prisma format:*)",
       "Bash(node_modules/.bin/prisma validate:*)",
       "Bash(node_modules/.bin/prisma migrate status:*)",
-      "Bash(node_modules/.bin/prisma migrate diff:*)"
+      "Bash(node_modules/.bin/prisma migrate diff:*)",
+      "Bash(./deploy/deploy.sh:*)"
     ]
   }
 }
