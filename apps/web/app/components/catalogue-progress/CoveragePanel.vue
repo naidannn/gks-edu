@@ -105,7 +105,7 @@ function levelCell(row: CatalogueProgressRow, level: ProgramLevel) {
         </thead>
         <tbody>
           <tr v-for="row in filtered" :key="row.id">
-            <td data-label="Сургууль"><CatalogueProgressSchool :school="row" /></td>
+            <td data-label="Сургууль"><CatalogueProgressSchool :school="row" :tab="check === 'faculties' ? 'faculties' : 'programs'" /></td>
 
             <template v-if="check === 'programs'">
               <td

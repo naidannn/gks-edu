@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import type { CatalogueProgressRow } from '@gks/shared';
 
-/** Logo and name, linking to the school's admin page — the first cell of every tab. */
-defineProps<{ school: CatalogueProgressRow }>();
+/**
+ * Logo and name, linking to the school's admin page — the first cell of every
+ * tab. `tab` opens that page on the matching section (1A-44), so "no intakes"
+ * leads to the intakes, not to the top of a long form.
+ */
+const props = defineProps<{ school: CatalogueProgressRow; tab?: 'intakes' | 'programs' | 'faculties' }>();
+const href = computed(() => `/admin/universities/${props.school.id}${props.tab ? `?tab=${props.tab}` : ''}`);
 </script>
 
 <template>
-  <NuxtLink :to="`/admin/universities/${school.id}`" class="cp-school">
+  <NuxtLink :to="href" class="cp-school">
     <span class="cp-school__rank gks-tnum" title="Каталогийн дараалал">{{ school.gksRank ? `#${school.gksRank}` : '—' }}</span>
     <img v-if="school.logoPath" :src="school.logoPath" alt="" class="cp-school__logo" loading="lazy">
     <span v-else class="cp-school__logo cp-school__logo--empty" aria-hidden="true">

@@ -204,6 +204,37 @@ const NUMERIC: [keyof UniversityForm, { min: number; max: number; integer: boole
   ['gksManualRank', { min: 1, max: 1000, integer: true }],
 ];
 
+/**
+ * The two halves of the form on the edit screen (1A-44): what the public page
+ * says about the school, and our own brokerage settings and ranks.
+ */
+export type UniversityFormSection = 'profile' | 'brokerage';
+
+const BROKERAGE_FIELDS = new Set<keyof UniversityForm>([
+  'acceptsLanguagePrep',
+  'acceptsFromMongolia',
+  'isGksEligible',
+  'accreditation',
+  'agentContractStatus',
+  'commissionNote',
+  'internalNote',
+  'theKoreaRank',
+  'theWorldRank',
+  'theRankYear',
+  'gksRankBoost',
+  'gksManualRank',
+]);
+
+/**
+ * Which half holds the first invalid field — the edit screen switches to it,
+ * because a red box on a tab nobody is looking at reads as "Save is broken".
+ */
+export function sectionOfErrors(errors: Record<string, string>): UniversityFormSection | null {
+  const keys = Object.keys(errors);
+  if (!keys.length) return null;
+  return keys.every((key) => BROKERAGE_FIELDS.has(key as keyof UniversityForm)) ? 'brokerage' : 'profile';
+}
+
 export function validateUniversityForm(form: UniversityForm, errors: Record<string, string>): boolean {
   for (const key of Object.keys(errors)) Reflect.deleteProperty(errors, key);
 

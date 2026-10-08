@@ -6,19 +6,62 @@ import type {
   GksScoreParts,
 } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
-import { emptyUniversityForm, fillFromUniversity, universityPayload, validateUniversityForm } from '~/utils/university-form';
+import {
+  emptyUniversityForm,
+  fillFromUniversity,
+  sectionOfErrors,
+  universityPayload,
+  validateUniversityForm,
+} from '~/utils/university-form';
 
 /**
  * One university: the record itself (1A-26), its programmes and its intake
  * terms (1A-27). The programme and intake tables are the reason this page is
  * more than a form — both are empty for the whole imported catalogue.
+ *
+ * One tab per kind of data (1A-44). It used to be a single scroll — eight form
+ * cards, then colleges, programmes, intakes — so the intakes, which are what
+ * the office edits most, sat under a page and a half of address fields. The
+ * form is still one record with one Save: its public half and its brokerage
+ * half are two tabs over the same `form`, and the save bar follows both.
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
 const route = useRoute();
+const router = useRouter();
 const auth = useAuthStore();
 const api = useApi();
 const id = computed(() => String(route.params.id));
+
+type TabKey = 'profile' | 'intakes' | 'programs' | 'faculties' | 'brokerage';
+
+const TABS: { key: TabKey; label: string; icon: string }[] = [
+  { key: 'profile', label: 'Үндсэн мэдээлэл', icon: 'info' },
+  { key: 'intakes', label: 'Элсэлт', icon: 'calendar' },
+  { key: 'programs', label: 'Анги, төлбөр', icon: 'book-open' },
+  { key: 'faculties', label: 'Танхим', icon: 'building-2' },
+  { key: 'brokerage', label: 'Зуучлал, эрэмбэ', icon: 'handshake' },
+];
+
+const requested = String(route.query.tab ?? '');
+const tab = ref<TabKey>(TABS.some((item) => item.key === requested) ? (requested as TabKey) : 'profile');
+// `?tab=` so a reload, a link from the progress page and the way back from
+// an intake or programme editor all land on the same section.
+watch(tab, (key) => router.replace({ query: { ...route.query, tab: key === 'profile' ? undefined : key } }));
+
+const formTab = computed(() => (tab.value === 'profile' || tab.value === 'brokerage' ? tab.value : null));
+
+/** The tab's own count; the form tabs have none. */
+function tabCount(key: TabKey): number | null {
+  if (!university.value) return null;
+  if (key === 'intakes') return university.value.intakes.length;
+  if (key === 'programs') return university.value.programs.length;
+  if (key === 'faculties') return faculties.items.value.length;
+  return null;
+}
+
+/** This page, on the tab an editor should come back to. */
+const returnTo = (key: TabKey) => `/admin/universities/${id.value}?tab=${key}`;
 
 const university = ref<AdminUniversityDetail | null>(null);
 const pending = ref(true);
@@ -31,13 +74,32 @@ const saving = ref(false);
 const saveError = ref<string | null>(null);
 const saved = ref(false);
 
+/**
+ * Unsaved edits survive a tab switch — it is one `form` — but not a trip to
+ * the intake or programme editor, which is one click away on another tab.
+ * The save bar says so while the form is open, and leaving asks.
+ */
+const savedSnapshot = ref('');
+const dirty = computed(() => savedSnapshot.value !== '' && JSON.stringify(form) !== savedSnapshot.value);
+
+onBeforeRouteLeave((to, from) => {
+  // `?tab=` changes are this page, not a departure.
+  if (to.path === from.path || !dirty.value) return true;
+  return globalThis.confirm('Сургуулийн мэдээлэлд хадгалаагүй өөрчлөлт байна. Хадгалахгүйгээр гарах уу?');
+});
+
+function fill(found: AdminUniversityDetail) {
+  fillFromUniversity(form, found);
+  savedSnapshot.value = JSON.stringify(form);
+}
+
 async function load() {
   pending.value = true;
   loadError.value = false;
   try {
     const found = await api.get<AdminUniversityDetail>(`/admin/universities/${id.value}`);
     university.value = found;
-    fillFromUniversity(form, found);
+    fill(found);
   } catch {
     loadError.value = true;
   } finally {
@@ -51,6 +113,7 @@ async function save() {
   saved.value = false;
   if (!validateUniversityForm(form, errors)) {
     saveError.value = 'Улаанаар тэмдэглэсэн талбаруудыг шалгана уу.';
+    tab.value = sectionOfErrors(errors) ?? tab.value;
     return;
   }
 
@@ -58,7 +121,7 @@ async function save() {
   try {
     const updated = await api.patch<AdminUniversityDetail>(`/admin/universities/${id.value}`, universityPayload(form));
     university.value = updated;
-    fillFromUniversity(form, updated);
+    fill(updated);
     slugLocked.value = true;
     saved.value = true;
   } catch (err) {
@@ -79,6 +142,8 @@ async function togglePublished() {
     });
     university.value = updated;
     form.isPublished = updated.isPublished;
+    // Saved on its own: move the baseline, keep any other edit still pending.
+    savedSnapshot.value = JSON.stringify({ ...JSON.parse(savedSnapshot.value), isPublished: updated.isPublished });
   } catch (err) {
     saveError.value = apiErrorMessage(err, 'Төлөв солиход алдаа гарлаа.');
   } finally {
@@ -98,16 +163,19 @@ async function togglePublished() {
  * means (`/admin/programs`).
  */
 function editProgram(program: AdminUniversityProgram) {
-  return navigateTo(`/admin/programs/new?id=${program.id}`);
+  return navigateTo({ path: '/admin/programs/new', query: { id: program.id, returnTo: returnTo('programs') } });
 }
 
 function addProgram() {
-  return navigateTo(`/admin/programs/new?universityId=${id.value}`);
+  return navigateTo({ path: '/admin/programs/new', query: { universityId: id.value, returnTo: returnTo('programs') } });
 }
 
 /** Straight into the Gemini mode, which is how an empty school gets filled. */
 function researchPrograms() {
-  return navigateTo(`/admin/programs/new?universityId=${id.value}&mode=research`);
+  return navigateTo({
+    path: '/admin/programs/new',
+    query: { universityId: id.value, mode: 'research', returnTo: returnTo('programs') },
+  });
 }
 
 // ── Faculties (танхим) ─────────────────────────────────────────────────────
@@ -193,8 +261,14 @@ async function removeFaculty(facultyId: string, programCount: number) {
  * is `/admin/admissions/new`, which knows the lead-days rule; this table shows
  * both dates (staff see both, CLAUDE.md) and links to it.
  */
-const intakeEditHref = (intake: AdminIntakeTerm) => `/admin/admissions/new?id=${intake.id}`;
-const intakeAddHref = computed(() => `/admin/admissions/new?universityId=${id.value}`);
+const intakeEditHref = (intake: AdminIntakeTerm) => ({
+  path: '/admin/admissions/new',
+  query: { id: intake.id, returnTo: returnTo('intakes') },
+});
+const intakeAddHref = computed(() => ({
+  path: '/admin/admissions/new',
+  query: { universityId: id.value, returnTo: returnTo('intakes') },
+}));
 
 // ── Delete (admin only) ────────────────────────────────────────────────────
 const confirmDelete = ref(false);
@@ -289,125 +363,56 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
         </div>
       </header>
 
-      <!-- ── The record itself ─────────────────────────────────────────── -->
-      <form class="gks-form-body" @submit.prevent="save">
-        <UniversityAdminFields v-model="form" :errors="errors" :slug-locked="slugLocked" />
+      <nav class="gks-tabs" aria-label="Сургуулийн хэсгүүд">
+        <button
+          v-for="item in TABS"
+          :key="item.key"
+          type="button"
+          class="gks-tab"
+          :class="{ 'gks-tab--active': tab === item.key }"
+          :aria-current="tab === item.key ? 'page' : undefined"
+          @click="tab = item.key"
+        >
+          <DsIcon :name="item.icon" :size="16" />
+          <span>{{ item.label }}</span>
+          <span
+            v-if="tabCount(item.key) !== null"
+            class="ud-tab-count gks-tnum"
+            :class="{ 'ud-tab-count--empty': tabCount(item.key) === 0 }"
+          >
+            {{ tabCount(item.key) }}
+          </span>
+        </button>
+      </nav>
 
-        <DsCard v-if="saveError" accent><p class="gks-form-page__error">{{ saveError }}</p></DsCard>
+      <!-- ── The record itself: two tabs over one form, one Save ──────────── -->
+      <form v-if="formTab" class="gks-form-body" @submit.prevent="save">
+        <UniversityAdminFields v-model="form" :errors="errors" :slug-locked="slugLocked" :section="formTab" />
 
-        <div class="gks-form-actions">
-          <DsButton v-if="slugLocked" variant="ghost" icon-left="unlock" @click="slugLocked = false">
+        <div class="ud-save-bar">
+          <DsButton
+            v-if="slugLocked && formTab === 'profile'"
+            variant="ghost"
+            icon-left="unlock"
+            @click="slugLocked = false"
+          >
             Slug засах
           </DsButton>
-          <span v-if="saved" class="gks-form-page__saved"><DsIcon name="check" :size="16" /> Хадгаллаа</span>
-          <DsButton variant="secondary" :disabled="saving" @click="load">Буцаах</DsButton>
+          <span v-if="saveError" class="gks-form-page__error ud-save-bar__msg">{{ saveError }}</span>
+          <span v-else-if="dirty" class="ud-save-bar__msg ud-save-bar__msg--dirty">
+            <DsIcon name="circle-dot" :size="14" /> Хадгалаагүй өөрчлөлт байна
+          </span>
+          <span v-else-if="saved" class="gks-form-page__saved ud-save-bar__msg">
+            <DsIcon name="check" :size="16" /> Хадгаллаа
+          </span>
+          <span v-else class="ud-save-bar__msg" />
+          <DsButton variant="secondary" :disabled="saving || !dirty" @click="load">Буцаах</DsButton>
           <DsButton type="submit" variant="accent" icon-left="save" :loading="saving">Хадгалах</DsButton>
         </div>
       </form>
 
-      <!-- ── Faculties ─────────────────────────────────────────────────── -->
-      <DsCard title="Танхим" :eyebrow="`${faculties.items.value.length} танхим`">
-        <p class="gks-form-page__hint">
-          Сургуулийн 단과대학-ууд. Судалгаанаас солонгос нэрээрээ үүсдэг тул монголоор нэрлэж
-          өгнө үү — жагсаалт, картан дээр энэ нэр гарна.
-        </p>
-        <p v-if="facultyError" class="gks-form-page__error">{{ facultyError }}</p>
-
-        <ul v-if="faculties.items.value.length" class="gks-faculties">
-          <li v-for="faculty in faculties.items.value" :key="faculty.id">
-            <DsInput
-              v-model="facultyDraft[faculty.id]"
-              :label="faculty.nameKo ?? faculty.nameEn ?? 'Танхим'"
-              @blur="renameFaculty(faculty.id)"
-            />
-            <span class="gks-faculties__count gks-tnum">{{ faculty.programCount }} анги</span>
-            <DsIconButton
-              icon="trash-2"
-              label="Танхимыг устгах"
-              variant="outline"
-              size="sm"
-              :disabled="facultySaving === faculty.id"
-              @click="removeFaculty(faculty.id, faculty.programCount)"
-            />
-          </li>
-        </ul>
-        <p v-else class="gks-form-page__empty">
-          Танхим бүртгэгдээгүй байна. Ангиудыг судлуулах эсвэл гараар нэмэхэд танхим нь
-          өөрөө үүснэ.
-        </p>
-
-        <form class="gks-faculties__add" @submit.prevent="addFaculty">
-          <DsInput v-model="newFaculty" label="Шинэ танхим" placeholder="Инженерийн танхим" />
-          <DsButton type="submit" variant="secondary" icon-left="plus" :loading="facultySaving === 'new'">
-            Нэмэх
-          </DsButton>
-        </form>
-      </DsCard>
-
-      <!-- ── Programmes ────────────────────────────────────────────────── -->
-      <DsCard title="Хөтөлбөр, төлбөр" :eyebrow="`${university.programs.length} хөтөлбөр`">
-        <template #action>
-          <DsButton variant="ghost" size="sm" icon-left="sparkles" @click="researchPrograms">
-            Интернэтээс судлах
-          </DsButton>
-          <DsButton variant="secondary" size="sm" icon-left="plus" @click="addProgram">Хөтөлбөр нэмэх</DsButton>
-        </template>
-
-        <p v-if="!university.programs.length" class="gks-form-page__empty">
-          Хөтөлбөр бүртгэгдээгүй байна. Хөтөлбөргүй бол каталогийн «боловсролын түвшин» шүүлтүүр
-          энэ сургуулийг олохгүй, мэргэжлээр хайхад ч гарч ирэхгүй. «Интернэтээс судлах» дарвал
-          Gemini энэ сургуулийн ангиуд болон төлбөрийг олж санал болгоно.
-        </p>
-
-        <div v-else class="gks-table-wrap gks-table-wrap--auto">
-          <table class="gks-table">
-            <thead>
-              <tr>
-                <th>Түвшин</th>
-                <th>Нэр</th>
-                <th>Танхим</th>
-                <th class="gks-table__num">Улирлын төлбөр</th>
-                <th class="gks-table__num">Жилийн төлбөр</th>
-                <th class="gks-table__num">TOPIK</th>
-                <th>Төлөв</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in university.programs" :key="p.id">
-                <td>{{ PROGRAM_LEVEL_LABELS[p.level] }}</td>
-                <td>
-                  <span class="gks-cell-name">{{ p.nameMn }}</span>
-                  <span v-if="p.nameKo" class="gks-cell-sub">{{ p.nameKo }}</span>
-                  <span v-else-if="p.nameEn" class="gks-cell-sub">{{ p.nameEn }}</span>
-                </td>
-                <td>
-                  <DsBadge v-if="p.faculty" tone="neutral">{{ p.faculty.nameKo ?? p.faculty.nameMn }}</DsBadge>
-                  <DsBadge v-else tone="warning">Танхимгүй</DsBadge>
-                </td>
-                <td class="gks-tnum gks-table__num">{{ formatKrw(p.tuitionPerTermKrw) ?? '—' }}</td>
-                <td class="gks-tnum gks-table__num">
-                  {{ formatKrw(annualTuitionKrw(p)) ?? '—' }}
-                  <span class="gks-cell-sub">{{ tuitionYearLabel(p.tuitionYear) }}</span>
-                </td>
-                <td class="gks-tnum gks-table__num">{{ p.topikLevel ?? '—' }}</td>
-                <td>
-                  <DsBadge :tone="p.isPublished ? 'success' : 'neutral'">
-                    {{ p.isPublished ? 'Нийтэд' : 'Нуусан' }}
-                  </DsBadge>
-                  <DsBadge v-if="!p.verifiedAt" tone="warning">Хянагдаагүй</DsBadge>
-                </td>
-                <td class="gks-table__actions">
-                  <DsIconButton icon="pencil" label="Засах" size="sm" @click="editProgram(p)" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </DsCard>
-
       <!-- ── Intake terms ──────────────────────────────────────────────── -->
-      <DsCard title="Элсэлтийн улирал" :eyebrow="`${university.intakes.length} улирал`">
+      <DsCard v-if="tab === 'intakes'" title="Элсэлтийн улирал" :eyebrow="`${university.intakes.length} улирал`">
         <template #action>
           <DsButton
             variant="secondary"
@@ -421,7 +426,7 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
 
         <p class="gks-page__hint">
           Улирлыг элсэлтийн дэлгэц дээр засна — манай эцсийн хугацаа, хичээл эхлэх огноо,
-          хянасан тэмдэглэгээ тэнд бүрэн байдаг.
+          хянасан тэмдэглэгээ тэнд бүрэн байдаг. Хадгалсны дараа энэ хуудас руу буцна.
           <NuxtLink to="/admin/admissions" class="gks-form-page__link">Бүх элсэлт</NuxtLink>
         </p>
 
@@ -475,92 +480,195 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
         </div>
       </DsCard>
 
-      <!-- ── GKS ranking, read only (1A-30) ────────────────────────────── -->
-      <DsCard title="GKS эрэмбэ" eyebrow="Тооцоолсон">
-        <p class="gks-page__hint">
-          Каталог болон хайлт энэ эрэмбээр эрэмбэлэгддэг. Оноог систем тооцоолох тул
-          гараар засах цорын ганц зүйл нь дээрх «Рэйтинг» хэсгийн засварын оноо.
-          <NuxtLink to="/admin/universities/ranking" class="gks-form-page__link">Жинг тохируулах</NuxtLink>
-        </p>
-        <dl class="gks-meta">
-          <div>
-            <dt>Эрэмбэ</dt>
-            <dd class="gks-tnum">{{ university.gksRank ? `#${university.gksRank}` : UNKNOWN_LABEL }}</dd>
-          </div>
-          <div>
-            <dt>Оноо</dt>
-            <dd class="gks-tnum">{{ university.gksScore?.toFixed(2) ?? UNKNOWN_LABEL }}</dd>
-          </div>
-          <div>
-            <dt>Гар засвар</dt>
-            <dd class="gks-tnum">
-              {{ university.gksRankBoost ? `${university.gksRankBoost > 0 ? '+' : ''}${university.gksRankBoost}` : '0' }}
-            </dd>
-          </div>
-          <div>
-            <dt>Сүүлд тооцоолсон</dt>
-            <dd class="gks-tnum">
-              {{ university.gksScoredAt ? formatDate(university.gksScoredAt) : UNKNOWN_LABEL }}
-            </dd>
-          </div>
-          <div v-for="part in scoreParts" :key="part.label">
-            <dt>{{ part.label }}</dt>
-            <dd class="gks-tnum">{{ part.value.toFixed(0) }} / 100</dd>
-          </div>
-        </dl>
-      </DsCard>
-
-      <!-- ── Importer-owned, read only ─────────────────────────────────── -->
-      <DsCard title="Импортын мэдээлэл" eyebrow="Зөвхөн харах">
-        <p class="gks-page__hint">
-          Амьдралын зардал ба чанарын тэмдэглэгээг импорт хөтөлдөг — энд гараар засдаггүй.
-        </p>
-        <dl class="gks-meta">
-          <div><dt>Бүртгэсэн</dt><dd class="gks-tnum">{{ formatDate(university.createdAt) }}</dd></div>
-          <div><dt>Сүүлд өөрчилсөн</dt><dd class="gks-tnum">{{ formatDate(university.updatedAt) }}</dd></div>
-          <div><dt>Хадгалсан хэрэглэгч</dt><dd class="gks-tnum">{{ university._count.savedBy }}</dd></div>
-          <div><dt>Холбоотой үйлчилгээ</dt><dd class="gks-tnum">{{ university._count.cases }}</dd></div>
-          <div><dt>Холбоотой мэдүүлэг</dt><dd class="gks-tnum">{{ university._count.applications }}</dd></div>
-          <div><dt>Материалын дүрэм</dt><dd class="gks-tnum">{{ university._count.requirementRules }}</dd></div>
-          <div>
-            <dt>Амьдралын зардал</dt>
-            <dd>
-              {{ university.livingCost?.tierLabelMn
-                ?? (university.livingCost ? 'Бүртгэлтэй' : UNKNOWN_LABEL) }}
-            </dd>
-          </div>
-        </dl>
-      </DsCard>
-
-      <!-- ── Danger zone ───────────────────────────────────────────────── -->
-      <DsCard v-if="auth.isAdmin" title="Сургууль устгах" accent>
-        <p class="gks-page__hint">
-          <template v-if="referenceCount > 0">
-            Энэ сургууль {{ referenceCount }} бичлэгт холбогдсон тул устгах боломжгүй.
-            Оронд нь «Нийтлэлээс хасах» товчийг ашиглана уу.
-          </template>
-          <template v-else>
-            Устгасан сургуулийг сэргээх боломжгүй. Хөтөлбөр, элсэлтийн улирал нь хамт устана.
-          </template>
-        </p>
-        <p v-if="deleteError" class="gks-form-page__error">{{ deleteError }}</p>
-        <div class="gks-form-actions">
-          <template v-if="confirmDelete">
-            <span class="gks-form-page__confirm">«{{ universityName(university) }}»-г бүрмөсөн устгах уу?</span>
-            <DsButton variant="secondary" @click="confirmDelete = false">Болих</DsButton>
-            <DsButton variant="danger" icon-left="trash-2" :loading="deleting" @click="remove">Тийм, устга</DsButton>
-          </template>
-          <DsButton
-            v-else
-            variant="danger"
-            icon-left="trash-2"
-            :disabled="referenceCount > 0"
-            @click="confirmDelete = true"
-          >
-            Устгах
+      <!-- ── Programmes ────────────────────────────────────────────────── -->
+      <DsCard v-if="tab === 'programs'" title="Анги, төлбөр" :eyebrow="`${university.programs.length} анги`">
+        <template #action>
+          <DsButton variant="ghost" size="sm" icon-left="sparkles" @click="researchPrograms">
+            Интернэтээс судлах
           </DsButton>
+          <DsButton variant="secondary" size="sm" icon-left="plus" @click="addProgram">Анги нэмэх</DsButton>
+        </template>
+
+        <p v-if="!university.programs.length" class="gks-form-page__empty">
+          Анги бүртгэгдээгүй байна. Ангигүй бол каталогийн «боловсролын түвшин» шүүлтүүр
+          энэ сургуулийг олохгүй, мэргэжлээр хайхад ч гарч ирэхгүй. «Интернэтээс судлах» дарвал
+          Gemini энэ сургуулийн ангиуд болон төлбөрийг олж санал болгоно.
+        </p>
+
+        <div v-else class="gks-table-wrap gks-table-wrap--auto">
+          <table class="gks-table">
+            <thead>
+              <tr>
+                <th>Түвшин</th>
+                <th>Нэр</th>
+                <th>Танхим</th>
+                <th class="gks-table__num">Улирлын төлбөр</th>
+                <th class="gks-table__num">Жилийн төлбөр</th>
+                <th class="gks-table__num">TOPIK</th>
+                <th>Төлөв</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in university.programs" :key="p.id">
+                <td>{{ PROGRAM_LEVEL_LABELS[p.level] }}</td>
+                <td>
+                  <span class="gks-cell-name">{{ p.nameMn }}</span>
+                  <span v-if="p.nameKo" class="gks-cell-sub">{{ p.nameKo }}</span>
+                  <span v-else-if="p.nameEn" class="gks-cell-sub">{{ p.nameEn }}</span>
+                </td>
+                <td>
+                  <DsBadge v-if="p.faculty" tone="neutral">{{ p.faculty.nameKo ?? p.faculty.nameMn }}</DsBadge>
+                  <DsBadge v-else tone="warning">Танхимгүй</DsBadge>
+                </td>
+                <td class="gks-tnum gks-table__num">{{ formatKrw(p.tuitionPerTermKrw) ?? '—' }}</td>
+                <td class="gks-tnum gks-table__num">
+                  {{ formatKrw(annualTuitionKrw(p)) ?? '—' }}
+                  <span class="gks-cell-sub">{{ tuitionYearLabel(p.tuitionYear) }}</span>
+                </td>
+                <td class="gks-tnum gks-table__num">{{ p.topikLevel ?? '—' }}</td>
+                <td>
+                  <DsBadge :tone="p.isPublished ? 'success' : 'neutral'">
+                    {{ p.isPublished ? 'Нийтэд' : 'Нуусан' }}
+                  </DsBadge>
+                  <DsBadge v-if="!p.verifiedAt" tone="warning">Хянагдаагүй</DsBadge>
+                </td>
+                <td class="gks-table__actions">
+                  <DsIconButton icon="pencil" label="Засах" size="sm" @click="editProgram(p)" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </DsCard>
+
+      <!-- ── Faculties ─────────────────────────────────────────────────── -->
+      <DsCard v-if="tab === 'faculties'" title="Танхим" :eyebrow="`${faculties.items.value.length} танхим`">
+        <p class="gks-form-page__hint">
+          Сургуулийн 단과대학-ууд. Судалгаанаас солонгос нэрээрээ үүсдэг тул монголоор нэрлэж
+          өгнө үү — жагсаалт, картан дээр энэ нэр гарна. Нүднээс гарахад хадгалагдана.
+        </p>
+        <p v-if="facultyError" class="gks-form-page__error">{{ facultyError }}</p>
+
+        <ul v-if="faculties.items.value.length" class="gks-faculties">
+          <li v-for="faculty in faculties.items.value" :key="faculty.id">
+            <DsInput
+              v-model="facultyDraft[faculty.id]"
+              :label="faculty.nameKo ?? faculty.nameEn ?? 'Танхим'"
+              @blur="renameFaculty(faculty.id)"
+            />
+            <span class="gks-faculties__count gks-tnum">{{ faculty.programCount }} анги</span>
+            <DsIconButton
+              icon="trash-2"
+              label="Танхимыг устгах"
+              variant="outline"
+              size="sm"
+              :disabled="facultySaving === faculty.id"
+              @click="removeFaculty(faculty.id, faculty.programCount)"
+            />
+          </li>
+        </ul>
+        <p v-else class="gks-form-page__empty">
+          Танхим бүртгэгдээгүй байна. Ангиудыг судлуулах эсвэл гараар нэмэхэд танхим нь
+          өөрөө үүснэ.
+        </p>
+
+        <form class="gks-faculties__add" @submit.prevent="addFaculty">
+          <DsInput v-model="newFaculty" label="Шинэ танхим" placeholder="Инженерийн танхим" />
+          <DsButton type="submit" variant="secondary" icon-left="plus" :loading="facultySaving === 'new'">
+            Нэмэх
+          </DsButton>
+        </form>
+      </DsCard>
+
+      <template v-if="tab === 'brokerage'">
+        <!-- ── GKS ranking, read only (1A-30) ──────────────────────────── -->
+        <DsCard title="GKS эрэмбэ" eyebrow="Тооцоолсон">
+          <p class="gks-page__hint">
+            Каталог болон хайлт энэ эрэмбээр эрэмбэлэгддэг. Оноог систем тооцоолох тул
+            гараар засах зүйл нь дээрх «Рэйтинг» хэсгийн засварын оноо ба каталогийн байр.
+            <NuxtLink to="/admin/universities/ranking" class="gks-form-page__link">Жинг тохируулах</NuxtLink>
+          </p>
+          <dl class="gks-meta">
+            <div>
+              <dt>Эрэмбэ</dt>
+              <dd class="gks-tnum">{{ university.gksRank ? `#${university.gksRank}` : UNKNOWN_LABEL }}</dd>
+            </div>
+            <div>
+              <dt>Оноо</dt>
+              <dd class="gks-tnum">{{ university.gksScore?.toFixed(2) ?? UNKNOWN_LABEL }}</dd>
+            </div>
+            <div>
+              <dt>Гар засвар</dt>
+              <dd class="gks-tnum">
+                {{ university.gksRankBoost ? `${university.gksRankBoost > 0 ? '+' : ''}${university.gksRankBoost}` : '0' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Сүүлд тооцоолсон</dt>
+              <dd class="gks-tnum">
+                {{ university.gksScoredAt ? formatDate(university.gksScoredAt) : UNKNOWN_LABEL }}
+              </dd>
+            </div>
+            <div v-for="part in scoreParts" :key="part.label">
+              <dt>{{ part.label }}</dt>
+              <dd class="gks-tnum">{{ part.value.toFixed(0) }} / 100</dd>
+            </div>
+          </dl>
+        </DsCard>
+
+        <!-- ── Importer-owned, read only ───────────────────────────────── -->
+        <DsCard title="Импортын мэдээлэл" eyebrow="Зөвхөн харах">
+          <p class="gks-page__hint">
+            Амьдралын зардал ба чанарын тэмдэглэгээг импорт хөтөлдөг — энд гараар засдаггүй.
+          </p>
+          <dl class="gks-meta">
+            <div><dt>Бүртгэсэн</dt><dd class="gks-tnum">{{ formatDate(university.createdAt) }}</dd></div>
+            <div><dt>Сүүлд өөрчилсөн</dt><dd class="gks-tnum">{{ formatDate(university.updatedAt) }}</dd></div>
+            <div><dt>Хадгалсан хэрэглэгч</dt><dd class="gks-tnum">{{ university._count.savedBy }}</dd></div>
+            <div><dt>Холбоотой үйлчилгээ</dt><dd class="gks-tnum">{{ university._count.cases }}</dd></div>
+            <div><dt>Холбоотой мэдүүлэг</dt><dd class="gks-tnum">{{ university._count.applications }}</dd></div>
+            <div><dt>Материалын дүрэм</dt><dd class="gks-tnum">{{ university._count.requirementRules }}</dd></div>
+            <div>
+              <dt>Амьдралын зардал</dt>
+              <dd>
+                {{ university.livingCost?.tierLabelMn
+                  ?? (university.livingCost ? 'Бүртгэлтэй' : UNKNOWN_LABEL) }}
+              </dd>
+            </div>
+          </dl>
+        </DsCard>
+
+        <!-- ── Danger zone ─────────────────────────────────────────────── -->
+        <DsCard v-if="auth.isAdmin" title="Сургууль устгах" accent>
+          <p class="gks-page__hint">
+            <template v-if="referenceCount > 0">
+              Энэ сургууль {{ referenceCount }} бичлэгт холбогдсон тул устгах боломжгүй.
+              Оронд нь «Нийтлэлээс хасах» товчийг ашиглана уу.
+            </template>
+            <template v-else>
+              Устгасан сургуулийг сэргээх боломжгүй. Анги, элсэлтийн улирал нь хамт устана.
+            </template>
+          </p>
+          <p v-if="deleteError" class="gks-form-page__error">{{ deleteError }}</p>
+          <div class="gks-form-actions">
+            <template v-if="confirmDelete">
+              <span class="gks-form-page__confirm">«{{ universityName(university) }}»-г бүрмөсөн устгах уу?</span>
+              <DsButton variant="secondary" @click="confirmDelete = false">Болих</DsButton>
+              <DsButton variant="danger" icon-left="trash-2" :loading="deleting" @click="remove">Тийм, устга</DsButton>
+            </template>
+            <DsButton
+              v-else
+              variant="danger"
+              icon-left="trash-2"
+              :disabled="referenceCount > 0"
+              @click="confirmDelete = true"
+            >
+              Устгах
+            </DsButton>
+          </div>
+        </DsCard>
+      </template>
     </template>
   </div>
 </template>
@@ -584,6 +692,38 @@ useHead({ title: () => `${universityName(university.value, 'Сургууль')} 
   .gks-faculties > li,
   .gks-faculties__add { flex-wrap: wrap; }
 }
+/* Save follows both form tabs down the page — the profile tab alone is six
+   cards, and Save used to be under all of them. */
+.ud-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3) 0;
+  background: var(--surface-page);
+  border-top: var(--border-hair) solid var(--line-hairline);
+}
+.ud-save-bar__msg { margin: 0 auto 0 0; }
+.ud-save-bar__msg--dirty { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--warning-fg); font-size: var(--fs-body-sm); }
+
+/* How many rows sit behind a data tab; an empty one is the gap to fill. */
+.ud-tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+}
+.ud-tab-count--empty { background: var(--danger-bg); color: var(--danger-fg); }
+
 .gks-form-page__saved { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--success-fg); font-size: var(--fs-body-sm); }
 .gks-form-page__confirm { margin-right: auto; font-size: var(--fs-body-sm); }
 .gks-sub-form {

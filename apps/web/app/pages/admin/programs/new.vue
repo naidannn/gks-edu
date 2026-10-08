@@ -24,6 +24,12 @@ const route = useRoute();
 const catalogue = useUniversityCatalogue();
 
 const editingId = computed(() => (typeof route.query.id === 'string' ? route.query.id : null));
+/**
+ * Where Save, Delete and Back go. The school page passes `?returnTo=` so an
+ * edit started from a school's tab lands back on that tab, not on the
+ * cross-school list (1A-44). Only an in-app path is honoured.
+ */
+const backTo = computed(() => safeRedirectPath(route.query.returnTo, '/admin/programs'));
 useHead({ title: () => (editingId.value ? 'Хөтөлбөр засах · Админ' : 'Шинэ хөтөлбөр · Админ') });
 
 // `?mode=research` is how the school's own page hands off "find this school's
@@ -95,7 +101,7 @@ async function save() {
     } else {
       await api.post<AdminProgram>('/admin/programs', payload);
     }
-    await navigateTo('/admin/programs');
+    await navigateTo(backTo.value);
   } catch (err) {
     saveError.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
@@ -109,7 +115,7 @@ async function remove() {
   saveError.value = null;
   try {
     await api.delete(`/admin/programs/${editingId.value}`);
-    await navigateTo('/admin/programs');
+    await navigateTo(backTo.value);
   } catch (err) {
     saveError.value = apiErrorMessage(err, 'Устгаж чадсангүй');
   } finally {
@@ -268,7 +274,7 @@ function candidateAnnual(candidate: ProgramCandidate): string {
           {{ existing.university.nameMn }} — {{ PROGRAM_LEVEL_LABELS[existing.level] }}
         </p>
       </div>
-      <DsButton variant="ghost" icon-left="arrow-left" @click="navigateTo('/admin/programs')">Буцах</DsButton>
+      <DsButton variant="ghost" icon-left="arrow-left" @click="navigateTo(backTo)">Буцах</DsButton>
     </header>
 
     <!-- Mode switch: only meaningful when creating; editing is always by hand. -->
@@ -344,7 +350,7 @@ function candidateAnnual(candidate: ProgramCandidate): string {
         <DsIcon name="check" :size="15" />
         {{ bulkResult.created }} хөтөлбөр нэмэгдлээ<span v-if="bulkResult.skipped">,
         {{ bulkResult.skipped }} нь өмнө нь бүртгэгдсэн байсан тул алгаслаа</span>.
-        <NuxtLink to="/admin/programs">Жагсаалтаас харах</NuxtLink>
+        <NuxtLink :to="backTo">{{ route.query.returnTo ? 'Сургуулийн хуудсанд харах' : 'Жагсаалтаас харах' }}</NuxtLink>
       </p>
 
       <!-- Without a key every run is the same thirteen fixtures. Said once, at

@@ -23,6 +23,12 @@ const route = useRoute();
 const catalogue = useUniversityCatalogue();
 
 const editingId = computed(() => (typeof route.query.id === 'string' ? route.query.id : null));
+/**
+ * Where Save, Delete and Back go. The school page passes `?returnTo=` so an
+ * edit started from a school's tab lands back on that tab, not on the
+ * cross-school list (1A-44). Only an in-app path is honoured.
+ */
+const backTo = computed(() => safeRedirectPath(route.query.returnTo, '/admin/admissions'));
 useHead({ title: () => (editingId.value ? 'Элсэлт засах · Админ' : 'Шинэ элсэлт · Админ') });
 
 const mode = ref<'manual' | 'research'>('manual');
@@ -97,7 +103,7 @@ async function save() {
     } else {
       await api.post<AdminIntakeTerm>('/admin/admissions', payload);
     }
-    await navigateTo('/admin/admissions');
+    await navigateTo(backTo.value);
   } catch (err) {
     saveError.value = apiErrorMessage(err, 'Хадгалж чадсангүй');
   } finally {
@@ -111,7 +117,7 @@ async function remove() {
   saveError.value = null;
   try {
     await api.delete(`/admin/admissions/${editingId.value}`);
-    await navigateTo('/admin/admissions');
+    await navigateTo(backTo.value);
   } catch (err) {
     saveError.value = apiErrorMessage(err, 'Устгаж чадсангүй');
   } finally {
@@ -228,7 +234,7 @@ function candidateDate(value: string | null): string {
           {{ INTAKE_MONTH_LABELS[existing.month] ?? `${existing.month}-р сар` }}
         </p>
       </div>
-      <DsButton variant="ghost" icon-left="arrow-left" @click="navigateTo('/admin/admissions')">Буцах</DsButton>
+      <DsButton variant="ghost" icon-left="arrow-left" @click="navigateTo(backTo)">Буцах</DsButton>
     </header>
 
     <!-- Mode switch: only meaningful when creating; editing is always by hand. -->

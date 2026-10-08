@@ -106,7 +106,7 @@ function toggle(id: string) {
         <tbody>
           <template v-for="row in filtered" :key="row.id">
             <tr>
-              <td data-label="Сургууль"><CatalogueProgressSchool :school="row" /></td>
+              <td data-label="Сургууль"><CatalogueProgressSchool :school="row" tab="intakes" /></td>
               <td v-for="level in LEVELS" :key="level" :data-label="PROGRAM_LEVEL_LABELS[level]">
                 <template v-for="view in [levelView(row, level)]" :key="view.kind">
                   <div v-if="view.kind === 'rounds'" class="cp-rounds">
