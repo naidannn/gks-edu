@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PublicServicePricing, ServiceType } from '@gks/shared';
+import type { ProgramLevel, PublicServicePricing, ServiceType } from '@gks/shared';
 
 /**
  * 1A-10 — the shared shape of the four service pages: hero → what it covers →
@@ -14,6 +14,18 @@ export interface ServiceStep {
   number: string;
   title: string;
   note: string;
+}
+
+export interface ServiceCost {
+  title: string;
+  note: string;
+  /** Who it is paid to — the brokerage fee is not the whole bill, and saying so is the point. */
+  paidTo: string;
+}
+
+export interface ServiceFaq {
+  question: string;
+  answer: string;
 }
 
 export interface ServiceInclusion {
@@ -36,7 +48,38 @@ const props = defineProps<{
   suitedFor: string[];
   /** Anything the client must know before signing (§5.4 refund terms etc.). */
   conditions: string[];
+  /** Catalogue levels this service reads its live rounds / programmes from. */
+  levels: ProgramLevel[];
+  /** The costs beyond our fee: tuition, dormitory, visa, flights. Amounts live in the catalogue. */
+  costs?: ServiceCost[];
+  /** What to start gathering now. */
+  documents?: string[];
+  /** Quick facts: visa type, length, language requirement. */
+  facts?: { label: string; value: string }[];
+  faqs?: ServiceFaq[];
 }>();
+
+/** Where a visitor goes next — the same few pages from every service, minus the one they are on. */
+const related = computed(() => {
+  const all = [
+    { to: '/admissions', icon: 'calendar-days', title: 'Элсэлтийн хуанли', note: 'Сургууль бүрийн бүртгэлийн эцсийн хугацаа.' },
+    { to: '/programs', icon: 'graduation-cap', title: 'Анги, хөтөлбөр, төлбөр', note: 'Танхим, мэргэжлээр хайж, төлбөрөө харьцуул.' },
+    { to: '/universities', icon: 'school', title: 'Сургуулиуд', note: 'Байршил, дотуур байр, амьжиргааны зардал.' },
+    { to: '/gks-scholarship', icon: 'award', title: 'GKS тэтгэлэг', note: 'Төрийн бүрэн тэтгэлгийн хуваарь, нөхцөл.' },
+    { to: '/gks-check', icon: 'list-checks', title: 'GKS-д тэнцэх үү?', note: '2 минутын шалгалт.' },
+    { to: '/plan', icon: 'map', title: 'Суралцах төлөвлөгөө', note: 'Хэл → бакалавр → магистрын замаа зур.' },
+    { to: '/faq', icon: 'circle-help', title: 'Түгээмэл асуулт', note: 'Виз, төлбөр, буцаалтын тайлбар.' },
+  ];
+  return all;
+});
+
+const otherServices = computed(() =>
+  [
+    { to: '/services/language-prep', label: 'Хэлний бэлтгэл', service: 'LANGUAGE_PREP' },
+    { to: '/services/bachelor', label: 'Бакалавр', service: 'BACHELOR' },
+    { to: '/services/graduate', label: 'Магистр, доктор', service: 'MASTER' },
+  ].filter((row) => row.service !== props.service),
+);
 
 const { data: pricing } = await useApiFetch<PublicServicePricing[]>('/pricing/public');
 
@@ -80,6 +123,18 @@ const price = computed(() => pricing.value?.find((row) => row.serviceType === pr
       </div>
     </section>
 
+    <ServiceLive :levels="levels" />
+
+    <section v-if="facts?.length" class="svc__section">
+      <h2 class="svc__h2">Товч мэдээлэл</h2>
+      <dl class="svc__facts">
+        <div v-for="fact in facts" :key="fact.label">
+          <dt>{{ fact.label }}</dt>
+          <dd>{{ fact.value }}</dd>
+        </div>
+      </dl>
+    </section>
+
     <!-- No configured price → no price block, rather than a stale number. -->
     <section v-if="price" class="svc__section svc__price">
       <div>
@@ -111,6 +166,32 @@ const price = computed(() => pricing.value?.find((row) => row.serviceType === pr
       </ol>
     </section>
 
+    <section v-if="costs?.length" class="svc__section">
+      <h2 class="svc__h2">Манай хөлснөөс гадна ямар зардал гарах вэ?</h2>
+      <ul class="svc__costs">
+        <li v-for="cost in costs" :key="cost.title">
+          <h3>{{ cost.title }}</h3>
+          <p>{{ cost.note }}</p>
+          <span>Төлөх газар: {{ cost.paidTo }}</span>
+        </li>
+      </ul>
+      <p class="svc__foot">
+        Сургуулийн бодит төлбөрийг
+        <NuxtLink :to="{ path: '/programs', query: { level: levels[0] } }">хөтөлбөрийн жагсаалтаас</NuxtLink>
+        харна уу.
+      </p>
+    </section>
+
+    <section v-if="documents?.length" class="svc__section">
+      <h2 class="svc__h2">Одооноос бэлдэж эхлэх материал</h2>
+      <ul class="svc__suited">
+        <li v-for="doc in documents" :key="doc">
+          <DsIcon name="file-check" :size="16" />
+          <span>{{ doc }}</span>
+        </li>
+      </ul>
+    </section>
+
     <section class="svc__section">
       <h2 class="svc__h2">Хэнд тохирох вэ?</h2>
       <ul class="svc__suited">
@@ -119,6 +200,37 @@ const price = computed(() => pricing.value?.find((row) => row.serviceType === pr
           <span>{{ item }}</span>
         </li>
       </ul>
+    </section>
+
+    <section v-if="faqs?.length" class="svc__section">
+      <h2 class="svc__h2">Түгээмэл асуулт</h2>
+      <div class="svc__faqs">
+        <details v-for="faq in faqs" :key="faq.question">
+          <summary>{{ faq.question }}</summary>
+          <p>{{ faq.answer }}</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="svc__section">
+      <h2 class="svc__h2">Дараагийн алхам</h2>
+      <ul class="svc__related">
+        <li v-for="link in related" :key="link.to">
+          <NuxtLink :to="link.to" class="svc__related-link">
+            <DsIcon :name="link.icon" :size="20" />
+            <span>
+              <strong>{{ link.title }}</strong>
+              <small>{{ link.note }}</small>
+            </span>
+          </NuxtLink>
+        </li>
+      </ul>
+      <p class="svc__foot">
+        Өөр үйлчилгээ:
+        <template v-for="(other, index) in otherServices" :key="other.to">
+          <NuxtLink :to="other.to">{{ other.label }}</NuxtLink><template v-if="index < otherServices.length - 1"> · </template>
+        </template>
+      </p>
     </section>
 
     <section class="svc__cta">
@@ -205,6 +317,30 @@ const price = computed(() => pricing.value?.find((row) => row.serviceType === pr
 }
 .svc__cta-title { font-family: var(--font-display); font-size: var(--fs-h3); font-weight: var(--fw-bold); }
 .svc__cta-note { font-size: var(--fs-body-sm); color: var(--text-subtle); }
+
+.svc__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3); margin: 0; }
+.svc__facts > div { padding: var(--sp-4); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-lg); background: var(--surface-card); }
+.svc__facts dt { color: var(--text-subtle); font-size: var(--fs-caption); }
+.svc__facts dd { margin: var(--sp-1) 0 0; font-weight: var(--fw-semibold); }
+
+.svc__costs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-4); }
+.svc__costs li { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-5); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-lg); background: var(--surface-card); }
+.svc__costs h3 { font-size: var(--fs-body); font-weight: var(--fw-semibold); }
+.svc__costs p { font-size: var(--fs-body-sm); color: var(--text-subtle); }
+.svc__costs span { margin-top: auto; font-size: var(--fs-caption); color: var(--brand-700); font-weight: var(--fw-semibold); }
+.svc__foot { font-size: var(--fs-body-sm); color: var(--text-subtle); }
+.svc__foot a { color: var(--brand-700); font-weight: var(--fw-semibold); }
+
+.svc__faqs { display: flex; flex-direction: column; gap: var(--sp-2); }
+.svc__faqs details { padding: var(--sp-4) var(--sp-5); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-lg); background: var(--surface-card); }
+.svc__faqs summary { cursor: pointer; font-weight: var(--fw-semibold); }
+.svc__faqs p { margin-top: var(--sp-3); font-size: var(--fs-body-sm); color: var(--text-subtle); line-height: 1.6; }
+
+.svc__related { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); }
+.svc__related-link { display: flex; gap: var(--sp-3); align-items: flex-start; height: 100%; padding: var(--sp-4); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-lg); background: var(--surface-card); color: var(--text-body); text-decoration: none; }
+.svc__related-link:hover { border-color: var(--brand-600); }
+.svc__related-link strong { display: block; font-weight: var(--fw-semibold); }
+.svc__related-link small { display: block; margin-top: 2px; color: var(--text-subtle); font-size: var(--fs-caption); }
 
 @media (max-width: 720px) {
   .svc__price { grid-template-columns: 1fr; }
