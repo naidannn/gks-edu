@@ -404,6 +404,42 @@ export class FacebookAdminService {
     return { documentId: document.id };
   }
 
+  /**
+   * Deletes everything the Page holds about one person (2F, `/data-deletion`).
+   *
+   * The thread's messages go with it (cascade), and so do the comments its
+   * private replies came from and the assistant's sessions — the comment one
+   * and the thread's own. A lead stays: that is CRM data the person asked us to
+   * create, governed by the privacy policy, and the deletion page says it is
+   * removed only when they ask for it too.
+   */
+  async deleteThread(id: string): Promise<void> {
+    const thread = await this.prisma.facebookThread.findUnique({
+      where: { id },
+      select: { id: true, psid: true, chatSessionId: true, comments: { select: { fromId: true } } },
+    });
+    if (!thread) throw new NotFoundException('Facebook чат олдсонгүй');
+
+    const fromIds = [...new Set(thread.comments.map((comment) => comment.fromId))];
+    const anonymousIds = [`fb:${thread.psid}`, ...fromIds.map((fromId) => `fb-comment:${fromId}`)];
+
+    await this.prisma.$transaction([
+      this.prisma.facebookComment.deleteMany({
+        where: { OR: [{ threadId: id }, ...(fromIds.length ? [{ fromId: { in: fromIds } }] : [])] },
+      }),
+      this.prisma.facebookThread.delete({ where: { id } }),
+      this.prisma.chatSession.deleteMany({
+        where: {
+          channel: 'FACEBOOK',
+          OR: [
+            ...(thread.chatSessionId ? [{ id: thread.chatSessionId }] : []),
+            { anonymousId: { in: anonymousIds } },
+          ],
+        },
+      }),
+    ]);
+  }
+
   // ─── comments ───────────────────────────────────────────────────────────────
 
   async comments(query: QueryFacebookCommentsDto) {

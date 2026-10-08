@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DOC_STAFF_ROLES } from '../../common/constants/roles.js';
 import { Audit } from '../../common/decorators/audit.decorator.js';
@@ -6,6 +6,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { Role } from '../../prisma/client.js';
 import {
   CreateLeadFromThreadDto,
   LinkFacebookThreadDto,
@@ -87,6 +88,16 @@ export class AdminFacebookController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.facebook.createLead(id, dto, user.id);
+  }
+
+  /** A data-deletion request (`/data-deletion`). Admin-only: it cannot be undone. */
+  @Delete('threads/:id')
+  @Roles(Role.ADMIN)
+  @HttpCode(204)
+  @Audit({ action: 'facebook.thread.delete', entity: 'FacebookThread' })
+  @ApiOperation({ summary: 'Хүсэлтээр чатын бүх өгөгдлийг устгах' })
+  async deleteThread(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.facebook.deleteThread(id);
   }
 
   @Get('link-candidates')

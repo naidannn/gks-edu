@@ -129,6 +129,7 @@ const FOOTER_LEGAL = [
   { to: '/terms', label: 'Үйлчилгээний нөхцөл' },
   { to: '/privacy', label: 'Нууцлал' },
   { to: '/refund', label: 'Төлбөр, буцаалт' },
+  { to: '/data-deletion', label: 'Өгөгдөл устгах' },
 ];
 
 const year = new Date().getFullYear();

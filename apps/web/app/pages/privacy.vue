@@ -17,6 +17,13 @@ import type { LegalSection } from '~/components/legal/Document.vue';
  *     which is what `stores/auth.ts` does, and GA4 only loads when
  *     `NUXT_PUBLIC_GA_ID` is set.
  *
+ *   · §§ «Facebook» and «AI туслах» (2F, 2B) describe the Page integration and
+ *     the assistant as built: the page-scoped id, name and picture Meta hands
+ *     us, the messages and comments stored in `facebook_messages` /
+ *     `facebook_comments`, and the two model providers `LlmService` routes to
+ *     (Gemini first, DeepSeek as fallback). Meta's App Review reads this page,
+ *     which is also why it closes with an English summary.
+ *
  * The retention period below is the one number here that is a business
  * decision rather than an observed fact — see `ARCHITECTURE.md` §18 асуулт 9.
  */
@@ -57,7 +64,8 @@ const SECTIONS: LegalSection[] = [
           'Материал бүрдүүлэлтийн үед: паспорт, боловсролын үнэмлэх, дүнгийн жагсаалт, хэлний түвшний гэрчилгээ, санхүүгийн баримт, эрүүл мэндийн болон бусад шаардлагатай бичиг баримтын хуулбар.',
           'Бүртгэлийн мэдээлэл: и-мэйл хаяг, нууц үгийн шифрлэсэн хэлбэр, Google-ээр нэвтэрсэн бол Google-ийн бүртгэлийн танигч.',
           'Төлбөрийн мэдээлэл: төлбөрийн дүн, огноо, гүйлгээний дугаар, төлөв. Банкны карт эсвэл дансны нууц мэдээлэл бидэнд ирдэггүй — түүнийг төлбөрийн үйлчилгээ үзүүлэгч боловсруулна.',
-          'Харилцааны түүх: зөвлөхтэй бичсэн чат, илгээсэн мэдэгдэл, дуудлагын тэмдэглэл.',
+          'Харилцааны түүх: зөвлөхтэй бичсэн чат, AI туслахтай хийсэн яриа, илгээсэн мэдэгдэл, дуудлагын тэмдэглэл.',
+          'Facebook-ээр холбогдсон бол: манай Facebook хуудас (Page)-ны хүрээнд Meta-гийн олгодог танигч (page-scoped ID), Facebook дээрх нэр, профайл зураг, Messenger-ээр бичсэн мессеж, хавсралт, манай постны доор бичсэн сэтгэгдэл, таныг манай хуудас руу авчирсан зар/холбоосын мэдээлэл.',
           'Техникийн мэдээлэл: IP хаяг, төхөөрөмж, хөтчийн төрөл, зочилсон хуудас — үйлчилгээний аюулгүй байдал, статистикийн зорилгоор.',
         ],
       },
@@ -87,6 +95,52 @@ const SECTIONS: LegalSection[] = [
       {
         type: 'p',
         text: 'Таны урьдчилсан зөвшөөрөлгүйгээр зураг, амжилтын мэдээллийг сурталчилгаанд ашиглахгүй (Гэрээний 3.2).',
+      },
+    ],
+  },
+  {
+    id: 'facebook',
+    title: 'Facebook хуудас ба Messenger',
+    blocks: [
+      {
+        type: 'p',
+        text: `${COMPANY.name}-ийн Facebook хуудас руу Messenger-ээр бичих, эсвэл манай постны доор сэтгэгдэл үлдээхэд Meta Platforms тухайн мессеж, сэтгэгдлийг манай платформд дамжуулдаг. Бид дараах зорилгоор л ашиглана:`,
+      },
+      {
+        type: 'list',
+        items: [
+          'Таны асуултад хариулах — AI туслах эсвэл манай зөвлөх Messenger-ээр хариу бичнэ.',
+          'Сэтгэгдэлд хариулах — асуулт агуулсан сэтгэгдэлд дэлгэрэнгүй хариуг Messenger-ээр хувиар илгээж, сэтгэгдлийн доор богино мэдэгдэл үлдээнэ. Үнэ, хувийн мэдээлэл нийтэд бичигдэхгүй.',
+          'Та зөвлөгөө хүсэж утасны дугаараа өөрөө өгсөн бол зөвлөх тан руу залгах хүсэлт бүртгэх, ярианы түүхийг таны хүсэлттэй холбох.',
+          'Үйлчилгээний чанарыг сайжруулах — ажилтны сайн хариултыг нэргүйжүүлж, AI туслахын мэдлэгийн санд ашиглаж болно.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Бид Facebook-ийн найзуудын жагсаалт, таны хувийн хуудасны пост, бусад хуудастай харилцсан түүх зэргийг авдаггүй. Facebook-ээс ирсэн мэдээллийг худалдахгүй, сурталчилгааны зорилгоор гуравдагч этгээдэд дамжуулахгүй.',
+      },
+      {
+        type: 'note',
+        text: 'Facebook-ээр бидэнтэй харилцсан түүхээ устгуулах бол «Өгөгдөл устгах заавар» хуудсыг (gksedu.mn/data-deletion) үзнэ үү.',
+      },
+    ],
+  },
+  {
+    id: 'assistant',
+    title: 'AI туслах',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Вэбсайт болон Facebook Messenger дээрх AI туслах нь таны асуултыг хиймэл оюуны хэлний загвар ашиглан боловсруулж хариулдаг. Хариулт үүсгэхийн тулд таны бичсэн мессеж, ярианы өмнөх хэсэг, манай мэдлэгийн сангийн холбогдох хэсгийг загварын үйлчилгээ үзүүлэгч рүү илгээнэ.',
+      },
+      {
+        type: 'list',
+        items: [
+          'Загварын үйлчилгээ үзүүлэгч: Google (Gemini), нөөц хувилбараар DeepSeek. Тэд мэдээллийг зөвхөн хариулт үүсгэхэд боловсруулна.',
+          'Үнэ, хугацаа зэрэг тоог AI санаж хэлэхгүй, манай системийн бодит өгөгдлөөс уншиж хэлдэг. Гэсэн ч AI-ийн хариулт алдаатай байж болох тул чухал шийдвэр гаргахаасаа өмнө зөвлөхтэй баталгаажуулна уу.',
+          'Ажилтан ярианд оролцох бүрд AI тухайн ярианд түр хариулахаа зогсоодог. Хүнтэй ярих хүсэлтэй бол хэдийд ч бичээрэй.',
+          'Утасны дугаараа өгөх эсэх нь таны сонголт; AI дугаарыг зөвхөн таны зөвшөөрлөөр зөвлөгөөний хүсэлтэд бүртгэнэ.',
+        ],
       },
     ],
   },
@@ -123,6 +177,8 @@ const SECTIONS: LegalSection[] = [
           'И-мэйл илгээх үйлчилгээ үзүүлэгч — мэдэгдэл, баталгаажуулалтын захидал.',
           'Үүлэн дэд бүтцийн үйлчилгээ үзүүлэгч — мэдээллийн сан болон файл хадгалалт.',
           'Google — та Google бүртгэлээрээ нэвтрэхийг сонгосон тохиолдолд.',
+          'Meta Platforms (Facebook, Messenger) — та манай Facebook хуудастай харилцсан тохиолдолд мессеж хүлээн авах, хариу илгээх.',
+          'Хиймэл оюуны загварын үйлчилгээ үзүүлэгч (Google Gemini, DeepSeek) — AI туслахын хариулт үүсгэх.',
           'Эрх бүхий төрийн байгууллага — хуульд заасан үндэслэл, журмын дагуу.',
         ],
       },
@@ -157,6 +213,7 @@ const SECTIONS: LegalSection[] = [
           'Гэрээ, төлбөр, нягтлан бодох бүртгэлийн баримтыг хууль тогтоомжид заасан хугацаанд хадгална.',
           'Байршуулсан бичиг баримтыг үйлчилгээний хугацаанд болон гэрээ дуусгавар болсны дараа хуулиар шаардсан хугацаанд хадгална.',
           'Хувийн буланг устгах хүсэлт гаргасан тохиолдолд хуулиар хадгалах үүрэгтэй баримтаас бусад мэдээллийг устгана.',
+          'Facebook Messenger, сэтгэгдэл болон AI туслахтай хийсэн ярианы түүхийг сүүлийн харилцаанаас хойш 1 жил хадгалж, дараа нь устгана. Устгах хүсэлт ирвэл 30 хоногийн дотор устгана.',
         ],
       },
     ],
@@ -223,6 +280,27 @@ const SECTIONS: LegalSection[] = [
       {
         type: 'p',
         text: '18 нас хүрээгүй хэрэглэгчийн мэдээллийг зөвхөн эцэг эх, асран хамгаалагчийн зөвшөөрөлтэйгээр боловсруулна. Асран хамгаалагч хүүхдийнхээ мэдээлэлтэй танилцах, засварлуулах, устгуулах эрхтэй.',
+      },
+    ],
+  },
+  {
+    id: 'english',
+    title: 'English summary',
+    blocks: [
+      {
+        type: 'p',
+        text: `This policy is written in Mongolian; this section summarises it in English. The data controller is ${COMPANY.legalName} (GKS EDU GROUP LLC), ${COMPANY.addressOneLine}, Mongolia. Contact: ${COMPANY.email}, ${COMPANY.phone}.`,
+      },
+      {
+        type: 'list',
+        items: [
+          'What we collect: the details you give us when asking for a consultation or signing a contract (name, phone, email, education, documents needed for a Korean university application and visa), payment records, and the history of your conversations with our consultants and our AI assistant.',
+          'Facebook: when you message our Facebook Page or comment on our posts, Meta sends us your page-scoped ID, your Facebook name and profile picture, your messages, attachments and comments, and the ad or link that brought you to us. We use them only to answer you (by our AI assistant or a staff member), to register a consultation request when you give us your phone number, and to improve our answers. We do not access your friends list or personal posts, and we never sell or share Facebook data for advertising.',
+          'AI assistant: replies are generated by large language models from Google (Gemini) and, as a fallback, DeepSeek, which process your message only to produce the reply. Any staff reply pauses the assistant in that conversation.',
+          'Sharing: only as needed to provide the service — Korean universities, the Korean embassy, translators/notaries, couriers, our payment provider (QPay), email and cloud-hosting providers, Meta, and the AI providers above. We never sell personal data.',
+          'Retention: unconverted enquiries for 2 years; Facebook and AI chat history for 1 year after the last message; contracts and payments as required by law.',
+          'Your rights: access, correction, deletion and withdrawal of consent. To delete your Facebook conversation data, follow https://gksedu.mn/data-deletion or write to us; we delete it within 30 days.',
+        ],
       },
     ],
   },

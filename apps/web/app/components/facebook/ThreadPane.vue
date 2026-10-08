@@ -24,6 +24,8 @@ const props = defineProps<{
   pending?: boolean;
   /** The knowledge base is staff-only, so document officers are not offered it. */
   canTeach?: boolean;
+  /** Deleting a thread answers a data-deletion request and cannot be undone — admins only. */
+  canDelete?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -32,6 +34,8 @@ const emit = defineEmits<{
   changed: [thread: FacebookThreadItem];
   /** Something changed that only a re-read shows (a sent message, a pause). */
   refresh: [];
+  /** The thread no longer exists. */
+  deleted: [id: string];
 }>();
 
 const api = useApi();
@@ -50,6 +54,30 @@ const sending = ref(false);
 const sendError = ref<string | null>(null);
 const aiBusy = ref(false);
 const actionError = ref<string | null>(null);
+const deleting = ref(false);
+
+/**
+ * A data-deletion request (`/data-deletion`): the thread, its messages, the
+ * comments behind it and the assistant's sessions all go. Asked twice — once by
+ * the browser, once by the server's audit log — because nothing brings it back.
+ */
+async function removeThread(): Promise<void> {
+  const thread = props.thread;
+  if (!thread) return;
+  const who = thread.name ?? 'энэ хүн';
+  if (!globalThis.confirm(`${who}-ий Facebook чат, мессеж, сэтгэгдлийг бүрмөсөн устгах уу? Буцаах боломжгүй.`)) return;
+
+  deleting.value = true;
+  actionError.value = null;
+  try {
+    await api.delete(`/admin/facebook/threads/${thread.id}`);
+    emit('deleted', thread.id);
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Устгаж чадсангүй');
+  } finally {
+    deleting.value = false;
+  }
+}
 
 /**
  * Replies turned into answer cards during this visit. The next poll brings the
@@ -357,6 +385,17 @@ const referralRows = computed(() => entries(props.thread?.referral));
             <dt>PSID</dt>
             <dd class="gks-tnum">{{ thread.psid }}</dd>
           </dl>
+          <DsButton
+            v-if="canDelete"
+            size="sm"
+            variant="ghost"
+            icon-left="trash-2"
+            class="gks-fbt__delete"
+            :loading="deleting"
+            @click="removeThread"
+          >
+            Өгөгдлийг устгах
+          </DsButton>
         </div>
       </section>
     </header>
@@ -644,4 +683,5 @@ const referralRows = computed(() => entries(props.thread?.referral));
   .gks-fbt__foot { padding: var(--sp-3) var(--gutter-mobile) var(--sp-4); }
   .gks-fbt__keys { display: none; }
 }
+.gks-fbt__delete { margin-top: var(--sp-3); color: var(--red-700); }
 </style>

@@ -15,7 +15,7 @@
  * together, so a per-page date would only invite them to drift apart. Update it
  * whenever any of the three changes in substance.
  */
-const LEGAL_UPDATED_AT = '2026 оны 9 дүгээр сарын 6';
+const LEGAL_UPDATED_AT = '2026 оны 10 дугаар сарын 9';
 
 export type LegalBlock =
   | { type: 'p'; text: string }
@@ -47,6 +47,7 @@ const LEGAL_PAGES = [
   { to: '/terms', label: 'Үйлчилгээний нөхцөл' },
   { to: '/privacy', label: 'Нууцлалын бодлого' },
   { to: '/refund', label: 'Төлбөр, буцаалтын журам' },
+  { to: '/data-deletion', label: 'Өгөгдөл устгах заавар' },
 ];
 
 const related = computed(() => LEGAL_PAGES.filter((page) => page.to !== route.path));

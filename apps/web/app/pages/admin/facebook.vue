@@ -155,6 +155,12 @@ function onChanged(next: FacebookThreadItem): void {
   void loadList({ quiet: true }).catch(() => {});
 }
 
+function onDeleted(id: string): void {
+  threads.value = threads.value.filter((item) => item.id !== id);
+  closeThread();
+  void loadList({ quiet: true }).catch(() => {});
+}
+
 function onRefresh(): void {
   const id = activeId.value;
   if (id) void loadThread(id, { quiet: true }).catch(() => {});
@@ -335,9 +341,11 @@ const emptyText = computed(() => {
           :thread="active"
           :pending="threadPending"
           :can-teach="auth.isStaff"
+          :can-delete="auth.isAdmin"
           @back="mobilePane = 'list'"
           @changed="onChanged"
           @refresh="onRefresh"
+          @deleted="onDeleted"
         />
 
         <div v-else class="gks-fb__blank">
