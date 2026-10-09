@@ -32,7 +32,8 @@
     "contract:preview": "tsx scripts/preview-contract.ts",
     "checklist:preview": "tsx scripts/preview-checklist.ts",
     "storage:migrate": "tsx scripts/migrate-storage-to-s3.ts",
-    "storage:verify": "tsx scripts/verify-storage-migration.ts"
+    "storage:verify": "tsx scripts/verify-storage-migration.ts",
+    "ai:eval": "tsc -p tsconfig.build.json && node dist/modules/ai/eval/run-eval.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",

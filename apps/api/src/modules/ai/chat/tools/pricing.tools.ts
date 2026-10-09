@@ -1,12 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { toNumber, type DecimalLike } from '../../../../common/utils/decimal.js';
-import { AccessLevel, BalanceTrigger, PrepaymentMode, ServiceType } from '../../../../prisma/client.js';
+import {
+  AccessLevel,
+  BalanceTrigger,
+  PrepaymentMode,
+  ServiceType,
+} from '../../../../prisma/client.js';
 import { FxService } from '../../../fx/fx.service.js';
 import { PricingService } from '../../../pricing/pricing.service.js';
 import { requireEnum } from './args.js';
 import type { AiTool, AiToolProvider, ToolOutcome } from './tool.types.js';
 
 const SERVICE_TYPES = Object.values(ServiceType);
+
+/** The GKS fee is withheld from guests and registered visitors; see the class comment. */
+const canSeeGksFee = (level: AccessLevel): boolean =>
+  level === AccessLevel.CONTRACTED || level === AccessLevel.INTERNAL;
 
 /** When the rest of the fee falls due, in the words a client would use. */
 const BALANCE_TRIGGER_MN: Record<BalanceTrigger, string> = {
@@ -17,13 +26,14 @@ const BALANCE_TRIGGER_MN: Record<BalanceTrigger, string> = {
 /**
  * Money: what the service costs, and what a won is worth today (§5.3).
  *
- * **`get_service_pricing` starts at `REGISTERED`, and that is a business rule
- * rather than a security one** (§15-32). Prices are published information; the
- * office's position is that a figure quoted to a stranger with no idea of their
- * situation does more harm than good, so a guest is routed to a consultation
- * and the model never sees this tool at all. The `PUBLIC` level prompt already
- * tells it to explain the shape of the payment — prepayment and balance —
- * without the numbers.
+ * **Who may be told a price is a business rule, not a security one.** Until
+ * 2026-10-09 a guest was never quoted a figure (§15-32). The office reversed
+ * that for ordinary brokerage — the total, the prepayment and, above all, that
+ * the balance is only collected after the visa — because a visitor who cannot
+ * learn what it costs leaves. **GKS scholarship brokerage is the exception**:
+ * its fee is withheld from everyone below `CONTRACTED` for now, and the tool
+ * says so rather than returning a row the model might quote. A contracted
+ * client has the figure in their own contract.
  *
  * Neither figure below is a constant. Prices are versioned rows in
  * `ServicePricing`, and the balance falls due on the visa for ordinary brokerage
@@ -44,11 +54,12 @@ export class PricingTools implements AiToolProvider {
   private getServicePricing(): AiTool {
     return {
       name: 'get_service_pricing',
-      minLevel: AccessLevel.REGISTERED,
+      minLevel: AccessLevel.PUBLIC,
       label: 'Үйлчилгээний үнийг шалгаж байна…',
       description:
         'Нэг үйлчилгээний одоогийн үнэ: нийт дүн, урьдчилгаа, үлдэгдэл болон үлдэгдлийг ' +
-        'хэзээ төлөх болзол. Төгрөгөөр. Үнийг зөвхөн эндээс ав, санахыг бүү оролд.',
+        'хэзээ төлөх болзол. Төгрөгөөр. Үнийг зөвхөн эндээс ав, санахыг бүү оролд. ' +
+        'GKS тэтгэлгийн зуучлалын үнийг энэ хэрэгсэл хэлэхгүй.',
       parameters: {
         type: 'object',
         properties: {
@@ -56,8 +67,20 @@ export class PricingTools implements AiToolProvider {
         },
         required: ['serviceType'],
       },
-      run: async (args): Promise<ToolOutcome> => {
+      run: async (args, context): Promise<ToolOutcome> => {
         const serviceType = requireEnum(args, 'serviceType', SERVICE_TYPES);
+
+        if (serviceType === ServiceType.GKS_SCHOLARSHIP && !canSeeGksFee(context.level)) {
+          return {
+            title: 'GKS-ийн зуучлалын төлбөр',
+            data: {
+              found: false,
+              message:
+                'GKS тэтгэлгийн зуучлалын төлбөрийн дүнг одоогоор хэлэхгүй. Дүн, нөхцөлийг зөвлөх ' +
+                'уулзалтаар тайлбарлана гэж хэлээд цаг, утас санал болго. Өөрөөсөө дүн бүү дурд.',
+            },
+          };
+        }
 
         let row: Awaited<ReturnType<PricingService['getActive']>>;
         try {

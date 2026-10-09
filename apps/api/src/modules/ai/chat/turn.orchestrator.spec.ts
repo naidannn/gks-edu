@@ -190,6 +190,18 @@ describe('TurnOrchestrator', () => {
     expect(events.at(-1)).toMatchObject({ messageId: 'm-assistant', grounded: true });
   });
 
+  it('never completes a blank answer — it routes the visitor to a person instead', async () => {
+    // Found by the 2G-02 eval: a fallback model that spent its whole token cap
+    // thinking returned nothing, and the turn "finished" with an empty reply.
+    const { orchestrator, sessions } = harness({ answer: '   ' });
+
+    const events = await run(orchestrator);
+
+    expect(events.at(-1)).toMatchObject({ type: 'error', fallback: 'consultation' });
+    expect(events.map((event) => event.type)).not.toContain('done');
+    expect(sessions.recordAnswer).not.toHaveBeenCalled();
+  });
+
   it('retrieves at the caller level, with the configured threshold', async () => {
     const { orchestrator, retrieval } = harness();
 

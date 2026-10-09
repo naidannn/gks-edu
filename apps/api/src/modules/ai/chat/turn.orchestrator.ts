@@ -266,6 +266,16 @@ export class TurnOrchestrator {
       return;
     }
 
+    // A model can finish its turn having said nothing - thinking that used up the
+    // token cap, a provider that returned an empty body. A blank answer is the
+    // worst thing a visitor can be shown: no reply and no way forward. Say so, and
+    // route them to a person, instead of storing and "completing" an empty turn.
+    if (answer.trim() === '') {
+      this.logger.error(`Хоосон хариулт гарлаа (${usage.model}, tool: ${runs.length}) — зөвлөх рүү чиглүүллээ`);
+      yield offline('Уучлаарай, одоогоор хариулж чадсангүй. Зөвлөхтэй холбогдоно уу.', 'consultation');
+      return;
+    }
+
     const knownRefs = [...sources.map((source) => source.ref), ...runs.map((run) => run.ref)];
 
     let verdict = this.guard.review({

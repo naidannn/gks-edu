@@ -28,6 +28,18 @@ interface DeepseekChunk {
  * stream finishes. A tool call parsed from a half-arrived argument string is the
  * classic streaming bug here.
  */
+/**
+ * Room for the model's thinking on top of the answer.
+ *
+ * `max_tokens` on DeepSeek's v4 models covers the reasoning trace as well as the
+ * reply, and the trace comes first. Measured 2026-10-09 with a 700 cap: 550-660
+ * tokens went on thinking and the reply was 79 characters, or nothing at all -
+ * a blank answer, which reached visitors whenever Gemini's quota ran out and the
+ * turn fell back here. The answer's own length is limited by the prompt, not by
+ * this number, so the headroom costs only the thinking it makes room for.
+ */
+const REASONING_HEADROOM = 3000;
+
 @Injectable()
 export class DeepseekChatProvider implements LlmProvider {
   readonly name = 'deepseek' as const;
@@ -54,7 +66,7 @@ export class DeepseekChatProvider implements LlmProvider {
             }
           : {}),
         temperature: request.temperature ?? 0.2,
-        max_tokens: request.maxOutputTokens ?? 700,
+        max_tokens: (request.maxOutputTokens ?? 700) + REASONING_HEADROOM,
         stream: true,
         // Without this the usage block never arrives on a streamed call, and the
         // session's token bill silently stays at zero.

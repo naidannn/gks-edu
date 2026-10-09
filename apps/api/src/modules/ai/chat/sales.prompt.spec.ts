@@ -216,4 +216,16 @@ describe('layers that must agree', () => {
     expect(system).toContain('өгсөн дугаарыг нь ашиглаж');
     expect(system).toContain('аль хэдийн өгсөн бол дахин бүү асуу');
   });
+
+  it('quotes ordinary brokerage prices with the balance timing and withholds the GKS fee, in both layers', () => {
+    const system = build({ turns: 1, askAfter: 3, contactSettled: false });
+
+    // 2026-10-09: say the price, stress the balance is collected after the visa; GKS fee waits.
+    expect(system).toContain('яг дүнтэй нь');
+    expect(system).toContain('"үлдэгдлийг_хэзээ"');
+    expect(system).toContain('GKS тэтгэлгийн зуучлалын төлбөрийн дүнг хэлэхгүй');
+    expect(system).toContain('GKS тэтгэлгийн зуучлалын дүнг хэлэхгүй');
+    // The old "never quote a figure to a guest" rule must be gone.
+    expect(system).not.toContain('Үнийн **яг дүнг** бүү хэл');
+  });
 });
