@@ -31,7 +31,11 @@ const FACEBOOK_LEADS_CTE = Prisma.sql`
     SELECT DISTINCT ON (l.id)
       l.id                                  AS lead_id,
       t.id                                  AS thread_id,
-      concat_ws(' ', NULLIF(l."lastName", '—'), NULLIF(l."firstName", '—')) AS name,
+      -- The assistant files a nameless contact as "—"; the Facebook name is better than nothing.
+      COALESCE(
+        NULLIF(concat_ws(' ', NULLIF(l."lastName", '—'), NULLIF(l."firstName", '—')), ''),
+        t.name
+      )                                     AS name,
       l.phone                               AS phone,
       l.stage::text                         AS stage,
       l."createdAt"                         AS created_at,
