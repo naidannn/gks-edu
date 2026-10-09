@@ -3385,6 +3385,11 @@ model FacebookThread {
   /// Contact messages staff have not opened yet.
   unreadCount Int     @default(0)
 
+  /// Marked with a star in the inbox to come back to — one flag for the whole
+  /// office, like a shared label, not a per-person bookmark.
+  starred   Boolean   @default(false)
+  starredAt DateTime?
+
   /// The last time the contact wrote. Meta's 24-hour window runs from here,
   /// and outside it only a human-agent tagged message may be sent (7 days).
   lastInboundAt      DateTime?
@@ -3404,6 +3409,7 @@ model FacebookThread {
 
   @@index([lastMessageAt])
   @@index([needsStaff, lastMessageAt])
+  @@index([starred, lastMessageAt])
   @@index([leadId])
   @@index([clientId])
   @@map("facebook_threads")

@@ -16,7 +16,11 @@ const props = defineProps<{
   pending?: boolean;
 }>();
 
-defineEmits<{ select: [id: string] }>();
+defineEmits<{
+  select: [id: string];
+  /** The star beside the row — a shared "come back to this one" marker. */
+  star: [id: string, starred: boolean];
+}>();
 
 /** A picture link from Meta expires; once it 404s the row falls back to initials. */
 const brokenPics = ref(new Set<string>());
@@ -39,7 +43,7 @@ const AI_ICON = { ACTIVE: 'bot', PAUSED: 'pause', OFF: 'bot-off', IDLE: 'bot-off
 
 <template>
   <ul v-if="rows.length" class="gks-fbl" role="list">
-    <li v-for="row in rows" :key="row.item.id">
+    <li v-for="row in rows" :key="row.item.id" class="gks-fbl__item">
       <button
         type="button"
         class="gks-fbl__row"
@@ -88,6 +92,18 @@ const AI_ICON = { ACTIVE: 'bot', PAUSED: 'pause', OFF: 'bot-off', IDLE: 'bot-off
 
         <span v-if="row.item.unreadCount" class="gks-fbl__badge gks-tnum">{{ row.item.unreadCount }}</span>
       </button>
+      <!-- A sibling of the row, not inside it: a button may not hold a button. -->
+      <button
+        type="button"
+        class="gks-fbl__star"
+        :class="{ 'gks-fbl__star--on': row.item.starred }"
+        :aria-pressed="row.item.starred"
+        :aria-label="row.item.starred ? 'Одыг арилгах' : 'Одоор тэмдэглэх'"
+        :title="row.item.starred ? 'Одыг арилгах' : 'Одоор тэмдэглэх'"
+        @click="$emit('star', row.item.id, !row.item.starred)"
+      >
+        <DsIcon name="star" :size="15" />
+      </button>
     </li>
   </ul>
 
@@ -99,6 +115,30 @@ const AI_ICON = { ACTIVE: 'bot', PAUSED: 'pause', OFF: 'bot-off', IDLE: 'bot-off
 </template>
 
 <style scoped>
+.gks-fbl__item { position: relative; }
+.gks-fbl__star {
+  position: absolute;
+  right: var(--sp-3);
+  bottom: var(--sp-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--n-300);
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition-control);
+}
+.gks-fbl__item:hover .gks-fbl__star,
+.gks-fbl__star:focus-visible { opacity: 1; }
+.gks-fbl__star:hover { background: var(--surface-hover); color: var(--warning-fg); }
+/* A starred row keeps its star visible — that is the point of starring it. */
+.gks-fbl__star--on { opacity: 1; color: var(--amber-600); }
+@media (hover: none) { .gks-fbl__star { opacity: 1; } }
 .gks-fbl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 
 .gks-fbl__row {

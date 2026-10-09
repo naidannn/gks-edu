@@ -16,6 +16,7 @@ import {
   ReplyFacebookCommentDto,
   SendFacebookMessageDto,
   SetFacebookAiDto,
+  StarFacebookThreadDto,
 } from './dto/facebook.dto.js';
 import { FacebookAdminService } from './facebook-admin.service.js';
 
@@ -60,6 +61,12 @@ export class AdminFacebookController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.facebook.send(id, dto.text, user.id);
+  }
+
+  @Patch('threads/:id/star')
+  @ApiOperation({ summary: 'Чатыг одоор тэмдэглэх / тэмдэглэгээг арилгах' })
+  star(@Param('id', ParseUUIDPipe) id: string, @Body() dto: StarFacebookThreadDto) {
+    return this.facebook.setStar(id, dto.starred);
   }
 
   @Patch('threads/:id/ai')

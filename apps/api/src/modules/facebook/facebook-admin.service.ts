@@ -87,7 +87,7 @@ export class FacebookAdminService {
     const where = this.threadWhere(query, now);
 
     // Read-only, so `Promise.all` and not `$transaction` (CLAUDE.md rule 9).
-    const [items, total, needsStaff, unread, unlinked, comments, config] = await Promise.all([
+    const [items, total, needsStaff, unread, unlinked, starred, comments, config] = await Promise.all([
       this.prisma.facebookThread.findMany({
         where,
         include: THREAD_INCLUDE,
@@ -99,6 +99,7 @@ export class FacebookAdminService {
       this.prisma.facebookThread.count({ where: { needsStaff: true } }),
       this.prisma.facebookThread.count({ where: { unreadCount: { gt: 0 } } }),
       this.prisma.facebookThread.count({ where: { leadId: null, clientId: null } }),
+      this.prisma.facebookThread.count({ where: { starred: true } }),
       this.prisma.facebookComment.count({
         where: { status: { in: [FacebookCommentStatus.NEW, FacebookCommentStatus.FAILED] } },
       }),
@@ -108,7 +109,7 @@ export class FacebookAdminService {
     return {
       items: items.map((row) => this.threadItem(row, config, now)),
       total,
-      counts: { needsStaff, unread, unlinked, comments },
+      counts: { needsStaff, unread, unlinked, starred, comments },
     };
   }
 
@@ -215,6 +216,17 @@ export class FacebookAdminService {
       knowledgeDocumentId: null,
       createdAt: row.createdAt,
     };
+  }
+
+  /** Star or unstar a thread — a shared marker for "come back to this one". */
+  async setStar(id: string, starred: boolean) {
+    const row = await this.prisma.facebookThread.update({
+      where: { id },
+      data: { starred, starredAt: starred ? new Date() : null },
+      include: THREAD_INCLUDE,
+    });
+
+    return this.threadItem(row, await this.aiConfig.get(), new Date());
   }
 
   /** Switch the assistant off/on for this thread, or lift a staff pause early. */
@@ -533,6 +545,7 @@ export class FacebookAdminService {
     // and the default inbox filter would hide the answer.
     const scope = query.scope ?? (query.leadId || query.clientId ? 'ALL' : 'NEEDS_STAFF');
     if (scope === 'NEEDS_STAFF') and.push({ needsStaff: true });
+    if (scope === 'STARRED') and.push({ starred: true });
     if (scope === 'UNLINKED') and.push({ leadId: null, clientId: null });
     if (scope === 'AI') {
       and.push({ aiMode: FacebookAiMode.AUTO, OR: [{ aiPausedUntil: null }, { aiPausedUntil: { lte: now } }] });
@@ -568,6 +581,7 @@ export class FacebookAdminService {
       aiPausedUntil: row.aiPausedUntil && row.aiPausedUntil > now ? row.aiPausedUntil : null,
       aiActive: assistantActive(row, config, now),
       needsStaff: row.needsStaff,
+      starred: row.starred,
       unreadCount: row.unreadCount,
       lastMessageAt: row.lastMessageAt,
       lastMessagePreview: row.lastMessagePreview,

@@ -116,6 +116,7 @@ export const FACEBOOK_WINDOW_TONE: Record<FacebookThreadItem['window'], BadgeTon
 
 export const FACEBOOK_SCOPE_LABELS: Record<FacebookThreadScope, string> = {
   NEEDS_STAFF: 'Ажилтан хэрэгтэй',
+  STARRED: 'Одтой',
   ALL: 'Бүгд',
   AI: 'AI хариулж буй',
   UNLINKED: 'Холбоогүй',

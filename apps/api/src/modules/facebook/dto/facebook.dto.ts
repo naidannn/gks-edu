@@ -20,7 +20,7 @@ import { FacebookAiMode, FacebookCommentStatus } from '../../../prisma/client.js
 
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
 
-export const FACEBOOK_THREAD_SCOPES = ['NEEDS_STAFF', 'ALL', 'AI', 'UNLINKED'] as const;
+export const FACEBOOK_THREAD_SCOPES = ['NEEDS_STAFF', 'STARRED', 'ALL', 'AI', 'UNLINKED'] as const;
 export type FacebookThreadScope = (typeof FACEBOOK_THREAD_SCOPES)[number];
 
 export class QueryFacebookThreadsDto {
@@ -80,6 +80,12 @@ export class SetFacebookAiDto {
   @Equals(true)
   @IsOptional()
   resume?: true;
+}
+
+export class StarFacebookThreadDto {
+  @ApiProperty({ description: 'true = одоор тэмдэглэх, false = тэмдэглэгээг арилгах' })
+  @IsBoolean()
+  starred!: boolean;
 }
 
 export class LinkFacebookThreadDto {

@@ -38,6 +38,7 @@ const auth = useAuthStore();
 
 const SCOPES: { value: FacebookThreadScope; count: (c: FacebookThreadCounts) => number | null }[] = [
   { value: 'NEEDS_STAFF', count: (c) => c.needsStaff },
+  { value: 'STARRED', count: (c) => c.starred || null },
   { value: 'ALL', count: (c) => c.unread || null },
   { value: 'AI', count: () => null },
   { value: 'UNLINKED', count: (c) => c.unlinked },
@@ -50,7 +51,7 @@ const tab = ref<Tab>(route.query.tab === 'comments' ? 'comments' : 'messenger');
 const scope = ref<FacebookThreadScope>('NEEDS_STAFF');
 const search = ref('');
 const threads = ref<FacebookThreadItem[]>([]);
-const counts = ref<FacebookThreadCounts>({ needsStaff: 0, unread: 0, unlinked: 0, comments: 0 });
+const counts = ref<FacebookThreadCounts>({ needsStaff: 0, unread: 0, unlinked: 0, starred: 0, comments: 0 });
 const listPending = ref(true);
 const listError = ref<string | null>(null);
 
@@ -148,6 +149,25 @@ function closeThread(): void {
 }
 
 /** A PATCH answered with the new thread state; merge it rather than re-read. */
+/**
+ * Stars a thread from the list or the pane. Optimistic: the star flips at once
+ * and the server's answer is merged back through `onChanged`; a failure puts it
+ * back and says why.
+ */
+async function star(id: string, starred: boolean): Promise<void> {
+  const flip = (value: boolean) => {
+    threads.value = threads.value.map((item) => (item.id === id ? { ...item, starred: value } : item));
+    if (active.value?.id === id) active.value = { ...active.value, starred: value };
+  };
+  flip(starred);
+  try {
+    onChanged(await api.patch<FacebookThreadItem>(`/admin/facebook/threads/${id}/star`, { starred }));
+  } catch (e) {
+    flip(!starred);
+    listError.value = apiErrorMessage(e, 'Одоор тэмдэглэж чадсангүй');
+  }
+}
+
 function onChanged(next: FacebookThreadItem): void {
   if (active.value?.id === next.id) active.value = { ...active.value, ...next };
   threads.value = threads.value.map((item) => (item.id === next.id ? next : item));
@@ -233,6 +253,7 @@ const emptyText = computed(() => {
   if (search.value.trim()) return 'Хайлтад тохирох чат алга.';
   if (scope.value === 'NEEDS_STAFF') return 'Ажилтны хариу хүлээж буй чат алга — бусдад AI хариулж байна.';
   if (scope.value === 'UNLINKED') return 'Бүх чат CRM-тэй холбогдсон байна.';
+  if (scope.value === 'STARRED') return 'Одоор тэмдэглэсэн чат алга. Жагсаалтын мөр эсвэл чатын толгой дээрх одыг дарж тэмдэглэнэ.';
   return 'Энэ шүүлтүүрт чат алга.';
 });
 </script>
@@ -326,7 +347,13 @@ const emptyText = computed(() => {
         </div>
 
         <div class="gks-fb__list-scroll">
-          <FacebookThreadList :items="threads" :active-id="activeId" :pending="listPending" @select="select">
+          <FacebookThreadList
+            :items="threads"
+            :active-id="activeId"
+            :pending="listPending"
+            @select="select"
+            @star="star"
+          >
             <template #empty>
               <p class="gks-fb__empty">{{ listError ?? emptyText }}</p>
             </template>
@@ -346,6 +373,7 @@ const emptyText = computed(() => {
           @changed="onChanged"
           @refresh="onRefresh"
           @deleted="onDeleted"
+          @star="star"
         />
 
         <div v-else class="gks-fb__blank">

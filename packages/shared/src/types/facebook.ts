@@ -20,7 +20,7 @@ export type FacebookCommentStatus = 'NEW' | 'AI_REPLIED' | 'STAFF_REPLIED' | 'IG
  * Inbox filters. NEEDS_STAFF is the default: the last word is the contact's and
  * neither the assistant nor a person is going to answer it on their own.
  */
-export type FacebookThreadScope = 'NEEDS_STAFF' | 'ALL' | 'AI' | 'UNLINKED';
+export type FacebookThreadScope = 'NEEDS_STAFF' | 'STARRED' | 'ALL' | 'AI' | 'UNLINKED';
 
 export interface FacebookAttachment {
   type: 'image' | 'video' | 'audio' | 'file' | 'sticker' | 'other';
@@ -54,6 +54,8 @@ export interface FacebookThreadItem {
   /** True when the assistant would answer the next message right now. */
   aiActive: boolean;
   needsStaff: boolean;
+  /** Marked with a star by anybody in the office. */
+  starred: boolean;
   unreadCount: number;
   lastMessageAt: string;
   lastMessagePreview: string | null;
@@ -72,6 +74,7 @@ export interface FacebookThreadCounts {
   needsStaff: number;
   unread: number;
   unlinked: number;
+  starred: number;
   /** Comments still NEW or FAILED. */
   comments: number;
 }

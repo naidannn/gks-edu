@@ -36,6 +36,8 @@ const emit = defineEmits<{
   refresh: [];
   /** The thread no longer exists. */
   deleted: [id: string];
+  /** Toggle the shared star; the page owns the request so the list updates too. */
+  star: [id: string, starred: boolean];
 }>();
 
 const api = useApi();
@@ -281,6 +283,18 @@ const referralRows = computed(() => entries(props.thread?.referral));
 
         <div class="gks-fbt__who">
           <p class="gks-fbt__name">
+            <button
+              v-if="thread"
+              type="button"
+              class="gks-fbt__star"
+              :class="{ 'gks-fbt__star--on': thread.starred }"
+              :aria-pressed="thread.starred"
+              :aria-label="thread.starred ? 'Одыг арилгах' : 'Одоор тэмдэглэх'"
+              :title="thread.starred ? 'Одыг арилгах' : 'Одоор тэмдэглэх'"
+              @click="emit('star', thread.id, !thread.starred)"
+            >
+              <DsIcon name="star" :size="16" />
+            </button>
             {{ thread?.name ?? (pending ? 'Ачаалж байна…' : 'Нэргүй харилцагч') }}
             <DsBadge v-if="thread" :tone="FACEBOOK_WINDOW_TONE[thread.window]">
               {{ FACEBOOK_WINDOW_LABELS[thread.window] }}
@@ -684,4 +698,21 @@ const referralRows = computed(() => entries(props.thread?.referral));
   .gks-fbt__keys { display: none; }
 }
 .gks-fbt__delete { margin-top: var(--sp-3); color: var(--red-700); }
+.gks-fbt__star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-right: var(--sp-1);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--n-300);
+  vertical-align: -6px;
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+.gks-fbt__star:hover { background: var(--surface-hover); color: var(--amber-600); }
+.gks-fbt__star--on { color: var(--amber-600); }
 </style>
