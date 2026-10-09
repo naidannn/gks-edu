@@ -1,5 +1,6 @@
 import type { AuthSession, MetaTracking, User } from '@gks/shared';
 import { defineStore } from 'pinia';
+import { browserLock, refreshAcrossTabs, tokenSubject } from '~/utils/shared-refresh';
 import { singleFlight } from '~/utils/single-flight';
 
 const ACCESS_KEY = 'gks.accessToken';
@@ -92,31 +93,82 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Returns false when the refresh token is gone or rejected.
+   * Returns false when the session could not be renewed. The tokens are torn
+   * down only when the API actually refused them — an outage or a deploy
+   * restarting the API leaves them in place for the next attempt.
    *
-   * Single-flight: the API rotates refresh tokens, so parallel callers must
-   * share one round trip rather than each burn the same token — see
-   * {@link singleFlight}.
+   * Single-flight within the tab, and locked across tabs: the API rotates
+   * refresh tokens and revokes every session when a spent one comes back, so
+   * no two callers — here or in another tab — may present the same token. See
+   * {@link singleFlight} and {@link refreshAcrossTabs}.
    */
   const refresh = singleFlight(async (): Promise<boolean> => {
     const presented = refreshToken.value;
     if (!presented) return false;
 
-    try {
-      const session = await $fetch<AuthSession>('/auth/refresh', {
-        baseURL: config.public.apiBase,
-        method: 'POST',
-        body: { refreshToken: presented },
-      });
-      apply(session);
-      return true;
-    } catch {
-      // Only tear the session down if it is still the one that just failed.
-      // A refresh that lost a race must not wipe the tokens the winner stored.
-      if (refreshToken.value === presented) clear();
-      return false;
+    const outcome = await refreshAcrossTabs({
+      presented,
+      readStored: () => localStorage.getItem(REFRESH_KEY),
+      exchange: (token) =>
+        $fetch<AuthSession>('/auth/refresh', {
+          baseURL: config.public.apiBase,
+          method: 'POST',
+          body: { refreshToken: token },
+        }),
+      withLock: browserLock('gks.auth.refresh'),
+    });
+
+    switch (outcome.kind) {
+      case 'renewed':
+        apply(outcome.session);
+        return true;
+      case 'superseded':
+        accessToken.value = localStorage.getItem(ACCESS_KEY);
+        refreshToken.value = outcome.refreshToken;
+        return true;
+      case 'signed-out':
+        clear();
+        return false;
+      case 'rejected':
+        // Only tear the session down if it is still the one that just failed.
+        if (refreshToken.value === presented) clear();
+        return false;
+      case 'unavailable':
+        return false;
     }
   });
+
+  /**
+   * Another tab renewed, signed in or signed out: follow it. Without this a
+   * tab keeps presenting the refresh token it read at load time, long after
+   * another tab has spent it.
+   */
+  if (import.meta.client) {
+    window.addEventListener('storage', (event) => {
+      if (event.key !== ACCESS_KEY && event.key !== REFRESH_KEY && event.key !== null) return;
+
+      const nextAccess = localStorage.getItem(ACCESS_KEY);
+      const nextRefresh = localStorage.getItem(REFRESH_KEY);
+      if (!nextAccess || !nextRefresh) {
+        accessToken.value = null;
+        refreshToken.value = null;
+        user.value = null;
+        return;
+      }
+
+      const switched = tokenSubject(nextAccess) !== (user.value?.id ?? null);
+      accessToken.value = nextAccess;
+      refreshToken.value = nextRefresh;
+      if (switched) {
+        void $fetch<User>('/users/me', {
+          baseURL: config.public.apiBase,
+          headers: { Authorization: `Bearer ${nextAccess}` },
+        })
+          .then((me) => (user.value = me))
+          .catch(() => undefined);
+      }
+    });
+  }
 
   async function logout(): Promise<void> {
     const token = refreshToken.value;
@@ -146,7 +198,9 @@ export const useAuthStore = defineStore('auth', () => {
       });
     } catch {
       if (!(await refresh())) {
-        clear();
+        // A refused token is already cleared by `refresh`; an unreachable API
+        // is no reason to forget a session that may still be good.
+        if (!refreshToken.value) clear();
         return;
       }
 

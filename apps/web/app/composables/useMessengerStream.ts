@@ -99,8 +99,11 @@ export function useMessengerStream() {
       // An expired access token, not a dead stream: refresh and let the
       // caller reconnect immediately rather than backing off.
       const refreshed = await auth.refresh();
-      if (!refreshed) runtime.value.stopped = true;
-      return;
+      if (refreshed) return;
+      // Signed out for good, or the API is unreachable and still holding a
+      // session for us — the latter backs off and tries again.
+      if (!auth.refreshToken) runtime.value.stopped = true;
+      throw new Error('stream 401: refresh unavailable');
     }
     if (!response.ok || !response.body) throw new Error(`stream ${response.status}`);
 
