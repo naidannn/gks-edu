@@ -18,6 +18,8 @@ import type {
  * assistant not going to answer?* — so that is the default view and the
  * number on the tab.
  *
+ * The third tab is the Page's report (2F-10): who wrote, how many left a number, by day.
+ *
  * There is no live stream: Meta's webhook lands on the API and nothing pushes
  * it on to the browser. The inbox polls instead — the list every 15 seconds,
  * the open thread every 5 — and stops while the tab is hidden. A Messenger
@@ -29,7 +31,7 @@ import type {
 definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 useHead({ title: 'Facebook — CRM' });
 
-type Tab = 'messenger' | 'comments';
+type Tab = 'messenger' | 'comments' | 'report';
 
 const api = useApi();
 const route = useRoute();
@@ -47,7 +49,7 @@ const SCOPES: { value: FacebookThreadScope; count: (c: FacebookThreadCounts) => 
 const status = ref<FacebookStatus | null>(null);
 const settingsOpen = ref(false);
 
-const tab = ref<Tab>(route.query.tab === 'comments' ? 'comments' : 'messenger');
+const tab = ref<Tab>(route.query.tab === 'comments' || route.query.tab === 'report' ? route.query.tab : 'messenger');
 const scope = ref<FacebookThreadScope>('NEEDS_STAFF');
 const search = ref('');
 const threads = ref<FacebookThreadItem[]>([]);
@@ -189,7 +191,7 @@ function onRefresh(): void {
 
 function openTab(next: Tab): void {
   tab.value = next;
-  void router.replace({ query: { ...route.query, tab: next === 'comments' ? 'comments' : undefined } });
+  void router.replace({ query: { ...route.query, tab: next === 'messenger' ? undefined : next } });
 }
 
 // A link from a comment card, the lead page or the client page changes only
@@ -284,6 +286,16 @@ const emptyText = computed(() => {
           <DsIcon name="message-square-text" :size="16" /> Сэтгэгдэл
           <span v-if="counts.comments" class="gks-fb__count gks-tnum">{{ counts.comments }}</span>
         </button>
+        <button
+          type="button"
+          role="tab"
+          class="gks-fb__tab"
+          :class="{ 'gks-fb__tab--on': tab === 'report' }"
+          :aria-selected="tab === 'report'"
+          @click="openTab('report')"
+        >
+          <DsIcon name="chart-column" :size="16" /> Тайлан
+        </button>
       </div>
 
       <DsButton
@@ -313,6 +325,8 @@ const emptyText = computed(() => {
       @open-thread="select"
       @changed="onRefresh"
     />
+
+    <FacebookStats v-else-if="tab === 'report'" @open-thread="select" />
 
     <div v-else class="gks-fb__inbox" :data-pane="mobilePane">
       <!-- ── Queue ─────────────────────────────────────────────────────── -->

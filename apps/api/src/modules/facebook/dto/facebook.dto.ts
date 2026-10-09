@@ -17,6 +17,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { FacebookAiMode, FacebookCommentStatus } from '../../../prisma/client.js';
+import { FACEBOOK_REPORT_PRESETS, type FacebookReportPreset } from '../facebook-report-period.js';
 
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
 
@@ -169,4 +170,24 @@ export class ReplyFacebookCommentDto {
   @ApiProperty({ description: 'true = Messenger-ээр (private reply), false = сэтгэгдлийн доор нийтэд' })
   @IsBoolean()
   private!: boolean;
+}
+
+/** `YYYY-MM-DD`, office-local. */
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+export class QueryFacebookReportDto {
+  @ApiPropertyOptional({ enum: FACEBOOK_REPORT_PRESETS, default: 'today' })
+  @IsIn(FACEBOOK_REPORT_PRESETS)
+  @IsOptional()
+  preset?: FacebookReportPreset;
+
+  @ApiPropertyOptional({ description: 'preset=custom үед эхлэх огноо (YYYY-MM-DD)' })
+  @Matches(ISO_DAY, { message: 'Огноо YYYY-MM-DD хэлбэртэй байна' })
+  @IsOptional()
+  from?: string;
+
+  @ApiPropertyOptional({ description: 'preset=custom үед дуусах огноо, тухайн өдрийг оруулна (YYYY-MM-DD)' })
+  @Matches(ISO_DAY, { message: 'Огноо YYYY-MM-DD хэлбэртэй байна' })
+  @IsOptional()
+  to?: string;
 }

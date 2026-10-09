@@ -153,7 +153,9 @@
   border-radius: var(--radius-2);
   min-width: 0;
 }
-.gks-stat > span,
+/* `:not(…)`: a value or foot marked up as a `span` must keep its own size —
+   `.gks-stat > span` outranks a single class and shrank every number to caption. */
+.gks-stat > span:not(.gks-stat__value):not(.gks-stat__foot),
 .gks-stat__label {
   font-size: var(--fs-caption);
   color: var(--text-subtle);

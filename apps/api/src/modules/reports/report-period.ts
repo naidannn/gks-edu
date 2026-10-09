@@ -65,6 +65,16 @@ export function officeToday(now: Date = new Date()): CalendarDate {
   return { year: year!, month: month!, day: day! };
 }
 
+/** Today, as the office sees it, as `YYYY-MM-DD`. */
+export function officeTodayIso(now: Date = new Date()): string {
+  return iso(officeToday(now));
+}
+
+/** An office-local `YYYY-MM-DD` moved by whole days — calendar arithmetic, no `Date` drift. */
+export function shiftIsoDay(day: string, days: number): string {
+  return iso(addDays(parse(day), days));
+}
+
 function iso({ year, month, day }: CalendarDate): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }

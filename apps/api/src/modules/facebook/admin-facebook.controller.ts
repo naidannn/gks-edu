@@ -11,6 +11,7 @@ import {
   CreateLeadFromThreadDto,
   LinkFacebookThreadDto,
   QueryFacebookCommentsDto,
+  QueryFacebookReportDto,
   QueryFacebookThreadsDto,
   QueryLinkCandidatesDto,
   ReplyFacebookCommentDto,
@@ -19,6 +20,7 @@ import {
   StarFacebookThreadDto,
 } from './dto/facebook.dto.js';
 import { FacebookAdminService } from './facebook-admin.service.js';
+import { FacebookReportService } from './facebook-report.service.js';
 
 /**
  * The Facebook Page inbox (2F). Every staff role, like the 1K inbox: whoever
@@ -32,12 +34,21 @@ import { FacebookAdminService } from './facebook-admin.service.js';
 @Roles(...DOC_STAFF_ROLES)
 @Controller('admin/facebook')
 export class AdminFacebookController {
-  constructor(private readonly facebook: FacebookAdminService) {}
+  constructor(
+    private readonly facebook: FacebookAdminService,
+    private readonly reports: FacebookReportService,
+  ) {}
 
   @Get('status')
   @ApiOperation({ summary: 'Page холбогдсон эсэх, AI-ийн Facebook тохиргоо' })
   status() {
     return this.facebook.status();
+  }
+
+  @Get('report')
+  @ApiOperation({ summary: 'Тайлан: хэдэн хүн бичсэн, хэдэн контакт авсан, өдрөөр' })
+  report(@Query() query: QueryFacebookReportDto) {
+    return this.reports.build(query.preset ?? 'today', { from: query.from, to: query.to });
   }
 
   @Get('threads')

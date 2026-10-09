@@ -8,6 +8,7 @@ import { FacebookAdminService } from './facebook-admin.service.js';
 import { FacebookAssistantService } from './facebook-assistant.service.js';
 import { FacebookGraphService } from './facebook-graph.service.js';
 import { FacebookIntakeService } from './facebook-intake.service.js';
+import { FacebookReportService } from './facebook-report.service.js';
 import { FacebookWebhookController } from './facebook-webhook.controller.js';
 import { FacebookAssistantProcessor, FacebookInboundProcessor } from './facebook.processors.js';
 
@@ -32,6 +33,7 @@ import { FacebookAssistantProcessor, FacebookInboundProcessor } from './facebook
     FacebookIntakeService,
     FacebookAssistantService,
     FacebookAdminService,
+    FacebookReportService,
     FacebookInboundProcessor,
     FacebookAssistantProcessor,
   ],

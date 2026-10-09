@@ -39,6 +39,16 @@ export function localMonth(column: Prisma.Sql): Prisma.Sql {
   return Prisma.sql`to_char(date_trunc('month', (${column} AT TIME ZONE 'UTC') AT TIME ZONE ${OFFICE_TIME_ZONE}), 'YYYY-MM')`;
 }
 
+/** The office-local calendar day of a timestamp, as a `date`. Same two-step conversion as {@link localMonth}. */
+export function localDay(column: Prisma.Sql): Prisma.Sql {
+  return Prisma.sql`((${column} AT TIME ZONE 'UTC') AT TIME ZONE ${OFFICE_TIME_ZONE})::date`;
+}
+
+/** The office-local hour (0–23) of a timestamp. */
+export function localHour(column: Prisma.Sql): Prisma.Sql {
+  return Prisma.sql`extract(hour FROM (${column} AT TIME ZONE 'UTC') AT TIME ZONE ${OFFICE_TIME_ZONE})::int`;
+}
+
 /** `column` falls inside the period (half-open, so no boundary double-count). */
 export function within(column: Prisma.Sql, from: string, to: string): Prisma.Sql {
   return Prisma.sql`${column} >= ${localInstant(from)} AND ${column} < ${localInstant(to)}`;

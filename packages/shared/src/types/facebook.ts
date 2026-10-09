@@ -159,3 +159,92 @@ export interface FacebookStatus {
   facebookCommentReply: string;
   facebookStaffPauseHours: number;
 }
+
+// ── Report (2F-10) ──────────────────────────────────────────────────────────
+
+/** Day-sized windows first: the Page is watched daily, not monthly. */
+export type FacebookReportPreset = 'today' | 'yesterday' | '7d' | '30d' | 'month' | 'last-month' | 'custom';
+
+export interface FacebookReportPeriod {
+  preset: FacebookReportPreset;
+  /** Office-local `YYYY-MM-DD`, inclusive. */
+  from: string;
+  /** Office-local `YYYY-MM-DD`, **exclusive**. */
+  to: string;
+  /** The equal-shape window ending where `from` begins. */
+  previousFrom: string;
+  previousTo: string;
+  labelMn: string;
+}
+
+/** A figure in the period with the same figure one period earlier. */
+export interface FacebookReportMetric {
+  value: number;
+  previous: number;
+  /** `null` when the previous window was zero. */
+  changePercent: number | null;
+}
+
+export interface FacebookReportDay {
+  /** Office-local `YYYY-MM-DD`. */
+  day: string;
+  /** Distinct people who wrote that day. */
+  people: number;
+  /** Of them, writing to the Page for the first time. */
+  newPeople: number;
+  /** Leads captured from a Messenger thread that day. */
+  leads: number;
+  /** Messages people sent. */
+  messages: number;
+}
+
+/** How a new conversation reached the Page — the thread's first-touch referral. */
+export type FacebookReportSource = 'AD' | 'COMMENT' | 'LINK' | 'DIRECT';
+
+export interface FacebookReportLead {
+  leadId: string;
+  threadId: string;
+  name: string;
+  phone: string;
+  stage: string;
+  /** SOCIAL from a staff member, the assistant otherwise. */
+  capturedBy: 'AI' | 'STAFF';
+  createdAt: string;
+}
+
+export interface FacebookReport {
+  period: FacebookReportPeriod;
+  generatedAt: string;
+  totals: {
+    /** Distinct people who wrote in the period. */
+    people: FacebookReportMetric;
+    /** People whose first message to the Page falls in the period. */
+    newPeople: FacebookReportMetric;
+    /** Leads (name + phone) captured from a thread in the period. */
+    leads: FacebookReportMetric;
+    /** Messages people sent. */
+    inbound: FacebookReportMetric;
+    /** Replies the assistant delivered. */
+    aiReplies: FacebookReportMetric;
+    /** Replies staff delivered — from `/admin/facebook` or Business Suite. */
+    staffReplies: FacebookReportMetric;
+    /** Post comments received. */
+    comments: FacebookReportMetric;
+  };
+  /** leads ÷ new people, percent; `null` when nobody new wrote. */
+  leadRate: number | null;
+  /** Of this period's leads, how many are WON today. */
+  leadsWon: number;
+  /** Median minutes from a new person's first message to the first reply. */
+  firstReplyMedianMinutes: number | null;
+  /** New people nobody — assistant or staff — has replied to at all. */
+  newUnanswered: number;
+  days: FacebookReportDay[];
+  /** Messages people sent, by office-local hour 0–23. */
+  hours: number[];
+  sources: { source: FacebookReportSource; count: number }[];
+  /** Who answered: one row per staff member, plus Business Suite as `null`. */
+  staff: { staffId: string | null; name: string; replies: number; threads: number }[];
+  /** The leads captured in the period, newest first (at most 100). */
+  leadList: FacebookReportLead[];
+}
