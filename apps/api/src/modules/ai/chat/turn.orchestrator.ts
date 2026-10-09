@@ -277,6 +277,12 @@ export class TurnOrchestrator {
     }
 
     const knownRefs = [...sources.map((source) => source.ref), ...runs.map((run) => run.ref)];
+    // A phone the visitor typed, or one a tool returned, may be repeated back;
+    // the guard replaces any other.
+    const sourceTexts = [
+      ...messages.filter((message) => message.role === 'user').map((message) => message.content),
+      ...runs.map((run) => run.content),
+    ];
 
     let verdict = this.guard.review({
       answer,
@@ -284,6 +290,7 @@ export class TurnOrchestrator {
       contextHits: hits,
       playbooks,
       knownRefs,
+      sourceTexts,
     });
 
     if (verdict.leaked) {
@@ -301,6 +308,7 @@ export class TurnOrchestrator {
         contextHits: hits,
         playbooks,
         knownRefs,
+        sourceTexts,
       });
 
       if (verdict.leaked) {

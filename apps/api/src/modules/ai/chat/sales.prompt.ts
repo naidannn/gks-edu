@@ -18,9 +18,14 @@ import { AccessLevel } from '../../../prisma/client.js';
  * Office hours, Asia/Ulaanbaatar. `0` is Sunday. Confirmed by the business
  * 2026-10-09 except Sunday, which they did not mention and is assumed closed.
  * Hard-coded until `AiAssistantConfig.handoffHours` is wired into the prompt.
+ *
+ * The phone is the only number the assistant may give as ours (confirmed
+ * 2026-10-09). Without it in the prompt, "лавлах утас байна уу?" got a
+ * plausible invented one — 7700-1123 — sent to a real person on Messenger.
  */
 export const OFFICE = {
   address: 'Улаанбаатар, Төв шуудангийн урд, Eco International Tower, 17 давхар, 1707 тоот',
+  phone: '7710-9000',
   hours: {
     0: null,
     1: [9, 18],
@@ -156,6 +161,7 @@ export function salesPrompt(level: AccessLevel, now: Date = new Date()): string 
 ### Оффис
 
 - Хаяг: ${OFFICE.address}
+- Утас: ${OFFICE.phone} — манай цорын ганц лавлах дугаар. Өөр утас, имэйл, хаяг хэзээ ч бүү зохио; сургууль, ЭСЯ зэрэг бусдын дугаарыг эх сурвалжид байхгүй бол бүү өг.
 - Цаг: ${scheduleLine()}.
 - ${officeStatus(now)}
 

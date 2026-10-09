@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { AccessLevel } from '../../../prisma/client.js';
 import type { RetrievalHit } from '../knowledge/retrieval.service.js';
+import { OFFICE } from './sales.prompt.js';
 
 /** The longest message a visitor may send (§5.5). */
 const MAX_INPUT_CHARS = 2_000;
@@ -23,6 +24,8 @@ export interface GuardVerdict {
   uncitedFigures: string[];
   /** Citation markers pointing at sources that were never supplied. */
   fabricatedRefs: string[];
+  /** Phone numbers nobody gave the model, replaced with the office's. */
+  inventedPhones: string[];
 }
 
 /**
@@ -39,6 +42,9 @@ export interface GuardVerdict {
  * - **Every figure carries a citation.** A price or a date the model produced
  *   without a source is the single most damaging thing it can do, because it
  *   sounds exactly like one it read.
+ * - **No phone number is made up.** A number the visitor dials is worse than a
+ *   wrong price: it reaches a stranger. Every phone in the answer must be the
+ *   office's or one that appeared in the conversation, a source or a tool.
  * - **Input is bounded and inert.** 2,000 characters, and no HTML.
  */
 @Injectable()
@@ -82,6 +88,11 @@ export class GuardService {
     playbooks?: { body: string }[];
     /** The refs actually supplied to the model — `K1`…`Kn`, plus tool refs. */
     knownRefs: string[];
+    /**
+     * Other text a phone number may legitimately be repeated from: what the
+     * visitor wrote, and tool results. `contextHits` are included already.
+     */
+    sourceTexts?: string[];
   }): GuardVerdict {
     const leaked = this.detectLeak(params.answer, params.level, params.contextHits, params.playbooks);
 
@@ -90,13 +101,22 @@ export class GuardService {
     // with no sources retrieved at all, the model still wrote "[K1]".
     const { text: withoutFakes, fabricatedRefs } = stripUnknownRefs(params.answer, params.knownRefs);
 
-    const uncitedFigures = findUncitedFigures(withoutFakes);
-    const grounded = uncitedFigures.length === 0 && fabricatedRefs.length === 0;
+    const { text: withoutInventedPhones, inventedPhones } = replaceInventedPhones(withoutFakes, [
+      ...params.contextHits.map((hit) => hit.content),
+      ...(params.sourceTexts ?? []),
+    ]);
 
-    let text = withoutFakes.trim();
+    const uncitedFigures = findUncitedFigures(withoutInventedPhones);
+    const grounded = uncitedFigures.length === 0 && fabricatedRefs.length === 0 && inventedPhones.length === 0;
+
+    let text = withoutInventedPhones.trim();
 
     if (fabricatedRefs.length > 0) {
       this.logger.warn(`Байхгүй эх сурвалж иш татсан: ${fabricatedRefs.join(', ')}`);
+    }
+
+    if (inventedPhones.length > 0) {
+      this.logger.error(`Зохиосон утасны дугаарыг ${OFFICE.phone}-аар солив: ${inventedPhones.join(', ')}`);
     }
 
     if (uncitedFigures.length > 0) {
@@ -104,7 +124,7 @@ export class GuardService {
       text = `${text}\n\nТоон мэдээллийг зөвлөхөөр баталгаажуулна уу.`;
     }
 
-    return { grounded, leaked, text, uncitedFigures, fabricatedRefs };
+    return { grounded, leaked, text, uncitedFigures, fabricatedRefs, inventedPhones };
   }
 
   /**
@@ -184,6 +204,43 @@ function stripUnknownRefs(answer: string, knownRefs: string[]): { text: string; 
     .replace(/ +([.,!?…])/g, '$1');
 
   return { text, fabricatedRefs: [...fabricated] };
+}
+
+/**
+ * A Mongolian phone number: eight digits starting 5–9, optionally +976 and
+ * split 4-4. Not part of a longer run of digits — a bank account such as
+ * "9000 7710 9000" contains two such groups and is not a phone.
+ */
+const PHONE_PATTERN = /(?<!\d[\s-]?)(?:\+?976[\s-]?)?([5-9]\d{3})[\s-]?(\d{4})(?![\s-]?\d)/g;
+
+/**
+ * Replaces every phone number the model was not given with the office's.
+ *
+ * Replaced rather than removed: the sentence around an invented number is
+ * almost always "манай утас …", and the office's number is the right answer to
+ * it. Exported for the tests.
+ */
+export function replaceInventedPhones(
+  answer: string,
+  sourceTexts: string[],
+): { text: string; inventedPhones: string[] } {
+  const known = new Set([digitsOf(OFFICE.phone)]);
+  for (const source of sourceTexts) {
+    for (const match of source.matchAll(PHONE_PATTERN)) known.add(`${match[1]}${match[2]}`);
+  }
+
+  const invented = new Set<string>();
+  const text = answer.replace(PHONE_PATTERN, (match, head: string, tail: string) => {
+    if (known.has(`${head}${tail}`)) return match;
+    invented.add(match.trim());
+    return OFFICE.phone;
+  });
+
+  return { text, inventedPhones: [...invented] };
+}
+
+function digitsOf(phone: string): string {
+  return phone.replace(/\D/g, '');
 }
 
 /** Normalised word n-grams, for comparing what was said with what was shown. */
