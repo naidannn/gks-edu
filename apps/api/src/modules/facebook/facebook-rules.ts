@@ -132,8 +132,26 @@ function lastSentence(window: string): number | null {
 export function preview(text: string | null, attachments: { type: string }[] = []): string | null {
   const line = text?.replace(/\s+/g, ' ').trim();
   if (line) return line.slice(0, 140);
-  if (attachments.length) return attachments[0]!.type === 'image' ? '📷 Зураг' : '📎 Файл';
+  if (attachments.length) return attachmentLabel(attachments[0]!.type);
   return null;
+}
+
+function attachmentLabel(type: string): string {
+  if (type === 'image') return '📷 Зураг';
+  if (type === 'sticker') return '👍 Стикер';
+  return '📎 Файл';
+}
+
+/**
+ * Whether a message is only a sticker — Messenger's 👍 button is one.
+ *
+ * That is somebody saying "ok" or "баярлалаа" without typing it: nothing for
+ * the assistant to answer, and nothing for a person to pick up either. Flagged
+ * for staff, every conversation that ended politely came back to the top of
+ * the inbox as "ажилтан хэрэгтэй".
+ */
+export function isStickerOnly(text: string | null, attachments: { type: string }[] = []): boolean {
+  return !text?.trim() && attachments.length > 0 && attachments.every((attachment) => attachment.type === 'sticker');
 }
 
 // ─── comments ─────────────────────────────────────────────────────────────────

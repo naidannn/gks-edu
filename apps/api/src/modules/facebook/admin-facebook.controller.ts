@@ -69,6 +69,12 @@ export class AdminFacebookController {
     return this.facebook.setStar(id, dto.starred);
   }
 
+  @Patch('threads/:id/resolve')
+  @ApiOperation({ summary: '«Ажилтан хэрэгтэй» тэмдгийг арилгах — хариу бичихгүйгээр шийдсэн' })
+  resolve(@Param('id', ParseUUIDPipe) id: string) {
+    return this.facebook.resolve(id);
+  }
+
   @Patch('threads/:id/ai')
   @ApiOperation({ summary: 'Энэ чатад AI-г асаах/унтраах, түр зогсолтыг цуцлах' })
   setAi(@Param('id', ParseUUIDPipe) id: string, @Body() dto: SetFacebookAiDto) {

@@ -55,6 +55,7 @@ const draft = ref('');
 const sending = ref(false);
 const sendError = ref<string | null>(null);
 const aiBusy = ref(false);
+const resolveBusy = ref(false);
 const actionError = ref<string | null>(null);
 const deleting = ref(false);
 
@@ -194,6 +195,21 @@ function onKeydown(event: KeyboardEvent): void {
   if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
   event.preventDefault();
   void send();
+}
+
+/** Off the "needs staff" list without a reply — handled elsewhere, or nothing to answer. */
+async function resolve(): Promise<void> {
+  const id = props.thread?.id;
+  if (!id) return;
+  resolveBusy.value = true;
+  actionError.value = null;
+  try {
+    emit('changed', await api.patch<FacebookThreadItem>(`/admin/facebook/threads/${id}/resolve`));
+  } catch (e) {
+    actionError.value = apiErrorMessage(e, 'Тэмдгийг арилгаж чадсангүй');
+  } finally {
+    resolveBusy.value = false;
+  }
 }
 
 // ── Assistant and knowledge ──────────────────────────────────────────────────
@@ -361,7 +377,10 @@ const referralRows = computed(() => entries(props.thread?.referral));
 
       <p v-if="thread?.needsStaff" class="gks-fbt__note gks-fbt__note--alert">
         <DsIcon name="triangle-alert" :size="14" />
-        Энэ хүнд AI хариулахгүй — ажилтан хариулах хэрэгтэй.
+        <span class="gks-fbt__note-text">Энэ хүнд AI хариулахгүй — ажилтан хариулах хэрэгтэй.</span>
+        <DsButton size="sm" variant="secondary" icon-left="check" :loading="resolveBusy" @click="resolve">
+          Шийдсэн
+        </DsButton>
       </p>
       <p v-if="actionError" class="gks-fbt__note gks-fbt__note--error" role="alert">{{ actionError }}</p>
 
@@ -540,6 +559,7 @@ const referralRows = computed(() => entries(props.thread?.referral));
   font-size: var(--fs-micro);
 }
 .gks-fbt__note--alert { background: var(--red-050); color: var(--red-800); }
+.gks-fbt__note-text { flex: 1; min-width: 0; }
 .gks-fbt__note--error { background: var(--danger-bg); color: var(--danger-fg); }
 
 .gks-fbt__info {

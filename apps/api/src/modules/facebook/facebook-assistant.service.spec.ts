@@ -35,7 +35,7 @@ function setup(opts: {
   threads?: Record<string, unknown>[];
   events?: TurnEvent[];
   stored?: string;
-  pending?: { text: string | null; createdAt: Date }[];
+  pending?: { text: string | null; attachments?: { type: string }[]; createdAt: Date }[];
   /** Newest first — what `unanswered` scans for the last real answer. */
   recent?: { sender: string; createdAt: Date }[];
 }) {
@@ -176,12 +176,26 @@ describe('FacebookAssistantService.replyToThread', () => {
   });
 
   it('leaves a photo with no words to staff', async () => {
-    const { service, run, prisma } = setup({ pending: [{ text: null, createdAt: new Date(NOW - 1_000) }] });
+    const { service, run, prisma } = setup({
+      pending: [{ text: null, attachments: [{ type: 'image' }], createdAt: new Date(NOW - 1_000) }],
+    });
 
     await service.replyToThread('T1');
 
     expect(run).not.toHaveBeenCalled();
     expect(prisma.facebookThread.update).toHaveBeenCalledWith({ where: { id: 'T1' }, data: { needsStaff: true } });
+  });
+
+  it('neither answers nor flags a 👍 on its own', async () => {
+    const { service, run, prisma, graph } = setup({
+      pending: [{ text: null, attachments: [{ type: 'sticker' }], createdAt: new Date(NOW - 1_000) }],
+    });
+
+    await service.replyToThread('T1');
+
+    expect(run).not.toHaveBeenCalled();
+    expect(graph.sendText).not.toHaveBeenCalled();
+    expect(prisma.facebookThread.update).not.toHaveBeenCalled();
   });
 });
 

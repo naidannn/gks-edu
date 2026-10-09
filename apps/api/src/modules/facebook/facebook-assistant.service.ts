@@ -17,6 +17,7 @@ import { FacebookGraphError, FacebookGraphService } from './facebook-graph.servi
 import { FacebookIntakeService, isAutomatedEcho } from './facebook-intake.service.js';
 import {
   assistantActive,
+  isStickerOnly,
   messagingWindow,
   preview,
   splitForMessenger,
@@ -72,6 +73,11 @@ export class FacebookAssistantService {
     if (pending.length === 0) return;
 
     const words = pending.filter((message) => message.text?.trim());
+    // A 👍 after the answer is the person saying thanks — not a question, and
+    // not a reason to call somebody.
+    if (words.length === 0 && pending.every((message) => isStickerOnly(message.text, attachmentsOf(message)))) {
+      return;
+    }
     // The assistant only answers inside the ordinary 24 hours. It replies to
     // what was just said, so it is always inside them — unless the job sat in a
     // queue all day, and then the answer is stale anyway.
@@ -157,7 +163,7 @@ export class FacebookAssistantService {
       },
       orderBy: { createdAt: 'desc' },
       take: MAX_PENDING,
-      select: { text: true, createdAt: true },
+      select: { text: true, attachments: true, createdAt: true },
     });
 
     return rows.reverse();
@@ -443,6 +449,10 @@ export class FacebookAssistantService {
   private async flag(threadId: string): Promise<void> {
     await this.prisma.facebookThread.update({ where: { id: threadId }, data: { needsStaff: true } });
   }
+}
+
+function attachmentsOf(message: { attachments?: unknown }): { type: string }[] {
+  return Array.isArray(message.attachments) ? (message.attachments as { type: string }[]) : [];
 }
 
 /** The comment as the model reads it: what was asked, and under what. */

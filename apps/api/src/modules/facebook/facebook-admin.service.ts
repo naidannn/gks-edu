@@ -229,6 +229,21 @@ export class FacebookAdminService {
     return this.threadItem(row, await this.aiConfig.get(), new Date());
   }
 
+  /**
+   * Takes a thread off the "needs staff" list without writing in it — the
+   * person was answered on the phone or in Business Suite, or the last message
+   * needed no answer. The next message they send decides afresh.
+   */
+  async resolve(id: string) {
+    const row = await this.prisma.facebookThread.update({
+      where: { id },
+      data: { needsStaff: false },
+      include: THREAD_INCLUDE,
+    });
+
+    return this.threadItem(row, await this.aiConfig.get(), new Date());
+  }
+
   /** Switch the assistant off/on for this thread, or lift a staff pause early. */
   async setAi(id: string, dto: SetFacebookAiDto) {
     if (!dto.mode && !dto.resume) throw new BadRequestException('Юуг өөрчлөхөө заана уу');

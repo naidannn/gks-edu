@@ -17,7 +17,7 @@ import {
 } from '../../queue/queue.constants.js';
 import { AiConfigService } from '../ai/ai-config.service.js';
 import { FacebookGraphService } from './facebook-graph.service.js';
-import { assistantActive, isAnswerableComment, preview } from './facebook-rules.js';
+import { assistantActive, isAnswerableComment, isStickerOnly, preview } from './facebook-rules.js';
 import type { FacebookCommentJob, FacebookReplyJob } from './facebook.types.js';
 import { pageEvents, type PageEntry, type PageEvent } from './facebook-webhook.js';
 
@@ -116,6 +116,8 @@ export class FacebookIntakeService {
     // person's job, and saying "би зураг харж чадахгүй" to it is worse than
     // waiting for one.
     const assistantWillAnswer = answerable && assistantActive(thread, config);
+    // A 👍 neither asks for an answer nor settles whatever was already waiting.
+    const acknowledgement = isStickerOnly(event.text, event.attachments);
 
     await this.prisma.facebookThread.update({
       where: { id: thread.id },
@@ -129,7 +131,7 @@ export class FacebookIntakeService {
             }
           : {}),
         unreadCount: { increment: 1 },
-        needsStaff: !assistantWillAnswer,
+        ...(acknowledgement ? {} : { needsStaff: !assistantWillAnswer }),
         ...(event.referral && !thread.referral ? { referral: event.referral } : {}),
         ...(profile?.name ? { name: profile.name } : {}),
         ...(profile?.profilePic ? { profilePic: profile.profilePic } : {}),

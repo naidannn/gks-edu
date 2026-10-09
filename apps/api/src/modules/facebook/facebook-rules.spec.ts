@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   assistantActive,
   isAnswerableComment,
+  isStickerOnly,
   messagingWindow,
+  preview,
   splitForMessenger,
   toMessengerText,
   verifySignature,
@@ -112,6 +114,28 @@ describe('splitForMessenger', () => {
   it('hard-cuts a single unbroken run', () => {
     const parts = splitForMessenger('x'.repeat(250), 100);
     expect(parts.map((part) => part.length)).toEqual([100, 100, 50]);
+  });
+});
+
+describe('isStickerOnly', () => {
+  it('treats a 👍 or any sticker with no words as an acknowledgement', () => {
+    expect(isStickerOnly(null, [{ type: 'sticker' }])).toBe(true);
+    expect(isStickerOnly('  ', [{ type: 'sticker' }, { type: 'sticker' }])).toBe(true);
+  });
+
+  it('keeps words, photos and files as real messages', () => {
+    expect(isStickerOnly('Баярлалаа', [{ type: 'sticker' }])).toBe(false);
+    expect(isStickerOnly(null, [{ type: 'sticker' }, { type: 'image' }])).toBe(false);
+    expect(isStickerOnly(null, [{ type: 'file' }])).toBe(false);
+    expect(isStickerOnly(null, [])).toBe(false);
+  });
+});
+
+describe('preview', () => {
+  it('names a sticker as one, not as a file', () => {
+    expect(preview(null, [{ type: 'sticker' }])).toBe('👍 Стикер');
+    expect(preview(null, [{ type: 'image' }])).toBe('📷 Зураг');
+    expect(preview(null, [{ type: 'file' }])).toBe('📎 Файл');
   });
 });
 
