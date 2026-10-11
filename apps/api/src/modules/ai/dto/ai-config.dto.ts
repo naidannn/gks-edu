@@ -163,4 +163,9 @@ export class UpdateAiConfigDto {
   @Max(168)
   @IsOptional()
   facebookStaffPauseHours?: number;
+
+  @ApiPropertyOptional({ description: '2G-07 — automatic Messenger follow-ups inside the 24-hour window' })
+  @IsBoolean()
+  @IsOptional()
+  facebookFollowUpEnabled?: boolean;
 }

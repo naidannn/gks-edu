@@ -2931,6 +2931,10 @@ model AiAssistantConfig {
   facebookCommentReply    String  @default("Сайн байна уу! Дэлгэрэнгүй мэдээллийг inbox-оор илгээлээ 🙂")
   /// How long the assistant stays quiet in a thread after a person wrote in it.
   facebookStaffPauseHours Int     @default(12)
+  /// 2G-07 — automatic Messenger follow-ups inside Meta's 24 hours: a nudge
+  /// after an unanswered question, one promotional message with a link to the
+  /// website, one only for somebody who already booked a consultation.
+  facebookFollowUpEnabled Boolean @default(false)
 
   updatedAt   DateTime @updatedAt
   updatedById String?  @db.Uuid
@@ -3342,6 +3346,16 @@ enum FacebookSender {
   PAGE
 }
 
+/// An automatic follow-up the assistant sent into a silent thread (2G-07).
+enum FacebookFollowUp {
+  /// +30 min after the assistant asked a question nobody answered.
+  NUDGE
+  /// +20 h, before Meta's window closes: what to read on the website.
+  PROMO
+  /// The single message somebody who booked a consultation ever gets.
+  BOOKED
+}
+
 enum FacebookDeliveryStatus {
   /// Inbound, or outbound and accepted by the Send API.
   SENT
@@ -3407,6 +3421,10 @@ model FacebookThread {
   /// ad_id, source, ref. First touch, like `Lead.utm`.
   referral Json?
 
+  /// The contact said they do not want to hear from us ("хэрэггүй", "stop"):
+  /// no automatic follow-up ever again (2G-07). Answers still go out.
+  followUpOptOut Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -3445,6 +3463,9 @@ model FacebookMessage {
 
   /// The assistant's stored answer this message delivered, for the transcript link.
   chatMessageId String? @db.Uuid
+
+  /// Set when this was an automatic follow-up, not an answer (2G-07).
+  followUp FacebookFollowUp?
 
   /// Set when staff turned this reply into a draft answer card (2F-08).
   knowledgeDocumentId String?            @db.Uuid

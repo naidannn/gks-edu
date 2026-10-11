@@ -154,3 +154,12 @@ export const FACEBOOK_COMMENT_JOB = 'answer-comment';
  * greeting the greeting.
  */
 export const FACEBOOK_REPLY_DEBOUNCE_MS = 4_000;
+
+/**
+ * The Messenger follow-up sweep (2G-07). Every five minutes is fine-grained
+ * enough for a "+30 minutes" nudge and cheap: it reads only threads whose
+ * contact wrote in the last 24 hours.
+ */
+export const FACEBOOK_FOLLOW_UP_QUEUE = 'facebook-follow-up';
+export const FACEBOOK_FOLLOW_UP_JOB = 'follow-up-sweep';
+export const FACEBOOK_FOLLOW_UP_INTERVAL_MS = 5 * 60 * 1000;

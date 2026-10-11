@@ -29,6 +29,7 @@ const SELECT = {
   facebookCommentsEnabled: true,
   facebookCommentReply: true,
   facebookStaffPauseHours: true,
+  facebookFollowUpEnabled: true,
   updatedAt: true,
   updatedBy: { select: { id: true, name: true } },
 } as const;

@@ -18,9 +18,11 @@ export const OUR_ECHO_METADATA = 'gksedu';
  * `RESPONSE` inside 24 hours of the contact's last message; `HUMAN_AGENT` — a
  * person, not a bot, answering late — up to seven days. The assistant only ever
  * sends `RESPONSE`: it answers what was just asked, and a bot using the human
- * tag is exactly what Meta revokes the permission for.
+ * tag is exactly what Meta revokes the permission for. `UPDATE` is the same
+ * 24 hours for a message nobody asked for — the follow-up (2G-07) — and may be
+ * promotional; a tagged message never may.
  */
-export type SendMode = 'RESPONSE' | 'HUMAN_AGENT';
+export type SendMode = 'RESPONSE' | 'UPDATE' | 'HUMAN_AGENT';
 
 /**
  * The Graph API, as far as the Page needs it (2F): send a message, answer a
@@ -64,7 +66,7 @@ export class FacebookGraphService {
       recipient: { id: psid },
       ...(mode === 'HUMAN_AGENT'
         ? { messaging_type: 'MESSAGE_TAG', tag: 'HUMAN_AGENT' }
-        : { messaging_type: 'RESPONSE' }),
+        : { messaging_type: mode }),
       message: { text, metadata: OUR_ECHO_METADATA },
     });
   }

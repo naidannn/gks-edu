@@ -21,6 +21,7 @@ import {
 } from './dto/facebook.dto.js';
 import { FacebookAdminService } from './facebook-admin.service.js';
 import { FacebookAiCostService } from './facebook-ai-cost.service.js';
+import { FacebookFollowUpService } from './facebook-follow-up.service.js';
 import { FacebookReportService } from './facebook-report.service.js';
 
 /**
@@ -39,12 +40,19 @@ export class AdminFacebookController {
     private readonly facebook: FacebookAdminService,
     private readonly reports: FacebookReportService,
     private readonly aiCost: FacebookAiCostService,
+    private readonly followUps: FacebookFollowUpService,
   ) {}
 
   @Get('status')
   @ApiOperation({ summary: 'Page холбогдсон эсэх, AI-ийн Facebook тохиргоо' })
   status() {
     return this.facebook.status();
+  }
+
+  @Get('follow-ups/preview')
+  @ApiOperation({ summary: 'Одоо явах автомат follow-up-ууд (илгээхгүй, зөвхөн харуулна)' })
+  previewFollowUps() {
+    return this.followUps.sweep({ dry: true });
   }
 
   @Get('report')

@@ -17,6 +17,7 @@ import {
 } from '../../queue/queue.constants.js';
 import { AiConfigService } from '../ai/ai-config.service.js';
 import { FacebookGraphService } from './facebook-graph.service.js';
+import { isFollowUpRefusal } from './facebook-follow-up.js';
 import { assistantActive, isAnswerableComment, isStickerOnly, preview } from './facebook-rules.js';
 import type { FacebookCommentJob, FacebookReplyJob } from './facebook.types.js';
 import { pageEvents, type PageEntry, type PageEvent } from './facebook-webhook.js';
@@ -144,6 +145,8 @@ export class FacebookIntakeService {
         unreadCount: { increment: 1 },
         ...(acknowledgement ? {} : { needsStaff: !assistantWillAnswer }),
         ...(event.referral && !thread.referral ? { referral: event.referral } : {}),
+        // "Хэрэггүй ээ" ends the follow-ups for good (2G-07); it is still answered.
+        ...(isFollowUpRefusal(event.text) ? { followUpOptOut: true } : {}),
         ...(profile?.name ? { name: profile.name } : {}),
         ...(profile?.profilePic ? { profilePic: profile.profilePic } : {}),
       },

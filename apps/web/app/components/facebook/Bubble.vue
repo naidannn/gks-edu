@@ -92,8 +92,9 @@ const isPicture = (type: string): boolean => type === 'image' || type === 'stick
         Facebook руу илгээгдсэнгүй{{ message.error ? `: ${message.error}` : '' }}
       </p>
 
-      <div v-if="trailing || (canTeach && teachable)" class="gks-fbm__meta">
+      <div v-if="trailing || message.followUp || (canTeach && teachable)" class="gks-fbm__meta">
         <span v-if="message.commentId" class="gks-fbm__tagline">Сэтгэгдлийн хувийн хариу</span>
+        <span v-if="message.followUp" class="gks-fbm__tagline">Автомат follow-up</span>
         <span v-if="trailing" class="gks-tnum">{{ messageTime(message.createdAt) }}</span>
         <template v-if="canTeach && teachable">
           <NuxtLink

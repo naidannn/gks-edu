@@ -85,6 +85,9 @@ export interface FacebookThreadListResponse {
   counts: FacebookThreadCounts;
 }
 
+/** `NUDGE` after an unanswered question, `PROMO` before the window shuts, `BOOKED` once after a booking. */
+export type FacebookFollowUpKind = 'NUDGE' | 'PROMO' | 'BOOKED';
+
 export interface FacebookMessageItem {
   id: string;
   sender: FacebookSender;
@@ -98,6 +101,8 @@ export interface FacebookMessageItem {
   commentId: string | null;
   /** Set once staff turned this reply into a draft answer card. */
   knowledgeDocumentId: string | null;
+  /** Set when the assistant sent this unasked into a silent thread (2G-07). */
+  followUp: FacebookFollowUpKind | null;
   createdAt: string;
 }
 
@@ -158,6 +163,7 @@ export interface FacebookStatus {
   facebookCommentsEnabled: boolean;
   facebookCommentReply: string;
   facebookStaffPauseHours: number;
+  facebookFollowUpEnabled: boolean;
 }
 
 // ── Report (2F-10) ──────────────────────────────────────────────────────────

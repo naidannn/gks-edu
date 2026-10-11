@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { FACEBOOK_ASSISTANT_QUEUE, FACEBOOK_INBOUND_QUEUE } from '../../queue/queue.constants.js';
+import { FACEBOOK_ASSISTANT_QUEUE, FACEBOOK_FOLLOW_UP_QUEUE, FACEBOOK_INBOUND_QUEUE } from '../../queue/queue.constants.js';
 import { AiModule } from '../ai/ai.module.js';
 import { LeadsModule } from '../leads/leads.module.js';
 import { AdminFacebookController } from './admin-facebook.controller.js';
@@ -9,9 +9,10 @@ import { FacebookAssistantService } from './facebook-assistant.service.js';
 import { FacebookGraphService } from './facebook-graph.service.js';
 import { FacebookIntakeService } from './facebook-intake.service.js';
 import { FacebookAiCostService } from './facebook-ai-cost.service.js';
+import { FacebookFollowUpService } from './facebook-follow-up.service.js';
 import { FacebookReportService } from './facebook-report.service.js';
 import { FacebookWebhookController } from './facebook-webhook.controller.js';
-import { FacebookAssistantProcessor, FacebookInboundProcessor } from './facebook.processors.js';
+import { FacebookAssistantProcessor, FacebookFollowUpProcessor, FacebookInboundProcessor } from './facebook.processors.js';
 
 /**
  * The office's Facebook Page (2F, AI-ASSISTANT.md §16): Messenger and post
@@ -24,7 +25,11 @@ import { FacebookAssistantProcessor, FacebookInboundProcessor } from './facebook
  */
 @Module({
   imports: [
-    BullModule.registerQueue({ name: FACEBOOK_INBOUND_QUEUE }, { name: FACEBOOK_ASSISTANT_QUEUE }),
+    BullModule.registerQueue(
+      { name: FACEBOOK_INBOUND_QUEUE },
+      { name: FACEBOOK_ASSISTANT_QUEUE },
+      { name: FACEBOOK_FOLLOW_UP_QUEUE },
+    ),
     AiModule,
     LeadsModule,
   ],
@@ -36,8 +41,10 @@ import { FacebookAssistantProcessor, FacebookInboundProcessor } from './facebook
     FacebookAdminService,
     FacebookReportService,
     FacebookAiCostService,
+    FacebookFollowUpService,
     FacebookInboundProcessor,
     FacebookAssistantProcessor,
+    FacebookFollowUpProcessor,
   ],
 })
 export class FacebookModule {}

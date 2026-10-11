@@ -1,13 +1,17 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
-import type { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger, type OnModuleInit } from '@nestjs/common';
+import type { Job, Queue } from 'bullmq';
 import {
   FACEBOOK_ASSISTANT_QUEUE,
   FACEBOOK_COMMENT_JOB,
+  FACEBOOK_FOLLOW_UP_INTERVAL_MS,
+  FACEBOOK_FOLLOW_UP_JOB,
+  FACEBOOK_FOLLOW_UP_QUEUE,
   FACEBOOK_INBOUND_QUEUE,
   FACEBOOK_REPLY_JOB,
 } from '../../queue/queue.constants.js';
 import { FacebookAssistantService } from './facebook-assistant.service.js';
+import { FacebookFollowUpService } from './facebook-follow-up.service.js';
 import { FacebookIntakeService } from './facebook-intake.service.js';
 import type { FacebookCommentJob, FacebookInboundJob, FacebookReplyJob } from './facebook.types.js';
 
@@ -48,6 +52,39 @@ export class FacebookAssistantProcessor extends WorkerHost {
         return this.assistant.answerComment((job.data as FacebookCommentJob).commentId);
       default:
         this.logger.warn(`Үл мэдэгдэх Facebook ажил: ${job.name}`);
+    }
+  }
+}
+
+/**
+ * The follow-up sweep (2G-07), every five minutes. Upserted under a fixed key
+ * so every API instance converges on one repeatable job, and one worker at a
+ * time, so two sweeps never both decide a thread is due.
+ */
+@Processor(FACEBOOK_FOLLOW_UP_QUEUE, { concurrency: 1 })
+export class FacebookFollowUpProcessor extends WorkerHost implements OnModuleInit {
+  private readonly logger = new Logger(FacebookFollowUpProcessor.name);
+
+  constructor(
+    private readonly followUps: FacebookFollowUpService,
+    @InjectQueue(FACEBOOK_FOLLOW_UP_QUEUE) private readonly queue: Queue,
+  ) {
+    super();
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.queue.upsertJobScheduler(
+      FACEBOOK_FOLLOW_UP_JOB,
+      { every: FACEBOOK_FOLLOW_UP_INTERVAL_MS },
+      { data: {}, opts: { removeOnComplete: true, removeOnFail: 50 } },
+    );
+  }
+
+  async process(): Promise<void> {
+    try {
+      await this.followUps.sweep();
+    } catch (error) {
+      this.logger.error('Messenger follow-up sweep унав', error instanceof Error ? error.stack : String(error));
     }
   }
 }

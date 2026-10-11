@@ -20,6 +20,7 @@ const form = reactive({
   facebookCommentsEnabled: props.status.facebookCommentsEnabled,
   facebookCommentReply: props.status.facebookCommentReply,
   facebookStaffPauseHours: String(props.status.facebookStaffPauseHours),
+  facebookFollowUpEnabled: props.status.facebookFollowUpEnabled,
 });
 
 const saving = ref(false);
@@ -39,6 +40,7 @@ async function save(): Promise<void> {
       facebookCommentsEnabled: form.facebookCommentsEnabled,
       facebookCommentReply: form.facebookCommentReply.trim(),
       facebookStaffPauseHours: hours,
+      facebookFollowUpEnabled: form.facebookFollowUpEnabled,
     });
     emit('saved');
   } catch (e) {
@@ -64,6 +66,12 @@ async function save(): Promise<void> {
         <DsSwitch v-model="form.facebookCommentsEnabled" label="Постын сэтгэгдэлд AI хариулна" />
         <p class="gks-fbs__hint">
           Сэтгэгдэлд AI Messenger-ээр хувиар хариулж, сэтгэгдлийн доор доорх мөрийг нийтэд үлдээнэ.
+        </p>
+        <DsSwitch v-model="form.facebookFollowUpEnabled" label="Чимээгүй болсон хүнд автомат follow-up" />
+        <p class="gks-fbs__hint">
+          24 цагийн дотор л: асуултад хариулаагүй бол 30 минутын дараа сануулга, 20 цагийн дараа сайт руу
+          холбоостой нэг мессеж. Зөвлөгөөнд бүртгүүлсэн хүнд нэг л удаа. Нэг хүнд нийт 3-аас ихгүй,
+          «хэрэггүй» гэсэн хүнд огт явуулахгүй.
         </p>
       </div>
 

@@ -77,6 +77,7 @@ export class FacebookAdminService {
       facebookCommentsEnabled: config.facebookCommentsEnabled,
       facebookCommentReply: config.facebookCommentReply,
       facebookStaffPauseHours: config.facebookStaffPauseHours,
+      facebookFollowUpEnabled: config.facebookFollowUpEnabled,
     };
   }
 
@@ -147,6 +148,7 @@ export class FacebookAdminService {
         error: message.error,
         commentId: message.commentId,
         knowledgeDocumentId: message.knowledgeDocumentId,
+        followUp: message.followUp,
         createdAt: message.createdAt,
       })),
       aiSessionCode: thread.chatSession?.code ?? null,
@@ -214,6 +216,7 @@ export class FacebookAdminService {
       error: row.error,
       commentId: null,
       knowledgeDocumentId: null,
+      followUp: null,
       createdAt: row.createdAt,
     };
   }
