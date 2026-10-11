@@ -247,10 +247,15 @@ function forModel(card: ReturnType<typeof universityCard>) {
   };
 }
 
+/**
+ * Worded as a visa fact, never as praise. "Шилдэг итгэмжлэгдсэн" was the label
+ * until 2026-10-11, and the model repeated it as "шилдэг итгэмжлэгдсэн сургууль"
+ * six times in two days — a quality claim the tier does not make.
+ */
 const ACCREDITATION_MN: Record<AccreditationGrade, string> = {
-  EXCELLENT: 'Шилдэг итгэмжлэгдсэн (우수인증대학) — оюутны виз хялбаршуулсан журмаар шалгагдана',
-  CERTIFIED: 'Итгэмжлэгдсэн (인증대학)',
-  NONE: 'Итгэмжлэлийн жагсаалтад ороогүй',
+  EXCELLENT: 'Оюутны виз хялбаршуулсан журмаар шалгагддаг (우수인증대학). Чанарын зэрэглэл биш.',
+  CERTIFIED: 'Оюутны виз ердийн журмаар шалгагддаг (인증대학). Чанарын зэрэглэл биш.',
+  NONE: 'Визний итгэмжлэлийн жагсаалтад ороогүй',
 };
 
 type ProgramRow = {

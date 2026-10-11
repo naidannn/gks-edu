@@ -354,17 +354,33 @@ export class ChatSessionService {
     });
   }
 
-  /** Tokens spent across the platform today — the daily ceiling's input (2B-12). */
+  /**
+   * Tokens spent across the platform today — the daily ceiling's input (2B-12).
+   *
+   * Summed over today's answers, not today's sessions. It used to add up the
+   * whole lifetime of every session touched today, so a Messenger thread that
+   * had been talking since yesterday counted yesterday's tokens again on its
+   * first message of the morning. That was not what silenced the Page on
+   * 2026-10-09 — the answers alone came to 2.97M that day — but a ceiling has
+   * to measure what it says it measures.
+   */
   async tokensSpentToday(): Promise<number> {
     const since = new Date();
     since.setUTCHours(0, 0, 0, 0);
 
-    const totals = await this.prisma.chatSession.aggregate({
-      where: { lastMessageAt: { gte: since } },
+    const totals = await this.prisma.chatMessage.aggregate({
+      where: { createdAt: { gte: since }, role: ChatRole.ASSISTANT },
       _sum: { promptTokens: true, completionTokens: true },
     });
 
     return (totals._sum.promptTokens ?? 0) + (totals._sum.completionTokens ?? 0);
+  }
+
+  /** When today's ceiling lifts — the next UTC midnight, which is when `tokensSpentToday` restarts. */
+  static budgetResetsAt(now: Date = new Date()): Date {
+    const next = new Date(now);
+    next.setUTCHours(24, 0, 0, 0);
+    return next;
   }
 
   // ─── Guest tokens ───────────────────────────────────────────────────────────

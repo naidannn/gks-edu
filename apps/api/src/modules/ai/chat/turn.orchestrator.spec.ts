@@ -245,12 +245,23 @@ describe('TurnOrchestrator', () => {
   });
 
   it('marks an answer with an uncited figure as ungrounded', async () => {
-    const { orchestrator, sessions } = harness({ answer: 'Төлбөр нь 1,200,000₮.' });
+    const { orchestrator, sessions } = harness({ answer: 'Тэтгэлгийн 70% нь ийм.' });
 
     const events = await run(orchestrator);
 
     expect(events.at(-1)).toMatchObject({ grounded: false });
     expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toContain('баталгаажуулна уу');
+  });
+
+  it('withholds a price nobody gave when it has no pricing tool to look it up with', async () => {
+    const { orchestrator, sessions } = harness({ answer: 'Сайн сонголт. Төлбөр нь 1,500,000₮.' });
+
+    const events = await run(orchestrator);
+
+    const stored = vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content;
+    expect(stored).not.toContain('1,500,000');
+    // The widget streamed the draft; it is told to show the kept answer instead.
+    expect(events.find((event) => event.type === 'replace')).toMatchObject({ text: stored });
   });
 
   describe('when it must not answer', () => {
@@ -281,7 +292,7 @@ describe('TurnOrchestrator', () => {
 
       // A spent ceiling is a business decision, not an error: the visitor gets a
       // way to reach a person rather than an apology.
-      expect(events[0]).toMatchObject({ type: 'error', fallback: 'consultation' });
+      expect(events[0]).toMatchObject({ type: 'error', fallback: 'consultation', code: 'budget_exhausted' });
       expect(llm.stream).not.toHaveBeenCalled();
     });
 
@@ -432,6 +443,85 @@ describe('TurnOrchestrator', () => {
       expect(events.some((event) => event.type === 'card')).toBe(false);
       // A failed lookup is not a failed turn: the model was told, and said so.
       expect(events.at(-1)).toMatchObject({ type: 'done' });
+    });
+
+    it('sends a confirmation once, not before and after the action', async () => {
+      // Production: 8 of 14 consultation turns repeated the whole confirmation.
+      const request: LlmToolCall = { id: 'call-2', name: 'create_consultation_request', arguments: {} };
+      const { orchestrator, sessions } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[request]],
+        toolRuns: [toolRun({ name: 'create_consultation_request', card: undefined })],
+        answers: [
+          'Баярлалаа, Болд. Таны уулзалтыг Даваа гарагт бүртгэлээ.',
+          'Баярлалаа, Болд. Таны уулзалтыг Даваа гарагт бүртгэлээ [T1]. Зөвлөх залгаж баталгаажуулна.',
+        ],
+      });
+
+      const events = await run(orchestrator);
+
+      const stored = vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content;
+      expect(stored.match(/Баярлалаа/g)).toHaveLength(1);
+      expect(events.find((event) => event.type === 'replace')).toMatchObject({ text: stored });
+    });
+
+    it('keeps a short "let me check" before a lookup', async () => {
+      const { orchestrator, sessions } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[call]],
+        answers: ['Шалгаад хэлье. ', 'Нийт төлбөр 1,200,000₮ [T1].'],
+      });
+
+      await run(orchestrator);
+
+      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe(
+        'Шалгаад хэлье. Нийт төлбөр 1,200,000₮ [T1].',
+      );
+    });
+
+    it('carries out a profile save the model wrote as text, and never shows it', async () => {
+      const { orchestrator, sessions, tools } = harness({
+        tools: [PRICING_TOOL, { ...PRICING_TOOL, name: 'save_visitor_profile' }],
+        toolRuns: [toolRun({ name: 'save_visitor_profile', card: undefined })],
+        answer: "Голч 85 сайн. Тэмдэглэлээ [save_visitor_profile(gpa=85, gpaScale='100')].",
+      });
+
+      await run(orchestrator);
+
+      expect(tools.run).toHaveBeenCalledWith(
+        expect.objectContaining({
+          call: expect.objectContaining({ name: 'save_visitor_profile', arguments: { gpa: 85, gpaScale: '100' } }),
+        }),
+      );
+      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe('Голч 85 сайн. Тэмдэглэлээ.');
+    });
+
+    it('retries once when the model wrote a lookup as text instead of calling it', async () => {
+      const { orchestrator, llm, sessions } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[], [call]],
+        answers: ["Шалгая. get_service_pricing(serviceType='BACHELOR')", '', 'Нийт төлбөр 1,200,000₮ [T1].'],
+      });
+
+      await run(orchestrator);
+
+      expect(llm.stream).toHaveBeenCalledTimes(3);
+      expect(vi.mocked(llm.stream).mock.calls[1]![0].system).toContain('текстээр хэзээ ч бүү бич');
+      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe('Нийт төлбөр 1,200,000₮ [T1].');
+    });
+
+    it('sends the model to the pricing tool when it quoted a price from memory', async () => {
+      const { orchestrator, llm, sessions } = harness({
+        tools: [PRICING_TOOL],
+        toolCalls: [[], [call]],
+        answers: ['Нийт төлбөр 1,500,000₮, урьдчилгаа 500,000₮.', '', 'Нийт төлбөр 1,200,000₮ [T1].'],
+      });
+
+      await run(orchestrator);
+
+      expect(vi.mocked(llm.stream).mock.calls[1]![0].system).toContain('1,500,000₮');
+      expect(vi.mocked(llm.stream).mock.calls[1]![0]).toHaveProperty('tools');
+      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe('Нийт төлбөр 1,200,000₮ [T1].');
     });
 
     it('offers no tools at all when the level unlocks none', async () => {

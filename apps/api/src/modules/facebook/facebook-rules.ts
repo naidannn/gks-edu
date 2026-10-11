@@ -77,7 +77,8 @@ export function toMessengerText(answer: string): string {
   return (
     answer
       // Citation markers, with the space that preceded them: "120 сая₮ [T1]." → "120 сая₮."
-      .replace(/\s*\[(?:[KT]\d+)(?:\s*,\s*[KT]\d+)*\]/g, '')
+      // Any capital letter, not just K and T — "[O1]" reached a person twice.
+      .replace(/\s*\[(?:[A-Z]{1,2}\d+)(?:\s*,\s*[A-Z]{1,2}\d+)*\]/g, '')
       // [label](https://…) → label: https://…
       .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1: $2')
       // Headings, bold, italics, inline code.

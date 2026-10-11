@@ -213,4 +213,94 @@ describe('create_consultation_request', () => {
     expect(update).toMatchObject({ leadId: 'lead-1', outcome: 'LEAD_CREATED' });
     expect(update.profile).toMatchObject({ phone: '99112233', name: 'Болд' });
   });
+
+  it('promises no callback within the hour — nothing yet schedules that call', async () => {
+    const { requestTool } = harness();
+
+    const outcome = await requestTool.run({ phone: '99112233', summary: 'Асуулт' }, context());
+
+    expect(JSON.stringify(outcome.data)).not.toMatch(/1 цагийн дотор/);
+  });
+
+  describe('the agreed time', () => {
+    // 2026-10-10 is a Saturday; context() is 2026-09-14, so move "now" to Saturday 16:12.
+    const saturday = context({ now: new Date('2026-10-10T08:12:00Z') });
+
+    it('puts the time on the first line of the lead, with our weekday', async () => {
+      const { requestTool, leads } = harness();
+
+      const outcome = await requestTool.run(
+        { phone: '99112233', summary: 'Бакалавр', visitDate: '2026-10-12', visitTime: '14:00', contactMode: 'OFFICE' },
+        saturday,
+      );
+
+      const [dto] = vi.mocked(leads.createFromPublicForm).mock.calls[0]!;
+      expect(dto.note).toMatch(/^Тохирсон цаг: 2026-10-12 \(Даваа\) 14:00, оффис дээр уулзах\./);
+      expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирсон', гараг: 'Даваа' });
+    });
+
+    it('files the lead but flags a Sunday visit, and tells the model to offer another time', async () => {
+      // Production, thread 19ddc578: "Маргааш (10-11) 09:00–18:00 ажиллана" on a Saturday.
+      const { requestTool, leads } = harness();
+
+      const outcome = await requestTool.run(
+        { phone: '99112233', summary: 'Бакалавр', visitDate: '2026-10-11', visitTime: '16:00' },
+        saturday,
+      );
+
+      const [dto] = vi.mocked(leads.createFromPublicForm).mock.calls[0]!;
+      expect(dto.note).toMatch(/^⚠ Хүссэн цаг тохирохгүй/);
+      expect(outcome.data).toMatchObject({ created: true, цаг_тохирох_эсэх: 'тохирохгүй', гараг: 'Ням' });
+      expect((outcome.data as { message: string }).message).toContain('ажлын цагийн хүрээг');
+    });
+
+    it('rejects a Saturday hour before the office opens', async () => {
+      const { requestTool } = harness();
+
+      const outcome = await requestTool.run(
+        { phone: '99112233', summary: 'Асуулт', visitDate: '2026-10-17', visitTime: '10:00' },
+        saturday,
+      );
+
+      expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирохгүй' });
+      expect((outcome.data as { шалтгаан: string }).шалтгаан).toContain('11:00–18:00');
+    });
+
+    it('takes a day without an hour, since visitors may come any time we are open', async () => {
+      const { requestTool, leads } = harness();
+
+      const outcome = await requestTool.run(
+        { phone: '99112233', summary: 'Ирнэ', visitDate: '2026-10-12', contactMode: 'OFFICE' },
+        saturday,
+      );
+
+      const [dto] = vi.mocked(leads.createFromPublicForm).mock.calls[0]!;
+      expect(dto.note).toMatch(/^Тохирсон цаг: 2026-10-12 \(Даваа\), ажлын цагаар, оффис дээр уулзах\./);
+      expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирсон' });
+    });
+
+    it('needs no hour for a chat consultation', async () => {
+      const { requestTool } = harness();
+
+      const outcome = await requestTool.run({ phone: '99112233', summary: 'Чатаар', contactMode: 'ONLINE' }, saturday);
+
+      expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирсон' });
+    });
+
+    it('writes a changed time onto the lead that already exists', async () => {
+      const { requestTool, prisma, leads } = harness({ session: { leadId: 'lead-9' } });
+
+      const outcome = await requestTool.run(
+        { phone: '99112233', summary: 'Мягмар болгосон', visitDate: '2026-10-13', visitTime: '15:00' },
+        saturday,
+      );
+
+      expect(leads.createFromPublicForm).not.toHaveBeenCalled();
+      expect(vi.mocked(prisma.leadActivity.create).mock.calls[0]![0].data).toMatchObject({
+        leadId: 'lead-9',
+        body: expect.stringContaining('2026-10-13 (Мягмар) 15:00'),
+      });
+      expect(outcome.data).toMatchObject({ created: false, гараг: 'Мягмар' });
+    });
+  });
 });

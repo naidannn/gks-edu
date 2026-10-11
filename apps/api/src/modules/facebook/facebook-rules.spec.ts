@@ -83,6 +83,10 @@ describe('toMessengerText', () => {
     );
   });
 
+  it('drops a marker in any letter the model invents', () => {
+    expect(toMessengerText('Ням гарагт хаалттай [O1].')).toBe('Ням гарагт хаалттай.');
+  });
+
   it('turns markdown Messenger would print literally into plain text', () => {
     const answer = '## Алхам\n\n- **Нэгдүгээр:** материал\n- `TOPIK` шалгалт\n\n[Төлөвлөгөө](https://gksedu.mn/plan) үзнэ үү';
     expect(toMessengerText(answer)).toBe(

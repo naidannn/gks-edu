@@ -97,6 +97,86 @@ function scheduleLine(): string {
   return `Даваа–Баасан 09:00–18:00, Бямба 11:00–18:00, Ням гарагт хаалттай`;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** `2026-10-12` in Ulaanbaatar. Mongolia has no daylight saving, so a day is always 24 hours. */
+function officeDate(now: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ulaanbaatar',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
+/**
+ * The next seven days, each with its date, weekday and hours.
+ *
+ * Why it is spelled out: given only "today is Saturday" and the weekly hours,
+ * the model did the calendar arithmetic itself and got it wrong in production —
+ * a visit booked for a Sunday, "маргааш (Баасан)" said on a Friday, 10-10 called
+ * a Thursday, Saturday offered at 10:00. A model copies a date from a list
+ * reliably; it does not count weekdays reliably.
+ */
+export function officeWeek(now: Date = new Date()): string {
+  const lines: string[] = [];
+
+  for (let ahead = 0; ahead < 7; ahead += 1) {
+    const at = new Date(now.getTime() + ahead * DAY_MS);
+    const { day } = officeClock(at);
+    const hours = OFFICE.hours[day];
+    const when = ahead === 0 ? 'Өнөөдөр — ' : ahead === 1 ? 'Маргааш — ' : '';
+    const open = hours ? `${pad(hours[0])}:00–${pad(hours[1])}:00` : '**хаалттай**';
+    lines.push(`- ${when}${DAY_NAMES[day]}, ${officeDate(at)}: ${open}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Why a proposed visit or call time does not work, or null when it does.
+ *
+ * `date` is `YYYY-MM-DD` and `time` `HH:MM`, both Ulaanbaatar. `time` may be
+ * null: the office wants people to come whenever suits them inside opening
+ * hours, so a day alone is a complete answer and only has to be an open one
+ * that has not already closed. The answer is a Mongolian phrase the tool hands
+ * back to the model, so it can say exactly what is wrong.
+ */
+export function officeSlotProblem(date: string, time: string | null, now: Date = new Date()): string | null {
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
+  const timeMatch = time === null ? null : /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  if (!dateMatch || (time !== null && !timeMatch)) return 'огноо эсвэл цаг буруу бичигдсэн';
+
+  const hour = timeMatch ? Number(timeMatch[1]) : 12;
+  const minute = timeMatch ? Number(timeMatch[2]) : 0;
+  const at = new Date(`${date.trim()}T${pad(hour)}:${pad(minute)}:00+08:00`);
+  if (Number.isNaN(at.getTime()) || hour > 23 || minute > 59) return 'огноо эсвэл цаг буруу бичигдсэн';
+
+  const { day } = officeClock(at);
+  const hours = OFFICE.hours[day];
+  if (!hours) return `${date.trim()} бол ${DAY_NAMES[day]} гараг — оффис хаалттай`;
+
+  if (!timeMatch) {
+    const closes = new Date(`${date.trim()}T${pad(hours[1])}:00:00+08:00`);
+    return closes.getTime() <= now.getTime() ? 'тэр өдрийн ажлын цаг аль хэдийн дууссан' : null;
+  }
+
+  const minutes = hour * 60 + minute;
+  if (minutes < hours[0] * 60 || minutes >= hours[1] * 60) {
+    return `${DAY_NAMES[day]} гарагт оффис ${pad(hours[0])}:00–${pad(hours[1])}:00 ажиллана`;
+  }
+
+  if (at.getTime() < now.getTime()) return 'энэ цаг аль хэдийн өнгөрсөн';
+
+  return null;
+}
+
+/** `Даваа` for a `YYYY-MM-DD` in Ulaanbaatar — what the tool repeats back, so the model cannot mislabel it. */
+export function weekdayOf(date: string): string | null {
+  const at = new Date(`${date.trim()}T12:00:00+08:00`);
+  return Number.isNaN(at.getTime()) ? null : DAY_NAMES[officeClock(at).day]!;
+}
+
 /** Null for the levels where selling is the wrong job: a client's case, or staff. */
 export function salesPrompt(level: AccessLevel, now: Date = new Date()): string | null {
   if (level !== AccessLevel.PUBLIC && level !== AccessLevel.REGISTERED) {
@@ -135,13 +215,14 @@ export function salesPrompt(level: AccessLevel, now: Date = new Date()): string 
 - "Мэдэхгүй", "ялгаагүй" гэвэл ижил асуултыг давтахгүй: боломжийн нэг сонголтыг өөрөө санал болгож, яагаад гэдгийг нэг өгүүлбэрээр хэлээд цааш үргэл.
 - Нэр томьёо бүрийг (GKS, TOPIK, хэлний бэлтгэл, D-2 виз) анх дурдахдаа энгийн үгээр тайлбарла.
 - Мэдлэгийн сан/хэрэгсэлд тайлбар алга бол өөрөөсөө зохиохгүй — "Үүнийг зөвлөх нарийн тайлбарлана" гэж хэлээд дараагийн шат руу ор.
+- \`визийн_итгэмжлэл\` бол визний журам, сургуулийн чанар биш. "Шилдэг", "итгэмжлэгдсэн сайн сургууль" гэж бүү хэл; хэрэгтэй бол "оюутны виз хялбаршуулсан журмаар шалгагддаг" гэж л хэл.
 
 ### Халуун сэжимийг хаах
 
 Хэрэглэгч өөрөө цаг санал болгосон, "гэрээ байгуулъя / бүртгүүлье" гэсэн, эсвэл утсаа өгсөн бол тэр **халуун** — яг энд л борлуулалт алдагддаг.
 - "Болно", "заа" гэж ганц үгээр хариулж ярианыг бүү дуус. Хариулт дотор өдөр-цаг, оффисын хаяг, нэр, утасны дугаар дөрвийг баталгаажуул (нэр, дугаарыг аль хэдийн өгсөн бол дахин бүү асуу).
-- Цаг санал болгохдоо **хоёр тодорхой сонголт** өг ("Лхагва 11:00 эсвэл Пүрэв 15:00"). "Боломжтой цагаа бичнэ үү" гэж бүү хэл.
-- Цагаа өөрчлөх хүнд "ирж уулзах уу?" гэж шинээр бүү эхэл — өмнөх цагийг хүлээн зөвшөөрч шинэ хоёр цаг санал болго (\`summary\`-д "цаг өөрчилсөн" гэж бич).
+- Цаг санал болгохдоо хоёр цагаас сонгуулж **бүү шаха** — хүн өөрийн хүссэн цагтаа л ирдэг. Оффисын ажлын цагийн хүрээг хэл ("Даваа–Баасан 09:00–18:00, Бямба 11:00–18:00-ын хооронд танд тохирох цагтаа ирж болно") тэгээд аль өдөр, ойролцоогоор хэдэн цагт ирэхийг нь асуу.
+- Цагаа өөрчлөх хүнд "ирж уулзах уу?" гэж шинээр бүү эхэл — өмнөх цагийг хүлээн зөвшөөрч шинэ өдөр/цагийг нь асуу (\`summary\`-д "цаг өөрчилсөн" гэж бич).
 - Утсаа өгсөн хүнийг "тун удахгүй" гэсэн хоосон үгээр бүү хая — хэзээ, хэн залгахыг дараагийн ажлын цагаар тодорхой хэл.
 
 ### Тохирохгүй, ирж чадахгүй хүн
@@ -165,9 +246,12 @@ export function salesPrompt(level: AccessLevel, now: Date = new Date()): string 
 - Цаг: ${scheduleLine()}.
 - ${officeStatus(now)}
 
-Уулзалт санал болгохдоо ирэх боломжтой өдөр, цагийг **нэр заан** (жишээ нь "маргааш 14:00 эсвэл 16:00") санал болго — "хэзээ ч болно" гэж бүү хэл. Оффис хаалттай үед шууд дараагийн нээлттэй цагийг санал болго. Хэрэглэгч цаг сонговол нэр, утасны дугаарыг нь аваад \`create_consultation_request\`-ийн \`summary\`-д "ирэх цаг: …"-ыг бичиж, баталгаажуулан давтан хэл. Хүсэлт аль хэдийн үүссэн гэж хэрэгсэл хариулбал цагийг давтан баталгаажуулаад зөвлөх удахгүй баталгаажуулна гэж хэл. Баталгаажаагүй цагийг "товлосон" гэж бүү хэл.
+Ирэх 7 хоног (өдөр, гараг, огноог **зөвхөн эндээс** ав — өөрөө бүү тооцоол):
+${officeWeek(now)}
 
-Хэрэглэгч оффисын цагаас гадуур утсаа үлдээвэл **дараагийн ажлын өдрийн нээлтийн цагт** залгана гэж амла.
+Уулзалт санал болгохдоо дээрх жагсаалтын **нээлттэй** өдрүүд, тэдгээрийн ажлын цагийн хүрээг хэл (жишээ нь "Маргааш — Даваа (10-12) 09:00–18:00-ын хооронд хүссэн цагтаа ирж болно") — тодорхой хоёр цагаас сонгуулахгүй, хэрэглэгч өөрөө цагаа хэлнэ. Хаалттай өдөр, ажлын цагаас гадуурх эсвэл өнгөрсөн цагийг хэзээ ч бүү санал болго. Хэрэглэгч хаалттай цаг хүсвэл хаалттайг хэлээд хамгийн ойрын нээлттэй өдөр, түүний ажлын цагийг хэл. Хэрэглэгч өдөр (цагтай эсвэл цаггүй) хэлбэл нэр, утасны дугаарыг нь аваад \`create_consultation_request\`-д \`visitDate\`-ыг, цагаа хэлсэн бол \`visitTime\`-ыг дамжуулж, хэрэгслийн буцаасан гараг, огноогоор давтан баталгаажуул. Цаг хэлээгүй бол дахин шахаж бүү асуу. Хүсэлт аль хэдийн үүссэн бол цаг өөрчлөгдсөн үед мөн дахин дууд — шинэ цаг нь зөвлөхөд очно. Баталгаажаагүй цагийг "товлосон" гэж бүү хэл.
+
+Хэрэглэгч оффисын цагаас гадуур утсаа үлдээвэл **дараагийн ажлын өдөр** (жагсаалтаас нэрээр нь) зөвлөх залгана гэж хэл. "1 цагийн дотор", "5 минутын дараа" гэх мэт тодорхой хугацаа бүү амла.
 
 ### Хэрэглэгчийн бичиг
 

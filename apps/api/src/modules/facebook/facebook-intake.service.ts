@@ -34,6 +34,16 @@ const HOUR_MS = 60 * 60 * 1000;
 const AUTOMATED_ECHO_WINDOW_MS = 10_000;
 
 /**
+ * …and one this soon *before* the contact's message is too. Business Suite's
+ * follow-up ("Танд тэтгэлэгийн талаар өөр мэдээлэл авах уу… 1. … 2. …") is
+ * stamped 0.1–0.3 s ahead of the button press it comes with. Read as a person
+ * typing, it paused the assistant for 12 hours on threads 4a5f0fd1 and
+ * 8e1dff3f, and the "1" and "2" were never answered. Nobody reads a staff
+ * message and answers it in three seconds.
+ */
+const AUTOMATED_ECHO_LEAD_MS = 3_000;
+
+/**
  * Stores what the Page webhook reported, and decides who answers it (2F).
  *
  * Every write is keyed on Meta's own id, so the same entry processed twice — a
@@ -94,7 +104,7 @@ export class FacebookIntakeService {
   // ─── Messenger ──────────────────────────────────────────────────────────────
 
   private async inbound(event: Extract<PageEvent, { kind: 'message' }>): Promise<void> {
-    const thread = await this.thread(event.psid, event.at);
+    let thread = await this.thread(event.psid, event.at);
 
     const stored = await this.insertOnce({
       threadId: thread.id,
@@ -111,6 +121,7 @@ export class FacebookIntakeService {
     const profile = thread.name ? null : await this.graph.profile(event.psid);
 
     const config = await this.aiConfig.get();
+    thread = await this.undoAutomatedPause(thread, event.at, config.facebookStaffPauseHours);
     const answerable = Boolean(event.text?.trim());
     // The assistant reads words. A photo of a transcript or a voice note is a
     // person's job, and saying "би зураг харж чадахгүй" to it is worse than
@@ -188,6 +199,34 @@ export class FacebookIntakeService {
     });
   }
 
+  /**
+   * Lifts a pause that an automation echo set just before this message.
+   *
+   * The echo is usually stored first — it is stamped first — and at that point
+   * nothing says a button press is a quarter of a second behind it. Only the
+   * pause that echo itself set is lifted: one a person set earlier stands.
+   */
+  private async undoAutomatedPause(thread: FacebookThread, at: Date, pauseHours: number): Promise<FacebookThread> {
+    if (!thread.aiPausedUntil) return thread;
+
+    const echo = await this.prisma.facebookMessage.findFirst({
+      where: {
+        threadId: thread.id,
+        sender: FacebookSender.PAGE,
+        createdAt: { gte: new Date(at.getTime() - AUTOMATED_ECHO_LEAD_MS), lte: at },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    });
+    if (!echo) return thread;
+
+    const setByEcho = Math.abs(thread.aiPausedUntil.getTime() - (echo.createdAt.getTime() + pauseHours * HOUR_MS)) < 1_000;
+    if (!setByEcho) return thread;
+
+    this.logger.log(`Business Suite-ийн автомат мессежийн тавьсан түр зогсолтыг цуцаллаа (${thread.id})`);
+    return this.prisma.facebookThread.update({ where: { id: thread.id }, data: { aiPausedUntil: null } });
+  }
+
   /** An ad or m.me link opened (or re-opened) the thread. First touch wins. */
   private async referral(psid: string, referral: Record<string, string>): Promise<void> {
     const thread = await this.thread(psid, new Date());
@@ -232,10 +271,21 @@ export class FacebookIntakeService {
    * One pending reply per thread. A second message inside the debounce finds
    * the job already waiting and is answered by it — the job reads everything
    * unanswered when it runs, not what was there when it was queued.
+   *
+   * Except when that job is already *running*: it has read its question, and
+   * BullMQ ignores an add under the id of an active job. Messages that landed
+   * during the ~8 s of a turn were dropped that way in production — "Хаяг
+   * холбоо барих" tapped a second after "Бакалаврын мэдээлэл авах" never got
+   * the address. So a running job gets one follow-up slot beside it; the
+   * assistant runs a thread's turns one after another, never side by side.
    */
   async queueReply(threadId: string, delay: number = FACEBOOK_REPLY_DEBOUNCE_MS): Promise<void> {
+    const id = `reply-${threadId}`;
+    const existing = await this.assistantQueue.getJob(id);
+    const jobId = existing && (await existing.isActive()) ? `${id}-next` : id;
+
     await this.assistantQueue.add(FACEBOOK_REPLY_JOB, { threadId } satisfies FacebookReplyJob, {
-      jobId: `reply-${threadId}`,
+      jobId,
       delay,
       attempts: 2,
       backoff: { type: 'fixed', delay: 10_000 },
@@ -243,6 +293,18 @@ export class FacebookIntakeService {
       // under `reply-<thread>` would swallow every later reply for that thread.
       removeOnComplete: true,
       removeOnFail: true,
+    });
+  }
+
+  /** A comment answered later — after the daily budget lifts. */
+  async queueComment(commentId: string, delay = 0): Promise<void> {
+    await this.assistantQueue.add(FACEBOOK_COMMENT_JOB, { commentId } satisfies FacebookCommentJob, {
+      jobId: delay > 0 ? `comment-${commentId}-later` : `comment-${commentId}`,
+      delay,
+      attempts: 2,
+      backoff: { type: 'fixed', delay: 15_000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
     });
   }
 
@@ -276,13 +338,7 @@ export class FacebookIntakeService {
     const config = await this.aiConfig.get();
     if (!config.enabled || !config.facebookCommentsEnabled) return;
 
-    await this.assistantQueue.add(FACEBOOK_COMMENT_JOB, { commentId: created.id } satisfies FacebookCommentJob, {
-      jobId: `comment-${created.id}`,
-      attempts: 2,
-      backoff: { type: 'fixed', delay: 15_000 },
-      removeOnComplete: true,
-      removeOnFail: 100,
-    });
+    await this.queueComment(created.id);
     this.logger.log(`Facebook сэтгэгдэл ${event.commentId} → AI хариулна`);
   }
 }
@@ -291,11 +347,15 @@ function laterOf(current: Date | null, next: Date): Date {
   return current && current.getTime() > next.getTime() ? current : next;
 }
 
-/** Whether a Page echo is Business Suite's automation rather than a person (see the window above). */
-export function isAutomatedEcho(lastInboundAt: Date | null, at: Date): boolean {
-  if (!lastInboundAt) return false;
-  const gap = at.getTime() - lastInboundAt.getTime();
-  return gap >= 0 && gap <= AUTOMATED_ECHO_WINDOW_MS;
+/**
+ * Whether a Page echo is Business Suite's automation rather than a person:
+ * within ten seconds after a contact's message, or three before one (see the
+ * windows above).
+ */
+export function isAutomatedEcho(contactAt: Date | null, at: Date): boolean {
+  if (!contactAt) return false;
+  const gap = at.getTime() - contactAt.getTime();
+  return gap >= -AUTOMATED_ECHO_LEAD_MS && gap <= AUTOMATED_ECHO_WINDOW_MS;
 }
 
 /** Webhooks can arrive out of order; only a newer message moves the preview. */

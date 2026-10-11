@@ -10,6 +10,7 @@ import {
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { LeadsService } from '../../../leads/leads.service.js';
 import type { CreatePublicLeadDto } from '../../../leads/dto/create-public-lead.dto.js';
+import { officeSlotProblem, weekdayOf } from '../sales.prompt.js';
 import { readEnum, readNumber, readString, requireString } from './args.js';
 import type { AiTool, AiToolProvider, ToolContext, ToolOutcome } from './tool.types.js';
 
@@ -17,6 +18,13 @@ const EDUCATION_LEVELS = Object.values(EducationLevel);
 const SERVICE_TYPES = Object.values(ServiceType);
 const TIMING = ['WITHIN_3_MONTHS', 'THIS_YEAR', 'NEXT_YEAR', 'UNDECIDED'] as const;
 const BUDGET = ['UNDER_10M', 'UPTO_20M', 'OVER_20M', 'UNSURE'] as const;
+const CONTACT_MODES = ['OFFICE', 'PHONE', 'ONLINE'] as const;
+
+const CONTACT_MODE_MN: Record<(typeof CONTACT_MODES)[number], string> = {
+  OFFICE: 'оффис дээр уулзах',
+  PHONE: 'утсаар ярих',
+  ONLINE: 'онлайн/чатаар',
+};
 
 /** What the assistant has learned about a visitor, as `ChatSession.profile`. */
 export interface VisitorProfile {
@@ -156,8 +164,9 @@ export class LeadTools implements AiToolProvider {
       label: 'Зөвлөгөөний хүсэлт үүсгэж байна…',
       description:
         'Зөвлөх залгаж өгөх хүсэлт үүсгэнэ. Зөвхөн хэрэглэгч утасны дугаараа өөрөө бичиж өгсөн, ' +
-        'залгуулахыг зөвшөөрсөн тохиолдолд дууд. Дугаарыг хэзээ ч зохиож болохгүй. Хүсэлт ' +
-        'үүссэний дараа хэрэглэгчид хэзээ залгахыг хэл.',
+        'залгуулахыг зөвшөөрсөн тохиолдолд дууд. Дугаарыг хэзээ ч зохиож болохгүй. Уулзах эсвэл ' +
+        'ярих өдөр тохирсон бол visitDate-ыг, цагаа хэлсэн бол visitTime-ыг дамжуул. Хүсэлт үүссэн ч цаг ' +
+        'өөрчлөгдвөл дахин дууд — шинэ цаг зөвлөхөд очно.',
       parameters: {
         type: 'object',
         properties: {
@@ -177,6 +186,19 @@ export class LeadTools implements AiToolProvider {
             items: { type: 'string' },
             description: 'Ярианд дурдагдсан сургуулийн slug',
           },
+          visitDate: {
+            type: 'string',
+            description: 'Тохирсон өдөр, YYYY-MM-DD — "Ирэх 7 хоног" жагсаалтаас хуулж бич',
+          },
+          visitTime: {
+            type: 'string',
+            description: 'Хэрэглэгч өөрөө хэлсэн цаг, HH:MM (Улаанбаатарын цаг). Хэлээгүй бол бүү дамжуул.',
+          },
+          contactMode: {
+            type: 'string',
+            enum: [...CONTACT_MODES],
+            description: 'OFFICE — оффис дээр ирнэ, PHONE — утсаар ярина, ONLINE — чатаар/онлайн',
+          },
         },
         required: ['phone', 'summary'],
       },
@@ -184,6 +206,7 @@ export class LeadTools implements AiToolProvider {
         const phone = requireString(args, 'phone', 20);
         const summary = requireString(args, 'summary', 2_000);
         const name = readString(args, 'name', 120);
+        const slot = readSlot(args, context.now);
 
         const session = await this.prisma.chatSession.findUniqueOrThrow({
           where: { id: context.session.id },
@@ -195,13 +218,31 @@ export class LeadTools implements AiToolProvider {
         // model that calls the tool twice inside a single turn would otherwise
         // see a stale null both times and file two leads on one visitor.
         if (session.leadId) {
+          // A second call is how a changed time arrives — "Даваа биш Мягмар болно".
+          // Dropping it left the consultant calling about the old one, so it is
+          // written onto the lead the office is already looking at.
+          if (slot) {
+            await this.prisma.leadActivity.create({
+              data: {
+                leadId: session.leadId,
+                type: 'CHAT',
+                body: `${slot.line}\n${summary}`,
+                meta: { channel: channelKey(context), sessionCode: context.session.code, slotChanged: true },
+              },
+            });
+          }
+
           return {
             title: 'Хүсэлт аль хэдийн үүссэн',
             data: {
               created: false,
-              message:
-                'Энэ ярианаас зөвлөгөөний хүсэлт аль хэдийн үүссэн. Дахин үүсгэхгүй — ' +
-                'зөвлөх удахгүй холбогдоно гэдгийг л давтан хэл.',
+              ...(slot ? slotResult(slot) : {}),
+              message: slot?.problem
+                ? `Хүсэлт аль хэдийн үүссэн. Гэхдээ ${slot.problem}. Үүнийг хэлээд хамгийн ойрын нээлттэй өдөр, ажлын цагийн хүрээг хэлж, тохирох цагийг нь асуу.`
+                : slot
+                  ? 'Хүсэлт аль хэдийн үүссэн; шинэ цагийг зөвлөхөд дамжууллаа. Гараг, огноо, цагийг дээрхээр давтан хэл.'
+                  : 'Энэ ярианаас зөвлөгөөний хүсэлт аль хэдийн үүссэн. Дахин үүсгэхгүй — ' +
+                    'зөвлөх ажлын цагаар холбогдоно гэдгийг л давтан хэл.',
             },
           };
         }
@@ -255,7 +296,7 @@ export class LeadTools implements AiToolProvider {
           lastName: rest.length ? rest.join(' ') : '—',
           firstName: first ?? '—',
           phone,
-          note: summary,
+          note: slot ? `${slot.line}\n${summary}` : summary,
           ...(profile.educationLevel ? { educationLevel: profile.educationLevel } : {}),
           ...(profile.gpa !== undefined ? { gpa: profile.gpa } : {}),
           ...(profile.gpaScale ? { gpaScale: profile.gpaScale } : {}),
@@ -294,9 +335,17 @@ export class LeadTools implements AiToolProvider {
             // `merged` is the dedupe window: they already asked today. Say so,
             // rather than promising a second call nobody is going to make.
             repeat: result.merged,
-            message: result.merged
-              ? 'Энэ дугаараар өнөөдөр хүсэлт аль хэдийн бүртгэгдсэн байна. Зөвлөх удахгүй залгана гэдгийг давтан хэл.'
-              : 'Хүсэлт бүртгэгдлээ. Ажлын цагт 1 цагийн дотор, бусад үед дараагийн ажлын өдөр залгана гэж хэл.',
+            ...(slot ? slotResult(slot) : {}),
+            // No "within the hour": nothing yet turns a chat lead into a call
+            // somebody is due to make (2G-14), and in the first two days all 13
+            // leads promised one were still unassigned the next morning.
+            message: slot?.problem
+              ? `Хүсэлт бүртгэгдлээ, гэхдээ ${slot.problem}. Үүнийг хэлээд хамгийн ойрын нээлттэй өдөр, ажлын цагийн хүрээг хэлж, тохирох цагийг нь асуу; шинэ цаг хэлбэл энэ хэрэгслийг дахин дууд.`
+              : result.merged
+                ? 'Энэ дугаараар өнөөдөр хүсэлт аль хэдийн бүртгэгдсэн байна. Зөвлөх ажлын цагаар залгана гэдгийг давтан хэл.'
+                : slot
+                  ? 'Хүсэлт бүртгэгдлээ. Гараг, огноо, цагийг дээрхээр нэг удаа баталгаажуулж, зөвлөх ажлын цагаар залгаж баталгаажуулна гэж хэл. Тодорхой минут, цаг бүү амла.'
+                  : 'Хүсэлт бүртгэгдлээ. Зөвлөх ажлын цагаар (оффис хаалттай бол дараагийн ажлын өдөр) залгана гэж хэл. Тодорхой минут, цаг бүү амла.',
           },
         };
       },
@@ -341,6 +390,57 @@ export class LeadTools implements AiToolProvider {
 
     return merged;
   }
+}
+
+interface Slot {
+  /** First line of the lead's note — the consultant reads this before the summary. */
+  line: string;
+  date?: string;
+  weekday?: string | null;
+  time?: string;
+  mode?: (typeof CONTACT_MODES)[number];
+  /** Why the office cannot do that time, or null. */
+  problem: string | null;
+}
+
+/**
+ * The agreed visit or call, as fields rather than a sentence in the summary.
+ *
+ * In production the time lived only in prose the model wrote, which is how a
+ * visit got booked for a Sunday with nobody noticing. Here it is checked
+ * against the office's hours, and a time that does not work still files the
+ * lead — the phone number is the valuable part — but is flagged on its first
+ * line and handed back to the model to correct.
+ */
+function readSlot(args: Record<string, unknown>, now: Date): Slot | null {
+  const date = readString(args, 'visitDate', 10);
+  const time = readString(args, 'visitTime', 5);
+  const mode = readEnum(args, 'contactMode', CONTACT_MODES);
+  if (!date && !time && !mode) return null;
+
+  const how = mode ? CONTACT_MODE_MN[mode] : 'уулзах/ярих';
+  // A day without an hour is fine — the office asked that visitors come any
+  // time inside opening hours rather than pick one of two slots (2026-10-11).
+  // An hour without a day is the one thing a consultant cannot act on.
+  const problem = date ? officeSlotProblem(date, time ?? null, now) : time ? 'өдөр нь дутуу' : null;
+  const weekday = date ? weekdayOf(date) : null;
+  const when = [date, weekday ? `(${weekday})` : null, time].filter(Boolean).join(' ');
+  const line = problem
+    ? `⚠ Хүссэн цаг тохирохгүй: ${when || '—'}, ${how} — ${problem}. Шинэ цаг тохирох хэрэгтэй.`
+    : `Тохирсон цаг: ${when || 'цаг товлоогүй'}${date && !time ? ', ажлын цагаар' : ''}, ${how}.`;
+
+  return { line, ...(date ? { date } : {}), weekday, ...(time ? { time } : {}), ...(mode ? { mode } : {}), problem };
+}
+
+/** What the model reads back about the slot — the weekday is ours, so it cannot mislabel it. */
+function slotResult(slot: Slot) {
+  return {
+    цаг_тохирох_эсэх: slot.problem ? 'тохирохгүй' : 'тохирсон',
+    ...(slot.date ? { огноо: slot.date } : {}),
+    ...(slot.weekday ? { гараг: slot.weekday } : {}),
+    ...(slot.time ? { цаг: slot.time } : {}),
+    ...(slot.problem ? { шалтгаан: slot.problem } : {}),
+  };
 }
 
 function channelKey(context: ToolContext): string {

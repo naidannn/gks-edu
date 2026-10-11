@@ -414,6 +414,9 @@ export function useAiChat() {
       case 'token':
         patch({ content: (current?.content ?? '') + event.text });
         return;
+      case 'replace':
+        patch({ content: event.text });
+        return;
       case 'tool':
         activity.value = event.status === 'running' ? { name: event.name, label: event.label } : null;
         return;

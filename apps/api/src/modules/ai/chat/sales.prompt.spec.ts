@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AccessLevel } from '../../../prisma/client.js';
 import { buildSystemPrompt } from './prompt.builder.js';
-import { officeStatus, salesPrompt } from './sales.prompt.js';
+import { officeSlotProblem, officeStatus, officeWeek, salesPrompt } from './sales.prompt.js';
 
 /**
  * The sales layer (2G-03).
@@ -42,6 +42,48 @@ describe('officeStatus', () => {
     expect(officeStatus(at('2026-10-10T11:00:00Z'))).toContain('Даваа гарагт 09:00-д');
     // And on Sunday itself, Monday is simply tomorrow.
     expect(officeStatus(at('2026-10-11T05:00:00Z'))).toContain('маргааш 09:00-д');
+  });
+});
+
+describe('officeWeek', () => {
+  it('lists seven days with our own date and weekday, Sunday marked closed', () => {
+    // Saturday 16:12 in Ulaanbaatar — when thread 19ddc578 was booked for "маргааш (10-11)".
+    const week = officeWeek(at('2026-10-10T08:12:00Z')).split('\n');
+
+    expect(week).toHaveLength(7);
+    expect(week[0]).toBe('- Өнөөдөр — Бямба, 2026-10-10: 11:00–18:00');
+    expect(week[1]).toBe('- Маргааш — Ням, 2026-10-11: **хаалттай**');
+    expect(week[2]).toBe('- Даваа, 2026-10-12: 09:00–18:00');
+  });
+
+  it('rolls the date over on the Ulaanbaatar clock', () => {
+    // 20:30 UTC Thursday is already Friday morning there.
+    expect(officeWeek(at('2026-10-08T20:30:00Z'))).toMatch(/^- Өнөөдөр — Баасан, 2026-10-09/);
+  });
+});
+
+describe('officeSlotProblem', () => {
+  const now = at('2026-10-10T08:12:00Z');
+
+  it('accepts an open hour', () => {
+    expect(officeSlotProblem('2026-10-12', '14:00', now)).toBeNull();
+  });
+
+  it('accepts an open day with no hour — come any time while we are open', () => {
+    expect(officeSlotProblem('2026-10-12', null, now)).toBeNull();
+    // Saturday 16:12: today still counts until 18:00, Sunday never does.
+    expect(officeSlotProblem('2026-10-10', null, now)).toBeNull();
+    expect(officeSlotProblem('2026-10-11', null, now)).toContain('хаалттай');
+  });
+
+  it.each([
+    ['2026-10-11', '16:00', 'Ням гараг'],
+    ['2026-10-17', '10:00', '11:00–18:00'],
+    ['2026-10-12', '18:00', '09:00–18:00'],
+    ['2026-10-10', '15:00', 'өнгөрсөн'],
+    ['10-12', '14:00', 'буруу'],
+  ])('refuses %s %s', (date, time, reason) => {
+    expect(officeSlotProblem(date, time, now)).toContain(reason);
   });
 });
 
@@ -110,8 +152,10 @@ describe('salesPrompt', () => {
 
     // Audit: 94 of 136 hot leads never got a time; the confirmation was "болноо".
     expect(text).toContain('ганц үгээр хариулж ярианыг бүү дуус');
-    expect(text).toContain('хоёр тодорхой сонголт');
-    expect(text).toContain('Лхагва 11:00 эсвэл Пүрэв 15:00');
+    // The office's call (2026-10-11): give the opening-hours window and let them
+    // pick, rather than push two slots — people only come at a time they chose.
+    expect(text).toContain('09:00–18:00-ын хооронд');
+    expect(text).not.toMatch(/хоёр тодорхой сонголт|хоёр нээлттэй цаг/);
   });
 
   it('keeps someone who is not eligible, or cannot come in, in the conversation', () => {

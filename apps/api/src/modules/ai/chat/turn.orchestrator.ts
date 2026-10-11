@@ -6,7 +6,13 @@ import { LlmService } from '../llm/llm.service.js';
 import type { LlmMessage, LlmToolCall } from '../llm/llm.types.js';
 import { BudgetService } from './budget.service.js';
 import { ChatSessionService } from './chat-session.service.js';
-import { GuardService, LONG_ANSWER_CHARS, NO_QUOTE_INSTRUCTION } from './guard.service.js';
+import {
+  extractFakeToolCalls,
+  findInventedAmounts,
+  GuardService,
+  LONG_ANSWER_CHARS,
+  NO_QUOTE_INSTRUCTION,
+} from './guard.service.js';
 import { buildSystemPrompt, type SourceRef } from './prompt.builder.js';
 import { ToolRegistry, type ToolRun } from './tools/tool-registry.service.js';
 import type { ChatCard, ToolContext } from './tools/tool.types.js';
@@ -14,6 +20,12 @@ import type { ChatCard, ToolContext } from './tools/tool.types.js';
 /** What the SSE endpoint forwards to the browser (§5.6). */
 export type TurnEvent =
   | { type: 'token'; text: string }
+  /**
+   * The finished answer, when it differs from what was streamed — a preamble
+   * dropped as a duplicate, a tool call written as text, a retried round, a
+   * caveat the guard added. The widget replaces the bubble's text with it.
+   */
+  | { type: 'replace'; text: string }
   | { type: 'tool'; name: string; status: 'running' | 'done'; label: string }
   | { type: 'card'; card: ChatCard }
   | { type: 'sources'; sources: PublicSource[] }
@@ -38,6 +50,26 @@ export interface PublicSource {
  * blank reply, which is the one failure mode worse than an incomplete one.
  */
 const MAX_MODEL_CALLS = 4;
+
+/** The only tool whose fake call is carried out as written: it writes a note and returns nothing to say. */
+const SILENT_TOOL = 'save_visitor_profile';
+
+/** The tools whose preamble is a claim made before the fact — "бүртгэлээ" before anything was. */
+const ACTION_TOOLS = new Set(['create_consultation_request']);
+
+/** Said on the retry after the model wrote a tool call out as text instead of making it. */
+const REAL_CALL_INSTRUCTION =
+  'ЧУХАЛ: өмнөх оролдлогод чи хэрэгслийн дуудлагыг хариултын текст дотор бичсэн. Хэрэгслийг ' +
+  'текстээр хэзээ ч бүү бич — жинхэнээр дууд, эсвэл хэрэгсэлгүйгээр хариул.';
+
+/** Said on the retry after a tögrög amount appeared that no source or tool gave. */
+function realPriceInstruction(amounts: string[]): string {
+  return (
+    `ЧУХАЛ: өмнөх оролдлогод чи эх сурвалжгүй мөнгөн дүн бичсэн (${amounts.join(', ')}). ` +
+    'Үйлчилгээний үнийг зөвхөн `get_service_pricing` хэрэгслээр шалгаж хэл; шалгах боломжгүй бол ' +
+    'дүн бүү дурд.'
+  );
+}
 
 /**
  * One turn: question in, answer out (2B-04, AI-ASSISTANT.md §3).
@@ -119,7 +151,11 @@ export class TurnOrchestrator {
     // not an error: it is the assistant going quiet until tomorrow, and the
     // office hearing about it at 80% rather than at 100%.
     if ((await this.budget.check()).exhausted) {
-      yield offline('Өнөөдрийн хариултын хязгаарт хүрлээ. Зөвлөгөө авах хүсэлт үлдээнэ үү.', 'consultation');
+      yield offline(
+        'Өнөөдрийн хариултын хязгаарт хүрлээ. Зөвлөгөө авах хүсэлт үлдээнэ үү.',
+        'consultation',
+        BUDGET_EXHAUSTED,
+      );
       return;
     }
 
@@ -184,8 +220,13 @@ export class TurnOrchestrator {
     };
 
     let answer = '';
+    let streamed = '';
     const runs: ToolRun[] = [];
     const usage = new UsageMeter(config.chatModel);
+    const toolNames = new Set(toolDefinitions.map((tool) => tool.name));
+    // One corrective retry per turn, for either reason below — never a loop.
+    let nudge: string | null = null;
+    let retried = false;
 
     try {
       for (let round = 0; round < MAX_MODEL_CALLS; round += 1) {
@@ -196,7 +237,7 @@ export class TurnOrchestrator {
 
         for await (const event of this.llm.stream(
           {
-            system,
+            system: nudge ? `${system}\n\n${nudge}` : system,
             messages,
             // Whichever model answered the last round answers this one.
             //
@@ -221,7 +262,10 @@ export class TurnOrchestrator {
             // — and it is left on screen rather than swallowed: it is what the
             // visitor is reading while the lookup runs, and it is part of the
             // stored answer, so what was shown is what was checked.
-            if (mayStream) yield { type: 'token', text: event.delta };
+            if (mayStream) {
+              streamed += event.delta;
+              yield { type: 'token', text: event.delta };
+            }
           }
           if (event.type === 'tool-call') calls.push(event.call);
           // Opaque, provider-owned, and required back on the next call of this
@@ -229,8 +273,52 @@ export class TurnOrchestrator {
           if (event.type === 'done' && event.reasoning) reasoning = event.reasoning;
         }
 
-        answer += spoken;
-        if (calls.length === 0) break;
+        if (calls.length === 0) {
+          // The model's own last word is checked before it is accepted, while
+          // there is still a round left to do it properly.
+          const fake = extractFakeToolCalls(spoken);
+          const strippedToNothing = spoken.trim() !== '' && fake.text.trim() === '';
+          spoken = fake.text;
+
+          for (const written of fake.calls.filter((call) => call.name === SILENT_TOOL && toolNames.has(call.name))) {
+            // Its intent is unambiguous and it has nothing to report back, so
+            // it is simply done — the profile was never saved otherwise.
+            runs.push(
+              await this.tools.run({
+                call: { id: `written-${runs.length + 1}`, name: written.name, arguments: written.arguments },
+                context: toolContext,
+                ref: `T${runs.length + 1}`,
+              }),
+            );
+          }
+
+          const wantedLookup = fake.calls.some((call) => call.name !== SILENT_TOOL);
+          const inventedAmounts = findInventedAmounts(spoken, [
+            ...hits.map((hit) => hit.content),
+            ...messages.filter((message) => message.role === 'user').map((message) => message.content),
+            ...runs.map((run) => run.content),
+          ]);
+          const canRetry = !retried && round < MAX_MODEL_CALLS - 2;
+
+          if (canRetry && (wantedLookup || strippedToNothing)) {
+            retried = true;
+            nudge = REAL_CALL_INSTRUCTION;
+            continue;
+          }
+          if (canRetry && inventedAmounts.length > 0 && toolNames.has('get_service_pricing')) {
+            this.logger.warn(`Эх сурвалжгүй үнэ (${inventedAmounts.join(', ')}) — get_service_pricing-ээр дахин оролдуулав`);
+            retried = true;
+            nudge = realPriceInstruction(inventedAmounts);
+            continue;
+          }
+
+          answer = mergeRounds(answer, spoken);
+          break;
+        }
+
+        // Text before a tool call stays in the provider's history either way;
+        // whether it stays in the answer is settled when the next round speaks.
+        answer = mergeRounds(answer, spoken, calls.some((call) => ACTION_TOOLS.has(call.name)) ? 'action' : 'lookup');
 
         messages.push({
           role: 'assistant',
@@ -260,6 +348,8 @@ export class TurnOrchestrator {
           });
         }
       }
+      // Whatever preamble is still waiting has nothing after it to be compared with.
+      answer = mergeRounds(answer, '');
     } catch (error) {
       this.logger.error(`Хариулт үүсгэж чадсангүй: ${error instanceof Error ? error.message : String(error)}`);
       yield offline('Одоогоор хариулт өгч чадахгүй байна. Зөвлөхтэй холбогдоно уу.', 'messenger');
@@ -322,6 +412,10 @@ export class TurnOrchestrator {
       yield { type: 'token', text: verdict.text };
     } else if (!mayStream) {
       yield { type: 'token', text: verdict.text };
+    } else if (verdict.text !== streamed) {
+      // What was on screen is not what was kept: a duplicate dropped, a fake
+      // call stripped, a round retried, a caveat added. The stored answer wins.
+      yield { type: 'replace', text: verdict.text };
     }
 
     const used = usedSources(verdict.text, sources, runs);
@@ -398,8 +492,69 @@ class UsageMeter {
   }
 }
 
-function offline(message: string, fallback: 'messenger' | 'consultation'): TurnEvent {
-  return { type: 'error', code: 'assistant_unavailable', message, fallback };
+/** The error code for a spent daily budget — Messenger re-queues on it rather than giving up. */
+export const BUDGET_EXHAUSTED = 'budget_exhausted';
+
+function offline(
+  message: string,
+  fallback: 'messenger' | 'consultation',
+  code = 'assistant_unavailable',
+): TurnEvent {
+  return { type: 'error', code, message, fallback };
+}
+
+/**
+ * A preamble written before a tool call, waiting to see what the next round says.
+ *
+ * Kept on the answer as a marker rather than as text, because whether it
+ * belongs there depends on what comes after it.
+ */
+const PENDING = '\u0000';
+
+/**
+ * Joins one round's words onto the answer so far.
+ *
+ * Production, 2026-10-09..11: 8 of 14 consultation turns sent the confirmation
+ * twice — written once before `create_consultation_request` ran and again
+ * after. A preamble is dropped when the round after it says the same thing
+ * (most of its words reappear), and always before an action tool: "бүртгэлээ"
+ * written before anything was registered is a claim, not a courtesy. A real
+ * "шалгаад хэлье" before a lookup is left in place.
+ */
+function mergeRounds(answer: string, spoken: string, preambleOf?: 'action' | 'lookup'): string {
+  const [settled, pending, kind] = answer.includes(PENDING) ? answer.split(PENDING) : [answer, '', ''];
+
+  if (preambleOf) {
+    // A new preamble: resolve any older one as kept, park this one.
+    const before = pending ? `${settled}${pending}` : settled;
+    return spoken.trim() ? `${before}${PENDING}${spoken}${PENDING}${preambleOf}` : before;
+  }
+
+  if (!pending) return `${settled}${spoken}`;
+  if (!spoken.trim()) return `${settled}${pending}`;
+
+  const duplicate = kind === 'action' || wordOverlap(pending!, spoken) >= 0.5;
+  return duplicate ? `${settled}${spoken}` : `${settled}${pending}${spoken}`;
+}
+
+/** Share of the shorter text's words (4+ letters) that also appear in the other. */
+function wordOverlap(a: string, b: string): number {
+  const words = (text: string) =>
+    new Set(
+      text
+        .toLowerCase()
+        .split(/[^\p{L}]+/u)
+        .filter((word) => word.length >= 4),
+    );
+  const left = words(a);
+  const right = words(b);
+  const smaller = left.size <= right.size ? left : right;
+  const larger = smaller === left ? right : left;
+  if (smaller.size === 0) return 0;
+
+  let shared = 0;
+  for (const word of smaller) if (larger.has(word)) shared += 1;
+  return shared / smaller.size;
 }
 
 /** `[K1]`, `[T2]` … as they appear in the answer. */

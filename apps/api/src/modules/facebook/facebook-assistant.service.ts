@@ -11,7 +11,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AiConfigService } from '../ai/ai-config.service.js';
 import { ChatSessionService } from '../ai/chat/chat-session.service.js';
-import { TurnOrchestrator } from '../ai/chat/turn.orchestrator.js';
+import { BUDGET_EXHAUSTED, TurnOrchestrator } from '../ai/chat/turn.orchestrator.js';
 import type { LlmMessage } from '../ai/llm/llm.types.js';
 import { FacebookGraphError, FacebookGraphService } from './facebook-graph.service.js';
 import { FacebookIntakeService, isAutomatedEcho } from './facebook-intake.service.js';
@@ -29,6 +29,11 @@ const HISTORY_MESSAGES = 12;
 
 /** A burst longer than this is somebody pasting; the last few carry the question. */
 const MAX_PENDING = 8;
+
+/** Spread over the first minutes after the budget lifts, so a night's backlog is not one burst. */
+const RESET_JITTER_MS = 10 * 60 * 1000;
+
+type TurnResult = { text: string; messageId: string } | { failed: string };
 
 /**
  * The assistant on the Page (2F): a Messenger reply, and a comment's answer.
@@ -50,6 +55,13 @@ const MAX_PENDING = 8;
 export class FacebookAssistantService {
   private readonly logger = new Logger(FacebookAssistantService.name);
 
+  /**
+   * The turn in progress per thread. A follow-up job can start while the turn
+   * it follows is still sending (`queueReply`); it waits here instead of
+   * answering the same messages a second time.
+   */
+  private readonly inFlight = new Map<string, Promise<void>>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiConfig: AiConfigService,
@@ -62,6 +74,18 @@ export class FacebookAssistantService {
   // ─── Messenger ──────────────────────────────────────────────────────────────
 
   async replyToThread(threadId: string): Promise<void> {
+    const previous = this.inFlight.get(threadId) ?? Promise.resolve();
+    const current = previous.catch(() => undefined).then(() => this.reply(threadId));
+    this.inFlight.set(threadId, current);
+
+    try {
+      await current;
+    } finally {
+      if (this.inFlight.get(threadId) === current) this.inFlight.delete(threadId);
+    }
+  }
+
+  private async reply(threadId: string): Promise<void> {
     const startedAt = new Date();
     const config = await this.aiConfig.get();
     const thread = await this.prisma.facebookThread.findUnique({ where: { id: threadId } });
@@ -93,8 +117,13 @@ export class FacebookAssistantService {
 
     const history = await this.history(thread.id, pending[0]!.createdAt);
     const answer = await this.turn(session, question, [...history, { role: 'user', content: question }]);
-    if (!answer) {
+    if ('failed' in answer) {
       await this.flag(thread.id);
+      // Out of budget is not a refusal, it is "not until 08:00". On 2026-10-09
+      // eleven people wrote between 23:05 and the reset and nobody answered
+      // them in the morning either; the reply is asked for again at the reset,
+      // still inside Meta's 24 hours for anybody who wrote overnight.
+      if (answer.failed === BUDGET_EXHAUSTED) await this.intake.queueReply(thread.id, untilBudgetResets());
       return;
     }
 
@@ -149,7 +178,16 @@ export class FacebookAssistantService {
       if (row.sender === FacebookSender.CONTACT) continue;
       if (row.sender === FacebookSender.PAGE) {
         const previousContact = recent.slice(index + 1).find((older) => older.sender === FacebookSender.CONTACT);
-        if (isAutomatedEcho(previousContact?.createdAt ?? null, row.createdAt)) continue;
+        const nextContact = recent
+          .slice(0, index)
+          .reverse()
+          .find((newer) => newer.sender === FacebookSender.CONTACT);
+        if (
+          isAutomatedEcho(previousContact?.createdAt ?? null, row.createdAt) ||
+          isAutomatedEcho(nextContact?.createdAt ?? null, row.createdAt)
+        ) {
+          continue;
+        }
       }
       lastAnswer = row;
       break;
@@ -240,7 +278,13 @@ export class FacebookAssistantService {
 
     const question = commentQuestion(comment.text, postMessage);
     const answer = await this.turn(session, question, [{ role: 'user', content: question }]);
-    if (!answer) {
+    if ('failed' in answer && answer.failed === BUDGET_EXHAUSTED) {
+      // Left NEW, and asked again once the budget lifts — a private reply is
+      // allowed for seven days after the comment.
+      await this.intake.queueComment(comment.id, untilBudgetResets());
+      return;
+    }
+    if ('failed' in answer) {
       await this.prisma.facebookComment.update({
         where: { id: comment.id },
         data: { status: FacebookCommentStatus.FAILED, error: 'AI хариулт өгч чадсангүй — ажилтан хариулна уу' },
@@ -333,7 +377,7 @@ export class FacebookAssistantService {
     session: ChatSession,
     question: string,
     history: LlmMessage[],
-  ): Promise<{ text: string; messageId: string } | null> {
+  ): Promise<TurnResult> {
     let messageId: string | null = null;
 
     for await (const event of this.orchestrator.run({
@@ -344,16 +388,16 @@ export class FacebookAssistantService {
     })) {
       if (event.type === 'error') {
         this.logger.warn(`${session.code}: AI хариулсангүй — ${event.message}`);
-        return null;
+        return { failed: event.code };
       }
       if (event.type === 'done') messageId = event.messageId;
     }
 
-    if (!messageId) return null;
+    if (!messageId) return { failed: 'no_answer' };
 
     const stored = await this.prisma.chatMessage.findUnique({ where: { id: messageId }, select: { content: true } });
     const text = stored?.content.trim();
-    return text ? { text, messageId } : null;
+    return text ? { text, messageId } : { failed: 'no_answer' };
   }
 
   /** Sends an answer as one or more Messenger messages. False if Meta refused the first. */
@@ -449,6 +493,10 @@ export class FacebookAssistantService {
   private async flag(threadId: string): Promise<void> {
     await this.prisma.facebookThread.update({ where: { id: threadId }, data: { needsStaff: true } });
   }
+}
+
+function untilBudgetResets(now: Date = new Date()): number {
+  return ChatSessionService.budgetResetsAt(now).getTime() - now.getTime() + Math.floor(Math.random() * RESET_JITTER_MS);
 }
 
 function attachmentsOf(message: { attachments?: unknown }): { type: string }[] {

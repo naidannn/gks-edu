@@ -80,7 +80,7 @@ function setup(opts: {
     typing: vi.fn(async () => undefined),
     sendText: vi.fn(async () => ({ recipientId: 'U1', messageId: 'mid.1' })),
   };
-  const intake = { queueReply: vi.fn() };
+  const intake = { queueReply: vi.fn(), queueComment: vi.fn() };
   const aiConfig = {
     get: vi.fn(async () => ({
       enabled: true,
@@ -148,6 +148,62 @@ describe('FacebookAssistantService.replyToThread', () => {
     expect(prisma.facebookThread.update).toHaveBeenCalledWith({ where: { id: 'T1' }, data: { needsStaff: true } });
   });
 
+  it('asks again when the daily budget lifts, instead of leaving the night unanswered', async () => {
+    const { service, intake, graph } = setup({
+      events: [{ type: 'error', code: 'budget_exhausted', message: 'budget', fallback: 'consultation' }],
+    });
+
+    await service.replyToThread('T1');
+
+    expect(graph.sendText).not.toHaveBeenCalled();
+    const delay = intake.queueReply.mock.calls[0]![1] as number;
+    // Next UTC midnight (08:00 in Ulaanbaatar), plus up to ten minutes of spread.
+    expect(delay).toBeGreaterThan(0);
+    expect(delay).toBeLessThanOrEqual(24 * 3_600_000 + 10 * 60_000);
+  });
+
+  it('runs one thread’s turns one after another, never side by side', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const { service, prisma } = setup({
+      // The second job finds no thread and returns at once — if it is let through.
+      threads: [thread(), thread()],
+      events: [{ type: 'done', messageId: 'M1', grounded: true, truncated: false }],
+    });
+    prisma.facebookMessage.count.mockImplementationOnce(async () => {
+      await gate;
+      return 0;
+    });
+
+    const first = service.replyToThread('T1');
+    let secondDone = false;
+    const second = service.replyToThread('T1').then(() => (secondDone = true));
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(secondDone).toBe(false);
+
+    release();
+    await Promise.all([first, second]);
+    expect(secondDone).toBe(true);
+  });
+
+  it('does not count Business Suite\'s follow-up stamped just before the reply as the answer', async () => {
+    // 4a5f0fd1: the automation at 22:23:29.830, the contact's "1" at 22:23:30.082.
+    const pressed = new Date(NOW - 2_000);
+    const { service, prisma } = setup({
+      recent: [
+        { sender: 'CONTACT', createdAt: pressed },
+        { sender: 'PAGE', createdAt: new Date(pressed.getTime() - 250) },
+        { sender: 'AI', createdAt: new Date(NOW - 86_400_000) },
+      ],
+    });
+
+    await service.replyToThread('T1');
+
+    const pendingQuery = prisma.facebookMessage.findMany.mock.calls[1]![0] as { where: { createdAt: { gt: Date } } };
+    expect(pendingQuery.where.createdAt.gt).toEqual(new Date(NOW - 86_400_000));
+  });
+
   it('does not send over a person who stepped in mid-turn', async () => {
     const { service, graph } = setup({
       threads: [thread(), thread({ aiPausedUntil: new Date(NOW + 3_600_000) })],
@@ -206,8 +262,12 @@ describe('isAutomatedEcho', () => {
     [asked, 4_500, true],
     [asked, 10_000, true],
     [asked, 10_001, false],
-    [asked, -500, false],
-  ])('last inbound %s, echo after %ims → %s', (lastInboundAt, gap, expected) => {
+    // Business Suite's follow-up is stamped a fraction of a second *before* the
+    // button press it carries (4a5f0fd1: −248 ms). Three seconds is the limit.
+    [asked, -248, true],
+    [asked, -3_000, true],
+    [asked, -3_001, false],
+  ])('contact at %s, echo after %ims → %s', (lastInboundAt, gap, expected) => {
     expect(isAutomatedEcho(lastInboundAt as Date | null, new Date(asked.getTime() + gap))).toBe(expected);
   });
 });

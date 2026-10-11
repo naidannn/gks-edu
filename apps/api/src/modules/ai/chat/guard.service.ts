@@ -26,6 +26,10 @@ export interface GuardVerdict {
   fabricatedRefs: string[];
   /** Phone numbers nobody gave the model, replaced with the office's. */
   inventedPhones: string[];
+  /** Tögrög amounts no source, tool or visitor ever said — their sentences are dropped. */
+  inventedAmounts: string[];
+  /** Tool calls the model wrote out as text instead of making — stripped. */
+  fakeToolCalls: string[];
 }
 
 /**
@@ -101,15 +105,36 @@ export class GuardService {
     // with no sources retrieved at all, the model still wrote "[K1]".
     const { text: withoutFakes, fabricatedRefs } = stripUnknownRefs(params.answer, params.knownRefs);
 
-    const { text: withoutInventedPhones, inventedPhones } = replaceInventedPhones(withoutFakes, [
-      ...params.contextHits.map((hit) => hit.content),
-      ...(params.sourceTexts ?? []),
-    ]);
+    const sourceTexts = [...params.contextHits.map((hit) => hit.content), ...(params.sourceTexts ?? [])];
 
-    const uncitedFigures = findUncitedFigures(withoutInventedPhones);
-    const grounded = uncitedFigures.length === 0 && fabricatedRefs.length === 0 && inventedPhones.length === 0;
+    // The orchestrator already acts on these; this is the guarantee that a
+    // `[save_visitor_profile(...)]` never reaches a person whatever path the
+    // answer took.
+    const { text: withoutFakeCalls, calls } = extractFakeToolCalls(withoutFakes);
+    const fakeToolCalls = calls.map((call) => call.name);
 
-    let text = withoutInventedPhones.trim();
+    const { text: withoutInventedPhones, inventedPhones } = replaceInventedPhones(withoutFakeCalls, sourceTexts);
+
+    const { text: withoutInventedAmounts, inventedAmounts } = dropInventedAmounts(withoutInventedPhones, sourceTexts);
+
+    const uncitedFigures = findUncitedFigures(withoutInventedAmounts, sourceTexts);
+    const grounded =
+      uncitedFigures.length === 0 &&
+      fabricatedRefs.length === 0 &&
+      inventedPhones.length === 0 &&
+      inventedAmounts.length === 0 &&
+      fakeToolCalls.length === 0;
+
+    let text = withoutInventedAmounts.trim();
+
+    if (fakeToolCalls.length > 0) {
+      this.logger.warn(`Хэрэгслийн дуудлагыг текстээр бичсэн: ${fakeToolCalls.join(', ')}`);
+    }
+
+    if (inventedAmounts.length > 0) {
+      this.logger.error(`Эх сурвалжгүй мөнгөн дүнтэй өгүүлбэрийг хаслаа: ${inventedAmounts.join(', ')}`);
+      text = text ? `${text}\n\n${AMOUNT_WITHHELD}` : AMOUNT_WITHHELD;
+    }
 
     if (fabricatedRefs.length > 0) {
       this.logger.warn(`Байхгүй эх сурвалж иш татсан: ${fabricatedRefs.join(', ')}`);
@@ -124,7 +149,7 @@ export class GuardService {
       text = `${text}\n\nТоон мэдээллийг зөвлөхөөр баталгаажуулна уу.`;
     }
 
-    return { grounded, leaked, text, uncitedFigures, fabricatedRefs, inventedPhones };
+    return { grounded, leaked, text, uncitedFigures, fabricatedRefs, inventedPhones, inventedAmounts, fakeToolCalls };
   }
 
   /**
@@ -166,6 +191,9 @@ export class GuardService {
   }
 }
 
+/** Said in place of a price the model made up — the true one is a consultant's to give. */
+const AMOUNT_WITHHELD = 'Төлбөрийн яг дүнг зөвлөх баталгаажуулж хэлнэ.';
+
 /** The instruction added on a regenerate after a leak — one more chance, stricter. */
 export const NO_QUOTE_INSTRUCTION =
   'ЧУХАЛ: өмнөх оролдлогод чи дотоод баримтаас шууд хуулсан. Дахин бичихдээ дотоод ' +
@@ -194,8 +222,10 @@ function stripUnknownRefs(answer: string, knownRefs: string[]): { text: string; 
   const known = new Set(knownRefs);
   const fabricated = new Set<string>();
 
+  // Any letter, not just K and T: with no sources at all, the model labelled
+  // the office's address "[O1]" and it went out on Messenger as written.
   const text = answer
-    .replace(/\s*\[([KT]\d+)\]/g, (match, ref: string) => {
+    .replace(/\s*\[([A-Z]{1,2}\d+)\]/g, (match, ref: string) => {
       if (known.has(ref)) return match;
       fabricated.add(ref);
       return '';
@@ -268,21 +298,180 @@ function ngrams(text: string, size = NGRAM_WORDS): Set<string> {
  *
  * Exported for the tests, because this is the check most likely to be tuned.
  */
-export function findUncitedFigures(answer: string): string[] {
+export function findUncitedFigures(answer: string, sourceTexts: string[] = []): string[] {
   const uncited: string[] = [];
+  const known = numbersIn(sourceTexts);
 
   for (const sentence of answer.split(/(?<=[.!?…])\s+|\n+/)) {
     if (/\[[KT]\d+\]/.test(sentence)) continue;
 
-    for (const match of sentence.matchAll(FIGURE_PATTERN)) {
+    // A phone is not a figure: it is checked on its own, above. Read as one,
+    // "9911 2233" is the grouped thousand "11 223", and the footer went under
+    // 13 visit confirmations in two days because of the visitor's own number.
+    for (const match of sentence.replace(PHONE_PATTERN, ' ').matchAll(FIGURE_PATTERN)) {
       const figure = match[0].trim();
       // A bare small number is ordinary prose ("3 алхам", "2 хувилбар"); what
       // matters is money, percentages, dates and grouped thousands.
-      if (figure.length > 0) uncited.push(figure);
+      if (figure.length === 0) continue;
+      // Said back from somewhere it was given — the visitor's budget, a tool's
+      // figure cited a sentence earlier — it is not the model's invention.
+      const value = amountValue(figure);
+      if (value !== null && known.has(value)) continue;
+      uncited.push(figure);
     }
   }
 
   return [...new Set(uncited)];
+}
+
+/**
+ * A tögrög amount with its unit: `1,200,000₮`, `1.5 сая төгрөг`, `200 мянган төгрөг`.
+ * Won and dollars are left alone — a tuition converted at today's rate is the
+ * model's arithmetic on a cited figure, not an invented one.
+ */
+const TOGROG_PATTERN =
+  /(?:₮\s?\d[\d\s,.]*\d|₮\s?\d)|(?:\d[\d,.\s]*?\s?(?:сая|мянга(?:н)?)?\s?(?:₮|төгрөг\p{L}*))/gu;
+
+/** The smallest amount worth checking — below it is a fee nobody quotes by heart. */
+const MIN_CHECKED_AMOUNT = 10_000;
+
+/**
+ * Removes sentences that state a tögrög amount nobody gave the model.
+ *
+ * In production the assistant quoted the brokerage fee as 1,500,000₮ with a
+ * 500,000₮ prepayment — the real values are 1,200,000₮ and 200,000₮ — and cited
+ * it "[T1]", which was the visitor's profile. A citation marker proves nothing
+ * about a number; whether the number appears in what the model was handed
+ * does. The sentence goes rather than the figure: "нийт төлбөр нь байдаг"
+ * reads worse than nothing. Exported for the tests and the orchestrator, which
+ * gives the model one chance to look the price up before this runs.
+ */
+export function findInventedAmounts(answer: string, sourceTexts: string[]): string[] {
+  const known = numbersIn(sourceTexts);
+  const invented: string[] = [];
+
+  for (const match of answer.replace(PHONE_PATTERN, ' ').matchAll(TOGROG_PATTERN)) {
+    const value = amountValue(match[0]);
+    if (value === null || value < MIN_CHECKED_AMOUNT) continue;
+    if (!known.has(value)) invented.push(match[0].trim());
+  }
+
+  return [...new Set(invented)];
+}
+
+function dropInventedAmounts(answer: string, sourceTexts: string[]): { text: string; inventedAmounts: string[] } {
+  const inventedAmounts = findInventedAmounts(answer, sourceTexts);
+  if (inventedAmounts.length === 0) return { text: answer, inventedAmounts };
+
+  const text = answer
+    .split('\n')
+    .map((line) =>
+      line
+        .split(/(?<=[.!?…])\s+/)
+        .filter((sentence) => findInventedAmounts(sentence, sourceTexts).length === 0)
+        .join(' '),
+    )
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n');
+
+  return { text, inventedAmounts };
+}
+
+/** `1,200,000₮` → 1200000, `1.5 сая` → 1500000, `200 мянган` → 200000; null if it is not one number. */
+function amountValue(figure: string): number | null {
+  const multiplier = /сая/.test(figure) ? 1_000_000 : /мянга/.test(figure) ? 1_000 : 1;
+  const digits = figure.replace(/[^\d.,\s]/g, ' ').trim();
+  if (!digits) return null;
+
+  // With a multiplier, "1.5" and "1,5" are decimals; without one, separators group thousands.
+  const value =
+    multiplier > 1
+      ? Number.parseFloat(digits.replace(/\s/g, '').replace(',', '.'))
+      : Number.parseInt(digits.replace(/[\s,.]/g, ''), 10);
+
+  return Number.isFinite(value) ? Math.round(value * multiplier) : null;
+}
+
+/** Every number written anywhere in the sources, in the units `amountValue` returns. */
+function numbersIn(sourceTexts: string[]): Set<number> {
+  const known = new Set<number>();
+  for (const source of sourceTexts) {
+    for (const match of source.matchAll(/\d[\d,. ]*\d(?:\s?(?:сая|мянга))?|\d(?:\s?(?:сая|мянга))?/g)) {
+      const value = amountValue(match[0]);
+      if (value !== null) known.add(value);
+      // "1,200,000 болон 200,000" is two numbers, not one run of digits.
+      for (const part of match[0].split(/\s+/)) {
+        const single = amountValue(part);
+        if (single !== null) known.add(single);
+      }
+    }
+  }
+  return known;
+}
+
+/** A tool call the model wrote as prose, parsed back into a name and its arguments. */
+export interface FakeToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+/**
+ * Tool calls written into the answer instead of made.
+ *
+ * gemini-3.1-flash-lite does this now and then — "Таны мэдээллийг тэмдэглэлээ
+ * [save_visitor_profile(educationLevel='BACHELOR', goalLevel='MASTER')]" went
+ * to a real person seven times in two days, and the profile was never saved.
+ * Also caught: a `<tool_result>` block it echoed from the format it is shown.
+ *
+ * Returns the answer with all of it removed, and the calls parsed so the
+ * orchestrator can still carry out the harmless ones.
+ */
+export function extractFakeToolCalls(answer: string): { text: string; calls: FakeToolCall[] } {
+  const calls: FakeToolCall[] = [];
+
+  const text = answer
+    .replace(/<tool_(?:result|code|call)[^>]*>[\s\S]*?<\/tool_(?:result|code|call)>/g, ' ')
+    .replace(/<\/?tool_(?:result|code|call)[^>]*>/g, ' ')
+    .replace(FAKE_CALL_PATTERN, (_match, name: string, args: string) => {
+      calls.push({ name, arguments: parseCallArguments(args) });
+      return '';
+    })
+    .replace(/[ \t]+([.,!?…])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .trim();
+
+  return { text: text === answer.trim() ? answer : text, calls };
+}
+
+/**
+ * `[name(...)]`, `name(...)`, `default_api.name(...)`, `print(name(...))` for a
+ * snake_case name of two or more words — what every tool is called, and what
+ * no Mongolian sentence contains.
+ */
+const FAKE_CALL_PATTERN =
+  /\s*`?\[?\s*(?:print\(\s*)?(?:default_api\.)?\b([a-z]+(?:_[a-z]+)+)\s*\(([^()]*)\)\s*\)?\s*\]?`?/g;
+
+/** `educationLevel='BACHELOR', gpa=87` → `{ educationLevel: 'BACHELOR', gpa: 87 }`. */
+function parseCallArguments(raw: string): Record<string, unknown> {
+  const args: Record<string, unknown> = {};
+
+  for (const match of raw.matchAll(/(\w+)\s*[=:]\s*(?:'([^']*)'|"([^"]*)"|([^,\s)]+))/g)) {
+    const [, key, single, double, bare] = match;
+    if (single !== undefined || double !== undefined) {
+      args[key!] = single ?? double;
+    } else if (bare === 'true' || bare === 'True') {
+      args[key!] = true;
+    } else if (bare === 'false' || bare === 'False') {
+      args[key!] = false;
+    } else if (bare !== undefined && /^-?\d+(?:\.\d+)?$/.test(bare)) {
+      args[key!] = Number(bare);
+    } else if (bare !== undefined) {
+      args[key!] = bare;
+    }
+  }
+
+  return args;
 }
 
 /**

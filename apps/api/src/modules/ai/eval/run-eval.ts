@@ -174,6 +174,7 @@ try {
       message: question.text,
     })) {
       if (event.type === 'token') text += event.text;
+      else if (event.type === 'replace') text = event.text;
       else if (event.type === 'tool' && event.status === 'running') tools.push(event.name);
       else if (event.type === 'done') grounded = event.grounded;
       else if (event.type === 'error') offline = event.message;

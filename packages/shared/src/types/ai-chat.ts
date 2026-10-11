@@ -37,6 +37,8 @@ export interface AiSource {
  */
 export type AiStreamEvent =
   | { type: 'token'; text: string }
+  /** The kept answer, when it differs from what was streamed — replaces the bubble's text. */
+  | { type: 'replace'; text: string }
   | { type: 'tool'; name: string; status: 'running' | 'done'; label: string }
   | { type: 'card'; card: AiChatCard }
   | { type: 'sources'; sources: AiSource[] }
