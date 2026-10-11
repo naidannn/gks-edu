@@ -67,10 +67,10 @@ export const GKS_ROUNDS: GksRound[] = [
      * before that — so the only date on the page is the one we can still
      * deliver a complete application from.
      */
-    closesAt: '2026-10-15T18:00:00+09:00',
+    closesAt: '2026-10-25T18:00:00+09:00',
     countdown: true,
     estimated: false,
-    window: 'Эцсийн хугацаа: 10.15, 17:00 (УБ цагаар)',
+    window: 'Эцсийн хугацаа: 10.25, 17:00 (УБ цагаар)',
     afterClose: '2-р шатны хариу 12 сарын дунд, эцсийн жагсаалт 2027.01.07.',
     to: '/gks-2027',
   },

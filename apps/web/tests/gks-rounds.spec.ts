@@ -14,8 +14,8 @@ const graduate = GKS_ROUNDS.find((round) => round.id === 'graduate-2027')!;
 
 describe('GKS rounds', () => {
   it('closes the bachelor intake on our deadline, 18:00 KST — 17:00 in Ulaanbaatar, not midnight', () => {
-    expect(getGksRoundPhase(bachelor, at('2026-10-15T16:59:59+08:00'))).toBe('OPEN');
-    expect(getGksRoundPhase(bachelor, at('2026-10-15T17:00:00+08:00'))).toBe('CLOSED');
+    expect(getGksRoundPhase(bachelor, at('2026-10-25T16:59:59+08:00'))).toBe('OPEN');
+    expect(getGksRoundPhase(bachelor, at('2026-10-25T17:00:00+08:00'))).toBe('CLOSED');
   });
 
   it('never calls a round a "шугам" — that is office vocabulary', () => {
@@ -25,7 +25,7 @@ describe('GKS rounds', () => {
   it('leads with the open round that has a real countdown', () => {
     expect(featuredGksRound(GKS_ROUNDS, at('2026-09-21T12:00:00+08:00'))?.id).toBe('bachelor-uic-2027');
     // After the bachelor deadline, the graduate round that opens next leads.
-    expect(featuredGksRound(GKS_ROUNDS, at('2026-10-16T12:00:00+08:00'))?.id).toBe('graduate-2027');
+    expect(featuredGksRound(GKS_ROUNDS, at('2026-10-26T12:00:00+08:00'))?.id).toBe('graduate-2027');
   });
 
   it('says "now accepting" while open and marks an estimated opening as approximate', () => {
