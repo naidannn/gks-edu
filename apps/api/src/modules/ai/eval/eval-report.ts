@@ -5,6 +5,7 @@ import {
   type EvalAnswer,
   type EvalQuestion,
 } from './eval-checks.js';
+import { baseModel, costMicros, MODEL_PRICES_USD_PER_MTOK } from '../llm/llm.types.js';
 
 /** How many real questions to replay from each topic (`AI-SALES-IMPROVEMENT.md` §5). */
 export const TOPIC_QUOTA: Record<string, number> = {
@@ -72,10 +73,76 @@ export function sampleQuestions(
   return picked;
 }
 
+export interface EvalUsage {
+  /** Model calls the turn made: one per tool round, plus any retry. */
+  calls: number;
+  promptTokens: number;
+  /** Part of `promptTokens` served from the provider's prompt cache. */
+  cachedPromptTokens: number;
+  /** Billed output, thinking included. */
+  completionTokens: number;
+  reasoningTokens: number;
+}
+
 export interface EvalRecord {
   question: EvalQuestion;
   answer: EvalAnswer;
   checks: CheckResult[];
+  /** Absent on runs made before 2026-10-11. */
+  model?: string;
+  usage?: EvalUsage;
+  latencyMs?: number;
+}
+
+/**
+ * What the usage would cost, in USD, at the peak rate and at the off-peak one.
+ * DeepSeek charges double during its peak hours — 01-04 and 06-10 UTC on
+ * weekdays, which is 09-12 and 14-18 in Ulaanbaatar, the office's busiest time —
+ * so the report shows both. The prices are the app's own (`llm.types.ts`).
+ */
+export function usageCost(model: string, usage: EvalUsage): { peak: number; offPeak: number } | null {
+  if (!MODEL_PRICES_USD_PER_MTOK[baseModel(model)]) return null;
+  const peak =
+    costMicros(model, usage.promptTokens, usage.completionTokens, usage.cachedPromptTokens) / 1_000_000;
+  return { peak, offPeak: model.startsWith('deepseek-') ? peak / 2 : peak };
+}
+
+/** The cost-and-speed section appended to a run's report. */
+export function renderUsage(records: EvalRecord[], model: string): string {
+  const measured = records.filter((record) => record.usage);
+  if (measured.length === 0) return '';
+  const sum = (pick: (usage: EvalUsage) => number) =>
+    measured.reduce((total, record) => total + pick(record.usage!), 0);
+  const total: EvalUsage = {
+    calls: sum((u) => u.calls),
+    promptTokens: sum((u) => u.promptTokens),
+    cachedPromptTokens: sum((u) => u.cachedPromptTokens),
+    completionTokens: sum((u) => u.completionTokens),
+    reasoningTokens: sum((u) => u.reasoningTokens),
+  };
+  const cost = usageCost(model, total);
+  const latencies = measured.map((record) => record.latencyMs ?? 0).sort((a, b) => a - b);
+  const median = latencies[Math.floor(latencies.length / 2)] ?? 0;
+  const p90 = latencies[Math.floor(latencies.length * 0.9)] ?? 0;
+  const per = (n: number) => Math.round(n / measured.length);
+  const cachedShare = total.promptTokens ? Math.round((total.cachedPromptTokens / total.promptTokens) * 100) : 0;
+
+  return [
+    '## Зардал ба хурд',
+    '',
+    '| | Нийт | Нэг хариултад |',
+    '| --- | --- | --- |',
+    `| Моделийн дуудлага | ${total.calls} | ${(total.calls / measured.length).toFixed(1)} |`,
+    `| Оролтын token | ${total.promptTokens} | ${per(total.promptTokens)} |`,
+    `| …үүнээс cache | ${total.cachedPromptTokens} (${cachedShare}%) | ${per(total.cachedPromptTokens)} |`,
+    `| Гаралтын token (thinking орсон) | ${total.completionTokens} | ${per(total.completionTokens)} |`,
+    `| …үүнээс thinking | ${total.reasoningTokens} | ${per(total.reasoningTokens)} |`,
+    cost
+      ? `| Зардал, USD (оргил / оргил бус) | ${cost.peak.toFixed(4)} / ${cost.offPeak.toFixed(4)} | ${(cost.peak / measured.length).toFixed(5)} / ${(cost.offPeak / measured.length).toFixed(5)} |`
+      : '| Зардал | үнэ тодорхойгүй модель | |',
+    `| Хугацаа, мс (медиан / p90) | | ${median} / ${p90} |`,
+    '',
+  ].join('\n');
 }
 
 export interface Rate {

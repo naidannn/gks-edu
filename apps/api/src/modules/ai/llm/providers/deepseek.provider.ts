@@ -1,7 +1,14 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { sseDataLines } from '../sse-lines.js';
-import type { LlmChatRequest, LlmEvent, LlmFinishReason, LlmMessage, LlmProvider } from '../llm.types.js';
+import {
+  baseModel,
+  type LlmChatRequest,
+  type LlmEvent,
+  type LlmFinishReason,
+  type LlmMessage,
+  type LlmProvider,
+} from '../llm.types.js';
 import { LlmStreamError } from './gemini.provider.js';
 
 interface DeltaToolCall {
@@ -15,7 +22,12 @@ interface DeepseekChunk {
     delta?: { content?: string; reasoning_content?: string; tool_calls?: DeltaToolCall[] };
     finish_reason?: string | null;
   }[];
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    prompt_cache_hit_tokens?: number;
+    completion_tokens_details?: { reasoning_tokens?: number };
+  };
 }
 
 /**
@@ -51,11 +63,13 @@ export class DeepseekChatProvider implements LlmProvider {
     if (!apiKey) throw new ServiceUnavailableException('DEEPSEEK_API_KEY тохируулаагүй байна.');
 
     const baseUrl = this.config.get<string>('deepseek.baseUrl');
+    const mode = request.model.split(':')[1];
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: request.model,
+        model: baseModel(request.model),
+        ...thinkingParams(mode),
         messages: [{ role: 'system', content: request.system }, ...request.messages.map(toMessage)],
         ...(request.tools?.length
           ? {
@@ -120,6 +134,8 @@ export class DeepseekChatProvider implements LlmProvider {
           type: 'usage',
           promptTokens: chunk.usage.prompt_tokens ?? 0,
           completionTokens: chunk.usage.completion_tokens ?? 0,
+          cachedPromptTokens: chunk.usage.prompt_cache_hit_tokens ?? 0,
+          reasoningTokens: chunk.usage.completion_tokens_details?.reasoning_tokens ?? 0,
         };
       }
     }
@@ -178,4 +194,15 @@ function parseArguments(raw: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+/**
+ * Thinking is on by default at `high` effort. `:nothink` turns it off — the
+ * reply then starts at once and costs no hidden output; `:low` keeps it but
+ * shorter. Anything else leaves DeepSeek's default.
+ */
+function thinkingParams(mode: string | undefined): Record<string, unknown> {
+  if (mode === 'nothink') return { thinking: { type: 'disabled' } };
+  if (mode === 'low') return { thinking: { type: 'enabled' }, reasoning_effort: 'low' };
+  return {};
 }

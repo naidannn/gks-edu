@@ -18,6 +18,10 @@ export interface EvalQuestion {
   /** What the office did with it: `staff`, `automation` or `nobody`. */
   answeredBy: string;
   staffReply?: string;
+  /** The conversation before the question, for a turn replayed from production. */
+  history?: { role: 'user' | 'assistant'; content: string }[];
+  /** What the production assistant actually sent. */
+  prodAnswer?: string;
 }
 
 export interface EvalAnswer {

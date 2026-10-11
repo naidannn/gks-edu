@@ -10,6 +10,8 @@ export interface LlmTurnResult {
   provider: string;
   promptTokens: number;
   completionTokens: number;
+  /** The part of `promptTokens` served from the provider's prompt cache. */
+  cachedPromptTokens: number;
   costMicros: number;
   /** True when the primary model failed and the fallback answered. */
   usedFallback: boolean;
@@ -84,6 +86,7 @@ export class LlmService {
     let streamed = false;
     let promptTokens = 0;
     let completionTokens = 0;
+    let cachedPromptTokens = 0;
 
     const run = async function* (this: LlmService, chosen: string, usedFallback: boolean) {
       const provider = this.providerFor(chosen);
@@ -93,6 +96,7 @@ export class LlmService {
         if (event.type === 'usage') {
           promptTokens = event.promptTokens;
           completionTokens = event.completionTokens;
+          cachedPromptTokens = event.cachedPromptTokens ?? 0;
         }
         yield event;
       }
@@ -102,7 +106,8 @@ export class LlmService {
         provider: provider.name,
         promptTokens,
         completionTokens,
-        costMicros: costMicros(chosen, promptTokens, completionTokens),
+        cachedPromptTokens,
+        costMicros: costMicros(chosen, promptTokens, completionTokens, cachedPromptTokens),
         usedFallback,
       });
     }.bind(this);
@@ -130,7 +135,7 @@ export class LlmService {
 
     yield { type: 'text', delta: text };
     yield { type: 'usage', promptTokens: 0, completionTokens: 0 };
-    onResult?.({ model, provider: 'mock', promptTokens: 0, completionTokens: 0, costMicros: 0, usedFallback: false });
+    onResult?.({ model, provider: 'mock', promptTokens: 0, completionTokens: 0, cachedPromptTokens: 0, costMicros: 0, usedFallback: false });
     yield { type: 'done', finishReason: 'stop' };
   }
 }

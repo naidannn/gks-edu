@@ -15,7 +15,14 @@ interface GeminiPart {
 
 interface GeminiStreamChunk {
   candidates?: { content?: { parts?: GeminiPart[] }; finishReason?: string }[];
-  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    /** Part of `promptTokenCount`, served from the implicit cache. */
+    cachedContentTokenCount?: number;
+    /** Not part of `candidatesTokenCount`, but billed as output all the same. */
+    thoughtsTokenCount?: number;
+  };
 }
 
 /**
@@ -102,10 +109,13 @@ export class GeminiChatProvider implements LlmProvider {
       }
 
       if (chunk.usageMetadata) {
+        const usage = chunk.usageMetadata;
         yield {
           type: 'usage',
-          promptTokens: chunk.usageMetadata.promptTokenCount ?? 0,
-          completionTokens: chunk.usageMetadata.candidatesTokenCount ?? 0,
+          promptTokens: usage.promptTokenCount ?? 0,
+          completionTokens: (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0),
+          cachedPromptTokens: usage.cachedContentTokenCount ?? 0,
+          reasoningTokens: usage.thoughtsTokenCount ?? 0,
         };
       }
 

@@ -70,7 +70,7 @@ describe('GeminiChatProvider', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       responseOf([
         'data: {"candidates":[{"content":{"parts":[{"text":"Сайн "}]}}]}\n',
-        'data: {"candidates":[{"content":{"parts":[{"text":"байна уу"}],"role":"model"},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":4}}\n',
+        'data: {"candidates":[{"content":{"parts":[{"text":"байна уу"}],"role":"model"},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":4,"cachedContentTokenCount":6,"thoughtsTokenCount":3}}\n',
       ]),
     );
 
@@ -87,7 +87,14 @@ describe('GeminiChatProvider', () => {
       'байна уу',
     ]);
     expect(events.at(-1)).toEqual({ type: 'done', finishReason: 'stop' });
-    expect(events).toContainEqual({ type: 'usage', promptTokens: 10, completionTokens: 4 });
+    // Thinking is billed as output, so it is part of the completion count.
+    expect(events).toContainEqual({
+      type: 'usage',
+      promptTokens: 10,
+      completionTokens: 7,
+      cachedPromptTokens: 6,
+      reasoningTokens: 3,
+    });
   });
 
   it('never streams the model thinking out loud', async () => {
@@ -214,6 +221,43 @@ describe('DeepseekChatProvider', () => {
       stream_options: { include_usage: true },
     });
   });
+
+  it('reads the thinking mode from the model id and sends the bare id', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(responseOf(['data: [DONE]\n']));
+    const body = async (model: string) => {
+      fetchMock.mockClear();
+      await collect(new DeepseekChatProvider(config).stream({ model, system: 's', messages: [] }));
+      return JSON.parse(String(fetchMock.mock.calls[0]![1]!.body)) as Record<string, unknown>;
+    };
+
+    expect(await body('deepseek-flash:nothink')).toMatchObject({
+      model: 'deepseek-flash',
+      thinking: { type: 'disabled' },
+    });
+    expect(await body('deepseek-flash:low')).toMatchObject({ model: 'deepseek-flash', reasoning_effort: 'low' });
+    expect(await body('deepseek-flash')).not.toHaveProperty('thinking');
+  });
+
+  it('reports cache hits and thinking from the usage block', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      responseOf([
+        'data: {"choices":[],"usage":{"prompt_tokens":100,"completion_tokens":50,"prompt_cache_hit_tokens":80,"completion_tokens_details":{"reasoning_tokens":30}}}\n',
+        'data: [DONE]\n',
+      ]),
+    );
+
+    const events = await collect(
+      new DeepseekChatProvider(config).stream({ model: 'deepseek-flash', system: 's', messages: [] }),
+    );
+
+    expect(events).toContainEqual({
+      type: 'usage',
+      promptTokens: 100,
+      completionTokens: 50,
+      cachedPromptTokens: 80,
+      reasoningTokens: 30,
+    });
+  });
 });
 
 describe('LlmService', () => {
@@ -316,5 +360,17 @@ describe('costMicros', () => {
 
   it('rounds up, so a tiny call is not free', () => {
     expect(costMicros('gemini-3.1-flash-lite', 1, 0)).toBe(1);
+  });
+
+  it('bills cache hits at the cached price — what the providers actually charge', () => {
+    // 10,000 input of which 6,000 cached: 4,000 × 0.25 + 6,000 × 0.025 + 200 × 1.5 = 1,450 micro-dollars.
+    expect(costMicros('gemini-3.1-flash-lite', 10_000, 200, 6_000)).toBe(1_450);
+    expect(costMicros('gemini-3.1-flash-lite', 10_000, 200, 6_000)).toBeLessThan(
+      costMicros('gemini-3.1-flash-lite', 10_000, 200),
+    );
+  });
+
+  it('prices a DeepSeek thinking-mode id as its base model', () => {
+    expect(costMicros('deepseek-flash:nothink', 1_000, 1_000)).toBe(costMicros('deepseek-flash', 1_000, 1_000));
   });
 });

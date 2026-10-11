@@ -5,6 +5,10 @@
  *   EVAL_DATABASE_URL=postgresql://…@localhost:5432/gks_edu pnpm --filter @gks/api ai:eval
  *   … ai:eval --limit 10          # smoke test
  *   … ai:eval --topic visit       # one topic only
+ *   … ai:eval --model deepseek-flash:nothink   # another model, same questions
+ *   … ai:eval --turns ../../data/chat-corpus/prod/turns.jsonl   # production
+ *     Messenger turns, each replayed with the conversation before it
+ *     (`scripts/prod-chat-turns.mjs`)
  *
  * Questions come from `data/chat-corpus/eval-questions.jsonl`
  * (`scripts/facebook-chats-import.mjs`); the report lands beside it, gitignored.
@@ -35,9 +39,17 @@ import { MetaModule } from '../../meta/meta.module.js';
 import { AiConfigService } from '../ai-config.service.js';
 import { AiModule } from '../ai.module.js';
 import { ChatSessionService } from '../chat/chat-session.service.js';
+import { LlmService } from '../llm/llm.service.js';
+import type { LlmEvent } from '../llm/llm.types.js';
 import { TurnOrchestrator } from '../chat/turn.orchestrator.js';
 import { runChecks, type EvalQuestion } from './eval-checks.js';
-import { renderReport, sampleQuestions, type EvalRecord } from './eval-report.js';
+import {
+  renderReport,
+  renderUsage,
+  sampleQuestions,
+  type EvalRecord,
+  type EvalUsage,
+} from './eval-report.js';
 
 loadEnv({ path: ['.env', '../../.env'], quiet: true });
 
@@ -89,7 +101,8 @@ for (const name of [
   process.env[name] = '';
 }
 
-const corpus = resolve('../../data/chat-corpus/eval-questions.jsonl');
+const turnsFile = flag('turns');
+const corpus = resolve(turnsFile ?? '../../data/chat-corpus/eval-questions.jsonl');
 if (!existsSync(corpus)) {
   console.error(`${corpus} not found — run scripts/facebook-chats-import.mjs first.`);
   process.exit(1);
@@ -121,11 +134,12 @@ const all: Question[] = readFileSync(corpus, 'utf8')
   .split('\n')
   .filter(Boolean)
   .map((line, index) => {
-    const row = JSON.parse(line) as Omit<Question, 'id'> & { thread: string };
-    return { ...row, id: `${row.thread}-${index}` };
+    const row = JSON.parse(line) as Omit<Question, 'id'> & { thread: string; id?: string };
+    return { ...row, id: row.id ?? `${row.thread}-${index}` };
   });
 
-let questions = sampleQuestions(all);
+// Production turns are already a sample; the old corpus is sampled per topic.
+let questions = turnsFile ? all : sampleQuestions(all);
 const topic = flag('topic');
 if (topic) questions = questions.filter((q) => q.topic === topic);
 const limit = Number(flag('limit') ?? questions.length);
@@ -139,9 +153,37 @@ try {
   const orchestrator = app.get(TurnOrchestrator);
   const aiConfig = app.get(AiConfigService);
 
-  // The kill switch belongs to the live widget; the eval must not depend on it.
+  // The kill switch and the daily ceiling belong to the live widget; the eval
+  // must not depend on them. With --model the fallback is switched off too: a
+  // failed call is then a failed answer, not a quiet answer from another model
+  // (a fallback equal to the model is never tried).
   const original = aiConfig.get.bind(aiConfig);
-  aiConfig.get = async () => ({ ...(await original()), enabled: true });
+  const model = flag('model');
+  aiConfig.get = async () => ({
+    ...(await original()),
+    enabled: true,
+    dailyTokenBudget: Number.MAX_SAFE_INTEGER,
+    ...(model ? { chatModel: model, fallbackModel: model } : {}),
+  });
+
+  // Every model call a turn makes — tool rounds, retries — reports its usage
+  // once; the last report of a call is its total. Tapped here rather than read
+  // from the session so the cached and thinking tokens come through too.
+  const llm = app.get(LlmService);
+  const stream = llm.stream.bind(llm);
+  let usage: EvalUsage = emptyUsage();
+  llm.stream = async function* (...args: Parameters<LlmService['stream']>) {
+    let last: Extract<LlmEvent, { type: 'usage' }> | undefined;
+    for await (const event of stream(...args)) {
+      if (event.type === 'usage') last = event;
+      yield event;
+    }
+    usage.calls += 1;
+    usage.promptTokens += last?.promptTokens ?? 0;
+    usage.cachedPromptTokens += last?.cachedPromptTokens ?? 0;
+    usage.completionTokens += last?.completionTokens ?? 0;
+    usage.reasoningTokens += last?.reasoningTokens ?? 0;
+  };
   const config = await aiConfig.get();
   const chunks = await prisma.knowledgeChunk.count();
 
@@ -157,12 +199,23 @@ try {
   const pace = Number(flag('pace') ?? 8000);
 
   async function ask(question: Question): Promise<Record_> {
-    const { session } = await sessions.start({
-      channel: ChatChannel.WEB_WIDGET,
+    const replayed = question.history !== undefined;
+    let { session } = await sessions.start({
+      channel: replayed ? ChatChannel.FACEBOOK : ChatChannel.WEB_WIDGET,
       accessLevel: AccessLevel.PUBLIC,
       landingPage: '/eval',
     });
+    // A replayed turn is the Nth of its conversation: the count is what decides
+    // whether the prompt asks for a phone number yet.
+    if (replayed && question.history!.length > 0) {
+      session = await prisma.chatSession.update({
+        where: { id: session.id },
+        data: { messageCount: question.history!.length },
+      });
+    }
 
+    usage = emptyUsage();
+    const started = Date.now();
     let text = '';
     let grounded: boolean | null = null;
     let offline: string | undefined;
@@ -172,6 +225,9 @@ try {
       session,
       level: AccessLevel.PUBLIC,
       message: question.text,
+      ...(replayed
+        ? { history: [...question.history!, { role: 'user' as const, content: question.text }] }
+        : {}),
     })) {
       if (event.type === 'token') text += event.text;
       else if (event.type === 'replace') text = event.text;
@@ -181,7 +237,14 @@ try {
     }
 
     const answer = { text, grounded, tools, ...(offline ? { offline } : {}) };
-    return { question, answer, checks: runChecks(question, answer) };
+    return {
+      question,
+      answer,
+      checks: runChecks(question, answer),
+      model: config.chatModel,
+      usage,
+      latencyMs: Date.now() - started,
+    };
   }
 
   let lastStart = 0;
@@ -200,14 +263,17 @@ try {
   }
   console.log('');
 
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const stamp = `${new Date().toISOString().replace(/[:.]/g, '-')}-${config.chatModel.replace(/[^\w.-]+/g, '_')}`;
   const dir = resolve('../../data/chat-corpus/eval');
   mkdirSync(dir, { recursive: true });
-  const report = renderReport(records, {
-    when: new Date().toISOString(),
-    model: config.chatModel,
-    knowledgeChunks: chunks,
-  });
+  const report =
+    renderReport(records, {
+      when: new Date().toISOString(),
+      model: config.chatModel,
+      knowledgeChunks: chunks,
+    }) +
+    '\n' +
+    renderUsage(records, config.chatModel);
   writeFileSync(resolve(dir, `${stamp}.md`), report);
   writeFileSync(resolve(dir, `${stamp}.json`), JSON.stringify(records, null, 2));
   writeFileSync(resolve(dir, 'latest.md'), report);
@@ -216,4 +282,10 @@ try {
   console.log(`\nfull report: ${resolve(dir, 'latest.md')}`);
 } finally {
   await app.close();
+}
+// A queue connection outlives the context and keeps the process alive.
+process.exit(0);
+
+function emptyUsage(): EvalUsage {
+  return { calls: 0, promptTokens: 0, cachedPromptTokens: 0, completionTokens: 0, reasoningTokens: 0 };
 }
