@@ -26,7 +26,7 @@ const LEAD_LIST_LIMIT = 100;
  * marks its session `LEAD_CREATED`), STAFF otherwise — the «Сэжим үүсгэх»
  * button in the inbox.
  */
-const FACEBOOK_LEADS_CTE = Prisma.sql`
+export const FACEBOOK_LEADS_CTE = Prisma.sql`
   fb_leads AS (
     SELECT DISTINCT ON (l.id)
       l.id                                  AS lead_id,

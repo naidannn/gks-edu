@@ -5,6 +5,9 @@ import {
   facebookReportQuery,
   formatReplyMinutes,
   formatReportDay,
+  aiModelLabel,
+  formatTokens,
+  formatUsd,
 } from '../app/utils/facebook-report';
 
 describe('Facebook report helpers (2F-10)', () => {
@@ -42,5 +45,27 @@ describe('Facebook report helpers (2F-10)', () => {
   it('names the comparison window', () => {
     expect(facebookPreviousLabel('today')).toBe('өчигдөр');
     expect(facebookPreviousLabel('month')).toBe('өмнөх сар');
+  });
+});
+
+describe('AI cost formatting (2F-11)', () => {
+  it('shows fractions of a cent, and cents above a dollar', () => {
+    expect(formatUsd(null)).toBe('—');
+    expect(formatUsd(0)).toBe('$0');
+    expect(formatUsd(0.00166)).toBe('$0.0017');
+    expect(formatUsd(0.812)).toBe('$0.8120');
+    expect(formatUsd(12.345)).toBe('$12.35');
+  });
+
+  it('prints token counts like the provider consoles', () => {
+    expect(formatTokens(912)).toBe('912');
+    expect(formatTokens(45_782)).toBe('45.8K');
+    expect(formatTokens(2_070_000)).toBe('2.07M');
+  });
+
+  it('names the models the way the office reads them', () => {
+    expect(aiModelLabel('gemini-3.1-flash-lite')).toBe('Gemini 3.1 Flash-Lite');
+    expect(aiModelLabel('deepseek-flash:nothink')).toBe('DeepSeek Flash (thinking-гүй)');
+    expect(aiModelLabel('deepseek-v4-pro')).toBe('DeepSeek V4 Pro');
   });
 });

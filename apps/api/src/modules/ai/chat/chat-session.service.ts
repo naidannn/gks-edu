@@ -157,6 +157,7 @@ export class ChatSessionService {
     toolCalls?: Prisma.InputJsonValue;
     promptTokens: number;
     completionTokens: number;
+    cachedPromptTokens?: number;
     costMicros: number;
     latencyMs: number;
   }) {
@@ -173,6 +174,8 @@ export class ChatSessionService {
           ...(params.toolCalls !== undefined ? { toolCalls: params.toolCalls } : {}),
           promptTokens: params.promptTokens,
           completionTokens: params.completionTokens,
+          cachedPromptTokens: params.cachedPromptTokens ?? 0,
+          costMicros: BigInt(params.costMicros),
           latencyMs: params.latencyMs,
         },
       }),

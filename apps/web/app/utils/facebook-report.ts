@@ -82,3 +82,32 @@ export function busiestHours(hours: number[], limit = 3): { hour: number; label:
     .sort((a, b) => b.count - a.count || a.hour - b.hour)
     .slice(0, limit);
 }
+
+/**
+ * Dollars at the precision AI spend needs: one answer costs a fraction of a
+ * cent, so below a dollar four decimals, above it two. (2F-11)
+ */
+export function formatUsd(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+  if (value === 0) return '$0';
+  return `$${value.toFixed(Math.abs(value) < 1 ? 4 : 2)}`;
+}
+
+/** Token counts the way the providers' consoles print them: `2.07M`, `45.8K`, `912`. */
+export function formatTokens(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(value);
+}
+
+/** A model id as the office reads it: `deepseek-flash:nothink` → `DeepSeek Flash (thinking-гүй)`. */
+export function aiModelLabel(model: string): string {
+  const [base = model, mode] = model.split(':');
+  const name = base
+    .split('-')
+    .map((part) => (part === 'deepseek' ? 'DeepSeek' : part === 'lite' ? 'Lite' : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join(' ')
+    .replace(/ Lite$/, '-Lite');
+  const modes: Record<string, string> = { nothink: 'thinking-гүй', low: 'бага thinking' };
+  return mode ? `${name} (${modes[mode] ?? mode})` : name;
+}

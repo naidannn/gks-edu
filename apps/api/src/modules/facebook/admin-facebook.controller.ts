@@ -20,6 +20,7 @@ import {
   StarFacebookThreadDto,
 } from './dto/facebook.dto.js';
 import { FacebookAdminService } from './facebook-admin.service.js';
+import { FacebookAiCostService } from './facebook-ai-cost.service.js';
 import { FacebookReportService } from './facebook-report.service.js';
 
 /**
@@ -37,6 +38,7 @@ export class AdminFacebookController {
   constructor(
     private readonly facebook: FacebookAdminService,
     private readonly reports: FacebookReportService,
+    private readonly aiCost: FacebookAiCostService,
   ) {}
 
   @Get('status')
@@ -49,6 +51,12 @@ export class AdminFacebookController {
   @ApiOperation({ summary: 'Тайлан: хэдэн хүн бичсэн, хэдэн контакт авсан, өдрөөр' })
   report(@Query() query: QueryFacebookReportDto) {
     return this.reports.build(query.preset ?? 'today', { from: query.from, to: query.to });
+  }
+
+  @Get('report/ai-cost')
+  @ApiOperation({ summary: 'Тайлан: AI хариултын token ба зардал (USD), өдөр ба моделиор' })
+  reportAiCost(@Query() query: QueryFacebookReportDto) {
+    return this.aiCost.build(query.preset ?? 'today', { from: query.from, to: query.to });
   }
 
   @Get('threads')

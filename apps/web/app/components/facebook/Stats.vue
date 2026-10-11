@@ -5,6 +5,8 @@ import type { FacebookReport, FacebookReportPreset } from '@gks/shared';
  * The Facebook Page report (2F-10): how many people wrote, how many were new,
  * how many left a name and number, by day — and who answered them.
  *
+ * Below it, apart, what the assistant's answers cost (2F-11, `FacebookAiCost`).
+ *
  * Opens on «Өнөөдөр», because that is the question the office asks of the
  * Page: "how many wrote today, how many numbers did we get". Every figure is
  * shown beside the same figure one window earlier, as in `/admin/reports`.
@@ -266,6 +268,14 @@ const dayLabelStep = computed(() => {
           «Авсан контакт» — Messenger чатаас үүссэн сэжим (AI эсвэл ажилтан бүртгэсэн); өмнө нь вэбээр бүртгүүлсэн хүнийг чаттай
           холбосон бол тооцохгүй.
         </p>
+
+        <FacebookAiCost
+          :preset="preset"
+          :from="from"
+          :to="to"
+          :previous-label="previousLabel"
+          :stamp="report.generatedAt"
+        />
       </template>
     </div>
   </div>

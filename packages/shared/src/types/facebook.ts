@@ -248,3 +248,46 @@ export interface FacebookReport {
   /** The leads captured in the period, newest first (at most 100). */
   leadList: FacebookReportLead[];
 }
+
+// ── AI cost (2F-11) ─────────────────────────────────────────────────────────
+
+/** What the assistant's Messenger answers used and cost, in some slice of the period. */
+export interface FacebookAiCostUsage {
+  /** Answers the assistant stored. */
+  answers: number;
+  promptTokens: number;
+  /** The part of `promptTokens` the provider served from its prompt cache — billed at a tenth or less. */
+  cachedPromptTokens: number;
+  /** Output, thinking included. */
+  completionTokens: number;
+  /** USD, cache discount included. */
+  costUsd: number;
+}
+
+export interface FacebookAiCostReport {
+  period: FacebookReportPeriod;
+  generatedAt: string;
+  totals: FacebookAiCostUsage & {
+    /**
+     * Answers stored before the cost was recorded per answer (2F-11). They are
+     * priced at list price without the cache discount, so they read high.
+     */
+    estimatedAnswers: number;
+  };
+  /** The same totals one period earlier. */
+  previous: FacebookAiCostUsage;
+  /** Cost against the previous period, percent; `null` when that was zero. */
+  costChangePercent: number | null;
+  /** USD per answer; `null` with no answers. */
+  costPerAnswerUsd: number | null;
+  /** Leads the assistant captured on Messenger in the period. */
+  aiLeads: number;
+  /** USD per lead the assistant captured; `null` with none. */
+  costPerAiLeadUsd: number | null;
+  /** Percent of input served from cache, over answers that recorded it; `null` when none did. */
+  cachedSharePercent: number | null;
+  /** One row per office-local day, zero-filled. */
+  days: (FacebookAiCostUsage & { day: string })[];
+  /** One row per model that answered, most expensive first. */
+  models: (FacebookAiCostUsage & { model: string })[];
+}

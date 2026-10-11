@@ -2799,9 +2799,15 @@ model ChatMessage {
   /// not an error (§5.5).
   grounded Boolean @default(true)
 
-  promptTokens     Int?
-  completionTokens Int?
-  latencyMs        Int?
+  promptTokens       Int?
+  completionTokens   Int?
+  /// The part of `promptTokens` the provider served from its prompt cache,
+  /// billed at a tenth or less. Null on answers stored before 2F-11.
+  cachedPromptTokens Int?
+  /// What the turn cost, USD × 1e6, with the cache discount — the figure the
+  /// provider bills. Null before 2F-11; the report estimates those at list price.
+  costMicros         BigInt?
+  latencyMs          Int?
 
   createdAt DateTime @default(now())
 

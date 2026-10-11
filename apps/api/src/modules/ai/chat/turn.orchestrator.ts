@@ -432,6 +432,7 @@ export class TurnOrchestrator {
       ...(runs.length > 0 ? { toolCalls: toolLog(runs) as unknown as Prisma.InputJsonValue } : {}),
       promptTokens: usage.promptTokens,
       completionTokens: usage.completionTokens,
+      cachedPromptTokens: usage.cachedPromptTokens,
       costMicros: usage.costMicros,
       latencyMs: Date.now() - startedAt,
     });
@@ -478,13 +479,21 @@ export class TurnOrchestrator {
 class UsageMeter {
   promptTokens = 0;
   completionTokens = 0;
+  cachedPromptTokens = 0;
   costMicros = 0;
 
   constructor(public model: string) {}
 
-  add(result: { model: string; promptTokens: number; completionTokens: number; costMicros: number }): void {
+  add(result: {
+    model: string;
+    promptTokens: number;
+    completionTokens: number;
+    cachedPromptTokens?: number;
+    costMicros: number;
+  }): void {
     this.promptTokens += result.promptTokens;
     this.completionTokens += result.completionTokens;
+    this.cachedPromptTokens += result.cachedPromptTokens ?? 0;
     this.costMicros += result.costMicros;
     // The model that answered last is the one the message is attributed to —
     // it is the one whose words were kept.

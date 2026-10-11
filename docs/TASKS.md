@@ -272,6 +272,7 @@
 | `2F-07` | Ажилтны хариултаас мэдлэгийн сангийн `ENTRY` ноорог (асуулт = харилцагчийн өмнөх мессеж) — нийтлэхээс өмнө `/admin/ai/knowledge`-д уншина | wip | S | 2F-05, 2A-08 |
 | `2F-08` | Meta тохиргоо: Messenger бүтээгдэхүүнтэй app, Page-ийг `messages`, `message_echoes`, `messaging_postbacks`, `messaging_referrals`, `feed`-д subscribe; урт хугацааны Page token; `FB_*` утгууд `deploy/.env.production`-д; App Review (`pages_messaging`, `pages_manage_engagement`, `pages_read_user_content`, Human Agent) + бизнес баталгаажуулалт | todo | M | 2F-02 |
 | `2F-09` | Production-д асаах: migration, `facebookEnabled` эхлээд зөвхөн Messenger-т, хэдэн өдөр транскрипт уншаад сэтгэгдлийг асаах | todo | S | 2F-08 |
+| `2F-11` | Facebook тайланд «AI-ийн зардал» тусдаа хэсэг: AI хариулт, token (cache-ийн хувь), USD зардал (нэг хариулт, AI авсан нэг контакт), өдөр ба моделиор; хариулт бүрт `cachedPromptTokens` + бодит `costMicros` хадгалж cache-ийн хөнгөлөлтийг тооцох (Google/DeepSeek-ийн нэхэмжлэлтэй тулгасан: хуучин тооцоо ~1.8× өндөр байсан) | wip | M | 2F-10 |
 
 ### 2G — Борлуулалт ба follow-up (бодит чатаас)
 
