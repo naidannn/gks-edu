@@ -154,7 +154,6 @@ const TRUST = [
         </p>
       </template>
 
-      <AiChatQuota v-if="!auth.isAuthenticated && active" :guest="chat.guest.value" :held="chat.held.value" />
       <AiChatComposer
         class="gks-ai-hero__composer"
         :disabled="chat.sending.value || (active && Boolean(chat.held.value))"
@@ -177,7 +176,6 @@ const TRUST = [
       </button>
     </div>
 
-    <AiChatQuota v-if="!auth.isAuthenticated && !active" :guest="chat.guest.value" />
 
     <ul class="gks-ai-hero__trust">
       <li v-for="item in TRUST" :key="item.text">

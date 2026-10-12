@@ -11,6 +11,7 @@ import { LeadsModule } from '../leads/leads.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { ProgramsModule } from '../programs/programs.module.js';
+import { StudyPlanModule } from '../study-plan/study-plan.module.js';
 import { UniversitiesModule } from '../universities/universities.module.js';
 import { BudgetService } from './chat/budget.service.js';
 import { ChatController } from './chat/chat.controller.js';
@@ -22,6 +23,7 @@ import { CatalogTools } from './chat/tools/catalog.tools.js';
 import { KnowledgeTools } from './chat/tools/knowledge.tools.js';
 import { LeadTools } from './chat/tools/lead.tools.js';
 import { PricingTools } from './chat/tools/pricing.tools.js';
+import { StudyPlanTools } from './chat/tools/study-plan.tools.js';
 import { ToolRegistry } from './chat/tools/tool-registry.service.js';
 import { TurnOrchestrator } from './chat/turn.orchestrator.js';
 import { LlmService } from './llm/llm.service.js';
@@ -59,6 +61,9 @@ import { AdminChatSessionsService } from './sessions/admin-chat-sessions.service
     AdmissionsModule,
     PricingModule,
     FxModule,
+    // 2G-19: the recommendation the assistant gives after one question is the
+    // `/plan` answer, not a second calculation of it.
+    StudyPlanModule,
     // The one module the assistant *writes* through: a chat-born lead goes down
     // the same path the website's form does, so the dedupe window, the Meta
     // conversion and the staff notification are not reimplemented (§6.3).
@@ -83,6 +88,7 @@ import { AdminChatSessionsService } from './sessions/admin-chat-sessions.service
     CatalogTools,
     AdmissionsTools,
     PricingTools,
+    StudyPlanTools,
     KnowledgeTools,
     LeadTools,
     ToolRegistry,

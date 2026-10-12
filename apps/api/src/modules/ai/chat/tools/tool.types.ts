@@ -38,7 +38,7 @@ export interface ToolContext {
  * the mappers below build those shapes and this type carries them untyped.
  */
 export interface ChatCard {
-  type: 'universities' | 'university' | 'programs' | 'intakes' | 'pricing' | 'fx';
+  type: 'universities' | 'university' | 'programs' | 'intakes' | 'pricing' | 'fx' | 'study_plan';
   data: unknown;
 }
 

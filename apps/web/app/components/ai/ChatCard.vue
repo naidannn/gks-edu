@@ -179,6 +179,65 @@ function intakeTerm(year: number, month: number): string {
     </footer>
   </article>
 
+  <!-- A first recommendation: when, where, how much (2G-19) -->
+  <article v-else-if="card.type === 'study_plan'" class="ai-card ai-card--list">
+    <header class="ai-card__head">
+      <DsIcon name="map" :size="15" />
+      <span>Танд санал болгох төлөвлөгөө</span>
+    </header>
+    <div class="ai-card__plan-path">
+      <span v-for="(stage, index) in card.data.stages" :key="index" class="ai-card__plan-stage">
+        <DsIcon v-if="index > 0" name="arrow-right" :size="13" />
+        <strong>{{ stage.titleMn }}</strong>
+        <span>
+          {{ intakeTerm(stage.year, stage.month) }}<template v-if="stage.durationMonths"> · {{ stage.durationMonths }} сар</template><template v-if="stage.estimated"> · тооцоо</template>
+        </span>
+      </span>
+      <span v-if="card.data.registerBy" class="ai-card__plan-deadline">
+        Бүртгэл {{ formatNumericDateUtc(card.data.registerBy) }} хүртэл
+        <DsBadge :tone="deadlineCountdownTone(card.data.daysToRegister)">
+          {{ deadlineCountdownLabel(card.data.daysToRegister) }}
+        </DsBadge>
+      </span>
+    </div>
+    <p v-if="card.data.schools.length" class="ai-card__plan-caption">
+      {{ card.data.schoolsAfterPrep ? 'Хэлний бэлтгэлийн дараа элсэх сургуулиуд' : 'Одоо мэдүүлж болох сургуулиуд' }}
+    </p>
+    <NuxtLink
+      v-for="school in card.data.schools"
+      :key="school.slug"
+      :to="`/universities/${school.slug}`"
+      class="ai-card__row"
+    >
+      <img v-if="school.logoPath" :src="school.logoPath" alt="" class="ai-card__logo ai-card__logo--sm" loading="lazy">
+      <span v-else class="ai-card__logo ai-card__logo--sm ai-card__logo--blank">{{ initials(school.nameMn) }}</span>
+      <span class="ai-card__row-main">
+        <strong>{{ school.nameMn }}</strong>
+        <span>{{ [school.cityMn, school.programMn].filter(Boolean).join(' · ') }}</span>
+      </span>
+      <span class="ai-card__price">
+        <template v-if="school.tuitionPerYearMnt">
+          <strong>{{ formatMntMillions(school.tuitionPerYearMnt, school.tuitionPerYearMnt) }}</strong>
+          <span>жилд · {{ formatKrw(school.tuitionPerYearKrw) }}</span>
+        </template>
+        <span v-else class="ai-card__unknown">{{ UNKNOWN_LABEL }}</span>
+      </span>
+    </NuxtLink>
+    <div v-if="card.data.firstYearMinMnt || card.data.firstYearMaxMnt" class="ai-card__plan-total">
+      <span>Эхний жилийн нийт зардал</span>
+      <strong>{{ formatMntMillions(card.data.firstYearMinMnt, card.data.firstYearMaxMnt) }}</strong>
+      <small>Сургалт, амьжиргаа, үйлчилгээ · ₩1 = {{ card.data.krwToMnt.toFixed(2) }}₮</small>
+    </div>
+    <footer class="ai-card__foot">
+      <NuxtLink :to="card.data.planUrl" class="ai-card__link">
+        Бүтэн төлөвлөгөө <DsIcon name="arrow-right" :size="14" />
+      </NuxtLink>
+      <NuxtLink :to="consultationLink()" class="ai-card__link ai-card__link--quiet">
+        Зөвлөгөө авах
+      </NuxtLink>
+    </footer>
+  </article>
+
   <!-- Exchange rate: one line, it is a fact rather than a choice -->
   <p v-else-if="card.type === 'fx'" class="ai-card ai-card--line">
     <DsIcon name="banknote" :size="15" />
@@ -319,6 +378,47 @@ a.ai-card__row:hover { background: var(--surface-hover); }
   text-decoration: none;
 }
 .ai-card__cta:hover { background: var(--brand-700); }
+
+.ai-card__plan-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: var(--border-hair) solid var(--line-soft);
+}
+.ai-card__plan-stage { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-caption); color: var(--text-muted); }
+.ai-card__plan-stage strong { font-size: var(--fs-body-sm); color: var(--text-strong); }
+.ai-card__plan-stage .gks-icon { color: var(--text-subtle); }
+.ai-card__plan-deadline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-basis: 100%;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+}
+.ai-card__plan-caption {
+  padding: var(--sp-2) var(--sp-4) 0;
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.ai-card__plan-total {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 2px var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: var(--border-hair) solid var(--line-soft);
+  background: var(--surface-sunken);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+.ai-card__plan-total strong { font-family: var(--font-display); font-size: var(--fs-h4, var(--fs-body)); color: var(--text-strong); white-space: nowrap; }
+.ai-card__plan-total small { grid-column: 1 / -1; font-size: var(--fs-micro); color: var(--text-subtle); }
 
 .ai-card--line {
   flex-direction: row;

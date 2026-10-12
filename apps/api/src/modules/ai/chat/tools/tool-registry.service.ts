@@ -7,6 +7,7 @@ import { CatalogTools } from './catalog.tools.js';
 import { KnowledgeTools } from './knowledge.tools.js';
 import { LeadTools } from './lead.tools.js';
 import { PricingTools } from './pricing.tools.js';
+import { StudyPlanTools } from './study-plan.tools.js';
 import {
   ToolArgumentError,
   type AiTool,
@@ -62,8 +63,9 @@ export class ToolRegistry {
     pricing: PricingTools,
     knowledge: KnowledgeTools,
     lead: LeadTools,
+    plan: StudyPlanTools,
   ) {
-    const all = [catalog, admissions, pricing, knowledge, lead].flatMap((provider) => provider.tools());
+    const all = [catalog, admissions, pricing, knowledge, lead, plan].flatMap((provider) => provider.tools());
     this.registry = new Map(all.map((tool) => [tool.name, tool]));
   }
 

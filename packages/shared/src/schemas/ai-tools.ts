@@ -32,6 +32,7 @@ export const AI_TOOL_NAMES = [
   'get_service_pricing',
   'get_fx_rate',
   'search_knowledge',
+  'build_study_plan',
 ] as const;
 
 export type AiToolName = (typeof AI_TOOL_NAMES)[number];
@@ -96,6 +97,22 @@ export const searchKnowledgeArgsSchema = z.object({
     .optional(),
 });
 
+/**
+ * 2G-19 — the `/plan` answer as one call. Only the goal is required: everything
+ * else defaults (no Korean, any subject, any city), because asking for it first
+ * is what made visitors leave before the recommendation arrived.
+ */
+export const buildStudyPlanArgsSchema = z.object({
+  goal: programLevelSchema,
+  education: z.enum(['SECONDARY_SCHOOL', 'VOCATIONAL', 'BACHELOR', 'MASTER', 'PHD']).optional(),
+  topik: z.number().int().min(0).max(6).optional(),
+  field: z.string().max(80).optional(),
+  region: z.string().max(60).optional(),
+  maxTuitionPerYearMnt: z.number().int().min(0).optional(),
+  /** "Хямд хувилбар" with no figure — the tool picks the ceiling. */
+  cheaper: z.boolean().optional(),
+});
+
 export const aiToolArgsSchemas = {
   search_universities: searchUniversitiesArgsSchema,
   get_university: getUniversityArgsSchema,
@@ -104,6 +121,7 @@ export const aiToolArgsSchemas = {
   get_service_pricing: getServicePricingArgsSchema,
   get_fx_rate: getFxRateArgsSchema,
   search_knowledge: searchKnowledgeArgsSchema,
+  build_study_plan: buildStudyPlanArgsSchema,
 } satisfies Record<AiToolName, z.ZodType>;
 
 /* ── Cards ─────────────────────────────────────────────────────────────────── */
@@ -180,12 +198,46 @@ export interface AiFxCard {
   source: string;
 }
 
+/**
+ * A first recommendation: when, which schools in which city, and the first
+ * year in tögrög (2G-19). Built from the same `/study-plan` answer the planner
+ * page shows, so "see the whole plan" opens the same figures.
+ */
+export interface AiStudyPlanCard {
+  goal: ProgramLevel;
+  /** One stage, or language prep first and then the degree. */
+  stages: { titleMn: string; year: number; month: number; durationMonths: number | null; estimated: boolean }[];
+  /** Our deadline for the first stage, ISO — never the school's. */
+  registerBy: string | null;
+  daysToRegister: number | null;
+  /** True when the schools are the ones open *after* language prep. */
+  schoolsAfterPrep: boolean;
+  schools: {
+    slug: string;
+    nameMn: string;
+    cityMn: string | null;
+    logoPath: string | null;
+    programMn: string;
+    tuitionPerYearKrw: number | null;
+    tuitionPerYearMnt: number | null;
+  }[];
+  /** Matching programmes in the catalogue, of which `schools` are the first. */
+  total: number;
+  firstYearMinMnt: number | null;
+  firstYearMaxMnt: number | null;
+  /** MNT per 1 KRW, the rate the figures were converted at. */
+  krwToMnt: number;
+  /** `/plan?…` with the same answers. */
+  planUrl: string;
+}
+
 export type AiChatCard =
   | { type: 'universities'; data: { items: AiUniversityCard[]; total: number; searchUrl: string } }
   | { type: 'university'; data: AiUniversityCard & { url: string } }
   | { type: 'programs'; data: { items: AiProgramCard[]; total: number; searchUrl: string } }
   | { type: 'intakes'; data: { items: AiIntakeCard[]; total: number } }
   | { type: 'pricing'; data: AiPricingCard }
-  | { type: 'fx'; data: AiFxCard };
+  | { type: 'fx'; data: AiFxCard }
+  | { type: 'study_plan'; data: AiStudyPlanCard };
 
 export type AiChatCardType = AiChatCard['type'];

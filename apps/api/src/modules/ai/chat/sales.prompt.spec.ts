@@ -122,25 +122,24 @@ describe('salesPrompt', () => {
     expect(text).toContain('Хоёрыг хамт бүү тавь');
   });
 
-  it('guides a visitor who knows nothing instead of quizzing them', () => {
+  it('recommends from what it knows instead of quizzing a visitor who knows nothing', () => {
     const text = salesPrompt(AccessLevel.PUBLIC)!;
 
-    // Real thread: "Бакалаврын мэдээлэл авах" got a school list, then "which city?".
+    // 2G-19: field → GPA → level → budget, one per turn, and people left before
+    // the recommendation. Now: the plan as soon as the level is known.
     expect(text).toContain('юу ч мэдэхгүй');
-    expect(text).toContain('сургуулийн жагсаалт бүү асга');
-    // The ladder, in order: goal, field, city, only then named schools.
-    const order = ['**Зорилго:**', '**Юунд дуртай:**', '**Хот:**', '**Нэр дэвшигчид:**'].map(
-      (step) => text.indexOf(step),
-    );
-    expect(order.every((index) => index >= 0)).toBe(true);
-    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(text).toContain('Санал хамгийн хожимдоо хоёр дахь хариултанд');
+    expect(text).toContain('юу ч бүү асуу, тэр ээлжид л `build_study_plan`');
+    // The order: the plan, then the questions that refine it.
+    expect(text.indexOf('**Санал өгөх хариулт**')).toBeLessThan(text.indexOf('**Нарийвчлах асуулт**'));
   });
 
-  it('offers numbered choices and never repeats a question the visitor could not answer', () => {
+  it('asks the refining questions after the plan, one at a time, and the GPA only for scholarships', () => {
     const text = salesPrompt(AccessLevel.PUBLIC)!;
 
-    expect(text).toContain('"2" гэж бичихэд л хангалттай');
-    expect(text).toContain('ижил асуултыг давтахгүй');
+    expect(text).toContain('Ээлж бүрт нэгээс илүүгүй, үргэлж санал өгсний **дараа**');
+    expect(text).toContain('Голчийг зөвхөн тэтгэлэг');
+    expect(text).toContain('Ижил асуултыг хоёр дахь удаа бүү тав');
   });
 
   it('keeps city comparisons to what the tools return', () => {
@@ -240,13 +239,22 @@ describe('layers that must agree', () => {
     expect(system).not.toContain('2–4 өгүүлбэр');
   });
 
-  it('lets the sales layer steer with a choice before the capture threshold', () => {
+  it('recommends before it asks for anything personal', () => {
     const system = build({ turns: 1, askAfter: 3, contactSettled: false });
 
-    // The ban is on personal details, not on "bachelor or master?".
-    expect(system).toContain('хувийн мэдээллийг');
-    expect(system).toContain('чиглүүлэх сонголтын асуулт');
-    expect(system).not.toContain('юу ч бүү асуу');
+    // 2G-19: a plan within two answers, and the GPA/budget questions only after it.
+    expect(system).toContain('Эхлээд санал, дараа нь нарийвчлал');
+    expect(system).toContain('build_study_plan');
+    expect(system).toContain('саналын **өмнө хэзээ ч бүү асуу**');
+    expect(system).not.toContain('Чиглүүлэх шат');
+  });
+
+  it('takes the budget choices from the tool rather than inventing amounts', () => {
+    const system = build({ turns: 4, askAfter: 3, contactSettled: false });
+
+    // A ₮ figure the model typed itself is dropped by the guard.
+    expect(system).toContain('`төсвийн_сонголт`');
+    expect(system).not.toMatch(/\d+ сая₮ хүртэл/);
   });
 
   it('asks for one thing per turn once capture opens', () => {

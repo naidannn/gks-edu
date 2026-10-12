@@ -40,7 +40,7 @@ const sessionMessageLimit = ref('40');
 const sessionTokenBudget = ref('60000');
 const dailyTokenBudget = ref('1000000');
 const leadCaptureAfterMessages = ref('3');
-const guestMessageLimit = ref('5');
+const guestMessageLimit = ref('15');
 const greeting = ref('');
 const persona = ref('');
 

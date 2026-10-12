@@ -25,29 +25,28 @@ function prompt(
 }
 
 describe('the capture layer', () => {
-  it('forbids asking before the office’s threshold', () => {
+  it('holds the phone back before the office’s threshold', () => {
     const system = prompt({ turns: 1, askAfter: 3, contactSettled: false });
 
-    expect(system).toContain('хувийн мэдээллийг');
-    // And the phone must not even be mentioned yet.
+    expect(system).toContain('утасны');
     expect(system).not.toContain('create_consultation_request`-ыг дууд');
   });
 
-  it('opens one question at a time once the threshold is passed', () => {
+  it('offers the call once the threshold is passed, one request per turn', () => {
     const system = prompt({ turns: 3, askAfter: 3, contactSettled: false });
 
-    expect(system).toContain('зөвхөн нэг');
     expect(system).toContain('create_consultation_request');
+    expect(system).toContain('нэг л хүсэлт');
   });
 
-  it('names only the fields still missing', () => {
-    const system = prompt(
-      { turns: 4, askAfter: 3, contactSettled: false },
-      { educationLevel: 'BACHELOR', gpa: 3.5 },
-    );
+  // 2G-19: 182 of 935 production answers asked for a GPA. The layer used to
+  // list the missing fields and ask for one a turn; now it only records them.
+  it('never turns the missing profile fields into questions', () => {
+    const system = prompt({ turns: 6, askAfter: 3, contactSettled: false }, { educationLevel: 'BACHELOR' });
 
-    expect(system).toContain('koreanLevel, goalLevel, budget, timing');
-    expect(system).not.toContain('educationLevel, gpa');
+    expect(system).toContain('асуулга маягаар **бүү** асуу');
+    expect(system).not.toContain('Дутуу байгаа');
+    expect(system).not.toContain('koreanLevel, goalLevel, budget, timing');
   });
 
   it('closes the subject once the number is settled, either way', () => {
@@ -55,22 +54,6 @@ describe('the capture layer', () => {
 
     expect(settled).toContain('Утасны асуудал шийдэгдсэн');
     expect(settled).not.toContain('Зөвлөх залгаад');
-  });
-
-  it('says the profile is complete rather than listing nothing', () => {
-    const system = prompt(
-      { turns: 8, askAfter: 3, contactSettled: true },
-      {
-        educationLevel: 'BACHELOR',
-        gpa: 3.5,
-        koreanLevel: 'TOPIK 4',
-        goalLevel: 'MASTER',
-        budget: 'UPTO_20M',
-        timing: 'NEXT_YEAR',
-      },
-    );
-
-    expect(system).toContain('Профайл бүрэн');
   });
 
   it('is absent when the tool is not on this caller’s level', () => {

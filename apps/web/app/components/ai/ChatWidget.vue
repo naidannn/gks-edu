@@ -129,7 +129,6 @@ function rate(
         <NuxtLink :to="fallbackLink.to" @click="open = false">{{ fallbackLink.label }}</NuxtLink>
       </p>
 
-      <AiChatQuota v-if="!auth.isAuthenticated" :guest="chat.guest.value" :held="chat.held.value" />
       <AiChatComposer
         ref="composer"
         :disabled="chat.sending.value || Boolean(chat.held.value)"

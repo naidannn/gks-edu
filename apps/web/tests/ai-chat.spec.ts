@@ -88,6 +88,31 @@ describe('aiNextSteps', () => {
     }
   });
 
+  // 2G-19: after the plan, the questions that refine it are one tap each — the
+  // fourth and fifth question, asked after the answer rather than before it.
+  it('after a study plan, offers the refinements as taps and a person to reach', () => {
+    const plan: AiChatCard = {
+      type: 'study_plan',
+      data: {
+        goal: 'BACHELOR',
+        stages: [{ titleMn: 'Бакалавр', year: 2027, month: 3, durationMonths: null, estimated: false }],
+        registerBy: null,
+        daysToRegister: null,
+        schoolsAfterPrep: false,
+        schools: [],
+        total: 0,
+        firstYearMinMnt: null,
+        firstYearMaxMnt: null,
+        krwToMnt: 2.5,
+        planUrl: '/plan?goal=BACHELOR',
+      },
+    };
+    const steps = aiNextSteps([plan], { signedIn: false });
+
+    expect(steps.map((step) => step.label)).toEqual(['Хямд хувилбар', 'Өөр хот', 'Тэтгэлэг', 'Зөвлөгөө авах']);
+    expect(steps.filter((step) => step.kind === 'link')).toHaveLength(1);
+  });
+
   it('only names one school in the start link when every round belongs to it', () => {
     const intake = (slug: string) => ({
       id: `i-${slug}`,

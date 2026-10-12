@@ -210,6 +210,32 @@ function stepsFor(card: AiChatCard, context: AiChatContext): AiChatAction[] {
         },
       ];
 
+    case 'study_plan':
+      // The plan is the first answer; these are the questions that refine it
+      // (2G-19). Asked before the plan they were an interrogation; after it,
+      // each one is a tap that visibly changes the schools and the total.
+      return [
+        {
+          kind: 'ask',
+          label: 'Хямд хувилбар',
+          prompt: 'Илүү хямд зардалтай хувилбар санал болгооч',
+          icon: 'piggy-bank',
+        },
+        {
+          kind: 'ask',
+          label: 'Өөр хот',
+          prompt: 'Өөр хотод сурвал аль сургууль, хэдэн төгрөг болох вэ?',
+          icon: 'map-pin',
+        },
+        {
+          kind: 'ask',
+          label: 'Тэтгэлэг',
+          prompt: 'Эдгээр сургуульд тэтгэлэг авах боломж бий юу?',
+          icon: 'award',
+        },
+        { ...humanLink(context), primary: true },
+      ];
+
     case 'fx':
       return [
         {

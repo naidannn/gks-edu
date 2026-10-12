@@ -145,7 +145,6 @@ function rate(
             @send="send"
           />
         </div>
-        <AiChatQuota v-if="!auth.isAuthenticated" :guest="chat.guest.value" />
 
         <div class="gks-chat-hero__starters">
           <button
@@ -189,7 +188,6 @@ function rate(
           <NuxtLink :to="fallbackLink.to">{{ fallbackLink.label }}</NuxtLink>
         </p>
 
-        <AiChatQuota v-if="!auth.isAuthenticated" :guest="chat.guest.value" :held="chat.held.value" />
         <div class="gks-chat-page__composer">
           <AiChatComposer
             :disabled="chat.sending.value || Boolean(chat.held.value)"

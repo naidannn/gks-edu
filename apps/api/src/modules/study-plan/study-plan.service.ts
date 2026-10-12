@@ -64,7 +64,13 @@ export class StudyPlanService {
     private readonly fx: FxService,
   ) {}
 
-  async build(query: QueryStudyPlanDto) {
+  /**
+   * `schoolsShown`, when given, lists that many *schools* — one programme each —
+   * instead of the first six programmes. The catalogue's order is by school, so
+   * the first six programmes are usually six departments of the top school;
+   * the page can live with that, a three-school recommendation cannot (2G-19).
+   */
+  async build(query: QueryStudyPlanDto, options: { schoolsShown?: number } = {}) {
     const now = new Date();
 
     // A goal the visitor's diploma cannot reach is not an error to throw at
@@ -117,14 +123,16 @@ export class StudyPlanService {
 
     const [items, total, regions, costPrices, goalPrices, living, unlocked, firstMonth, pricing, fxRate] =
       await Promise.all([
-        this.prisma.universityProgram.findMany({
-          where: schoolsWhere,
-          select: PROGRAM_CARD_FIELDS,
-          // Our own recommendation order, exactly as the catalogue opens
-          // (ARCHITECTURE.md §3.1) — `gksRank` orders the plan and never shows in it.
-          orderBy: [{ university: { gksRank: 'asc' } }, { university: { nameMn: 'asc' } }],
-          take: SCHOOLS_SHOWN,
-        }),
+        options.schoolsShown
+          ? this.onePerSchool(schoolsWhere, options.schoolsShown)
+          : this.prisma.universityProgram.findMany({
+              where: schoolsWhere,
+              select: PROGRAM_CARD_FIELDS,
+              // Our own recommendation order, exactly as the catalogue opens
+              // (ARCHITECTURE.md §3.1) — `gksRank` orders the plan and never shows in it.
+              orderBy: [{ university: { gksRank: 'asc' } }, { university: { nameMn: 'asc' } }],
+              take: SCHOOLS_SHOWN,
+            }),
         this.prisma.universityProgram.count({ where: schoolsWhere }),
         this.regionCounts(regionWhere),
         this.priceRange(costWhere, firstLevel),
@@ -254,6 +262,35 @@ export class StudyPlanService {
         },
       ],
     };
+  }
+
+  /**
+   * The first `count` schools in recommendation order that have a matching
+   * programme, and one programme from each — a priced one when the school has
+   * any, because the point of naming it is to say what it costs.
+   */
+  private async onePerSchool(where: Prisma.UniversityProgramWhereInput, count: number) {
+    const schools = await this.prisma.university.findMany({
+      where: { programs: { some: where } },
+      orderBy: [{ gksRank: 'asc' }, { nameMn: 'asc' }],
+      select: { id: true },
+      take: count,
+    });
+
+    const priced: Prisma.UniversityProgramWhereInput = {
+      OR: [{ tuitionPerTermKrw: { not: null } }, { tuitionPerYearKrw: { not: null } }],
+    };
+    const first = (universityId: string, extra: Prisma.UniversityProgramWhereInput[] = []) =>
+      this.prisma.universityProgram.findFirst({
+        where: { AND: [where, { universityId }, ...extra] },
+        select: PROGRAM_CARD_FIELDS,
+        orderBy: { nameMn: 'asc' },
+      });
+
+    const rows = await Promise.all(
+      schools.map(async ({ id }) => (await first(id, [priced])) ?? (await first(id))),
+    );
+    return rows.filter((row): row is NonNullable<typeof row> => row !== null);
   }
 
   /** The easiest Korean-taught door in this match set — the target of the language stage. */
