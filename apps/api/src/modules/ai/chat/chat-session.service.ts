@@ -350,6 +350,35 @@ export class ChatSessionService {
     }));
   }
 
+  /**
+   * Questions this browser has had answered without an account — the guest
+   * allowance's input (2C-15).
+   *
+   * Answers, not questions: a turn the model failed on (a provider outage, the
+   * daily ceiling) stores the question and no answer, and a visitor whose free
+   * question went unanswered has not had it.
+   *
+   * Counted across every conversation the browser started, closed ones too:
+   * per session, "new chat" would be a free reset, and removing a thread from
+   * the list would be another. A session somebody later signed in to carries
+   * their `userId` and drops out — those questions were asked by a person we
+   * now know.
+   *
+   * The browser id is the visitor's own, so clearing storage resets it. That is
+   * accepted: the allowance is an invitation to register, not a paywall, and
+   * the per-IP throttle on the turn endpoint is what holds against a script.
+   */
+  async guestAnswersReceived(anonymousId: string | null): Promise<number> {
+    if (!anonymousId) return 0;
+
+    return this.prisma.chatMessage.count({
+      where: {
+        role: ChatRole.ASSISTANT,
+        session: { anonymousId, userId: null, channel: ChatChannel.WEB_WIDGET },
+      },
+    });
+  }
+
   async close(sessionId: string): Promise<void> {
     await this.prisma.chatSession.update({
       where: { id: sessionId },

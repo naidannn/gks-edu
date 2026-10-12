@@ -2911,6 +2911,11 @@ model AiAssistantConfig {
   /// Turns before the assistant asks for the visitor's situation once (§6.2).
   leadCaptureAfterMessages Int @default(3)
 
+  /// 2C-15 — questions a visitor may ask before signing in. The next one is
+  /// held behind a sign-up card and sent once they have an account. Counted per
+  /// browser across conversations; 0 means sign in before the first question.
+  guestMessageLimit Int @default(2)
+
   greeting String @default("Сайн байна уу. Солонгост суралцах талаар юу ч асууж болно — сургууль, хугацаа, материал, тэтгэлэг.")
   persona  String @default("Чи GKS EDU-ийн туслах. Нэргүй, хүн шиг дүр зохиохгүй, хэрэглэгчийг «та» гэж дуудна. Найрсаг, товч, монголоор хариулна.")
 

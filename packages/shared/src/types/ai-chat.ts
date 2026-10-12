@@ -43,7 +43,29 @@ export type AiStreamEvent =
   | { type: 'card'; card: AiChatCard }
   | { type: 'sources'; sources: AiSource[] }
   | { type: 'done'; messageId: string; grounded: boolean; truncated: boolean }
-  | { type: 'error'; code: string; message: string; fallback: 'messenger' | 'consultation' };
+  | { type: 'error'; code: string; message: string; fallback: 'messenger' | 'consultation' }
+  /**
+   * 2C-15 — what a signed-out visitor has left, after each of their turns. Sent
+   * by the web endpoint only, not by the orchestrator. Its companion is an
+   * `error` with code `auth_required`, which replaces a turn past the allowance.
+   */
+  | { type: 'quota'; remaining: number; limit: number };
+
+/** The error code that means "sign in and this question will be answered". */
+export const AI_AUTH_REQUIRED = 'auth_required';
+
+/** `GET /ai/chat/status`. `guest` is null for somebody signed in. */
+export interface AiChatStatus {
+  enabled: boolean;
+  greeting: string | null;
+  guest: AiGuestAllowance | null;
+}
+
+/** Free questions before the sign-up card (2C-15). */
+export interface AiGuestAllowance {
+  limit: number;
+  remaining: number;
+}
 
 /** What `POST /ai/chat/sessions` answers with. */
 export interface AiSessionStart {
@@ -98,6 +120,8 @@ export interface AiAssistantConfigPayload {
   sessionTokenBudget: number;
   dailyTokenBudget: number;
   leadCaptureAfterMessages: number;
+  /** 2C-15 — free questions before the sign-up card; 0 = sign in first. */
+  guestMessageLimit: number;
   greeting: string;
   persona: string;
   ctaRules: unknown;
@@ -114,4 +138,118 @@ export interface AiChatSessionSummary {
   /** The opening question, on one line, at most 80 characters. */
   title: string;
   lastMessageAt: string;
+}
+
+// ─── 2E-04: the office's view of the assistant's conversations ────────────────
+
+export type AiSessionChannel = 'WEB_WIDGET' | 'PORTAL' | 'ADMIN_COPILOT' | 'FACEBOOK';
+
+export type AiChatOutcome = 'NONE' | 'LEAD_CREATED' | 'HANDOFF' | 'CONTRACT_STARTED';
+
+/** Tabs on `/admin/ai/sessions`. */
+export type AiAdminSessionScope = 'ALL' | 'LIVE' | 'USERS' | 'GUESTS' | 'LEADS' | 'DISLIKED';
+
+/** Which surface; `WEB` is the site and the cabinet together, and the default. */
+export type AiAdminChannelFilter = 'WEB' | 'WEB_WIDGET' | 'PORTAL' | 'FACEBOOK' | 'ALL';
+
+export interface AiAdminSessionPerson {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  client: { id: string; code: string } | null;
+}
+
+export interface AiAdminSessionItem {
+  id: string;
+  code: string;
+  channel: AiSessionChannel;
+  status: AiSessionStatus;
+  outcome: AiChatOutcome;
+  accessLevel: 'PUBLIC' | 'REGISTERED' | 'CONTRACTED' | 'INTERNAL';
+  anonymousId: string | null;
+  /** The opening question. */
+  title: string;
+  /** The visitor's half of `messageCount`. */
+  questions: number;
+  messageCount: number;
+  costUsd: number;
+  landingPage: string | null;
+  source: string | null;
+  /** Active, and somebody wrote in the last ten minutes. */
+  live: boolean;
+  lastMessageAt: string;
+  createdAt: string;
+  user: AiAdminSessionPerson | null;
+  lead: { id: string; firstName: string; lastName: string; phone: string } | null;
+  feedback: { up: number; down: number };
+}
+
+export interface AiAdminSessionCounts {
+  all: number;
+  live: number;
+  users: number;
+  guests: number;
+  leads: number;
+  disliked: number;
+}
+
+export interface AiAdminSessionListResponse {
+  items: AiAdminSessionItem[];
+  meta: { total: number; page: number; limit: number };
+  counts: AiAdminSessionCounts;
+}
+
+/** One tool run as the orchestrator logs it (`toolLog`). */
+export interface AiAdminToolCall {
+  ref?: string;
+  name: string;
+  title?: string;
+  arguments?: unknown;
+  ok?: boolean;
+  durationMs?: number;
+}
+
+export interface AiAdminTranscriptMessage {
+  id: string;
+  role: 'USER' | 'ASSISTANT' | 'SYSTEM' | 'TOOL';
+  content: string;
+  citations: AiSource[];
+  cards: AiChatCard[];
+  toolCalls: AiAdminToolCall[];
+  model: string | null;
+  grounded: boolean | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  latencyMs: number | null;
+  createdAt: string;
+  feedback: { value: AiFeedbackValue; reason: AiFeedbackReason | null; comment: string | null } | null;
+}
+
+export interface AiAdminSessionDetail extends AiAdminSessionItem {
+  profile: Record<string, unknown>;
+  intents: string[];
+  summary: string | null;
+  promptTokens: number;
+  completionTokens: number;
+  case: { id: string; code: string } | null;
+  conversationId: string | null;
+  messages: AiAdminTranscriptMessage[];
+  /** The same person's other conversations — by account, else by browser. */
+  others: AiAdminSessionItem[];
+}
+
+export interface AiAdminPersonRow {
+  kind: 'USER' | 'GUEST';
+  anonymousId: string | null;
+  user: (AiAdminSessionPerson & { role: string }) | null;
+  sessions: number;
+  messages: number;
+  firstChatAt: string;
+  lastChatAt: string;
+}
+
+export interface AiAdminPeopleResponse {
+  items: AiAdminPersonRow[];
+  meta: { total: number; page: number; limit: number };
 }

@@ -29,8 +29,14 @@ onMounted(() => {
 });
 onBeforeUnmount(() => messenger.disconnect());
 
+/**
+ * `tab: false` keeps an entry out of the phone tab bar. The assistant (2C-16)
+ * is the one so marked: on a phone it already floats in the corner of every
+ * screen and leads the dashboard, so a sixth tab would only squeeze the five.
+ */
 const NAV = [
   { to: '/app', label: 'Хяналтын самбар', short: 'Самбар', icon: 'layout-dashboard' },
+  { to: '/app/assistant', label: 'AI зөвлөх', short: 'AI', icon: 'sparkles', tab: false, badge: 'Шинэ' },
   { to: '/messages', label: 'Зөвлөхтэй чатлах', short: 'Чат', icon: 'message-circle' },
   { to: '/app/cases', label: 'Миний үйлчилгээ', short: 'Үйлчилгээ', icon: 'folder-open' },
   { to: '/app/profile', label: 'Миний мэдээлэл', short: 'Мэдээлэл', icon: 'user-round' },
@@ -38,6 +44,8 @@ const NAV = [
 ];
 
 /** The chat is the only entry that carries a count; the rest carry a dot or nothing. */
+const TABS = NAV.filter((item) => item.tab !== false);
+
 const unreadFor = (to: string): number => (to === '/messages' ? messenger.unread.value.threads : 0);
 
 function isActive(to: string): boolean {
@@ -79,6 +87,7 @@ async function onLogout() {
             {{ unreadFor(item.to) }}
           </span>
           <span v-else-if="item.to === '/app/profile' && needsProfile" class="gks-portal__dot" aria-label="Дутуу мэдээлэл" />
+          <span v-else-if="item.badge" class="gks-portal__new">{{ item.badge }}</span>
         </NuxtLink>
       </nav>
 
@@ -137,7 +146,7 @@ async function onLogout() {
 
     <nav class="gks-portal__tabbar" aria-label="Хэрэглэгчийн цэс">
       <NuxtLink
-        v-for="item in NAV"
+        v-for="item in TABS"
         :key="item.to"
         :to="item.to"
         class="gks-portal__tab"
@@ -209,6 +218,15 @@ async function onLogout() {
 }
 .gks-portal__nav-link:hover { background: var(--surface-hover); color: var(--text-strong); }
 .gks-portal__nav-link--active { background: var(--surface-selected); color: var(--brand-700); font-weight: var(--fw-semibold); }
+.gks-portal__new {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-100);
+  color: var(--brand-700);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+}
 .gks-portal__dot { margin-left: auto; width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--red-700); }
 .gks-portal__count {
   margin-left: auto;

@@ -5,6 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Req,
   Res,
   ServiceUnavailableException,
@@ -13,7 +14,7 @@ import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { Public } from '../../../common/decorators/public.decorator.js';
-import { ChatChannel } from '../../../prisma/client.js';
+import { ChatChannel, type ChatSession } from '../../../prisma/client.js';
 import { AccessLevelService } from '../access-level.js';
 import { AiConfigService } from '../ai-config.service.js';
 import { ChatSessionService } from './chat-session.service.js';
@@ -28,6 +29,19 @@ import { TurnOrchestrator, type TurnEvent } from './turn.orchestrator.js';
 
 /** nginx closes an idle upstream at `proxy_read_timeout`; a comment keeps it awake. */
 const HEARTBEAT_MS = 25_000;
+
+/**
+ * Frames only the web endpoint sends — the guest allowance (2C-15). Not part of
+ * `TurnEvent`, because the orchestrator also answers Facebook, where nobody
+ * signs in.
+ *
+ * `quota` follows every guest turn with what is left; `error` with code
+ * `auth_required` replaces a turn the allowance does not cover, and the widget
+ * answers it with the sign-up card rather than an apology.
+ */
+type ChatFrame = TurnEvent | { type: 'quota'; remaining: number; limit: number };
+
+const AUTH_REQUIRED = 'auth_required';
 
 /**
  * The chat endpoints (2B-09, AI-ASSISTANT.md §12.1).
@@ -66,9 +80,20 @@ export class ChatController {
   @Get('status')
   @Public()
   @ApiOperation({ summary: 'Whether the assistant is switched on' })
-  async status() {
+  async status(@Query('anonymousId') anonymousId: string | undefined, @Req() request: Request) {
     const config = await this.aiConfig.get();
-    return { enabled: config.enabled, greeting: config.enabled ? config.greeting : null };
+    const base = { enabled: config.enabled, greeting: config.enabled ? config.greeting : null };
+
+    // The guest allowance, so the composer can say "1 асуулт үлдлээ" before the
+    // visitor types rather than after. Somebody signed in has none to count.
+    const user = await this.optionalUser.resolve(request);
+    if (user || !config.enabled) return { ...base, guest: null };
+
+    const asked = await this.sessions.guestAnswersReceived(cleanAnonymousId(anonymousId));
+    return {
+      ...base,
+      guest: { limit: config.guestMessageLimit, remaining: Math.max(config.guestMessageLimit - asked, 0) },
+    };
   }
 
   @Post('sessions')
@@ -209,6 +234,12 @@ export class ChatController {
     // mid-conversation changes what may be retrieved (AI-ASSISTANT.md §4.5).
     const level = await this.accessLevel.resolve(user);
 
+    // The guest allowance (2C-15). Decided here rather than in the browser,
+    // which only mirrors it: a widget is a suggestion, this is the rule. The
+    // question is not stored — the widget keeps it and sends it again once the
+    // visitor has an account, so it is asked once, by somebody we know.
+    const guest = user ? null : await this.guestAllowance(session);
+
     response.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     response.setHeader('Cache-Control', 'no-cache, no-transform');
     response.setHeader('Connection', 'keep-alive');
@@ -221,6 +252,17 @@ export class ChatController {
     // otherwise the tokens are spent on an answer nobody will read.
     request.on('close', () => controller.abort());
 
+    if (guest && guest.remaining <= 0) {
+      write(response, {
+        type: 'error',
+        code: AUTH_REQUIRED,
+        message: 'Үргэлжлүүлэхийн тулд бүртгүүлнэ үү — асуултад тань шууд хариулна.',
+        fallback: 'consultation',
+      });
+      response.end();
+      return;
+    }
+
     const heartbeat = setInterval(() => response.write(': ping\n\n'), HEARTBEAT_MS);
 
     try {
@@ -231,6 +273,11 @@ export class ChatController {
         signal: controller.signal,
       })) {
         write(response, event);
+      }
+
+      if (guest) {
+        const asked = await this.sessions.guestAnswersReceived(session.anonymousId);
+        write(response, { type: 'quota', limit: guest.limit, remaining: Math.max(guest.limit - asked, 0) });
       }
     } catch (error) {
       write(response, {
@@ -259,9 +306,28 @@ export class ChatController {
     await this.sessions.close(session.id);
     return { closed: true };
   }
+
+  /**
+   * What a signed-out caller has left, or `null` when the allowance does not
+   * apply. Only the public widget is metered: the cabinet's widget has a
+   * signed-in user by construction, and a session with no browser id predates
+   * the allowance and is left alone rather than locked.
+   */
+  private async guestAllowance(session: ChatSession): Promise<{ limit: number; remaining: number } | null> {
+    if (session.channel !== ChatChannel.WEB_WIDGET || !session.anonymousId) return null;
+
+    const config = await this.aiConfig.get();
+    const asked = await this.sessions.guestAnswersReceived(session.anonymousId);
+    return { limit: config.guestMessageLimit, remaining: config.guestMessageLimit - asked };
+  }
+}
+
+/** The widget's browser id is 32 hex characters; anything else counts nothing. */
+function cleanAnonymousId(value: string | undefined): string | null {
+  return value && /^[a-f0-9]{16,64}$/i.test(value) ? value : null;
 }
 
 /** One SSE frame. Named events, so the client can switch on `event:`. */
-function write(response: Response, event: TurnEvent): void {
+function write(response: Response, event: ChatFrame): void {
   response.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
 }

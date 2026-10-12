@@ -65,6 +65,8 @@ const NAV: NavItem[] = [
 const TABS = [
   { to: '/', label: 'Нүүр', icon: 'house', match: null },
   { to: '/universities', label: 'Сургууль', icon: 'graduation-cap', match: '/universities' },
+  // The assistant sits in the middle, where the thumb rests (2C-14).
+  { to: '/chat', label: 'AI зөвлөх', icon: 'sparkles', match: '/chat' },
   { to: '/admissions', label: 'Элсэлт', icon: 'calendar-days', match: '/admissions' },
 ];
 
@@ -300,6 +302,18 @@ async function onLogout() {
         </div>
 
         <div class="gks-appbar__actions">
+          <!-- The assistant, one tap from every page (2C-14). Text where the bar
+               has room, the icon alone where it does not, and gone below 900px,
+               where the tab bar carries it. -->
+          <NuxtLink
+            to="/chat"
+            class="gks-appbar__ai"
+            :class="{ 'gks-appbar__ai--active': route.path === '/chat' }"
+            aria-label="AI зөвлөх"
+          >
+            <DsIcon name="sparkles" :size="16" />
+            <span class="gks-appbar__ai-text">AI зөвлөх</span>
+          </NuxtLink>
           <template v-if="auth.isAuthenticated">
             <NuxtLink to="/app" class="gks-appbar__account">
               <DsIcon name="folder-open" :size="16" />
@@ -707,6 +721,34 @@ async function onLogout() {
    did not do it — people could not tell where their own pages were. This is
    the same accent shape "Бүртгүүлэх" has for everybody else, in the same
    place, so the bar always has exactly one bright thing in it. */
+.gks-appbar__ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-sm);
+  padding: 0 var(--sp-3);
+  border: var(--border-hair) solid var(--brand-200);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--brand-050), rgba(124, 58, 237, .08));
+  color: var(--brand-700);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: var(--transition-control);
+}
+.gks-appbar__ai .gks-icon { color: #7c3aed; }
+.gks-appbar__ai:hover,
+.gks-appbar__ai--active { border-color: var(--brand-400); color: var(--brand-800); }
+/* The 1025–1180 band already ran within ~27px of overflowing: icon only. */
+@media (min-width: 1025px) and (max-width: 1180px) {
+  .gks-appbar__ai { padding: 0; width: var(--control-sm); justify-content: center; }
+  .gks-appbar__ai-text { display: none; }
+}
+@media (max-width: 900px) {
+  .gks-appbar__ai { display: none; }
+}
+
 .gks-appbar__account {
   display: inline-flex;
   align-items: center;

@@ -1,6 +1,9 @@
+import { AI_AUTH_REQUIRED } from '@gks/shared';
 import type {
   AiChatCard,
   AiChatChannel,
+  AiChatStatus,
+  AiGuestAllowance,
   AiChatMessageItem,
   AiChatSessionSummary,
   AiChatTranscript,
@@ -47,6 +50,12 @@ const ANON_KEY = 'gks:ai:anon';
 const HELD_KEY = 'gks:ai:held';
 /** The server keeps fifty; holding more proves nothing extra. */
 const MAX_HELD = 50;
+/**
+ * The question a visitor typed past the guest allowance (2C-15). Kept across
+ * the trip to `/register` and back — a full page load if they pick email — so
+ * it can be sent the moment they have an account.
+ */
+const HELD_QUESTION_KEY = 'gks:ai:heldQuestion';
 
 /** A message on screen, which is a stored one plus whatever is still arriving. */
 export interface AiChatBubble {
@@ -88,6 +97,12 @@ export function useAiChat() {
   /** Past conversations, newest first — the `/chat` sidebar (2C-13). */
   const history = useState<AiChatSessionSummary[]>('ai:history', () => []);
   const historyLoading = useState<boolean>('ai:historyLoading', () => false);
+  /** Free questions left for a signed-out visitor; `null` once signed in (2C-15). */
+  const guest = useState<AiGuestAllowance | null>('ai:guest', () => null);
+  /** The question waiting behind the sign-up card, or `null` when there is no card. */
+  const held = useState<string | null>('ai:held', () => null);
+  /** Set while a held question is being sent, so two mounted surfaces cannot both send it. */
+  const resuming = useState<boolean>('ai:resuming', () => false);
 
   // ─── the guest's own identifiers ────────────────────────────────────────────
 
@@ -195,8 +210,15 @@ export function useAiChat() {
   /** Is there an assistant at all? Answered before the widget draws itself. */
   async function status(): Promise<boolean> {
     try {
-      const result = await api.get<{ enabled: boolean; greeting: string | null }>('/ai/chat/status');
+      // The browser id rides along so a returning guest's allowance is counted
+      // across the conversations they already had (2C-15).
+      const result = await api.get<AiChatStatus>('/ai/chat/status', {
+        query: auth.isAuthenticated ? {} : { anonymousId: anonymousId() },
+      });
       greeting.value = result.greeting;
+      guest.value = result.guest;
+      // A held question survives a reload; so must the card that explains it.
+      if (!auth.isAuthenticated) held.value = stored(HELD_QUESTION_KEY);
       return result.enabled;
     } catch {
       // The API being unreachable is not the same as the assistant being off,
@@ -251,6 +273,11 @@ export function useAiChat() {
    * can see who is asking.
    */
   async function restore(): Promise<void> {
+    // A turn in flight is the freshest copy of the thread there is: a question
+    // sent from the landing page or the dashboard is still streaming when the
+    // full screen mounts, and reloading now would wipe the half-written answer.
+    if (sending.value) return;
+
     const existing = stored(SESSION_KEY);
     if (!existing || !(stored(TOKEN_KEY) || auth.isAuthenticated)) return;
     if (loadedSessionId.value === existing && !auth.isAuthenticated) return;
@@ -310,6 +337,14 @@ export function useAiChat() {
   async function send(text: string): Promise<void> {
     const question = text.trim();
     if (!question || sending.value) return;
+
+    // Past the allowance the question is not sent at all: it is shown, kept,
+    // and answered once the visitor signs in. The server would refuse it anyway
+    // (`auth_required`); asking first would only cost them a round trip.
+    if (!auth.isAuthenticated && guest.value && guest.value.remaining <= 0) {
+      hold(question);
+      return;
+    }
 
     offline.value = null;
     sending.value = true;
@@ -431,7 +466,19 @@ export function useAiChat() {
         activity.value = null;
         touchHistory();
         return;
+      case 'quota':
+        guest.value = { limit: event.limit, remaining: event.remaining };
+        return;
       case 'error':
+        if (event.code === AI_AUTH_REQUIRED) {
+          // The question bubble is already on screen; the empty answer under it
+          // gives way to the sign-up card.
+          dropIfEmpty();
+          guest.value = { limit: guest.value?.limit ?? 0, remaining: 0 };
+          hold(messages.value[messages.value.length - 1]?.content ?? '', false);
+          activity.value = null;
+          return;
+        }
         patch({ pending: false });
         // Anything already spoken stays — a turn that got half an answer out
         // before the model died is still worth showing. A blank one goes.
@@ -439,6 +486,61 @@ export function useAiChat() {
         offline.value = { message: event.message, fallback: event.fallback };
         activity.value = null;
         return;
+    }
+  }
+
+  // ─── the guest allowance (2C-15) ────────────────────────────────────────────
+
+  /**
+   * Puts a question behind the sign-up card. `show` adds its bubble — false when
+   * the bubble is already there, because the server is the one that refused.
+   */
+  function hold(question: string, show = true): void {
+    if (!question) return;
+    if (show) {
+      messages.value = [
+        ...messages.value,
+        { id: null, role: 'USER', content: question, sources: [], cards: [], grounded: true, pending: false, feedback: null },
+      ];
+    }
+    held.value = question;
+    remember(HELD_QUESTION_KEY, question);
+  }
+
+  /**
+   * After sign-in: claim the conversation, then ask the question that was
+   * waiting. Safe to call from every surface that noticed the sign-in — the
+   * first one takes the question out of storage and the rest find nothing.
+   */
+  async function resumeAfterSignIn(): Promise<void> {
+    if (!auth.isAuthenticated || resuming.value) return;
+
+    guest.value = null;
+    const question = held.value ?? stored(HELD_QUESTION_KEY);
+    held.value = null;
+    if (import.meta.client) {
+      try {
+        window.localStorage.removeItem(HELD_QUESTION_KEY);
+      } catch {
+        // See `stored`.
+      }
+    }
+
+    if (!question) {
+      await restore();
+      return;
+    }
+
+    resuming.value = true;
+    try {
+      // The held bubble only ever existed on this screen; the transcript the
+      // server sends back is the real one, and the question goes out after it.
+      const existing = stored(SESSION_KEY);
+      if (existing) await load(existing);
+      else messages.value = messages.value.filter((m) => !(m.id === null && m.content === question));
+      await send(question);
+    } finally {
+      resuming.value = false;
     }
   }
 
@@ -539,6 +641,16 @@ export function useAiChat() {
     if (sending.value) return;
 
     messages.value = [];
+    // A fresh thread starts without the card; the allowance itself is unchanged,
+    // so the next question past it brings the card straight back.
+    held.value = null;
+    if (import.meta.client) {
+      try {
+        window.localStorage.removeItem(HELD_QUESTION_KEY);
+      } catch {
+        // See `stored`.
+      }
+    }
     offline.value = null;
     sessionId.value = null;
     loadedSessionId.value = null;
@@ -591,5 +703,8 @@ export function useAiChat() {
     open,
     newChat,
     remove,
+    guest,
+    held,
+    resumeAfterSignIn,
   };
 }

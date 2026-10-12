@@ -37,6 +37,8 @@ const TAB_LINKS = [
       <DsBadge v-if="profile?.code" tone="neutral">{{ profile.code }}</DsBadge>
     </header>
 
+    <AiPromptCard />
+
     <DsCard v-if="error" accent><p>{{ error }}</p></DsCard>
     <div v-else-if="pending && !overview" class="gks-home__skeleton" />
 

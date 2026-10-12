@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChatRole, FeedbackValue } from '../../../prisma/client.js';
+import { ChatChannel, ChatRole, FeedbackValue } from '../../../prisma/client.js';
 import type { PrismaService } from '../../../prisma/prisma.service.js';
 import { ChatSessionService } from './chat-session.service.js';
 
@@ -14,7 +14,7 @@ import { ChatSessionService } from './chat-session.service.js';
  */
 function harness() {
   const prisma = {
-    chatMessage: { findFirst: vi.fn(), findMany: vi.fn() },
+    chatMessage: { findFirst: vi.fn(), findMany: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     chatFeedback: { upsert: vi.fn().mockResolvedValue({ value: 'DOWN', reason: 'WRONG' }) },
     chatSession: { findMany: vi.fn().mockResolvedValue([]) },
   } as unknown as PrismaService;
@@ -154,5 +154,34 @@ describe('ChatSessionService.listSummaries', () => {
     expect(first!.title).toBe('Сөүлд хэлний бэлтгэл');
     expect(second!.title).toHaveLength(80);
     expect(second!.title.endsWith('…')).toBe(true);
+  });
+});
+
+describe('ChatSessionService.guestAnswersReceived', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('counts a browser’s answered questions across every guest conversation on the site', async () => {
+    const { service, prisma } = harness();
+    vi.mocked(prisma.chatMessage.count).mockResolvedValue(2 as never);
+
+    await expect(service.guestAnswersReceived('abc123')).resolves.toBe(2);
+
+    // Answers, so a failed turn costs nothing. No session id and no status in
+    // the filter: "new chat" and "remove" must not reset the allowance (2C-15).
+    // A session somebody signed in to has a `userId` and drops out; Facebook is
+    // not metered.
+    expect(vi.mocked(prisma.chatMessage.count).mock.calls[0]![0]).toEqual({
+      where: {
+        role: ChatRole.ASSISTANT,
+        session: { anonymousId: 'abc123', userId: null, channel: ChatChannel.WEB_WIDGET },
+      },
+    });
+  });
+
+  it('counts nothing for a caller with no browser id, without a query', async () => {
+    const { service, prisma } = harness();
+
+    await expect(service.guestAnswersReceived(null)).resolves.toBe(0);
+    expect(prisma.chatMessage.count).not.toHaveBeenCalled();
   });
 });

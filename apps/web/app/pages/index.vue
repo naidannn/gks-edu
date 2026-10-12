@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import type { UniversityCard, UniversityFacets } from '@gks/shared';
+import type { AiChatStatus, UniversityCard, UniversityFacets } from '@gks/shared';
 
-/** Public landing page: hero, planner, GKS scholarship, active admissions, services, coming-soon teaser, trust wall, FAQ, CTA (1A-09). */
+/** Public landing page: AI hero, hero, planner, GKS scholarship, active admissions, services, coming-soon teaser, trust wall, FAQ, CTA (1A-09, 2C-14). */
+
+/**
+ * Whether the assistant leads the page (2C-14). Asked on the server so the
+ * question box is in the first HTML — it is the largest thing above the fold,
+ * and drawing it after hydration would shove the whole page down. With the
+ * assistant switched off the original hero is the page's first section again.
+ */
+const { data: aiStatus } = await useApiFetch<AiChatStatus>('/ai/chat/status');
+const aiFirst = computed(() => Boolean(aiStatus.value?.enabled));
 const { data: facets } = await useApiFetch<UniversityFacets>('/universities/facets', { lazy: true });
 const selectedCity = ref('');
 // Our own recommendation order (1A-30) — the same order the catalogue uses, so
@@ -233,15 +242,18 @@ useHead({
 
 <template>
   <div class="gks-home">
+    <HomeAiHero v-if="aiFirst" />
+
     <section class="gks-hero">
       <div class="gks-hero__copy">
         <span class="gks-hero__eyebrow">Таны Солонгост сурах зам</span>
-        <h1 class="gks-hero__title">
+        <!-- One <h1> per page: the assistant's heading takes it when it leads. -->
+        <component :is="aiFirst ? 'h2' : 'h1'" class="gks-hero__title">
           Солонгост сурах мөрөөдлөөс
           <span class="gks-hero__title-tail">
             <span class="gks-hero__title-accent">бодит төлөвлөгөө</span> рүү 🇰🇷
           </span>
-        </h1>
+        </component>
         <p class="gks-hero__lede">
           Танд тохирох сургууль, шаардлагатай материал, хугацаа болон визний бэлтгэлийг
           зөвлөхтэйгөө хамт нэг дор төлөвлө.
@@ -264,7 +276,7 @@ useHead({
           alt="Солонгосын их сургуулийн campus дээр ярилцаж яваа оюутнууд"
           width="1600"
           height="1066"
-          fetchpriority="high"
+          :fetchpriority="aiFirst ? 'auto' : 'high'"
         >
       </div>
     </section>

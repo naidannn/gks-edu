@@ -28,23 +28,34 @@ const available = ref(false);
 const open = ref(false);
 const composer = ref<{ focus: () => void } | null>(null);
 
-/** The `/chat` page is the same conversation full-size; no bubble on top of it. */
-const suppressed = computed(() => route.path === '/chat');
+/**
+ * No bubble on top of the same conversation drawn bigger: the `/chat` page, the
+ * cabinet's assistant page, and the landing page's hero while it is on screen
+ * (2C-14) — the launcher comes back once the visitor has scrolled past it.
+ */
+const inlineVisible = useState<boolean>('ai:inlineVisible', () => false);
+const suppressed = computed(
+  () => route.path === '/chat' || route.path === '/app/assistant' || inlineVisible.value,
+);
 
 onMounted(async () => {
   // Which shell the conversation started in, so the cabinet's sessions can be
   // told apart from the public site's in the reports (2E-08).
   chat.channel.value = props.channel;
   available.value = await chat.status();
-  if (available.value) await chat.restore();
+  if (!available.value) return;
+  // Signed in with a question still held from before (a full page load back
+  // from /register) — claim the thread and ask it; otherwise just reload it.
+  if (auth.isAuthenticated) await chat.resumeAfterSignIn();
+  else await chat.restore();
 });
 
-// Signing in claims the guest conversation for the account (§12.1) — the
-// transcript call is what performs it, so it is re-run on the transition.
+// Signing in claims the guest conversation for the account (§12.1) and sends
+// the question the sign-up card was holding (2C-15).
 watch(
   () => auth.isAuthenticated,
   (signedIn) => {
-    if (signedIn && available.value) void chat.restore();
+    if (signedIn && available.value) void chat.resumeAfterSignIn();
   },
 );
 
@@ -107,6 +118,7 @@ function rate(
         :activity="chat.activity.value"
         :signed-in="auth.isAuthenticated"
         :busy="chat.sending.value"
+        :held="chat.held.value"
         @rate="rate"
         @ask="send"
       />
@@ -117,7 +129,13 @@ function rate(
         <NuxtLink :to="fallbackLink.to" @click="open = false">{{ fallbackLink.label }}</NuxtLink>
       </p>
 
-      <AiChatComposer ref="composer" :disabled="chat.sending.value" @send="send" />
+      <AiChatQuota v-if="!auth.isAuthenticated" :guest="chat.guest.value" :held="chat.held.value" />
+      <AiChatComposer
+        ref="composer"
+        :disabled="chat.sending.value || Boolean(chat.held.value)"
+        :placeholder="chat.held.value ? 'Бүртгүүлээд үргэлжлүүлнэ үү' : undefined"
+        @send="send"
+      />
     </section>
 
     <button
@@ -128,7 +146,7 @@ function rate(
       aria-label="AI зөвлөхтэй ярих"
       @click="open = !open"
     >
-      <DsIcon :name="open ? 'chevron-down' : 'message-circle'" :size="22" />
+      <DsIcon :name="open ? 'chevron-down' : 'sparkles'" :size="22" />
       <span v-if="!open" class="gks-chat-widget__launcher-text">AI зөвлөх</span>
     </button>
   </div>

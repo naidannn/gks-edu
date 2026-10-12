@@ -40,6 +40,7 @@ const sessionMessageLimit = ref('40');
 const sessionTokenBudget = ref('60000');
 const dailyTokenBudget = ref('1000000');
 const leadCaptureAfterMessages = ref('3');
+const guestMessageLimit = ref('2');
 const greeting = ref('');
 const persona = ref('');
 
@@ -57,6 +58,7 @@ function fill(value: AiAssistantConfigPayload) {
   sessionTokenBudget.value = String(value.sessionTokenBudget);
   dailyTokenBudget.value = String(value.dailyTokenBudget);
   leadCaptureAfterMessages.value = String(value.leadCaptureAfterMessages);
+  guestMessageLimit.value = String(value.guestMessageLimit);
   greeting.value = value.greeting;
   persona.value = value.persona;
 }
@@ -114,6 +116,7 @@ async function save() {
       sessionTokenBudget: Number.parseInt(sessionTokenBudget.value, 10),
       dailyTokenBudget: Number.parseInt(dailyTokenBudget.value, 10),
       leadCaptureAfterMessages: Number.parseInt(leadCaptureAfterMessages.value, 10),
+      guestMessageLimit: Number.parseInt(guestMessageLimit.value, 10),
       greeting: greeting.value.trim(),
       persona: persona.value.trim(),
     });
@@ -257,6 +260,14 @@ async function save() {
           min="1"
           max="20"
           hint="Эхний мессежээс асуувал зочин гарч одно. Утсыг үнэ цэнэ өгсний дараа асуудаг."
+        />
+        <DsInput
+          v-model="guestMessageLimit"
+          label="Бүртгэлгүй зочны үнэгүй асуулт"
+          type="number"
+          min="0"
+          max="50"
+          hint="Энэ тооны дараагийн асуултад бүртгэлийн карт гарч, бүртгүүлмэгц асуулт нь автоматаар хариулагдана. 0 — эхний асуултаас бүртгүүлнэ."
         />
       </DsCard>
 

@@ -34,6 +34,8 @@ import { IngestProcessor } from './knowledge/ingest.processor.js';
 import { IngestService } from './knowledge/ingest.service.js';
 import { KnowledgeService } from './knowledge/knowledge.service.js';
 import { RetrievalService } from './knowledge/retrieval.service.js';
+import { AdminChatSessionsController } from './sessions/admin-chat-sessions.controller.js';
+import { AdminChatSessionsService } from './sessions/admin-chat-sessions.service.js';
 
 /**
  * The phase-2 assistant (`docs/AI-ASSISTANT.md`).
@@ -62,7 +64,7 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     // conversion and the staff notification are not reimplemented (§6.3).
     LeadsModule,
   ],
-  controllers: [AdminKnowledgeController, AdminAiConfigController, ChatController],
+  controllers: [AdminKnowledgeController, AdminAiConfigController, AdminChatSessionsController, ChatController],
   providers: [
     AccessLevelService,
     AiConfigService,
@@ -86,6 +88,7 @@ import { RetrievalService } from './knowledge/retrieval.service.js';
     ToolRegistry,
     TurnOrchestrator,
     OptionalUserService,
+    AdminChatSessionsService,
   ],
   exports: [
     AccessLevelService,

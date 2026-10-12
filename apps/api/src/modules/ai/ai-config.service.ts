@@ -20,6 +20,7 @@ const SELECT = {
   sessionTokenBudget: true,
   dailyTokenBudget: true,
   leadCaptureAfterMessages: true,
+  guestMessageLimit: true,
   greeting: true,
   persona: true,
   ctaRules: true,

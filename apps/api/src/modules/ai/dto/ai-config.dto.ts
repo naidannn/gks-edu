@@ -112,6 +112,18 @@ export class UpdateAiConfigDto {
   @IsOptional()
   leadCaptureAfterMessages?: number;
 
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 50,
+    description: 'Questions a signed-out visitor may ask before the sign-up card; 0 = sign in first (2C-15)',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(50)
+  @IsOptional()
+  guestMessageLimit?: number;
+
   @ApiPropertyOptional({ description: 'The first line the widget shows' })
   @IsString()
   @MinLength(10)

@@ -19,6 +19,8 @@ const props = defineProps<{
   signedIn?: boolean;
   /** A turn is in flight: no chips under an answer that is about to be superseded. */
   busy?: boolean;
+  /** A question waiting behind the sign-up card (2C-15) — the card replaces its answer. */
+  held?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -42,6 +44,16 @@ const nextSteps = computed(() => {
   if (!last) return [];
   const asked = props.messages.filter((message) => message.role === 'USER').map((message) => message.content);
   return aiNextSteps(last.cards, { signedIn: Boolean(props.signedIn) }, asked);
+});
+
+/**
+ * The card quotes the waiting question only when its bubble is not on screen —
+ * after a reload, the bubble was never stored, but the question still was.
+ */
+const heldQuote = computed(() => {
+  if (!props.held) return null;
+  const last = props.messages[props.messages.length - 1];
+  return last?.role === 'USER' && last.content === props.held ? null : props.held;
 });
 
 const scroller = ref<HTMLElement | null>(null);
@@ -86,6 +98,7 @@ watch(
       last?.cards.length,
       lastAnswerIndex.value,
       props.activity?.label,
+      props.held,
     ] as const;
   },
   ([length], previous) => {
@@ -104,7 +117,7 @@ defineExpose({ scrollToEnd });
   <div ref="scroller" class="gks-chat-thread" :class="{ 'gks-chat-thread--wide': wide }" @scroll.passive="onScroll">
     <!-- The empty conversation: the page draws its own; the widget's is the
          greeting and the four questions people ask first. -->
-    <template v-if="!messages.length">
+    <template v-if="!messages.length && !held">
       <slot name="empty">
         <p v-if="greeting" class="gks-chat-bubble gks-chat-bubble--ai gks-chat-bubble--greeting">
           {{ greeting }}
@@ -157,6 +170,10 @@ defineExpose({ scrollToEnd });
         />
       </div>
     </template>
+
+    <div v-if="held" class="gks-chat-row">
+      <AiChatGate :question="heldQuote" :compact="!wide" />
+    </div>
 
     <p v-if="activity" class="gks-chat-activity">
       <DsIcon name="loader-circle" :size="14" />

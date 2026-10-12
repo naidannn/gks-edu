@@ -7,6 +7,9 @@
  */
 import type {
   AccessLevel,
+  AiChatOutcome,
+  AiSessionChannel,
+  AiSessionStatus,
   AccreditationGrade,
   AgentContractStatus,
   AiFeedbackReason,
@@ -1040,6 +1043,28 @@ export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
   REGISTERED: 'Бүртгэлтэй',
   CONTRACTED: 'Гэрээтэй',
   INTERNAL: 'Дотоод',
+};
+
+// ── AI assistant: conversations (2E-04) ────────────────────────────────────
+
+export const AI_SESSION_CHANNEL_LABELS: Record<AiSessionChannel, string> = {
+  WEB_WIDGET: 'Вебсайт',
+  PORTAL: 'Миний булан',
+  ADMIN_COPILOT: 'Ажилтны туслах',
+  FACEBOOK: 'Facebook',
+};
+
+export const AI_SESSION_STATUS_LABELS: Record<AiSessionStatus, string> = {
+  ACTIVE: 'Идэвхтэй',
+  HANDED_OFF: 'Зөвлөхөд шилжсэн',
+  CLOSED: 'Хаагдсан',
+};
+
+export const AI_CHAT_OUTCOME_LABELS: Record<AiChatOutcome, string> = {
+  NONE: '—',
+  LEAD_CREATED: 'Сэжим үүссэн',
+  HANDOFF: 'Зөвлөхөд шилжсэн',
+  CONTRACT_STARTED: 'Гэрээ эхэлсэн',
 };
 
 export const KNOWLEDGE_KIND_LABELS: Record<KnowledgeKind, string> = {
