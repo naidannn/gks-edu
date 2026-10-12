@@ -57,58 +57,136 @@ const heldQuote = computed(() => {
 });
 
 const scroller = ref<HTMLElement | null>(null);
+const tail = ref<HTMLElement | null>(null);
 
 /**
- * Follow the answer as it streams — but only from the bottom.
+ * How a new answer arrives on screen — the way current chat apps do it.
  *
- * Somebody who has scrolled up to re-read an earlier answer is reading it;
- * yanking them back down every 40ms while tokens arrive makes the transcript
- * unusable exactly when it is most worth reading. Sending a message is the
- * exception: whoever just pressed send wants to see the reply, wherever they
- * had scrolled to.
+ * Sending scrolls the question to the **top** of the thread, and the answer is
+ * written out beneath it into the space below. Nothing follows the stream down:
+ * pinning the view to the bottom on every token scrolls a long answer's
+ * beginning away while it is being read, so the reader starts at the first line
+ * and scrolls when they choose to.
+ *
+ * `spacer` is what makes the first part possible: the last question can only
+ * reach the top if there is at least a screen of content under it, so an empty
+ * block makes up the difference and shrinks as the answer grows into it. A
+ * restored conversation opens at its end, which with the spacer is the last
+ * question and its answer.
  */
-const pinned = ref(true);
+const spacer = ref(0);
+/** Content continues below the visible area — the "jump down" button. */
+const below = ref(false);
+
+function lastQuestion(): HTMLElement | null {
+  const rows = scroller.value?.querySelectorAll<HTMLElement>('[data-role="USER"]');
+  return rows?.length ? rows[rows.length - 1]! : null;
+}
+
+function paddingTop(el: HTMLElement): number {
+  return Number.parseFloat(getComputedStyle(el).paddingTop) || 0;
+}
+
+function measure(): void {
+  const el = scroller.value;
+  const question = lastQuestion();
+  if (!el || !question || !tail.value) {
+    spacer.value = 0;
+  } else {
+    const used = tail.value.offsetTop - question.offsetTop;
+    spacer.value = Math.max(0, el.clientHeight - used - paddingTop(el) * 2);
+  }
+  onScroll();
+}
 
 function onScroll(): void {
   const el = scroller.value;
-  if (!el) return;
-  pinned.value = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  if (!el || !tail.value) return;
+  below.value = tail.value.offsetTop - (el.scrollTop + el.clientHeight) > 40;
 }
 
-function scrollToEnd(force = false): void {
-  if (force) pinned.value = true;
-  if (!pinned.value) return;
+/** The newest question to the top of the thread, smoothly. */
+function alignToQuestion(): void {
   nextTick(() => {
-    const el = scroller.value;
-    if (el) el.scrollTop = el.scrollHeight;
+    measure();
+    // The spacer has to be in the DOM before the scroll, or the browser clamps
+    // the target to the old, shorter scroll height.
+    nextTick(() => {
+      const el = scroller.value;
+      const question = lastQuestion();
+      if (!el || !question) return;
+      el.scrollTo({ top: question.offsetTop - paddingTop(el), behavior: 'smooth' });
+    });
   });
 }
 
-// Everything that can grow the bottom of the list: a new bubble, the next
-// token, the dots giving way to text, the sources and rating row that appear
-// once an answer completes, and the tool-activity line.
+function scrollToEnd(smooth = false): void {
+  nextTick(() => {
+    measure();
+    nextTick(() => {
+      const el = scroller.value;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+    });
+  });
+}
+
+/** The real content's end into view — the button, not the empty space after it. */
+function jumpDown(): void {
+  const el = scroller.value;
+  if (!el || !tail.value) return;
+  el.scrollTo({ top: Math.max(0, tail.value.offsetTop - el.clientHeight + 24), behavior: 'smooth' });
+}
+
 watch(
-  () => {
-    const last = props.messages[props.messages.length - 1];
-    return [
-      props.messages.length,
-      last?.content,
-      last?.pending,
-      last?.sources.length,
-      last?.cards.length,
-      lastAnswerIndex.value,
-      props.activity?.label,
-      props.held,
-    ] as const;
-  },
-  ([length], previous) => {
-    const last = props.messages[props.messages.length - 1];
-    scrollToEnd(length !== previous?.[0] && last?.role === 'USER');
+  () => props.messages,
+  (next, previous) => {
+    const last = next[next.length - 1];
+    const lastUser = [...next].reverse().find((message) => message.role === 'USER');
+    // A question just typed here: appended to the same thread, not stored yet,
+    // and either alone (held for sign-up) or followed by its pending answer.
+    const sameThread = !previous?.length || next[0] === previous[0] || next[0]?.id === previous[0]?.id;
+    const wasSent =
+      previous !== undefined &&
+      next.length > previous.length &&
+      sameThread &&
+      lastUser?.id === null &&
+      (last === lastUser || (last?.role === 'ASSISTANT' && last.pending));
+
+    if (wasSent) alignToQuestion();
+    else if (!previous || next[0]?.id !== previous[0]?.id || next.length < previous.length) scrollToEnd();
+    else nextTick(measure);
   },
   { flush: 'post' },
 );
 
-onMounted(() => scrollToEnd(true));
+// Everything else that changes the height under the question: cards, sources,
+// the rating row, chips, the activity line, the sign-up card.
+watch(
+  () => [lastAnswerIndex.value, props.activity?.label, props.held, nextSteps.value.length] as const,
+  () => nextTick(measure),
+  { flush: 'post' },
+);
+
+// The answer grows a few characters a frame inside `AiChatAnswer`, which no
+// prop here sees — so the rows are watched for size instead.
+let resizer: ResizeObserver | null = null;
+
+onMounted(() => {
+  if ('ResizeObserver' in window && scroller.value) {
+    resizer = new ResizeObserver(() => measure());
+    resizer.observe(scroller.value);
+    for (const child of Array.from(scroller.value.children)) resizer.observe(child);
+  }
+  scrollToEnd();
+});
+
+onUpdated(() => {
+  if (!resizer || !scroller.value) return;
+  // `observe` on an element already observed is a no-op, so this only adds rows.
+  for (const child of Array.from(scroller.value.children)) resizer.observe(child);
+});
+
+onBeforeUnmount(() => resizer?.disconnect());
 
 defineExpose({ scrollToEnd });
 </script>
@@ -137,20 +215,22 @@ defineExpose({ scrollToEnd });
       </slot>
     </template>
 
-    <template v-for="(message, index) in messages" :key="message.id ?? `pending-${index}`">
-      <div v-if="message.role === 'USER'" class="gks-chat-row gks-chat-row--user">
+    <!-- Keyed by position: an answer gets its id when it finishes, and
+         re-keying then would remount it mid-way through writing itself out. -->
+    <template v-for="(message, index) in messages" :key="index">
+      <div v-if="message.role === 'USER'" class="gks-chat-row gks-chat-row--user" data-role="USER">
         <p class="gks-chat-bubble gks-chat-bubble--user">{{ message.content }}</p>
       </div>
 
       <div v-else class="gks-chat-row">
-        <p class="gks-chat-bubble gks-chat-bubble--ai">
-          <span v-if="message.content">{{ message.content }}</span>
+        <div class="gks-chat-bubble gks-chat-bubble--ai gks-chat-bubble--answer">
+          <AiChatAnswer v-if="message.content" :text="message.content" :streaming="message.pending" />
           <!-- An empty pending bubble is the pause before the first token; the
                dots are what stop it reading as a failure. -->
           <span v-if="message.pending" class="gks-chat-typing" aria-label="Бичиж байна">
             <i /><i /><i />
           </span>
-        </p>
+        </div>
 
         <AiChatCard v-for="(card, cardIndex) in message.cards" :key="`${card.type}-${cardIndex}`" :card="card" />
 
@@ -180,12 +260,15 @@ defineExpose({ scrollToEnd });
       {{ activity.label }}
     </p>
 
+    <span ref="tail" class="gks-chat-tail" aria-hidden="true" />
+    <div class="gks-chat-spacer" :style="{ height: `${spacer}px` }" aria-hidden="true" />
+
     <button
-      v-if="!pinned && messages.length"
+      v-if="below && messages.length"
       type="button"
       class="gks-chat-jump"
-      aria-label="Сүүлийн мессеж рүү очих"
-      @click="scrollToEnd(true)"
+      aria-label="Доош очих"
+      @click="jumpDown"
     >
       <DsIcon name="arrow-down" :size="16" />
     </button>
@@ -194,6 +277,7 @@ defineExpose({ scrollToEnd });
 
 <style scoped>
 .gks-chat-thread {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
@@ -236,6 +320,13 @@ defineExpose({ scrollToEnd });
   border-bottom-left-radius: 4px;
 }
 .gks-chat-bubble--greeting { color: var(--text-muted); }
+/* Rendered Markdown carries its own line breaks. */
+.gks-chat-bubble--answer { white-space: normal; }
+
+.gks-chat-tail { display: block; flex: none; height: 0; margin-top: calc(var(--sp-3) * -1); }
+.gks-chat-thread--wide .gks-chat-tail { margin-top: calc(var(--sp-5) * -1); }
+.gks-chat-spacer { flex: none; margin-top: calc(var(--sp-3) * -1); }
+.gks-chat-thread--wide .gks-chat-spacer { margin-top: calc(var(--sp-5) * -1); }
 
 .gks-chat-starters { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
 .gks-chat-starter {

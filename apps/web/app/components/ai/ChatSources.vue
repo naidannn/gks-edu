@@ -10,9 +10,10 @@ import type { AiSource } from '@gks/shared';
  * table from one that was improvised, and how a consultant can check a claim
  * without replaying the conversation.
  *
- * The markers (`K1`, `T2`) are the ones the answer text itself carries, so a
- * sentence can be traced to its row in this list. Collapsed by default: the
- * answer is what was asked for, the provenance is what is asked for second.
+ * The `K1`/`T2` codes are internal — the answer text no longer shows them
+ * (`renderChatMarkdown`), so neither does this list; a title and where it came
+ * from is what a visitor can use. Collapsed by default: the answer is what was
+ * asked for, the provenance is what is asked for second.
  */
 defineProps<{ sources: AiSource[] }>();
 
@@ -28,7 +29,6 @@ const open = ref(false);
 
     <ul v-if="open" class="gks-chat-sources__list">
       <li v-for="source in sources" :key="source.ref">
-        <span class="gks-chat-sources__ref">{{ source.ref }}</span>
         <span class="gks-chat-sources__title">
           {{ source.title }}
           <span v-if="source.heading" class="gks-chat-sources__heading">· {{ source.heading }}</span>
@@ -73,14 +73,6 @@ const open = ref(false);
   flex-wrap: wrap;
   gap: var(--sp-2);
   font-size: var(--fs-caption);
-}
-.gks-chat-sources__ref {
-  flex: none;
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-  background: var(--brand-100);
-  color: var(--brand-700);
-  font-weight: var(--fw-semibold);
 }
 .gks-chat-sources__title { color: var(--text-strong); }
 .gks-chat-sources__heading { color: var(--text-muted); }

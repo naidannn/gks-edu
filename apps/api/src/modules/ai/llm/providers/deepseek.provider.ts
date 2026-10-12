@@ -63,7 +63,15 @@ export class DeepseekChatProvider implements LlmProvider {
     if (!apiKey) throw new ServiceUnavailableException('DEEPSEEK_API_KEY тохируулаагүй байна.');
 
     const baseUrl = this.config.get<string>('deepseek.baseUrl');
-    const mode = request.model.split(':')[1];
+    // A history whose tool calls another provider made (Gemini answered the
+    // first round, then 503'd and the turn fell back here) has no reasoning
+    // trace to hand back, and thinking mode refuses a tool call without one —
+    // "The `reasoning_content` in the thinking mode must be passed back". With
+    // thinking off the same history is accepted, so this call goes without it.
+    const foreignToolCalls = request.messages.some(
+      (message) => message.role === 'assistant' && message.toolCalls?.length && !message.reasoning,
+    );
+    const mode = foreignToolCalls ? 'nothink' : request.model.split(':')[1];
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
