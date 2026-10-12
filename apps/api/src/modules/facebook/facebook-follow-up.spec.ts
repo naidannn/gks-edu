@@ -247,6 +247,16 @@ describe('the message', () => {
       expect(text.length).toBeLessThan(600);
     }
   });
+
+  it.each(['GKS', 'GRADUATE', 'LANGUAGE', 'BACHELOR', 'GENERAL'] as const)(
+    '%s: the promotion ends on an offer the assistant answers in the chat',
+    (topic) => {
+      const last = followUpText(FacebookFollowUp.PROMO, topic).split('\n').at(-1)!;
+      expect(last).toMatch(/энд шууд гаргаад өгье — авах уу\?$/);
+      // Living costs are not in the catalogue, so the offer never promises them.
+      expect(last).not.toMatch(/зардал|байр|дотуур/);
+    },
+  );
 });
 
 describe('isDaytime', () => {

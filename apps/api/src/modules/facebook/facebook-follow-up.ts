@@ -272,6 +272,21 @@ export function followUpText(kind: FacebookFollowUp, topic: FollowUpTopic): stri
   }
 }
 
+/**
+ * The question a promotion ends on. The assistant answers it right here in the
+ * chat (`search_programs`, `search_universities`) from what the person already
+ * told it: a bare "Тийм" is enough, because the follow-up is in the history it
+ * reads. No living costs — the catalogue has no dormitory or living-cost
+ * figures, and a number the assistant cannot look up is one it makes up.
+ */
+const OFFER: Record<FollowUpTopic, string> = {
+  GKS: 'Хүсвэл GKS-ээр сурч болох, танд тохирох сургуулиудыг анги, танхимтай нь энд шууд гаргаад өгье — авах уу?',
+  BACHELOR: 'Хүсвэл танд тохирох сургуулиудыг анги, танхим, сургалтын төлбөр, тэтгэлэгтэй нь энд шууд гаргаад өгье — авах уу?',
+  GRADUATE: 'Хүсвэл танд тохирох сургуулиудыг анги, танхим, сургалтын төлбөр, тэтгэлэгтэй нь энд шууд гаргаад өгье — авах уу?',
+  LANGUAGE: 'Хүсвэл танд тохирох хэлний бэлтгэлийн сургуулиудыг төлбөр, элсэлтийн улиралтай нь энд шууд гаргаад өгье — авах уу?',
+  GENERAL: 'Хүсвэл танд тохирох сургуулиудыг анги, танхим, сургалтын төлбөр, тэтгэлэгтэй нь энд шууд гаргаад өгье — авах уу?',
+};
+
 function promoText(topic: FollowUpTopic, link: string): string {
   const ask = 'Асуух зүйл гарвал энд бичээрэй, эсвэл утасны дугаараа үлдээвэл зөвлөх тань руу залгана.';
   switch (topic) {
@@ -281,6 +296,7 @@ function promoText(topic: FollowUpTopic, link: string): string {
         `Тэнцэх боломжоо 1 минутад шалгаарай: ${siteLink('/gks-check', FacebookFollowUp.PROMO)}`,
         `Хугацаа, шаардлага: ${link}`,
         ask,
+        OFFER[topic],
       ].join('\n');
     case 'BACHELOR':
       return [
@@ -288,6 +304,7 @@ function promoText(topic: FollowUpTopic, link: string): string {
         siteLink('/universities', FacebookFollowUp.PROMO),
         `Бакалаврын үйлчилгээ, элсэлтийн нөхцөл: ${link}`,
         ask,
+        OFFER[topic],
       ].join('\n');
     case 'GRADUATE':
       return [
@@ -295,12 +312,14 @@ function promoText(topic: FollowUpTopic, link: string): string {
         siteLink('/programs', FacebookFollowUp.PROMO),
         `Магистр, докторын үйлчилгээ: ${link}`,
         ask,
+        OFFER[topic],
       ].join('\n');
     case 'LANGUAGE':
       return [
         'Сайн байна уу 🙂 Солонгос хэлний бэлтгэлийн сургуулиуд, элсэлтийн улирал, төлбөрийг нэг дороос харна уу:',
         link,
         ask,
+        OFFER[topic],
       ].join('\n');
     case 'GENERAL':
       return [
@@ -308,6 +327,7 @@ function promoText(topic: FollowUpTopic, link: string): string {
         siteLink('/plan', FacebookFollowUp.PROMO),
         `Их сургуулиудын мэдээлэл: ${link}`,
         ask,
+        OFFER[topic],
       ].join('\n');
   }
 }
