@@ -53,9 +53,18 @@ const tab = ref<Tab>(route.query.tab === 'comments' || route.query.tab === 'repo
 const scope = ref<FacebookThreadScope>('NEEDS_STAFF');
 const search = ref('');
 const threads = ref<FacebookThreadItem[]>([]);
+/** Threads in the current scope and search, of which `threads` holds the newest pages. */
+const total = ref(0);
 const counts = ref<FacebookThreadCounts>({ needsStaff: 0, unread: 0, unlinked: 0, starred: 0, comments: 0 });
 const listPending = ref(true);
 const listError = ref<string | null>(null);
+const morePending = ref(false);
+const moreError = ref<string | null>(null);
+/** Bumped by every fresh load, so a page that was in flight for the old scope is dropped. */
+let listGeneration = 0;
+const hasMore = computed(() => threads.value.length < total.value);
+
+const PAGE_SIZE = 50;
 
 const activeId = ref<string | null>(null);
 const active = ref<FacebookThreadDetail | null>(null);
@@ -71,24 +80,109 @@ const mobilePane = ref<'list' | 'thread'>('list');
  * "nobody needs us" is the expensive one to believe — so only a load somebody
  * asked for reports failure, and a failed poll keeps the last good list.
  */
+function listUrl(before?: string): string {
+  const params = new URLSearchParams({ scope: scope.value, limit: String(PAGE_SIZE) });
+  if (search.value.trim()) params.set('search', search.value.trim());
+  if (before) params.set('before', before);
+  return `/admin/facebook/threads?${params}`;
+}
+
+/**
+ * Reloads the first page. A real load starts the list over; the poll keeps
+ * whatever was scrolled into view and refreshes only the head — see
+ * `mergeHead`.
+ */
 async function loadList(options: { quiet?: boolean } = {}): Promise<void> {
+  const generation = options.quiet ? listGeneration : ++listGeneration;
   if (!options.quiet) {
     listPending.value = true;
     listError.value = null;
+    moreError.value = null;
   }
   try {
-    const params = new URLSearchParams({ scope: scope.value, limit: '50', offset: '0' });
-    if (search.value.trim()) params.set('search', search.value.trim());
-    const result = await api.get<FacebookThreadListResponse>(`/admin/facebook/threads?${params}`);
-    threads.value = result.items;
+    const result = await api.get<FacebookThreadListResponse>(listUrl());
+    if (generation !== listGeneration) return;
+    threads.value = options.quiet ? mergeHead(threads.value, result.items) : result.items;
+    total.value = result.total;
     counts.value = result.counts;
+    if (!options.quiet) listScroll.value?.scrollTo({ top: 0 });
   } catch (e) {
     if (options.quiet) throw e;
     listError.value = apiErrorMessage(e, 'Чатын жагсаалтыг ачаалж чадсангүй');
   } finally {
-    if (!options.quiet) listPending.value = false;
+    if (!options.quiet && generation === listGeneration) listPending.value = false;
   }
 }
+
+/**
+ * The poll's first page laid over the rows already loaded. Everything at or
+ * after the page's oldest timestamp is the page's to decide — a thread there
+ * that the page left out has left the scope (answered, unlinked) — and the
+ * older rows the person scrolled to stay until the next real load.
+ */
+function mergeHead(current: FacebookThreadItem[], head: FacebookThreadItem[]): FacebookThreadItem[] {
+  // A short page is the whole scope; there is nothing older to keep.
+  if (head.length < PAGE_SIZE) return head;
+  const oldest = head[head.length - 1]!.lastMessageAt;
+  const ids = new Set(head.map((item) => item.id));
+  const tail = current.filter((item) => !ids.has(item.id) && item.lastMessageAt < oldest);
+  return [...head, ...tail];
+}
+
+/** The next page, older than the last row on screen. */
+async function loadMore(): Promise<void> {
+  const last = threads.value.at(-1);
+  if (!last || morePending.value || listPending.value || !hasMore.value) return;
+  const generation = listGeneration;
+  morePending.value = true;
+  moreError.value = null;
+  try {
+    const result = await api.get<FacebookThreadListResponse>(listUrl(last.lastMessageAt));
+    if (generation !== listGeneration) return;
+    const ids = new Set(threads.value.map((item) => item.id));
+    const fresh = result.items.filter((item) => !ids.has(item.id));
+    threads.value = [...threads.value, ...fresh];
+    // A page of nothing but rows we already have means the cursor cannot
+    // move; stop asking rather than ask forever.
+    total.value = fresh.length ? result.total : threads.value.length;
+    counts.value = result.counts;
+  } catch (e) {
+    if (generation === listGeneration) moreError.value = apiErrorMessage(e, 'Цааш ачаалж чадсангүй');
+  } finally {
+    if (generation === listGeneration) morePending.value = false;
+  }
+}
+
+// Infinite scroll: a sentinel under the last row, watched inside the list's
+// own scroll box, asks for the next page a little before it comes into view.
+const listScroll = ref<HTMLElement | null>(null);
+const listEnd = ref<HTMLElement | null>(null);
+let endObserver: IntersectionObserver | null = null;
+
+watch([listScroll, listEnd], ([root, end]) => {
+  endObserver?.disconnect();
+  endObserver = null;
+  if (!root || !end) return;
+  endObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) void loadMore();
+    },
+    { root, rootMargin: '0px 0px 300px 0px' },
+  );
+  endObserver.observe(end);
+});
+
+// A page shorter than the box never scrolls, so the sentinel stays in view and
+// the observer does not fire again; ask once more whenever a page lands.
+watch(
+  () => threads.value.length,
+  () => {
+    void nextTick(() => {
+      const root = listScroll.value;
+      if (root && hasMore.value && root.scrollHeight <= root.clientHeight + 300) void loadMore();
+    });
+  },
+);
 
 async function loadThread(id: string, options: { quiet?: boolean } = {}): Promise<void> {
   if (!options.quiet) {
@@ -211,6 +305,7 @@ watch(search, () => {
 watch(scope, () => void loadList());
 onBeforeUnmount(() => {
   if (searchTimer) clearTimeout(searchTimer);
+  endObserver?.disconnect();
 });
 
 onMounted(async () => {
@@ -360,7 +455,7 @@ const emptyText = computed(() => {
           </div>
         </div>
 
-        <div class="gks-fb__list-scroll">
+        <div ref="listScroll" class="gks-fb__list-scroll">
           <FacebookThreadList
             :items="threads"
             :active-id="activeId"
@@ -372,6 +467,15 @@ const emptyText = computed(() => {
               <p class="gks-fb__empty">{{ listError ?? emptyText }}</p>
             </template>
           </FacebookThreadList>
+          <div v-if="threads.length && !listPending" ref="listEnd" class="gks-fb__more">
+            <template v-if="moreError">
+              <span>{{ moreError }}</span>
+              <DsButton size="sm" variant="ghost" icon-left="rotate-cw" @click="loadMore">Дахин оролдох</DsButton>
+            </template>
+            <span v-else-if="morePending">Ачаалж байна…</span>
+            <span v-else-if="hasMore" class="gks-tnum">{{ threads.length }} / {{ total }}</span>
+            <span v-else-if="total > PAGE_SIZE" class="gks-tnum">Бүгд харагдаж байна · {{ total }}</span>
+          </div>
         </div>
       </aside>
 
@@ -528,6 +632,16 @@ const emptyText = computed(() => {
 .gks-fb__scope--on .gks-fb__scope-count { background: rgba(255, 255, 255, .18); color: var(--text-inverse); }
 
 .gks-fb__list-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+.gks-fb__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 40px;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-caption);
+  color: var(--text-subtle);
+}
 .gks-fb__empty { padding: var(--sp-8) var(--sp-5); text-align: center; font-size: var(--fs-body-sm); color: var(--text-subtle); }
 
 .gks-fb__pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }

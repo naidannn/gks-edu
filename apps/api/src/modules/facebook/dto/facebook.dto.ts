@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import {
   Equals,
   IsBoolean,
+  IsDate,
   IsEnum,
   IsIn,
   IsInt,
@@ -30,7 +31,7 @@ export class QueryFacebookThreadsDto {
   @IsOptional()
   scope?: FacebookThreadScope;
 
-  @ApiPropertyOptional({ description: 'Нэр, утас, мессежийн эхлэлээр' })
+  @ApiPropertyOptional({ description: 'Нэр, утас, чатын аль ч мессежээр' })
   @IsString()
   @IsOptional()
   @MaxLength(100)
@@ -61,6 +62,17 @@ export class QueryFacebookThreadsDto {
   @Min(0)
   @IsOptional()
   offset?: number;
+
+  /**
+   * Infinite scroll's cursor: threads whose last message is no later than
+   * this. An offset drifts while staff answer threads out of "Хариу хүлээж
+   * буй" and new ones arrive on top; a timestamp does not.
+   */
+  @ApiPropertyOptional({ description: 'Энэ хугацаанаас өмнөх чатууд (ISO)' })
+  @Type(() => Date)
+  @IsDate()
+  @IsOptional()
+  before?: Date;
 }
 
 export class SendFacebookMessageDto {

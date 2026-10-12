@@ -86,13 +86,16 @@ export class FacebookAdminService {
   async list(query: QueryFacebookThreadsDto) {
     const now = new Date();
     const where = this.threadWhere(query, now);
+    // `lte`, not `lt`: two threads can share a timestamp, and the browser
+    // drops the row it already has rather than skip the one it has not.
+    const page = query.before ? { AND: [where, { lastMessageAt: { lte: query.before } }] } : where;
 
     // Read-only, so `Promise.all` and not `$transaction` (CLAUDE.md rule 9).
     const [items, total, needsStaff, unread, unlinked, starred, comments, config] = await Promise.all([
       this.prisma.facebookThread.findMany({
-        where,
+        where: page,
         include: THREAD_INCLUDE,
-        orderBy: { lastMessageAt: 'desc' },
+        orderBy: [{ lastMessageAt: 'desc' }, { id: 'desc' }],
         take: query.limit ?? 50,
         skip: query.offset ?? 0,
       }),
@@ -575,7 +578,10 @@ export class FacebookAdminService {
       and.push({
         OR: [
           { name: contains },
-          { lastMessagePreview: contains },
+          // Any message in the thread, not just the newest — "who asked about
+          // the dormitory" is usually answered three messages back. The
+          // trigram index on `facebook_messages.text` keeps this ILIKE cheap.
+          { messages: { some: { text: contains } } },
           { lead: { OR: [{ firstName: contains }, { lastName: contains }, { phone: { contains: term } }] } },
           { client: { OR: [{ firstName: contains }, { lastName: contains }, { code: contains }, { phone: { contains: term } }] } },
         ],
