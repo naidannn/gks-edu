@@ -11,6 +11,7 @@ import { SlackService } from '../notifications/slack.service.js';
 import { MetaEventsService } from '../meta/meta-events.service.js';
 import { officeDateRange } from '../reports/report-period.js';
 import type { MetaRequestContext } from '../meta/request-context.js';
+import { nameSkeleton, phoneKey, sameGivenName } from './person-match.js';
 import type { AssignLeadDto, QueryLeadsDto } from './dto/query-leads.dto.js';
 import type { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
 import type { CreateLeadDto } from './dto/create-lead.dto.js';
@@ -88,9 +89,12 @@ function channelOf(source: LeadSource): IntakeChannel {
 }
 
 export interface PublicLeadResult {
-  id: string;
-  /** True when the submission merged into a lead the visitor had already created. */
+  /** Null only for a client the office registered without any lead. */
+  id: string | null;
+  /** True when the submission landed on a record the person already had. */
   merged: boolean;
+  /** Set when the number belongs to an existing client — no lead was created (1B-26). */
+  client?: { id: string; code: string };
 }
 
 /**
@@ -166,33 +170,18 @@ export class LeadsService {
     const channel = channelOf(source);
     const universityIds = await this.resolveUniversityIds(dto.interestedUniversitySlugs);
 
-    const recent = await this.prisma.lead.findFirst({
-      where: { phone, createdAt: { gte: new Date(Date.now() - DEDUPE_WINDOW_MS) } },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true },
-    });
+    const { client, lead: recent } = await this.matchPerson(phone, dto.firstName);
+
+    // 1B-26 — somebody the office has already taken on. A new enquiry would
+    // put a second consultant on the phone to a person someone is already
+    // looking after, and count them in the funnel as a stranger.
+    if (client) return this.recordClientEnquiry(client, dto, phone, channel);
 
     if (recent) {
-      await this.prisma.leadActivity.create({
-        data: {
-          leadId: recent.id,
-          type: channel.activityType,
-          body: channel.body(dto.note, true),
-          meta: { channel: channel.key, repeat: true } satisfies Prisma.InputJsonObject,
-        },
-      });
-      // A website enquiry still sitting in NEW whose owner now walks in has
-      // been contacted by the visit itself. Only NEW moves: a lead further
-      // along keeps the stage the consultant gave it.
-      if (channel.initialStage !== LeadStage.NEW) {
-        await this.prisma.lead.updateMany({
-          where: { id: recent.id, stage: LeadStage.NEW },
-          data: { stage: channel.initialStage },
-        });
-      }
-      // A second form inside the dedupe window means the visitor is still
-      // waiting for a call — worth saying out loud, not just filing. From the
-      // office it means they are sitting in the waiting area right now.
+      await this.recordRepeat(recent, dto, universityIds, channel);
+      // A second form means the visitor is still waiting for a call — worth
+      // saying out loud, not just filing. From the office it means they are
+      // sitting in the waiting area right now.
       await this.slack.notify({
         emoji: channel.key === 'office_qr' ? '🏢' : '🔁',
         title: channel.key === 'office_qr' ? 'Оффис дээр зөвлөгөө хүлээж байна' : 'Давтан зөвлөгөөний хүсэлт',
@@ -261,6 +250,142 @@ export class LeadsService {
       await this.reportLeadToMeta(dto, phone, lead.id, request);
     }
     return { id: lead.id, merged: false };
+  }
+
+  /**
+   * Who this number already is (1B-26): a client, or a lead still in play.
+   *
+   * A client matches on the number and a given name that agrees (see
+   * `person-match.ts`) — a parent's phone can carry a sibling's enquiry. A
+   * lead matches the same way while it is open, at any age; inside the old
+   * 24-hour window the number alone decides, as it always has, because a
+   * repeat that quick is the same visitor still waiting for the call.
+   */
+  async matchPerson(rawPhone: string, firstName: string) {
+    const key = phoneKey(normalizePhone(rawPhone));
+    if (!key) return { client: null, lead: null };
+    const dayAgo = new Date(Date.now() - DEDUPE_WINDOW_MS);
+
+    const [clients, leads] = await Promise.all([
+      this.prisma.client.findMany({
+        where: { OR: [{ phone: { endsWith: key } }, { phoneAlt: { endsWith: key } }] },
+        select: { id: true, code: true, firstName: true, lastName: true, leadId: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.lead.findMany({
+        where: {
+          phone: { endsWith: key },
+          mergedIntoId: null,
+          client: { is: null },
+          OR: [{ stage: { notIn: [LeadStage.WON, LeadStage.LOST] } }, { createdAt: { gte: dayAgo } }],
+        },
+        select: { id: true, firstName: true, lastName: true, stage: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return {
+      client: clients.find((client) => sameGivenName(client.firstName, firstName)) ?? null,
+      lead:
+        leads.find((lead) => lead.createdAt >= dayAgo) ??
+        leads.find((lead) => sameGivenName(lead.firstName, firstName)) ??
+        null,
+    };
+  }
+
+  /**
+   * A repeat lands on the lead it repeats: one more timeline entry, and the
+   * fields the earlier submission left empty are filled from this one — a
+   * chat that only got a phone number learns the name the form gives later.
+   * Nothing already on the lead is overwritten.
+   */
+  private async recordRepeat(
+    lead: { id: string; firstName: string; lastName: string; stage: LeadStage },
+    dto: CreatePublicLeadDto,
+    universityIds: string[],
+    channel: IntakeChannel,
+  ): Promise<void> {
+    const current = await this.prisma.lead.findUniqueOrThrow({
+      where: { id: lead.id },
+      select: {
+        email: true,
+        age: true,
+        educationLevel: true,
+        schoolName: true,
+        gpa: true,
+        gpaScale: true,
+        koreanLevel: true,
+        englishLevel: true,
+        interestedMajor: true,
+        interestedServices: true,
+        interestedUniversityIds: true,
+      },
+    });
+
+    const typed = nameSkeleton(dto.firstName);
+    const known = nameSkeleton(lead.firstName);
+    const fill: Prisma.LeadUpdateInput = {
+      ...(!known && typed ? { firstName: dto.firstName.trim(), lastName: dto.lastName.trim() } : {}),
+      ...(!current.email && dto.email ? { email: dto.email.trim().toLowerCase() } : {}),
+      ...(current.age == null && dto.age != null ? { age: dto.age } : {}),
+      ...(!current.educationLevel && dto.educationLevel ? { educationLevel: dto.educationLevel } : {}),
+      ...(!current.schoolName && dto.schoolName?.trim() ? { schoolName: dto.schoolName.trim() } : {}),
+      ...(current.gpa == null && dto.gpa != null ? { gpa: dto.gpa, gpaScale: dto.gpaScale } : {}),
+      ...(!current.koreanLevel && dto.koreanLevel ? { koreanLevel: dto.koreanLevel } : {}),
+      ...(!current.englishLevel && dto.englishLevel ? { englishLevel: dto.englishLevel } : {}),
+      ...(!current.interestedMajor && dto.interestedMajor ? { interestedMajor: dto.interestedMajor } : {}),
+      interestedServices: [...new Set([...current.interestedServices, ...(dto.interestedServices ?? [])])],
+      interestedUniversityIds: [...new Set([...current.interestedUniversityIds, ...universityIds])],
+      // A website enquiry still sitting in NEW whose owner now walks in has
+      // been contacted by the visit itself. Only NEW moves: a lead further
+      // along keeps the stage the consultant gave it.
+      ...(channel.initialStage !== LeadStage.NEW && lead.stage === LeadStage.NEW ? { stage: channel.initialStage } : {}),
+    };
+
+    // Inside the 24-hour window a different name on the same number is filed
+    // here too; saying whose it was keeps a sibling from vanishing into it.
+    const body = channel.body(dto.note, true);
+    await this.prisma.$transaction([
+      this.prisma.lead.update({ where: { id: lead.id }, data: fill }),
+      this.prisma.leadActivity.create({
+        data: {
+          leadId: lead.id,
+          type: channel.activityType,
+          body: typed && known && typed !== known ? `${dto.lastName.trim()} ${dto.firstName.trim()}: ${body}` : body,
+          meta: { channel: channel.key, repeat: true } satisfies Prisma.InputJsonObject,
+        },
+      }),
+    ]);
+  }
+
+  /** An existing client got in touch through a public channel — told to the office, not filed as a lead. */
+  private async recordClientEnquiry(
+    client: { id: string; code: string; firstName: string; lastName: string; leadId: string | null },
+    dto: CreatePublicLeadDto,
+    phone: string,
+    channel: IntakeChannel,
+  ): Promise<PublicLeadResult> {
+    if (client.leadId) {
+      await this.prisma.leadActivity.create({
+        data: {
+          leadId: client.leadId,
+          type: channel.activityType,
+          body: channel.body(dto.note, true),
+          meta: { channel: channel.key, repeat: true, clientId: client.id } satisfies Prisma.InputJsonObject,
+        },
+      });
+    }
+    await this.slack.notify({
+      emoji: '👤',
+      title: channel.key === 'office_qr' ? 'Үйлчлүүлэгч оффис дээр ирлээ' : 'Үйлчлүүлэгч дахин холбогдлоо',
+      fields: [
+        { label: 'Үйлчлүүлэгч', value: `${client.code} · ${client.lastName} ${client.firstName}` },
+        { label: 'Утас', value: phone },
+        { label: 'Тэмдэглэл', value: dto.note },
+      ],
+      link: { label: 'Үйлчлүүлэгчийг нээх', path: `/admin/clients/${client.id}` },
+    });
+    return { id: client.leadId, merged: true, client: { id: client.id, code: client.code } };
   }
 
   /**

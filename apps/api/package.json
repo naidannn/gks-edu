@@ -26,6 +26,7 @@
     "intakes:import": "tsx prisma/import-intakes.ts",
     "programs:import": "tsx prisma/import-programs.ts",
     "clients:import": "tsx prisma/import-clients.ts",
+    "clients:link-leads": "tsx prisma/link-client-leads.ts",
     "contract:template:import": "tsx prisma/import-contract-template.ts",
     "postinstall": "prisma generate",
     "email:preview": "tsx scripts/preview-emails.ts",

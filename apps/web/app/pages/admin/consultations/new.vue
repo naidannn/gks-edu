@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { LeadDetail, LeadListItem, PaginatedResult } from '@gks/shared';
+import type { LeadDetail } from '@gks/shared';
 import { useAuthStore } from '~/stores/auth';
-import { emptyLeadForm, leadPayload, normalizedPhone, stripPhone, validateLeadForm } from '~/utils/lead-form';
+import { emptyLeadForm, leadPayload, validateLeadForm } from '~/utils/lead-form';
 
 /**
  * Register the person sitting at the desk (1B-19).
@@ -33,33 +33,12 @@ onMounted(async () => {
 });
 
 /**
- * Someone who enquired online last week and walks in today is the same person.
- * The number is checked as it is typed so the consultant can open the existing
- * record instead of creating a second one — nothing is blocked, because they
- * are looking at the person and the merge tool exists for the rest (1B-09).
+ * Someone who enquired online last week and walks in today is the same person,
+ * and someone who is already a client should not come back as a lead. The
+ * number is checked as it is typed so the consultant can open the existing
+ * record instead of creating a second one (1B-09, 1B-26).
  */
-const existing = ref<LeadListItem[]>([]);
-let phoneTimer: ReturnType<typeof setTimeout> | undefined;
-
-watch(() => form.phone, (value) => {
-  clearTimeout(phoneTimer);
-  if (!/^(976)?\d{8}$/.test(stripPhone(value))) {
-    existing.value = [];
-    return;
-  }
-  // Search the stored form, not the typed one — a saved number never carries
-  // its country code.
-  const phone = normalizedPhone(value);
-  phoneTimer = setTimeout(async () => {
-    try {
-      const found = await api.get<PaginatedResult<LeadListItem>>('/leads', { query: { q: phone, limit: 5 } });
-      existing.value = found.items;
-    } catch {
-      existing.value = [];
-    }
-  }, 400);
-});
-onBeforeUnmount(() => clearTimeout(phoneTimer));
+const { clients: existingClients, leads: existing } = useExistingPerson(() => form.phone);
 
 const submitting = ref(false);
 const submitError = ref<string | null>(null);
@@ -97,6 +76,23 @@ useHead({ title: 'Зөвлөгөө бүртгэх · CRM' });
         үлдсэнийг мэдсэн хэрээрээ нөхөж болно.
       </p>
     </header>
+
+    <DsCard v-if="existingClients.length" accent>
+      <p class="gks-lead-new__dupe-title">
+        <DsIcon name="triangle-alert" :size="16" />
+        Энэ дугаартай үйлчлүүлэгч байна:
+      </p>
+      <ul class="gks-lead-new__dupe-list">
+        <li v-for="match in existingClients" :key="match.id">
+          <NuxtLink :to="`/admin/clients/${match.id}`">
+            {{ match.code }} · {{ match.lastName }} {{ match.firstName }}
+          </NuxtLink>
+        </li>
+      </ul>
+      <p class="gks-lead-new__dupe-hint">
+        Тэр хүн мөн бол сэжим бүртгэхгүй — үйлчлүүлэгчийн картаас нь үргэлжлүүлээрэй.
+      </p>
+    </DsCard>
 
     <DsCard v-if="existing.length" accent>
       <p class="gks-lead-new__dupe-title">

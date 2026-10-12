@@ -49,7 +49,14 @@ function siteAccount(overrides: Partial<AccountRow> = {}): AccountRow {
 }
 
 function prismaStub(
-  overrides: { registerTaken?: boolean; account?: AccountRow; leadAccount?: AccountRow; lead?: unknown } = {},
+  overrides: {
+    registerTaken?: boolean;
+    account?: AccountRow;
+    leadAccount?: AccountRow;
+    lead?: unknown;
+    /** What `findLeadsOfPerson` finds under the client's number (1B-26). */
+    personLeads?: unknown[];
+  } = {},
 ) {
   const created = { id: 'client-1', code: 'KH-2026-0001', userId: 'user-1' };
 
@@ -62,9 +69,16 @@ function prismaStub(
         Promise.resolve({ ...created, userId: data.userId })),
       // `generateCode` reads the highest code issued this year, not a count.
       findFirst: vi.fn().mockResolvedValue(null),
+      update: vi.fn(),
     },
-    lead: { update: vi.fn() },
-    leadActivity: { create: vi.fn() },
+    lead: {
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue(overrides.personLeads ?? []),
+    },
+    leadActivity: { create: vi.fn(), updateMany: vi.fn() },
+    chatSession: { updateMany: vi.fn() },
+    facebookThread: { updateMany: vi.fn() },
   };
 
   const prisma = {
@@ -551,5 +565,90 @@ describe('ClientsService.upsertOwn — the office already has this person', () =
       expect.objectContaining({ link: expect.objectContaining({ path: '/admin/clients/client-9' }) }),
     );
     expect(tx.client.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('ClientsService — the person\'s enquiries follow them (1B-26)', () => {
+  const personLead = (id: string, overrides: object = {}) => ({
+    id,
+    firstName: 'Түвшин',
+    stage: LeadStage.CONTACTED,
+    assignedToId: 'consultant-3',
+    source: LeadSource.WEBSITE,
+    createdAt: new Date('2026-09-01'),
+    ...overrides,
+  });
+
+  it('links a client registered from the client form to their oldest lead, and folds the rest', async () => {
+    const { prisma, tx } = prismaStub({
+      personLeads: [personLead('website-lead'), personLead('messenger-lead', { firstName: 'Tuvshin', source: LeadSource.SOCIAL })],
+    });
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+
+    await service.create(adultDto(), 'staff-1');
+
+    expect(tx.client.update).toHaveBeenCalledWith({
+      where: { id: 'client-1' },
+      data: { leadId: 'website-lead', assignedConsultantId: 'consultant-3' },
+    });
+    expect(tx.lead.update).toHaveBeenCalledWith({
+      where: { id: 'website-lead' },
+      data: { userId: 'user-1', stage: LeadStage.WON },
+    });
+    // The trail entry the source report counts as a win.
+    expect(tx.leadActivity.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        leadId: 'website-lead',
+        type: 'STAGE_CHANGE',
+        meta: expect.objectContaining({ to: LeadStage.WON, clientId: 'client-1' }),
+      }),
+    });
+    expect(tx.lead.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['messenger-lead'] } },
+      data: expect.objectContaining({ mergedIntoId: 'website-lead', stage: LeadStage.LOST }),
+    });
+    // First touch: the client came from the website, whoever typed them in.
+    expect(tx.client.update).toHaveBeenCalledWith({ where: { id: 'client-1' }, data: { source: LeadSource.WEBSITE } });
+  });
+
+  it('leaves a client with no matching lead as it was', async () => {
+    const { prisma, tx } = prismaStub();
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+
+    await service.create(adultDto(), 'staff-1');
+
+    expect(tx.client.update).not.toHaveBeenCalled();
+    expect(tx.lead.update).not.toHaveBeenCalled();
+  });
+
+  it('folds the person\'s other leads into the one being converted', async () => {
+    const { prisma, tx } = prismaStub({
+      lead: {
+        id: 'lead-1',
+        firstName: 'Түвшин',
+        lastName: 'Батбаяр',
+        phone: '99112233',
+        email: null,
+        stage: LeadStage.CONSULTED,
+        source: LeadSource.OFFICE,
+        interestedServices: [ServiceType.BACHELOR],
+        interestedUniversityIds: [],
+        client: null,
+        mergedIntoId: null,
+        userId: null,
+      },
+      personLeads: [personLead('lead-1'), personLead('earlier-web-form')],
+    });
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+
+    await service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1');
+
+    expect(tx.lead.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['earlier-web-form'] } },
+      data: expect.objectContaining({ mergedIntoId: 'lead-1' }),
+    });
   });
 });

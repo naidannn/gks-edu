@@ -8,11 +8,47 @@ import type { MetaEventsService } from '../meta/meta-events.service.js';
 import { LeadsService, normalizePhone } from './leads.service.js';
 import type { CreatePublicLeadDto } from './dto/create-public-lead.dto.js';
 
-/** Minimal Prisma double — only the calls the public-form path makes. */
-function prismaStub(overrides: { recentLead?: { id: string } | null } = {}) {
+type LeadRow = { id: string; firstName?: string; lastName?: string; stage?: LeadStage; createdAt?: Date };
+type ClientRow = { id: string; code: string; firstName: string; lastName: string; leadId: string | null };
+
+const EMPTY_LEAD_FIELDS = {
+  email: null,
+  age: null,
+  educationLevel: null,
+  schoolName: null,
+  gpa: null,
+  gpaScale: null,
+  koreanLevel: null,
+  englishLevel: null,
+  interestedMajor: null,
+  interestedServices: [],
+  interestedUniversityIds: [],
+};
+
+/**
+ * Minimal Prisma double — only the calls the public-form path makes.
+ * `recentLead` is a lead filed under the same number in the last hour;
+ * `leads` and `clients` are what `matchPerson` finds under the number.
+ */
+function prismaStub(
+  overrides: { recentLead?: { id: string } | null; leads?: LeadRow[]; clients?: ClientRow[]; stored?: object } = {},
+) {
+  const leads = [
+    ...(overrides.recentLead ? [{ ...overrides.recentLead, createdAt: new Date() }] : []),
+    ...(overrides.leads ?? []),
+  ].map((lead) => ({
+    firstName: 'Тэмүүлэн',
+    lastName: 'Батбаяр',
+    stage: LeadStage.NEW,
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    ...lead,
+  }));
+
   const prisma = {
     lead: {
-      findFirst: vi.fn().mockResolvedValue(overrides.recentLead ?? null),
+      findMany: vi.fn().mockResolvedValue(leads),
+      findUniqueOrThrow: vi.fn().mockResolvedValue({ ...EMPTY_LEAD_FIELDS, ...overrides.stored }),
+      update: vi.fn().mockResolvedValue({}),
       // Mirrors the `select` on the real create — the staff notification reads
       // these fields straight off the returned row.
       create: vi.fn().mockResolvedValue({
@@ -24,11 +60,12 @@ function prismaStub(overrides: { recentLead?: { id: string } | null } = {}) {
         source: LeadSource.WEBSITE,
         interestedServices: [],
       }),
-      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
+    client: { findMany: vi.fn().mockResolvedValue(overrides.clients ?? []) },
     leadActivity: { create: vi.fn().mockResolvedValue({ id: 'activity' }) },
     university: { findMany: vi.fn().mockResolvedValue([{ id: 'uni-1' }]) },
     user: { findMany: vi.fn().mockResolvedValue([]) },
+    $transaction: vi.fn((writes: Promise<unknown>[]) => Promise.all(writes)),
   };
   return prisma as unknown as PrismaService & typeof prisma;
 }
@@ -191,10 +228,86 @@ describe('LeadsService.createFromPublicForm', () => {
         body: 'Оффис дээр ирж, QR кодоор дахин бүртгүүлсэн',
       }),
     });
-    expect(prisma.lead.updateMany).toHaveBeenCalledWith({
-      where: { id: 'existing-lead', stage: LeadStage.NEW },
+    expect(prisma.lead.update.mock.calls[0]![0]).toMatchObject({
+      where: { id: 'existing-lead' },
       data: { stage: LeadStage.CONTACTED },
     });
     expect(meta.track).not.toHaveBeenCalled();
+  });
+
+  // ─── 1B-26: one person, one record ─────────────────────────────────────────
+
+  it('files a repeat on the open lead with the same name, however long ago it came in', async () => {
+    const prisma = prismaStub({ leads: [{ id: 'website-lead', firstName: 'Temuulen' }] });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    // The website form a fortnight ago was typed in Latin; the QR today in Cyrillic.
+    const result = await service.createFromPublicForm(base, {}, { source: LeadSource.OFFICE });
+
+    expect(result).toEqual({ id: 'website-lead', merged: true });
+    expect(prisma.lead.create).not.toHaveBeenCalled();
+  });
+
+  it('opens a new lead when an old one on the number has another name — a sibling on a parent\'s phone', async () => {
+    const prisma = prismaStub({ leads: [{ id: 'sister', firstName: 'Ариунжаргал' }] });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    const result = await service.createFromPublicForm({ ...base, firstName: 'Ариунзаяа' });
+
+    expect(result.merged).toBe(false);
+    expect(prisma.lead.create).toHaveBeenCalled();
+  });
+
+  it('fills what the earlier submission left empty, and learns the name a chat never got', async () => {
+    const prisma = prismaStub({
+      leads: [{ id: 'chat-lead', firstName: '—', lastName: '—' }],
+      stored: { email: 'kept@example.com', interestedServices: ['GKS'] },
+    });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    await service.createFromPublicForm({
+      ...base,
+      email: 'new@example.com',
+      gpa: 3.6,
+      interestedServices: ['BACHELOR'],
+    } as CreatePublicLeadDto);
+
+    const data = prisma.lead.update.mock.calls[0]![0].data;
+    expect(data).toMatchObject({ firstName: 'Тэмүүлэн', lastName: 'Батбаяр', gpa: 3.6 });
+    expect(data.email).toBeUndefined();
+    expect(data.interestedServices).toEqual(['GKS', 'BACHELOR']);
+  });
+
+  it('does not file an existing client as a new lead — the office is told instead', async () => {
+    const prisma = prismaStub({
+      clients: [{ id: 'client-1', code: 'KH-2026-0058', firstName: 'Тэмүүлэн', lastName: 'Батбаяр', leadId: 'their-lead' }],
+    });
+    const slack = slackStub();
+    const meta = metaStub();
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slack, meta);
+
+    const result = await service.createFromPublicForm({ ...base, note: 'Визний талаар асуух гэсэн юм' });
+
+    expect(result).toEqual({ id: 'their-lead', merged: true, client: { id: 'client-1', code: 'KH-2026-0058' } });
+    expect(prisma.lead.create).not.toHaveBeenCalled();
+    expect(prisma.leadActivity.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ leadId: 'their-lead', body: 'Визний талаар асуух гэсэн юм' }),
+    });
+    expect((slack.notify as ReturnType<typeof vi.fn>).mock.calls[0]![0]).toMatchObject({
+      link: { path: '/admin/clients/client-1' },
+    });
+    expect(meta.track).not.toHaveBeenCalled();
+  });
+
+  it('still opens a lead for a client\'s sibling enquiring on the same phone', async () => {
+    const prisma = prismaStub({
+      clients: [{ id: 'client-1', code: 'KH-2026-0058', firstName: 'Анужин', lastName: 'Батбаяр', leadId: null }],
+    });
+    const service = new LeadsService(prisma, notificationsStub(), emailStub(), slackStub(), metaStub());
+
+    const result = await service.createFromPublicForm(base);
+
+    expect(result.client).toBeUndefined();
+    expect(prisma.lead.create).toHaveBeenCalled();
   });
 });

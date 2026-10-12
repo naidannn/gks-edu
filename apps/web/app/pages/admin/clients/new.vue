@@ -37,6 +37,16 @@ onMounted(async () => {
   await Promise.all(tasks);
 });
 
+/**
+ * 1B-26 — the number may already be a client, and the person's enquiries are
+ * linked to the new client on save when the given name agrees. Shown before
+ * saving so neither surprises anyone.
+ */
+const { clients: phoneClients, leads: phoneLeads } = useExistingPerson(() => form.phone);
+const leadsToLink = computed(() =>
+  phoneLeads.value.filter((match) => !match.client && match.id !== leadId.value),
+);
+
 const submitting = ref(false);
 const submitError = ref<string | null>(null);
 
@@ -89,6 +99,37 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
       </p>
     </header>
 
+    <DsCard v-if="phoneClients.length" accent>
+      <p class="gks-form-page__match-title">
+        <DsIcon name="triangle-alert" :size="16" />
+        Энэ дугаартай үйлчлүүлэгч аль хэдийн байна:
+      </p>
+      <ul class="gks-form-page__match-list">
+        <li v-for="match in phoneClients" :key="match.id">
+          <NuxtLink :to="`/admin/clients/${match.id}`">{{ match.code }} · {{ match.lastName }} {{ match.firstName }}</NuxtLink>
+        </li>
+      </ul>
+      <p class="gks-form-page__match-hint">Тэр хүн мөн бол дахин бүртгэхгүй. Ах дүү нэг утас хэрэглэдэг бол үргэлжлүүлж болно.</p>
+    </DsCard>
+
+    <DsCard v-if="leadsToLink.length">
+      <p class="gks-form-page__match-title">
+        <DsIcon name="link" :size="16" />
+        Энэ дугаартай зөвлөгөөний хүсэлт:
+      </p>
+      <ul class="gks-form-page__match-list">
+        <li v-for="match in leadsToLink" :key="match.id">
+          <NuxtLink :to="`/admin/consultations/${match.id}`">{{ match.lastName }} {{ match.firstName }}</NuxtLink>
+          <span class="gks-form-page__match-meta">
+            {{ LEAD_SOURCE_LABELS[match.source] }} · {{ LEAD_STAGE_LABELS[match.stage] }} · {{ formatDate(match.createdAt) }}
+          </span>
+        </li>
+      </ul>
+      <p class="gks-form-page__match-hint">
+        Нэр нь таарвал хадгалахад үйлчлүүлэгчтэй автоматаар холбогдож, сэжим «Гэрээ болсон» болно.
+      </p>
+    </DsCard>
+
     <form class="gks-form-body" @submit.prevent="submit">
       <CrmClientFormFields
         v-model="form"
@@ -127,5 +168,9 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
 
 .gks-form-page__switches { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-4); }
 .gks-form-page__error { color: var(--danger-fg); }
+.gks-form-page__match-title { display: flex; align-items: center; gap: var(--sp-2); font-weight: 600; }
+.gks-form-page__match-list { display: flex; flex-direction: column; gap: var(--sp-1); margin: var(--sp-2) 0; }
+.gks-form-page__match-meta { margin-left: var(--sp-2); color: var(--text-muted); font-size: var(--fs-body-sm); }
+.gks-form-page__match-hint { color: var(--text-muted); font-size: var(--fs-body-sm); }
 .gks-form-actions { justify-content: flex-end; }
 </style>

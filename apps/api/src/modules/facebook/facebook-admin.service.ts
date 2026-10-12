@@ -321,6 +321,16 @@ export class FacebookAdminService {
     if (!thread) throw new NotFoundException('Facebook чат олдсонгүй');
     if (thread.leadId) throw new BadRequestException('Энэ чат аль хэдийн сэжимтэй холбогдсон байна');
 
+    // 1B-26 — the person behind the thread may already be on file: a client,
+    // or the website enquiry they sent before they wrote on Messenger. The
+    // thread joins that record instead of starting a second one.
+    const known = await this.leads.matchPerson(dto.phone, dto.firstName);
+    if (known.client) {
+      const { id: clientId, leadId } = known.client;
+      return this.link(id, { clientId, ...(leadId ? { leadId } : {}) }, actorId);
+    }
+    if (known.lead) return this.link(id, { leadId: known.lead.id }, actorId);
+
     const lead = await this.leads.createByStaff(
       {
         firstName: dto.firstName,

@@ -29,6 +29,7 @@ import { SlackService } from '../notifications/slack.service.js';
 import { activeStaffWhere, STAFF_ROLES } from '../../common/constants/roles.js';
 import { officeDateRange } from '../reports/report-period.js';
 import { absorbLogin, findLoginToAbsorb } from './absorb-login.js';
+import { attachLeadsToClient, findLeadsOfPerson, foldLeads } from './link-leads.js';
 import { DEADLINE_WARNING_MS, TERMINAL_STAGES, liveCase } from './client-cases.js';
 import { CLIENT_PHASES, type ClientPhase, clientPhaseOf, clientPhaseWhere } from './client-phase.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
@@ -185,8 +186,9 @@ export class ClientsService {
           userId: account.id,
           createdById: actorId,
         },
-        select: { id: true, userId: true },
+        select: { id: true, code: true, userId: true, assignedConsultantId: true },
       });
+      await this.linkPersonLeads(tx, client, dto, actorId);
 
       if (dto.openCase !== false) {
         await this.cases.createWithin(tx, {
@@ -289,6 +291,11 @@ export class ClientsService {
         });
       }
 
+      // The same person's other enquiries — the website form before the
+      // office visit, the Messenger chat after it — are this lead's duplicates.
+      const others = (await findLeadsOfPerson(tx, merged)).filter((other) => other.id !== lead.id);
+      await foldLeads(tx, lead.id, others.map((other) => other.id), actorId);
+
       // The lead keeps its own timeline; the conversion is one more entry on it.
       await tx.lead.update({
         where: { id: lead.id },
@@ -310,6 +317,23 @@ export class ClientsService {
     if (!existingAccount?.hasLogin) await this.invitePortal(created.userId, merged);
 
     return { ...(await this.findOne(created.id)), accountLinked: Boolean(existingAccount) };
+  }
+
+  /**
+   * 1B-26 — a client registered from the client form or the cabinet is still
+   * somebody who enquired first. Their leads are linked, and the client is
+   * attributed to the channel that first brought them in (first touch), not
+   * to the desk or the form that happened to register them.
+   */
+  private async linkPersonLeads(
+    tx: Prisma.TransactionClient,
+    client: { id: string; code: string; userId: string; assignedConsultantId: string | null },
+    person: { phone: string; phoneAlt?: string | null; firstName: string },
+    actorId: string | null,
+  ): Promise<void> {
+    const leads = await findLeadsOfPerson(tx, person);
+    const primary = await attachLeadsToClient(tx, client, leads, { actorId });
+    if (primary) await tx.client.update({ where: { id: client.id }, data: { source: primary.source } });
   }
 
   /**
@@ -538,7 +562,7 @@ export class ClientsService {
       if (existing) {
         await tx.client.update({ where: { id: existing.id }, data: columns });
       } else {
-        await tx.client.create({
+        const client = await tx.client.create({
           data: {
             ...columns,
             ...this.toRequiredClientData(dto),
@@ -546,7 +570,9 @@ export class ClientsService {
             userId,
             source: LeadSource.WEBSITE,
           },
+          select: { id: true, code: true, userId: true, assignedConsultantId: true },
         });
+        await this.linkPersonLeads(tx, client, dto, null);
       }
 
       // The account mirrors the name and phone the client just entered, so

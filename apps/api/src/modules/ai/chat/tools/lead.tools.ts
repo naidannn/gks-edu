@@ -313,6 +313,30 @@ export class LeadTools implements AiToolProvider {
           userId: context.userId,
         });
 
+        // 1B-26 — the number is an existing client's. No lead was filed; the
+        // office was told. The visitor is not told whose number it is: anyone
+        // can type a phone number into a chat.
+        if (result.client) {
+          await this.prisma.chatSession.update({
+            where: { id: context.session.id },
+            data: {
+              leadId: result.id,
+              outcome: ChatOutcome.HANDOFF,
+              summary,
+              profile: { ...profile, phone, ...(name ? { name } : {}) } as object,
+            },
+          });
+          return {
+            title: 'Зөвлөхөд дамжууллаа',
+            data: {
+              created: false,
+              message:
+                'Энэ дугаар манай бүртгэлд байгаа тул хүсэлтийг хариуцсан зөвлөхөд нь шууд дамжууллаа. ' +
+                'Бүртгэлийн дэлгэрэнгүйг бүү хэл — зөвлөх ажлын цагаар холбогдоно гэдгийг л хэл.',
+            },
+          };
+        }
+
         await this.prisma.chatSession.update({
           where: { id: context.session.id },
           data: {
