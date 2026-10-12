@@ -483,6 +483,26 @@ async function onLogout() {
           </nav>
         </div>
       </div>
+
+      <!-- Developer credit: the last line of every public page. -->
+      <div class="gks-credit">
+        <a
+          href="https://amarhan.mn/?utm_source=gksedu.mn&utm_medium=referral&utm_campaign=footer_credit"
+          target="_blank"
+          rel="noopener"
+          class="gks-credit__link"
+          aria-label="Систем хөгжүүлсэн: Amarhan.mn — дижитал шилжилтийн түнш (шинэ цонхонд нээгдэнэ)"
+        >
+          <span class="gks-credit__label">Систем хөгжүүлсэн</span>
+          <span class="gks-credit__brand">
+            <span class="gks-credit__mark" aria-hidden="true">A</span>
+            <span class="gks-credit__name">Amarhan<span class="gks-credit__tld">.mn</span></span>
+          </span>
+          <span class="gks-credit__divider" aria-hidden="true" />
+          <span class="gks-credit__tagline">Дижитал шилжилтийн түнш</span>
+          <DsIcon name="arrow-up-right" :size="14" class="gks-credit__arrow" />
+        </a>
+      </div>
     </footer>
 
     <nav class="gks-tabbar" aria-label="Үндсэн цэс">
@@ -855,6 +875,88 @@ async function onLogout() {
 }
 .gks-footer__bottom-link:hover { color: var(--n-000); }
 
+/* ---- Developer credit: a quiet signature strip under the legal row ----
+   A hairline of light runs across the top; the mark warms up on hover. */
+.gks-credit {
+  position: relative;
+  background: rgba(0, 0, 0, .18);
+  padding: var(--sp-4) var(--gutter-desktop);
+  display: flex;
+  justify-content: center;
+}
+.gks-credit::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(147, 197, 253, .45), rgba(251, 191, 36, .45), transparent);
+}
+.gks-credit__link {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: 6px 14px 6px 16px;
+  border: var(--border-hair) solid rgba(255, 255, 255, .08);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, .03);
+  color: var(--n-400);
+  font-size: var(--fs-micro);
+  text-decoration: none;
+  transition: border-color .25s ease, background-color .25s ease, box-shadow .25s ease;
+}
+.gks-credit__link:hover,
+.gks-credit__link:focus-visible {
+  border-color: rgba(147, 197, 253, .35);
+  background: rgba(255, 255, 255, .06);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, .08), 0 8px 24px -12px rgba(59, 130, 246, .6);
+}
+.gks-credit__label {
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  color: var(--n-500);
+}
+.gks-credit__brand { display: inline-flex; align-items: center; gap: 7px; }
+.gks-credit__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--brand-500), #6366f1 55%, #f59e0b);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--fw-black);
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 2px 6px rgba(37, 99, 235, .35);
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+}
+.gks-credit__link:hover .gks-credit__mark { transform: rotate(-8deg) scale(1.08); }
+.gks-credit__name {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: .01em;
+  color: var(--n-000);
+}
+.gks-credit__tld {
+  background: linear-gradient(90deg, var(--brand-300), #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gks-credit__divider { width: 1px; height: 12px; background: rgba(255, 255, 255, .14); }
+.gks-credit__tagline { color: var(--n-400); }
+.gks-credit__arrow { color: var(--n-500); transition: transform .25s ease, color .25s ease; }
+.gks-credit__link:hover .gks-credit__arrow { color: var(--brand-300); transform: translate(2px, -2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gks-credit__mark,
+  .gks-credit__arrow { transition: none; }
+}
+
 /* ---- Mobile bottom tabs (≤900px) ----
    Three destinations plus the sheet. Same shape as the portal shell's bar, so
    a client crossing between /universities and /app does not relearn the
@@ -957,7 +1059,7 @@ async function onLogout() {
 
   /* Clear the fixed bar so the last row of the footer is never trapped
      under it. */
-  .gks-footer__bottom-inner { padding-bottom: calc(var(--sp-5) + 58px + env(safe-area-inset-bottom, 0px)); }
+  .gks-credit { padding-bottom: calc(var(--sp-4) + 58px + env(safe-area-inset-bottom, 0px)); }
 }
 
 @media (max-width: 640px) {
@@ -966,8 +1068,9 @@ async function onLogout() {
   .gks-appbar__panel-logout { display: block; }
   .gks-main { padding: var(--sp-6) var(--gutter-mobile) var(--sp-9); }
   .gks-footer__inner { grid-template-columns: 1fr; padding: var(--sp-8) var(--gutter-mobile) var(--sp-6); }
-  .gks-footer__bottom-inner {
-    padding: var(--sp-4) var(--gutter-mobile) calc(var(--sp-4) + 58px + env(safe-area-inset-bottom, 0px));
-  }
+  .gks-footer__bottom-inner { padding: var(--sp-4) var(--gutter-mobile); }
+  .gks-credit { padding-left: var(--gutter-mobile); padding-right: var(--gutter-mobile); }
+  .gks-credit__divider,
+  .gks-credit__tagline { display: none; }
 }
 </style>
