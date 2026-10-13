@@ -5,6 +5,7 @@ import { AdmissionsService } from '../admissions/admissions.service.js';
 import { FxService } from '../fx/fx.service.js';
 import { PricingService } from '../pricing/pricing.service.js';
 import { PROGRAM_CARD_FIELDS } from '../programs/programs.service.js';
+import { ProgramSearchIndex } from '../programs/program-search-index.service.js';
 import { programSearchWhere } from '../programs/programs.service.js';
 import { TERMS_PER_YEAR, annualTuitionWhere } from '../programs/tuition.js';
 import { livingCostMonthlyMax, livingCostMonthlyMin, readLivingCost } from '../universities/living-cost.js';
@@ -62,6 +63,7 @@ export class StudyPlanService {
     private readonly admissions: AdmissionsService,
     private readonly pricing: PricingService,
     private readonly fx: FxService,
+    private readonly searchIndex: ProgramSearchIndex,
   ) {}
 
   /**
@@ -85,11 +87,16 @@ export class StudyPlanService {
     const field = rawField === ANY_FIELD ? null : rawField;
     const region = query.region?.trim() || null;
     const budgetKrw = query.budget ?? null;
+    // The keyword the visitor typed, matched exactly the way `/programs`
+    // matches it — a plan that counts programmes the catalogue would not list
+    // is a plan that falls apart on the next click. Resolved once: every count
+    // below narrows by the same field.
+    const fieldWhere = field ? programSearchWhere(field, await this.searchIndex.matchingIds(field)) : null;
 
-    const goalWhere = this.programWhere({ level: goal, field, region, budgetKrw });
+    const goalWhere = this.programWhere({ level: goal, fieldWhere, region, budgetKrw });
     // The language gate is decided on the four questions the visitor answered,
     // never on the region and budget chips — see `needsLanguageStage`.
-    const gateWhere = this.programWhere({ level: goal, field });
+    const gateWhere = this.programWhere({ level: goal, fieldWhere });
 
     // Round one settles the one branch the rest of the plan hangs off: is the
     // language stage in the path or not?
@@ -117,7 +124,7 @@ export class StudyPlanService {
     // region leaves exactly one chip — the one already selected — with no way
     // back to the others.
     const regionWhere = this.withTopikGate(
-      this.programWhere({ level: goal, field, budgetKrw }),
+      this.programWhere({ level: goal, fieldWhere, budgetKrw }),
       needsPrep ? targetTopik : topik,
     );
 
@@ -204,19 +211,16 @@ export class StudyPlanService {
    */
   private programWhere(options: {
     level: ProgramLevel;
-    field?: string | null;
+    fieldWhere?: Prisma.UniversityProgramWhereInput | null;
     region?: string | null;
     budgetKrw?: number | null;
   }): Prisma.UniversityProgramWhereInput {
-    const { level, field, region, budgetKrw } = options;
+    const { level, fieldWhere, region, budgetKrw } = options;
 
     // Both conditions are themselves `OR`s, so they go in one `AND` — two of
     // them sharing `where.OR` would quietly become one.
     const and: Prisma.UniversityProgramWhereInput[] = [];
-    // The keyword the visitor typed, matched exactly the way `/programs`
-    // matches it — a plan that counts programmes the catalogue would not list
-    // is a plan that falls apart on the next click.
-    if (field) and.push(programSearchWhere(field));
+    if (fieldWhere) and.push(fieldWhere);
     // Same rule as `/programs`, and against the same derived annual figure: a
     // budget filter is about published prices, so a programme with no price at
     // all is out of a budgeted list rather than silently counted as affordable

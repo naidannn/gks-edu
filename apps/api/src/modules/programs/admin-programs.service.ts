@@ -19,6 +19,7 @@ import type { BulkCreateProgramsDto } from './dto/bulk-programs.dto.js';
 import type { QueryAdminProgramsDto } from './dto/query-programs.dto.js';
 import type { CreateProgramDto, UpdateProgramDto } from './dto/university-program.dto.js';
 import { FacultiesService } from './faculties.service.js';
+import { ProgramSearchIndex } from './program-search-index.service.js';
 import { PROGRAM_CARD_FIELDS, PROGRAMS_FACETS_CACHE_KEY, ProgramsService } from './programs.service.js';
 
 /**
@@ -59,14 +60,15 @@ export class AdminProgramsService extends ProgramsService {
   constructor(
     prisma: PrismaService,
     cache: CacheService,
+    searchIndex: ProgramSearchIndex,
     private readonly faculties: FacultiesService,
     @InjectQueue(GKS_RANKING_QUEUE) private readonly rankingQueue: Queue,
   ) {
-    super(prisma, cache);
+    super(prisma, cache, searchIndex);
   }
 
   async findAllAdmin(query: QueryAdminProgramsDto) {
-    const where = this.buildAdminWhere(query);
+    const where = await this.buildAdminWhere(query);
 
     // Same reason as the public list: the annual figure is derived from the
     // level's terms-per-year, so it cannot be an `ORDER BY` on a column.
@@ -283,8 +285,8 @@ export class AdminProgramsService extends ProgramsService {
 
   // --- Internals ---
 
-  private buildAdminWhere(query: QueryAdminProgramsDto): Prisma.UniversityProgramWhereInput {
-    const where = this.buildWhere(query, { publicOnly: false });
+  private async buildAdminWhere(query: QueryAdminProgramsDto): Promise<Prisma.UniversityProgramWhereInput> {
+    const where = await this.buildWhere(query, { publicOnly: false });
 
     if (query.noFaculty) where.facultyId = null;
     if (query.unverified) where.verifiedAt = null;
@@ -408,6 +410,7 @@ export class AdminProgramsService extends ProgramsService {
    * editor gets their response back and the new order lands seconds later.
    */
   private async invalidate(slug: string): Promise<void> {
+    this.searchIndex.invalidate();
     await Promise.all([
       this.cache.del(universityDetailCacheKey(slug)),
       this.cache.del(UNIVERSITIES_FACETS_CACHE_KEY),

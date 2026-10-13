@@ -6,6 +6,7 @@ import { AdminProgramsController } from './admin-programs.controller.js';
 import { AdminProgramsService } from './admin-programs.service.js';
 import { AdminFacultiesController } from './admin-faculties.controller.js';
 import { ProgramsController } from './programs.controller.js';
+import { ProgramSearchIndex } from './program-search-index.service.js';
 import { ProgramsService } from './programs.service.js';
 import { ProgramResearchProcessor } from './research/program-research.processor.js';
 import { ProgramResearchService } from './research/program-research.service.js';
@@ -31,12 +32,13 @@ import { FacultiesService } from './faculties.service.js';
   ],
   controllers: [ProgramsController, AdminProgramsController, AdminFacultiesController],
   providers: [
+    ProgramSearchIndex,
     ProgramsService,
     AdminProgramsService,
     FacultiesService,
     ProgramResearchService,
     ProgramResearchProcessor,
   ],
-  exports: [ProgramsService, AdminProgramsService, FacultiesService],
+  exports: [ProgramsService, AdminProgramsService, FacultiesService, ProgramSearchIndex],
 })
 export class ProgramsModule {}

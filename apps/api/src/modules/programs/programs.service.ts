@@ -4,6 +4,7 @@ import { paginate } from '../../common/dto/pagination.dto.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CacheService } from '../../redis/cache.service.js';
 import type { ProgramSort, QueryProgramsDto } from './dto/query-programs.dto.js';
+import { ProgramSearchIndex } from './program-search-index.service.js';
 import { ANNUAL_TUITION_SQL, annualTuitionWhere, compareAnnualTuition } from './tuition.js';
 
 /**
@@ -112,10 +113,11 @@ export class ProgramsService {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly cache: CacheService,
+    protected readonly searchIndex: ProgramSearchIndex,
   ) {}
 
   async findAll(query: QueryProgramsDto) {
-    const where = this.buildWhere(query, { publicOnly: true });
+    const where = await this.buildWhere(query, { publicOnly: true });
 
     if (query.sort === 'tuition') {
       const { ids, total } = await this.tuitionOrderedIds(where, query.order, query.skip, query.limit);
@@ -272,10 +274,10 @@ export class ProgramsService {
    * `publicOnly` is the whole difference: a draft programme, or one at an
    * unpublished school, must never reach a visitor.
    */
-  protected buildWhere(
+  protected async buildWhere(
     query: QueryProgramsDto,
     options: { publicOnly: boolean },
-  ): Prisma.UniversityProgramWhereInput {
+  ): Promise<Prisma.UniversityProgramWhereInput> {
     const where: Prisma.UniversityProgramWhereInput = {};
     const university: Prisma.UniversityWhereInput = {};
     // Every condition that is itself an OR goes in here. Two of them cannot
@@ -289,7 +291,7 @@ export class ProgramsService {
       university.isPublished = true;
     }
 
-    if (query.q) and.push(programSearchWhere(query.q));
+    if (query.q) and.push(programSearchWhere(query.q, await this.searchIndex.matchingIds(query.q)));
 
     if (query.level) where.level = query.level;
     if (query.language) where.language = query.language;
@@ -331,40 +333,43 @@ export class ProgramsService {
  *
  * Every wording of the programme and of the college it sits in, in all three
  * languages, because whoever is typing may know the subject in any of them and
- * the catalogue holds all three. `contains` compiles to ILIKE '%q%', which the
- * pg_trgm GIN indexes on these columns serve.
+ * the catalogue holds all three. The word is also widened to every name of the
+ * field it belongs to (`search-vocabulary.ts`, 1I-15): nobody's programme is
+ * called "IT" or "нягтлан бодогч", and those are the words people type. That
+ * match runs in memory (`ProgramSearchIndex`) and arrives here as `matchingIds`.
  *
- * The school's three names are searched too, but only for a term of four
- * characters or more. "IT" is two, and "Univers**it**y" contains it — a short
- * word matched against school names returns the entire catalogue, which is the
- * one answer a search box must never give. Whoever actually wants one school
- * has a dropdown listing every school with its count.
+ * The school's three names are searched too, but only for the typed word and
+ * only for a term of four characters or more. "IT" is two, and
+ * "Univers**it**y" contains it — a short word matched against school names
+ * returns the entire catalogue, which is the one answer a search box must
+ * never give; and the field's names are subject words — "technology" is half
+ * the schools' names. Whoever actually wants one school has a dropdown
+ * listing every school with its count.
  *
- * Exported so the study planner searches on exactly these columns: two
+ * Exported so the study planner searches on exactly these terms: two
  * definitions of "matches" is how a plan and the catalogue it links to start
  * disagreeing about how many programmes exist.
  */
 export const SCHOOL_NAME_SEARCH_MIN_LENGTH = 4;
 
-export function programSearchWhere(term: string): Prisma.UniversityProgramWhereInput {
+export function programSearchWhere(term: string, matchingIds: string[]): Prisma.UniversityProgramWhereInput {
   const trimmed = term.trim();
-  const contains = { contains: trimmed, mode: 'insensitive' } as const;
+  if (!trimmed) return {};
+  const school = { contains: trimmed, mode: 'insensitive' } as const;
 
   return {
     OR: [
-      { nameMn: contains },
-      { nameEn: contains },
-      { nameKo: contains },
-      { faculty: { nameMn: contains } },
-      { faculty: { nameEn: contains } },
-      { faculty: { nameKo: contains } },
+      // One bind parameter per id; Postgres allows 65,535, the catalogue is ~14k.
+      { id: { in: matchingIds } },
       ...(trimmed.length >= SCHOOL_NAME_SEARCH_MIN_LENGTH
         ? [
-            { university: { nameMn: contains } },
-            { university: { nameEn: contains } },
-            // Korean school names are well past the short-term guard, and
-            // leaving this one out means typing 고려대학교 finds nothing.
-            { university: { nameKo: contains } },
+            {
+              university: {
+                // Korean school names are well past the short-term guard, and
+                // leaving `nameKo` out means typing 고려대학교 finds nothing.
+                OR: [{ nameMn: school }, { nameEn: school }, { nameKo: school }],
+              },
+            },
           ]
         : []),
     ],

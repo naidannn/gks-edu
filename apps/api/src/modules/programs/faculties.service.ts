@@ -5,6 +5,7 @@ import { CacheService } from '../../redis/cache.service.js';
 import { universityDetailCacheKey } from '../universities/universities.service.js';
 import { catalogueNameKey } from './catalogue-name.js';
 import type { CreateFacultyDto, UpdateFacultyDto } from './dto/faculty.dto.js';
+import { ProgramSearchIndex } from './program-search-index.service.js';
 import { PROGRAMS_FACETS_CACHE_KEY } from './programs.service.js';
 
 export const FACULTY_SELECT = {
@@ -30,6 +31,7 @@ export class FacultiesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly searchIndex: ProgramSearchIndex,
   ) {}
 
   /** Every faculty of one school, with how many programmes hang off each. */
@@ -216,6 +218,8 @@ export class FacultiesService {
    * creating one used to invalidate nothing at all.
    */
   private async invalidate(slug: string | null): Promise<void> {
+    // A college's names are searched as part of every programme in it.
+    this.searchIndex.invalidate();
     await Promise.all([
       this.cache.del(PROGRAMS_FACETS_CACHE_KEY),
       ...(slug ? [this.cache.del(universityDetailCacheKey(slug))] : []),

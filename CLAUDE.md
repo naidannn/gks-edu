@@ -125,7 +125,12 @@ Full entity definitions and state machines: `docs/ARCHITECTURE.md` §3–§9.
   it was a second vocabulary somebody maintained forever, and what a visitor types is a word.
   Search (`programSearchWhere`) matches that word against the programme's three names, the
   faculty's three names, and — only for terms of 4+ characters — the school's, because "IT"
-  is two and "Univers**it**y" contains it. Tuition is stored the way Korean schools publish
+  is two and "Univers**it**y" contains it. The typed word is also widened to its field
+  (`search-vocabulary.ts`): "AI", "программист" and "нягтлан бодогч" search every name of
+  their whole area. That list expands the *query* only — no programme is tagged with it, so it
+  is not the taxonomy coming back. The match runs in memory (`ProgramSearchIndex`) and reaches
+  SQL as `id IN (…)` — as ILIKEs it cost 500–700 ms; any new programme or faculty writer must
+  call its `invalidate()`. Tuition is stored the way Korean schools publish
   it — **per semester**, with `tuitionYear` saying which year's table it came from; never
   write the ×2 annual figure into the database. `tuitionYear` is a staff signal, not a public
   one: the admin list sorts and flags on it (`staleTuition`), the public card does not carry
