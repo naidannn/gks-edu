@@ -1,3 +1,4 @@
+import type { TrackedData } from '~/utils/ga-events';
 import {
   EXTERNAL_ID_COOKIE,
   FBC_COOKIE,
@@ -74,17 +75,37 @@ export interface MetaApi {
   newEventId: () => string;
 }
 
+declare module '#app' {
+  interface RuntimeNuxtHooks {
+    /** Every funnel event, announced once so GA4 can report the same step (see `utils/ga-events.ts`). */
+    'tracking:event': (event: { name: string; eventId: string; data?: TrackedData }) => void | Promise<void>;
+  }
+}
+
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig();
   const pixelId = config.public.metaPixelId;
+
+  /** Announced whether or not the pixel is configured: GA4 listens independently. */
+  function announce(name: string, eventId: string, data?: MetaCustomData): void {
+    void nuxtApp.callHook('tracking:event', { name, eventId, data });
+  }
 
   // A no-op with the same shape, so no call site has to ask whether tracking
   // is configured — the check lives here once.
   if (!pixelId) {
     const noop: MetaApi = {
-      track: () => '',
-      trackPaired: () => undefined,
-      trackCustom: () => '',
+      track(eventName, customData) {
+        const eventId = newEventId();
+        announce(eventName, eventId, customData);
+        return eventId;
+      },
+      trackPaired: (eventName, eventId, customData) => announce(eventName, eventId, customData),
+      trackCustom(eventName, customData) {
+        const eventId = newEventId();
+        announce(eventName, eventId, customData);
+        return eventId;
+      },
       newEventId,
     };
     return { provide: { meta: noop } };
@@ -152,15 +173,18 @@ export default defineNuxtPlugin((nuxtApp) => {
       const eventId = newEventId();
       target.fbq?.('track', eventName, customData ?? {}, { eventID: eventId });
       relay(eventName, eventId, customData);
+      announce(eventName, eventId, customData);
       return eventId;
     },
     trackPaired(eventName, eventId, customData) {
       target.fbq?.('track', eventName, customData ?? {}, { eventID: eventId });
+      announce(eventName, eventId, customData);
     },
     trackCustom(eventName, customData) {
       const eventId = newEventId();
       target.fbq?.('trackCustom', eventName, customData ?? {}, { eventID: eventId });
       relay(eventName, eventId, customData);
+      announce(eventName, eventId, customData);
       return eventId;
     },
     newEventId,

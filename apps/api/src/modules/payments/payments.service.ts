@@ -33,6 +33,7 @@ import { RequirementsService } from '../documents/requirements.service.js';
 import { PAYMENT_KIND_LABELS, PAYMENT_METHOD_LABELS, formatAmountMn, formatDateMn } from '../notifications/notification-labels.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { SlackService } from '../notifications/slack.service.js';
+import { Ga4Service } from '../analytics/ga4.service.js';
 import type { MetaActionSource, MetaStandardEvent } from '../meta/meta-capi.types.js';
 import { MetaEventsService } from '../meta/meta-events.service.js';
 import type { MetaUserIdentity } from '../meta/meta-user-data.js';
@@ -81,6 +82,7 @@ export class PaymentsService {
     private readonly storage: StorageService,
     private readonly pricing: PricingService,
     private readonly meta: MetaEventsService,
+    private readonly ga4: Ga4Service,
     @InjectQueue(QPAY_POLL_QUEUE) private readonly pollQueue: Queue,
   ) {}
 
@@ -808,6 +810,19 @@ export class PaymentsService {
         ...(payment.method ? { status: payment.method } : {}),
       },
     });
+
+    // GA4 only needs the money — the browser reports every other funnel step.
+    // Counter payments are not website conversions, here as for Meta.
+    if (eventName === 'Purchase' && payment.actionSource === 'website') {
+      await this.ga4.trackPurchase({
+        transactionId: payment.paymentId,
+        userId: payment.userId,
+        valueMnt: Number(payment.amountMnt),
+        kind: payment.kind,
+        itemName: PAYMENT_KIND_LABELS[payment.kind],
+        occurredAt: payment.occurredAt,
+      });
+    }
   }
 
   // ─── Refund (1C-16) ─────────────────────────────────────────────────────────

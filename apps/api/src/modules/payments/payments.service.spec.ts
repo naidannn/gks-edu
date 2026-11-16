@@ -13,6 +13,7 @@ import type { NotificationsService } from '../notifications/notifications.servic
 import { DEFAULT_PREPAYMENT_DUE_DAYS } from '../pricing/payment-terms.js';
 import type { PricingService } from '../pricing/pricing.service.js';
 import type { SlackService } from '../notifications/slack.service.js';
+import type { Ga4Service } from '../analytics/ga4.service.js';
 import type { MetaEventsService } from '../meta/meta-events.service.js';
 import { PaymentsService } from './payments.service.js';
 import type { QpayClientService } from './qpay-client.service.js';
@@ -111,10 +112,12 @@ function buildHarness(options: {
 
   const meta = { track: vi.fn().mockResolvedValue(undefined) } as unknown as MetaEventsService;
 
+  const ga4 = { trackPurchase: vi.fn().mockResolvedValue(undefined) } as unknown as Ga4Service;
+
   const service = new PaymentsService(
-    prismaTyped, cases, requirements, qpay, config, notifications, slack, storage, pricing, meta, pollQueue,
+    prismaTyped, cases, requirements, qpay, config, notifications, slack, storage, pricing, meta, ga4, pollQueue,
   );
-  return { service, prisma: prismaTyped, cases, requirements, qpay, pollQueue, notifications, slack, storage, pricing, meta };
+  return { service, prisma: prismaTyped, cases, requirements, qpay, pollQueue, notifications, slack, storage, pricing, meta, ga4 };
 }
 
 const student: AuthenticatedUser = { id: 'student-1', email: 's@gks.edu', role: Role.USER };

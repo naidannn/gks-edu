@@ -171,6 +171,14 @@ export interface AppConfig {
     /** Forces the log-instead-of-send path even when a token is present. */
     mock: boolean;
   };
+  ga4: {
+    /** The GA4 stream's measurement id (`G-…`), public by design. */
+    measurementId: string;
+    /** Measurement Protocol API secret. Empty = log instead of send. */
+    apiSecret: string;
+    timeoutMs: number;
+    mock: boolean;
+  };
   facebook: {
     /** 2F — the Page whose Messenger and comments we answer. */
     pageId: string;
@@ -298,6 +306,14 @@ export const configuration = (): AppConfig => ({
     testEventCode: process.env.META_TEST_EVENT_CODE ?? '',
     timeoutMs: Number.parseInt(process.env.META_CAPI_TIMEOUT_MS ?? '10000', 10),
     mock: (process.env.META_CAPI_MOCK ?? 'false') === 'true',
+  },
+  ga4: {
+    // The stream's measurement id is public; the browser carries the same one
+    // in NUXT_PUBLIC_GA_ID. The API secret is not, and is per stream.
+    measurementId: process.env.GA_MEASUREMENT_ID ?? process.env.NUXT_PUBLIC_GA_ID ?? '',
+    apiSecret: process.env.GA4_API_SECRET ?? '',
+    timeoutMs: Number.parseInt(process.env.GA4_TIMEOUT_MS ?? '10000', 10),
+    mock: (process.env.GA4_MOCK ?? 'false') === 'true',
   },
   facebook: {
     pageId: process.env.FB_PAGE_ID ?? '',

@@ -24,6 +24,7 @@ import { GksEligibilityModule } from './modules/gks-eligibility/gks-eligibility.
 import { LeadsModule } from './modules/leads/leads.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { MarketingModule } from './modules/marketing/marketing.module.js';
+import { AnalyticsModule } from './modules/analytics/analytics.module.js';
 import { MetaModule } from './modules/meta/meta.module.js';
 import { MessengerModule } from './modules/messenger/messenger.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
@@ -66,6 +67,7 @@ import { StorageModule } from './storage/storage.module.js';
     OtpModule,
     AuditModule,
     NotificationsModule,
+    AnalyticsModule,
     MetaModule,
     MarketingModule,
     HealthModule,

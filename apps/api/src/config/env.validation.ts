@@ -228,6 +228,24 @@ class EnvironmentVariables {
   @IsOptional()
   META_CAPI_MOCK?: string;
 
+  /** GA4 Measurement Protocol: the stream's measurement id (falls back to NUXT_PUBLIC_GA_ID). */
+  @IsString()
+  @IsOptional()
+  GA_MEASUREMENT_ID?: string;
+
+  /** GA4 Measurement Protocol API secret. Unset logs instead of sending. */
+  @IsString()
+  @IsOptional()
+  GA4_API_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  GA4_TIMEOUT_MS?: string;
+
+  @IsString()
+  @IsOptional()
+  GA4_MOCK?: string;
+
   /** 2F — the Facebook Page (Messenger + comments). All optional: unset logs instead of sending. */
   @IsString()
   @IsOptional()

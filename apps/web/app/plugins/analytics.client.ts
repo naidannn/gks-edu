@@ -10,6 +10,8 @@
  * *when* a view is sent, and *what is in it*. Both are commented below — they
  * were each a bug first.
  */
+import { toGaEvent } from '~/utils/ga-events';
+
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig();
   const gaId = config.public.gaId;
@@ -82,4 +84,23 @@ export default defineNuxtPlugin((nuxtApp) => {
   // the title is waiting on. `lastSent` keeps the overlap harmless.
   nuxtApp.hook('app:mounted', sendWhenTitleSettles);
   nuxtApp.hook('page:finish', sendWhenTitleSettles);
+
+  // The funnel events. The Meta plugin announces every one it fires; GA4 hears
+  // the same step under its own recommended name. Not queued through `useHead`
+  // like the config call — `queue` writes straight to `dataLayer`, so order
+  // against gtag.js loading does not matter.
+  nuxtApp.hook('tracking:event', (event) => {
+    const ga = toGaEvent(event);
+    if (ga) queue('event', ga.name, ga.params);
+  });
+
+  // Ties the browser's events to the server's `purchase` (Measurement
+  // Protocol), which has no cookie to go on and identifies the person by user
+  // id alone. The id is an internal uuid, not personal data.
+  const auth = useAuthStore();
+  watch(
+    () => auth.user?.id,
+    (id) => queue('config', gaId, { user_id: id ?? undefined, send_page_view: false }),
+    { immediate: true },
+  );
 });
