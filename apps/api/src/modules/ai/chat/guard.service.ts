@@ -146,7 +146,14 @@ export class GuardService {
 
     if (uncitedFigures.length > 0) {
       this.logger.warn(`Ишлэлгүй тоо: ${uncitedFigures.slice(0, 5).join(', ')}`);
-      text = `${text}\n\nТоон мэдээллийг зөвлөхөөр баталгаажуулна уу.`;
+    }
+
+    // Any answer that quotes a sum ends with the reminder, cited or not: a figure
+    // the model got right today is still an estimate the consultant confirms. It
+    // used to appear only when the guard had caught an uncited figure, which made
+    // it a side effect of one model's mistakes rather than a house style.
+    if ((uncitedFigures.length > 0 || quotesAmount(text)) && !text.includes(CONFIRM_FIGURES)) {
+      text = `${text}\n\n${CONFIRM_FIGURES}`;
     }
 
     return { grounded, leaked, text, uncitedFigures, fabricatedRefs, inventedPhones, inventedAmounts, fakeToolCalls };
@@ -189,6 +196,18 @@ export class GuardService {
 
     return false;
   }
+}
+
+/** The closing line of any answer that carries a sum. */
+const CONFIRM_FIGURES = 'Тоон мэдээллийг зөвлөхөөр баталгаажуулна уу.';
+
+/** True when the answer states a sum of money, a phone number not counted. */
+function quotesAmount(answer: string): boolean {
+  for (const match of answer.replace(PHONE_PATTERN, ' ').matchAll(TOGROG_PATTERN)) {
+    const value = amountValue(match[0]);
+    if (value !== null && value >= MIN_CHECKED_AMOUNT) return true;
+  }
+  return false;
 }
 
 /** Said in place of a price the model made up — the true one is a consultant's to give. */

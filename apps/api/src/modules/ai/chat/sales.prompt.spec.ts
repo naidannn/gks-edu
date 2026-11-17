@@ -130,6 +130,9 @@ describe('salesPrompt', () => {
     expect(text).toContain('юу ч мэдэхгүй');
     expect(text).toContain('Санал хамгийн хожимдоо хоёр дахь хариултанд');
     expect(text).toContain('юу ч бүү асуу, тэр ээлжид л `build_study_plan`');
+    // The one exception: a bare menu button opens with a numbered direction question.
+    expect(text).toContain('цэсний товч');
+    expect(text).toContain('1. IT 2. Бизнес 3. Эрүүл мэнд 4. Дизайн 5. Мэдэхгүй');
     // The order: the plan, then the questions that refine it.
     expect(text.indexOf('**Санал өгөх хариулт**')).toBeLessThan(text.indexOf('**Нарийвчлах асуулт**'));
   });

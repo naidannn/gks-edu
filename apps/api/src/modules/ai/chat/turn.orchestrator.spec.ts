@@ -385,6 +385,8 @@ describe('TurnOrchestrator', () => {
         'tool',
         'card',
         'token',
+        // The confirm line is added after the answer streamed, so the text is replaced.
+        'replace',
         'sources',
         'done',
       ]);
@@ -475,7 +477,7 @@ describe('TurnOrchestrator', () => {
       await run(orchestrator);
 
       expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe(
-        'Шалгаад хэлье. Нийт төлбөр 1,200,000₮ [T1].',
+        'Шалгаад хэлье. Нийт төлбөр 1,200,000₮ [T1].\n\nТоон мэдээллийг зөвлөхөөр баталгаажуулна уу.',
       );
     });
 
@@ -507,7 +509,9 @@ describe('TurnOrchestrator', () => {
 
       expect(llm.stream).toHaveBeenCalledTimes(3);
       expect(vi.mocked(llm.stream).mock.calls[1]![0].system).toContain('текстээр хэзээ ч бүү бич');
-      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe('Нийт төлбөр 1,200,000₮ [T1].');
+      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe(
+        'Нийт төлбөр 1,200,000₮ [T1].\n\nТоон мэдээллийг зөвлөхөөр баталгаажуулна уу.',
+      );
     });
 
     it('sends the model to the pricing tool when it quoted a price from memory', async () => {
@@ -521,7 +525,9 @@ describe('TurnOrchestrator', () => {
 
       expect(vi.mocked(llm.stream).mock.calls[1]![0].system).toContain('1,500,000₮');
       expect(vi.mocked(llm.stream).mock.calls[1]![0]).toHaveProperty('tools');
-      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe('Нийт төлбөр 1,200,000₮ [T1].');
+      expect(vi.mocked(sessions.recordAnswer).mock.calls[0]![0].content).toBe(
+        'Нийт төлбөр 1,200,000₮ [T1].\n\nТоон мэдээллийг зөвлөхөөр баталгаажуулна уу.',
+      );
     });
 
     it('offers no tools at all when the level unlocks none', async () => {
