@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AiConfigService } from '../ai-config.service.js';
+import { AnthropicChatProvider } from './providers/anthropic.provider.js';
 import { DeepseekChatProvider } from './providers/deepseek.provider.js';
 import { GeminiChatProvider, LlmStreamError } from './providers/gemini.provider.js';
 import { costMicros, type LlmChatRequest, type LlmEvent, type LlmProvider } from './llm.types.js';
@@ -20,8 +21,8 @@ export interface LlmTurnResult {
 /**
  * The one place that talks to a language model (2B-01).
  *
- * Three jobs, and no more: pick the provider from the model name (a `deepseek-`
- * prefix routes to DeepSeek, anything else to Gemini — the rule 1H-16 already
+ * Three jobs, and no more: pick the provider from the model name (a `claude-`
+ * prefix routes to Anthropic, `deepseek-` to DeepSeek, anything else to Gemini — the rule 1H-16 already
  * established), fall back once when the primary provider fails, and count what
  * the call cost.
  *
@@ -45,15 +46,22 @@ export class LlmService {
     private readonly aiConfig: AiConfigService,
     private readonly gemini: GeminiChatProvider,
     private readonly deepseek: DeepseekChatProvider,
+    private readonly anthropic: AnthropicChatProvider,
   ) {}
 
   /** True when no provider has a key — the assistant will answer with a stub. */
   get isMock(): boolean {
-    return !this.config.get<string>('gemini.apiKey') && !this.config.get<string>('deepseek.apiKey');
+    return (
+      !this.config.get<string>('gemini.apiKey') &&
+      !this.config.get<string>('deepseek.apiKey') &&
+      !this.config.get<string>('anthropic.apiKey')
+    );
   }
 
   providerFor(model: string): LlmProvider {
-    return AiConfigService.providerFor(model) === 'deepseek' ? this.deepseek : this.gemini;
+    const provider = AiConfigService.providerFor(model);
+    if (provider === 'anthropic') return this.anthropic;
+    return provider === 'deepseek' ? this.deepseek : this.gemini;
   }
 
   /**

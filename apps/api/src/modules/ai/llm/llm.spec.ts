@@ -4,6 +4,7 @@ import type { AiConfigService } from '../ai-config.service.js';
 import { costMicros, type LlmEvent } from './llm.types.js';
 import { LlmService } from './llm.service.js';
 import { sseDataLines } from './sse-lines.js';
+import { AnthropicChatProvider } from './providers/anthropic.provider.js';
 import { DeepseekChatProvider } from './providers/deepseek.provider.js';
 import { GeminiChatProvider, LlmStreamError } from './providers/gemini.provider.js';
 
@@ -169,6 +170,100 @@ describe('GeminiChatProvider', () => {
   });
 });
 
+describe('AnthropicChatProvider', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  const claudeConfig = { get: (key: string) => (key === 'anthropic.apiKey' ? 'k' : 'https://api.anthropic.com') } as never;
+
+  it('streams text and sums the three input counts', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      responseOf([
+        'data: {"type":"message_start","message":{"usage":{"input_tokens":20,"cache_read_input_tokens":70,"cache_creation_input_tokens":10,"output_tokens":1}}}\n',
+        'data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}\n',
+        'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Сайн "}}\n',
+        'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"байна уу"}}\n',
+        'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":9}}\n',
+      ]),
+    );
+
+    const events = await collect(
+      new AnthropicChatProvider(claudeConfig).stream({ model: 'claude-haiku-5-5', system: 's', messages: [{ role: 'user', content: 'сайн уу' }] }),
+    );
+
+    expect(events.filter((e) => e.type === 'text').map((e) => (e as { delta: string }).delta)).toEqual(['Сайн ', 'байна уу']);
+    expect(events).toContainEqual({ type: 'usage', promptTokens: 100, completionTokens: 9, cachedPromptTokens: 70 });
+    expect(events.at(-1)).toEqual({ type: 'done', finishReason: 'stop' });
+  });
+
+  it('assembles a tool call from argument fragments and hands back the thinking blocks', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      responseOf([
+        'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}\n',
+        'data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig"}}\n',
+        'data: {"type":"content_block_start","index":1,"content_block":{"type":"tool_use","id":"toolu_1","name":"get_service_pricing"}}\n',
+        'data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\\"serv"}}\n',
+        'data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"ice\\":\\"GKS\\"}"}}\n',
+        'data: {"type":"message_delta","delta":{"stop_reason":"tool_use"},"usage":{"output_tokens":5}}\n',
+      ]),
+    );
+
+    const events = await collect(
+      new AnthropicChatProvider(claudeConfig).stream({ model: 'claude-haiku-5-5', system: 's', messages: [] }),
+    );
+
+    expect(events).toContainEqual({
+      type: 'tool-call',
+      call: { id: 'toolu_1', name: 'get_service_pricing', arguments: { service: 'GKS' } },
+    });
+    const done = events.at(-1) as { finishReason: string; reasoning?: string };
+    expect(done.finishReason).toBe('tool_calls');
+    expect(JSON.parse(done.reasoning!)).toEqual([{ type: 'thinking', thinking: '', signature: 'sig' }]);
+  });
+
+  it('sends parallel tool results as one user turn, and no temperature', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(responseOf([]));
+
+    await collect(
+      new AnthropicChatProvider(claudeConfig).stream({
+        model: 'claude-haiku-5-5',
+        system: 's',
+        temperature: 0.2,
+        messages: [
+          { role: 'user', content: 'q' },
+          {
+            role: 'assistant',
+            content: '',
+            reasoning: JSON.stringify([{ type: 'thinking', thinking: '', signature: 'sig' }]),
+            toolCalls: [
+              { id: 'a', name: 't', arguments: {} },
+              { id: 'b', name: 't', arguments: {} },
+            ],
+          },
+          { role: 'tool', content: 'ra', toolCallId: 'a', name: 't' },
+          { role: 'tool', content: 'rb', toolCallId: 'b', name: 't' },
+        ],
+      }),
+    );
+
+    const body = JSON.parse((fetchSpy.mock.calls[0]![1] as { body: string }).body) as {
+      temperature?: number;
+      messages: { role: string; content: { type: string }[] }[];
+    };
+    expect(body.temperature).toBeUndefined();
+    expect(body.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user']);
+    expect(body.messages[1]!.content.map((b) => b.type)).toEqual(['thinking', 'tool_use', 'tool_use']);
+    expect(body.messages[2]!.content.map((b) => b.type)).toEqual(['tool_result', 'tool_result']);
+  });
+
+  it('carries the status on a failure so the fallback rule can read it', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{"error":{"message":"overloaded"}}', { status: 529 }));
+
+    await expect(
+      collect(new AnthropicChatProvider(claudeConfig).stream({ model: 'claude-haiku-5-5', system: 's', messages: [] })),
+    ).rejects.toMatchObject({ status: 529, isRetriable: true });
+  });
+});
+
 describe('DeepseekChatProvider', () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -273,12 +368,13 @@ describe('LlmService', () => {
   } as unknown as AiConfigService;
 
   function service() {
-    return new LlmService(config, aiConfig, new GeminiChatProvider(config), new DeepseekChatProvider(config));
+    return new LlmService(config, aiConfig, new GeminiChatProvider(config), new DeepseekChatProvider(config), new AnthropicChatProvider(config));
   }
 
   it('routes on the model-name prefix', () => {
     expect(service().providerFor('deepseek-v4-flash').name).toBe('deepseek');
     expect(service().providerFor('gemini-3.1-flash-lite').name).toBe('gemini');
+    expect(service().providerFor('claude-haiku-5-5').name).toBe('anthropic');
   });
 
   it('falls back to the other provider on a 429, before anything was streamed', async () => {

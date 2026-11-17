@@ -66,6 +66,7 @@ describe('AiConfigService', () => {
     it('routes on the model-name prefix, the rule 1H-16 established', () => {
       expect(AiConfigService.providerFor('deepseek-v4-flash')).toBe('deepseek');
       expect(AiConfigService.providerFor('gemini-3.1-flash-lite')).toBe('gemini');
+      expect(AiConfigService.providerFor('claude-haiku-5-5')).toBe('anthropic');
       // Anything unfamiliar goes to Gemini, which is the primary provider.
       expect(AiConfigService.providerFor('some-new-model')).toBe('gemini');
     });

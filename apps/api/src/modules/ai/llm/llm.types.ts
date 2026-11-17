@@ -1,7 +1,7 @@
 /**
  * The shape every provider is bent into (2B-01).
  *
- * Two providers answer this app — Gemini and DeepSeek — and the orchestrator
+ * Three providers answer this app — Gemini, DeepSeek and Claude — and the orchestrator
  * (2B-04) must not care which. What they genuinely share is a stream of text
  * deltas, a set of tool calls, and a token count at the end; everything else
  * about their wire formats is provider detail and stays inside the adapters.
@@ -85,7 +85,7 @@ export type LlmEvent =
   | { type: 'done'; finishReason: LlmFinishReason; reasoning?: string };
 
 export interface LlmProvider {
-  readonly name: 'gemini' | 'deepseek';
+  readonly name: 'gemini' | 'deepseek' | 'anthropic';
   stream(request: LlmChatRequest): AsyncIterable<LlmEvent>;
 }
 
@@ -113,6 +113,8 @@ export const MODEL_PRICES_USD_PER_MTOK: Record<string, { input: number; cached: 
   'deepseek-flash': { input: 0.3, cached: 0.006, output: 1.2 },
   'deepseek-v4-flash': { input: 0.3, cached: 0.006, output: 1.2 },
   'deepseek-v4-pro': { input: 1.32, cached: 0.044, output: 3.96 },
+  // Claude Haiku 5.5, up to 100K-token prompts (beyond that it is $0.50 / $2.50). Cache reads are a tenth of input.
+  'claude-haiku-5-5': { input: 0.1, cached: 0.01, output: 0.5 },
 };
 
 const DEFAULT_PRICE = { input: 0.5, cached: 0.5, output: 3 };

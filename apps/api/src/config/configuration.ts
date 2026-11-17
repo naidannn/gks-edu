@@ -112,6 +112,10 @@ export interface AppConfig {
     /** How many recipients one queue pass mails before it yields (rate control). */
     batchSize: number;
   };
+  anthropic: {
+    apiKey: string;
+    baseUrl: string;
+  };
   deepseek: {
     /**
      * 1I-07 — the "research this school's programmes" button. A different
@@ -253,6 +257,10 @@ export const configuration = (): AppConfig => ({
     maxOutputTokens: Number.parseInt(process.env.DEEPSEEK_MAX_OUTPUT_TOKENS ?? '16384', 10),
     // Defaults to mock unless a key is present AND mocking is not forced on.
     mock: (process.env.DEEPSEEK_MOCK ?? (process.env.DEEPSEEK_API_KEY ? 'false' : 'true')) === 'true',
+  },
+  anthropic: {
+    apiKey: process.env.ANTHROPIC_API_KEY ?? '',
+    baseUrl: process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com',
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY ?? '',

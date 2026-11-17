@@ -132,7 +132,8 @@ export class AiConfigService {
   }
 
   /** Which provider a model name routes to — the 1H-16 rule, in one place. */
-  static providerFor(model: string): 'deepseek' | 'gemini' {
+  static providerFor(model: string): 'anthropic' | 'deepseek' | 'gemini' {
+    if (model.startsWith('claude-')) return 'anthropic';
     return model.startsWith('deepseek-') ? 'deepseek' : 'gemini';
   }
 }

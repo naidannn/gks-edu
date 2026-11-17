@@ -90,6 +90,15 @@ class EnvironmentVariables {
   @IsOptional()
   GEMINI_SEARCH?: string;
 
+  /** Claude, for the chat assistant. Optional: with no key, `claude-*` models cannot be served. */
+  @IsString()
+  @IsOptional()
+  ANTHROPIC_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  ANTHROPIC_BASE_URL?: string;
+
   /** 1I-07 — DeepSeek, for the programme-and-tuition search. No grounding. */
   @IsString()
   @IsOptional()

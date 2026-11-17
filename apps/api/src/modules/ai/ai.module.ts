@@ -27,6 +27,7 @@ import { StudyPlanTools } from './chat/tools/study-plan.tools.js';
 import { ToolRegistry } from './chat/tools/tool-registry.service.js';
 import { TurnOrchestrator } from './chat/turn.orchestrator.js';
 import { LlmService } from './llm/llm.service.js';
+import { AnthropicChatProvider } from './llm/providers/anthropic.provider.js';
 import { DeepseekChatProvider } from './llm/providers/deepseek.provider.js';
 import { GeminiChatProvider } from './llm/providers/gemini.provider.js';
 import { EmbeddingService } from './embedding/embedding.service.js';
@@ -75,6 +76,7 @@ import { AdminChatSessionsService } from './sessions/admin-chat-sessions.service
     AiConfigService,
     GeminiChatProvider,
     DeepseekChatProvider,
+    AnthropicChatProvider,
     LlmService,
     EmbeddingService,
     KnowledgeService,
