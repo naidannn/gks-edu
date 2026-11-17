@@ -32,6 +32,20 @@ const EDUCATION_FOR_GOAL: Record<ProgramLevel, EducationLevel> = {
   [ProgramLevel.PHD]: EducationLevel.MASTER,
 };
 
+/**
+ * How long the degree runs when the programme did not say. A family weighs the
+ * whole course, not a year of it: "1 жилд 45 сая" next to "4 жилд 180 сая" is
+ * the comparison they are actually making.
+ */
+const DEFAULT_YEARS: Record<ProgramLevel, number> = {
+  [ProgramLevel.LANGUAGE_PREP]: 1,
+  [ProgramLevel.BACHELOR]: 4,
+  [ProgramLevel.MASTER]: 2,
+  [ProgramLevel.PHD]: 3,
+};
+
+const MONTHS_PER_YEAR = 12;
+
 const LEVEL_LABELS: Record<ProgramLevel, string> = {
   [ProgramLevel.LANGUAGE_PREP]: 'Хэлний бэлтгэл',
   [ProgramLevel.BACHELOR]: 'Бакалавр',
@@ -77,7 +91,8 @@ export class StudyPlanTools implements AiToolProvider {
       description:
         '"Хэдэн төгрөг болох вэ", "зардал хэд", "надад аль сургууль тохирох вэ" гэх ерөнхий асуултын ' +
         'хариулт. Хэрэглэгчид тохирох бэлэн санал: хэзээ явах (зам, манай бүртгэлийн хугацаа), аль хот, ' +
-        'аль 2–3 сургууль, эхний жилийн зардал төгрөгөөр (сургалт, амьжиргаа, үйлчилгээ). ' +
+        'аль 2–3 сургууль, сургууль бүрийн 1 жилийн болон бүтэн хугацааны зардал төгрөгөөр (сургалт + тухайн хотын амьжиргаа), ' +
+        'нэг удаагийн төлбөр (манай хураамж, элсэлтийн хураамж) тусдаа. ' +
         'Зөвхөн `goal` заавал — бусдыг мэдэхгүй бол бүү дамжуул, хэрэгсэл өөрөө тооцно ' +
         '(солонгос хэлгүй, ямар ч чиглэл, ямар ч хот). Дүнг аль хэдийн төгрөгт хөрвүүлсэн.',
       parameters: {
@@ -133,9 +148,13 @@ export class StudyPlanTools implements AiToolProvider {
             )
           : open;
 
+        const living = await this.plans.livingCostByUniversity(
+          distinctSchools(plan).map((program) => program.universityId),
+        );
+
         return {
           title: 'Суралцах төлөвлөгөө',
-          data: forModel(plan, budgetMnt ?? null, choices),
+          data: forModel(plan, budgetMnt ?? null, choices, living),
           card: { type: 'study_plan', data: planCard(plan) },
         };
       },
@@ -145,10 +164,25 @@ export class StudyPlanTools implements AiToolProvider {
 
 /* ── What the model reads ─────────────────────────────────────────────────── */
 
-function forModel(plan: Plan, budgetMnt: number | null, choices: number[]) {
+type LivingByUniversity = Map<string, { monthlyMin: number; monthlyMax: number }>;
+
+/**
+ * The plan as the model reads it — every figure already worded the way it is said.
+ *
+ * Three questions a family asks, answered in this order and never by the model's
+ * own arithmetic: *when* can I go (`хэзээ_явах`, one sentence), *what does each
+ * school cost* — a year, and the whole course (`сургуулиуд`) — and *what is paid
+ * once* (`нэг_удаагийн_төлбөр`). The old single "нийт 28–93 сая₮" spanned every
+ * programme in the catalogue and every city, so it answered none of them: people
+ * asked whether it was a year or four.
+ */
+function forModel(plan: Plan, budgetMnt: number | null, choices: number[], living: LivingByUniversity) {
   const rate = plan.cost.krwToMnt;
   const needsPrep = plan.schools.gate === 'AFTER_PREP';
   const goal = plan.input.goal;
+  const item = (key: string) => plan.cost.items.find((row) => row.key === key);
+  const planLiving = item('LIVING');
+  const serviceFee = item('SERVICE_FEE');
 
   return {
     тооцсон_нөхцөл: [
@@ -160,6 +194,7 @@ function forModel(plan: Plan, budgetMnt: number | null, choices: number[]) {
     ]
       .filter(Boolean)
       .join(', '),
+    хэзээ_явах: whenToGo(plan),
     зам: plan.stages.map((stage) => ({
       шат: stage.titleMn,
       эхлэх: `${stage.start.year} оны ${stage.start.month}-р сар`,
@@ -169,42 +204,30 @@ function forModel(plan: Plan, budgetMnt: number | null, choices: number[]) {
       огноо: stage.start.source === 'REAL' ? 'нийтлэгдсэн элсэлтээс' : 'хичээлийн хуанлиас тооцсон, баталгаат биш',
       яагаад: stage.reasonMn,
     })),
+    ...(needsPrep
+      ? {
+          хэлний_бэлтгэл: {
+            хугацаа_сар: plan.stages[0]?.durationMonths ?? null,
+            '1_жилийн_зардал': sumSaid(
+              [item('TUITION')?.minMnt ?? null, planLiving?.minMnt ?? null],
+              [item('TUITION')?.maxMnt ?? null, planLiving?.maxMnt ?? null],
+            ),
+            тайлбар: 'Хэлний бэлтгэлийн сургалт + амьжиргаа, бэлтгэлийн жилд. Дараа нь доорх ангийн зардал эхэлнэ.',
+          },
+        }
+      : {}),
     сургуулиуд_гэж_юу: needsPrep
       ? 'Хэлний бэлтгэлийн дараа элсэх боломжтой ангиуд (бидний зөвлөх дарааллаар)'
       : 'Одоо шууд мэдүүлж болох ангиуд (бидний зөвлөх дарааллаар)',
-    сургуулиуд: distinctSchools(plan).map((program) => {
-      const krw = annualTuitionKrw(program);
-      return {
-        сургууль: program.university.nameMn,
-        хот: program.university.cityMn ?? program.university.regionMn,
-        анги: program.nameMn,
-        жилийн_сургалтын_төлбөр: krw === null ? 'мэдээлэл шинэчлэгдэж байна' : `${sayKrw(krw)} ≈ ${sayMnt(krw * rate)}`,
-        topik: program.topikLevel,
-      };
-    }),
+    сургуулиуд: distinctSchools(plan).map((program) => schoolCost(program, rate, living, planLiving)),
+    нэг_удаагийн_төлбөр: [
+      serviceFee?.minMnt
+        ? `Манай үйлчилгээний хураамж ${sayMnt(serviceFee.minMnt)}${serviceFee.noteMn ? ` (${serviceFee.noteMn})` : ''}`
+        : null,
+      'Элсэлтийн хураамж — зөвхөн эхний улиралд, сургууль бүрийнх дээр бичсэн',
+    ].filter(Boolean),
     тохирох_анги_нийт: plan.schools.total,
     хотоор: plan.schools.regions.slice(0, REGIONS_NAMED).map((row) => ({ бүс: row.label, region: row.value, анги: row.count })),
-    эхний_жилийн_зардал: {
-      юуны_зардал: needsPrep ? 'Эхний жил = хэлний бэлтгэлийн жил' : `Эхний жил = ${LEVEL_LABELS[goal]}-ын эхний жил`,
-      мөрүүд: plan.cost.items
-        .filter((item) => item.minMnt !== null || item.maxMnt !== null)
-        .map((item) => ({
-          нэр: item.labelMn,
-          дүн: sayRange(item.minMnt, item.maxMnt),
-          ...(item.minKrw !== null ? { вон: sayKrwRange(item.minKrw, item.maxKrw) } : {}),
-          ...(item.noteMn ? { тайлбар: item.noteMn } : {}),
-          ...(item.isEstimate ? { ойролцоо: true } : {}),
-        })),
-      нийт: sayRange(plan.cost.totalMinMnt, plan.cost.totalMaxMnt),
-    },
-    ...(plan.cost.nextStage && plan.cost.nextStage.minKrw !== null
-      ? {
-          дараагийн_шатны_сургалтын_төлбөр: `${plan.cost.nextStage.titleMn}: жилд ${sayRange(
-            plan.cost.nextStage.minKrw * rate,
-            (plan.cost.nextStage.maxKrw ?? plan.cost.nextStage.minKrw) * rate,
-          )}`,
-        }
-      : {}),
     төсвийн_сонголт: choices.map((value) => `${sayMnt(value)} хүртэл`),
     ...(budgetMnt && plan.schools.total === 0
       ? { анхаар: 'Энэ төсөвт тохирох анги олдсонгүй — төсвийн_сонголтоос өндрийг санал болго' }
@@ -212,6 +235,75 @@ function forModel(plan: Plan, budgetMnt: number | null, choices: number[]) {
     ханш: `₩1 = ${rate.toFixed(2)}₮ (${plan.cost.fxDate.slice(0, 10)})`,
     бүтэн_төлөвлөгөө: `${SITE}${planPath(plan, budgetMnt)}`,
   };
+}
+
+/** One sentence: the earliest intake, our deadline for it, and how close that is. */
+function whenToGo(plan: Plan): string | null {
+  const [first, degree] = plan.stages;
+  if (!first) return null;
+
+  const parts = [`Хамгийн ойрдоо ${first.start.year} оны ${first.start.month}-р сарын элсэлтээр ${first.titleMn.toLowerCase()} эхэлж болно`];
+  const registerBy = first.start.registerBy?.slice(0, 10);
+  const days = first.start.daysToRegister;
+  if (registerBy) {
+    parts.push(
+      days !== null && days <= 1
+        ? `манай бүртгэлийн эцсийн хугацаа ${registerBy} — маргааш, тиймээс өнөөдөр эхлэх хэрэгтэй`
+        : days !== null && days <= 14
+          ? `манай бүртгэлийн эцсийн хугацаа ${registerBy}, ${days} хоног л үлдлээ`
+          : `манай бүртгэлийн эцсийн хугацаа ${registerBy}${days !== null ? ` (${days} хоног үлдсэн)` : ''}`,
+    );
+  }
+  if (first.start.source !== 'REAL') parts.push('огноо нь хичээлийн хуанлиас тооцсон, зөвлөх баталгаажуулна');
+
+  let sentence = `${parts.join('; ')}.`;
+  if (degree) {
+    sentence += ` ${first.durationMonths ?? ''} сарын хэлний бэлтгэлийн дараа ${degree.start.year} оны ${degree.start.month}-р сараас ${degree.titleMn.toLowerCase()}т шилжинэ.`.replace('  ', ' ');
+  }
+  return sentence;
+}
+
+/** A school priced on its own: a year of tuition + its own city's living cost, and the whole course. */
+function schoolCost(
+  program: ReturnType<typeof distinctSchools>[number],
+  rate: number,
+  living: LivingByUniversity,
+  planLiving: { minMnt: number | null; maxMnt: number | null } | undefined,
+) {
+  const tuitionKrw = annualTuitionKrw(program);
+  const tuition = tuitionKrw === null ? null : tuitionKrw * rate;
+  const own = living.get(program.universityId);
+  const livingMin = own ? own.monthlyMin * MONTHS_PER_YEAR * rate : (planLiving?.minMnt ?? null);
+  const livingMax = own ? own.monthlyMax * MONTHS_PER_YEAR * rate : (planLiving?.maxMnt ?? null);
+  const years = program.durationYears ?? DEFAULT_YEARS[program.level];
+  const admission = program.admissionFeeKrw ? program.admissionFeeKrw * rate : null;
+
+  return {
+    сургууль: program.university.nameMn,
+    хот: program.university.cityMn ?? program.university.regionMn,
+    анги: program.nameMn,
+    сургалтын_төлбөр_жилд: tuitionKrw === null ? 'мэдээлэл шинэчлэгдэж байна' : `${sayKrw(tuitionKrw)} ≈ ${sayMnt(tuition!)}`,
+    амьдрах_зардал_жилд: sayRange(livingMin, livingMax) ?? 'мэдээлэл шинэчлэгдэж байна',
+    '1_жилийн_нийт': tuition === null ? null : sumSaid([tuition, livingMin], [tuition, livingMax]),
+    сургах_хугацаа: `${trimZero(years.toFixed(1))} жил`,
+    бүтэн_хугацааны_нийт:
+      tuition === null
+        ? null
+        : `${trimZero(years.toFixed(1))} жилд ${sumSaid(
+            [tuition * years, livingMin === null ? null : livingMin * years],
+            [tuition * years, livingMax === null ? null : livingMax * years],
+          )}`,
+    элсэлтийн_хураамж: admission ? sayMnt(admission) : null,
+    topik: program.topikLevel,
+  };
+}
+
+/** `≈ 45 – 50 сая₮`: the sum of the parts that are known, never a part treated as zero. */
+function sumSaid(mins: (number | null)[], maxes: (number | null)[]): string | null {
+  if (mins.some((value) => value === null) || maxes.some((value) => value === null)) return null;
+  const min = (mins as number[]).reduce((a, b) => a + b, 0);
+  const max = (maxes as number[]).reduce((a, b) => a + b, 0);
+  return `≈ ${sayRange(min, max)}`;
 }
 
 /**
@@ -329,10 +421,6 @@ function sayRange(min: number | null, max: number | null): string | null {
 
 function sayKrw(value: number): string {
   return `₩${value.toLocaleString('en-US')}`;
-}
-
-function sayKrwRange(min: number, max: number | null): string {
-  return max === null || max === min ? sayKrw(min) : `${sayKrw(min)} – ${sayKrw(max)}`;
 }
 
 function trimZero(value: string): string {

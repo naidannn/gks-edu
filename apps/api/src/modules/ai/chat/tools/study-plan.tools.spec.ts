@@ -10,7 +10,10 @@ const RATE = 2.5;
 
 const program = (slug: string, nameMn: string, tuitionPerTermKrw: number) => ({
   id: `${slug}-${nameMn}`,
+  universityId: `${slug}-id`,
   level: ProgramLevel.BACHELOR,
+  durationYears: null,
+  admissionFeeKrw: slug === 'alpha' ? 200_000 : null,
   nameMn,
   tuitionPerTermKrw,
   tuitionPerYearKrw: null,
@@ -56,6 +59,7 @@ function fakePlan(input: Record<string, unknown>) {
         { key: 'SERVICE_FEE', labelMn: 'Үйлчилгээ', noteMn: null, minKrw: null, maxKrw: null, minMnt: 1_200_000, maxMnt: 1_200_000, isEstimate: false },
         { key: 'TUITION', labelMn: 'Сургалт', noteMn: null, minKrw: 6_000_000, maxKrw: 8_000_000, minMnt: 15_000_000, maxMnt: 20_000_000, isEstimate: false },
         { key: 'ADMISSION_FEE', labelMn: 'Элсэлт', noteMn: null, minKrw: null, maxKrw: null, minMnt: null, maxMnt: null, isEstimate: false },
+        { key: 'LIVING', labelMn: 'Амьдрах', noteMn: null, minKrw: 6_000_000, maxKrw: 12_000_000, minMnt: 15_000_000, maxMnt: 30_000_000, isEstimate: true },
       ],
       totalMinMnt: 16_200_000,
       totalMaxMnt: 21_200_000,
@@ -66,7 +70,9 @@ function fakePlan(input: Record<string, unknown>) {
 
 function planTool() {
   const build = vi.fn(async (query: Record<string, unknown>, _options?: unknown) => fakePlan({ ...query }));
-  const tools = new StudyPlanTools({ build } as unknown as StudyPlanService);
+  // alpha has its own city figure (₩500k–₩600k a month); the others fall back to the plan's.
+  const livingCostByUniversity = vi.fn(async () => new Map([['alpha-id', { monthlyMin: 500_000, monthlyMax: 600_000 }]]));
+  const tools = new StudyPlanTools({ build, livingCostByUniversity } as unknown as StudyPlanService);
   const tool = tools.tools()[0]!;
   const run = (args: Record<string, unknown>) =>
     tool.run(args, { level: AccessLevel.PUBLIC } as unknown as ToolContext);
@@ -142,11 +148,45 @@ describe('build_study_plan', () => {
     const outcome = await run({ goal: 'BACHELOR' });
     const source = JSON.stringify(outcome.data);
     const answer =
-      'alpha их сургууль — Сөүл, жилд ≈ 15 сая₮ [T1]. Эхний жилийн нийт зардал 16–21 сая₮ [T1]. ' +
+      'alpha их сургууль — Сөүл, 1 жилд ≈ 30 – 33 сая₮ [T1], 4 жилд нийт ≈ 120 – 132 сая₮ [T1]. ' +
       'Үйлчилгээний хураамж 1.2 сая₮ [T1].';
 
     expect(findInventedAmounts(answer, [source])).toEqual([]);
-    expect(findInventedAmounts('Нийт 30 сая₮ болно.', [source])).toEqual(['30 сая₮']);
+    expect(findInventedAmounts('Нийт 77 сая₮ болно.', [source])).toEqual(['77 сая₮']);
+  });
+
+  it('prices each school for a year and for the whole course, in its own city', async () => {
+    const { run } = planTool();
+    const data = (await run({ goal: 'BACHELOR' })).data as {
+      сургуулиуд: Record<string, string | null>[];
+    };
+    const alpha = data.сургуулиуд[0]!;
+
+    // ₩6M tuition + ₩6M–₩7.2M living a year, at ₩1 = 2.5₮.
+    expect(alpha['сургалтын_төлбөр_жилд']).toBe('₩6,000,000 ≈ 15 сая₮');
+    expect(alpha['амьдрах_зардал_жилд']).toBe('15 сая₮ – 18 сая₮');
+    expect(alpha['1_жилийн_нийт']).toBe('≈ 30 сая₮ – 33 сая₮');
+    expect(alpha['бүтэн_хугацааны_нийт']).toBe('4 жилд ≈ 120 сая₮ – 132 сая₮');
+    expect(alpha['элсэлтийн_хураамж']).toBe('500 мянган₮');
+    // No city figure for beta: the plan's living range stands in, never zero.
+    expect(data.сургуулиуд[1]!['амьдрах_зардал_жилд']).toBe('15 сая₮ – 30 сая₮');
+  });
+
+  it('says when to go in one sentence: the intake, our deadline, and how long the prep runs', async () => {
+    const { run } = planTool();
+    const data = (await run({ goal: 'BACHELOR' })).data as { хэзээ_явах: string; хэлний_бэлтгэл: Record<string, unknown> };
+
+    expect(data.хэзээ_явах).toContain('2027 оны 3-р сарын элсэлтээр');
+    expect(data.хэзээ_явах).toContain('2026-12-01');
+    expect(data.хэзээ_явах).toContain('9 сарын хэлний бэлтгэлийн дараа 2027 оны 9-р сараас бакалаврт');
+    expect(data.хэлний_бэлтгэл['1_жилийн_зардал']).toBe('≈ 30 сая₮ – 50 сая₮');
+  });
+
+  it('never hands the model a total with no period on it', async () => {
+    const { run } = planTool();
+    const data = (await run({ goal: 'BACHELOR' })).data as Record<string, unknown>;
+
+    expect(data).not.toHaveProperty('эхний_жилийн_зардал');
   });
 
   it('carries a card the widget can draw, linking to the same plan', async () => {

@@ -390,6 +390,30 @@ export class StudyPlanService {
   }
 
   /**
+   * Each school's own monthly living cost, in won, keyed by university id.
+   *
+   * The plan's living row is a range over every school it matched; a chat that
+   * names three schools prices each of them in its own city instead, so "1 жилд"
+   * beside a Busan school is Busan's figure, not Seoul-to-Jeju.
+   */
+  async livingCostByUniversity(universityIds: string[]): Promise<Map<string, { monthlyMin: number; monthlyMax: number }>> {
+    if (universityIds.length === 0) return new Map();
+    const rows = await this.prisma.university.findMany({
+      where: { id: { in: universityIds } },
+      select: { id: true, livingCost: true },
+    });
+
+    const costs = new Map<string, { monthlyMin: number; monthlyMax: number }>();
+    for (const row of rows) {
+      const min = livingCostMonthlyMin(row.livingCost);
+      const max = livingCostMonthlyMax(row.livingCost);
+      if (min === null && max === null) continue;
+      costs.set(row.id, { monthlyMin: (min ?? max)!, monthlyMax: (max ?? min)! });
+    }
+    return costs;
+  }
+
+  /**
    * Monthly living cost across the schools this plan actually points at.
    *
    * Read off the *shown* schools rather than off the stage being priced, and
