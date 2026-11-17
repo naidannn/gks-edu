@@ -27,6 +27,8 @@ export interface AppConfig {
     refreshExpiresIn: string;
   };
   embeddingDimensions: number;
+  /** `none` turns embeddings off: retrieval runs on full-text and trigram alone, and no API key is needed. */
+  embeddingProvider: 'gemini' | 'none';
   google: {
     /**
      * OAuth 2.0 Web client id. Empty disables "Google-ээр нэвтрэх" on both
@@ -237,6 +239,7 @@ export const configuration = (): AppConfig => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
   embeddingDimensions: Number.parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10),
+  embeddingProvider: process.env.EMBEDDING_PROVIDER === 'none' ? 'none' : 'gemini',
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID ?? '',
   },

@@ -14,6 +14,7 @@ function harness() {
   const queryRaw = vi.fn().mockResolvedValue([]);
   const prisma = { $queryRaw: queryRaw } as unknown as PrismaService;
   const embeddings = {
+    enabled: true,
     embedMany: vi.fn().mockResolvedValue([new Array(1536).fill(0.01)]),
   } as unknown as EmbeddingService;
 
@@ -75,6 +76,18 @@ describe('RetrievalService', () => {
     await service.search({ query: 'хэдэн төгрөг вэ', level: AccessLevel.PUBLIC });
 
     expect(embeddings.embedMany).toHaveBeenCalledWith(['хэдэн төгрөг вэ'], 'query');
+  });
+
+  it('skips the vector leg and never calls the embedder when embeddings are off', async () => {
+    const { service, queryRaw, embeddings } = harness();
+    (embeddings as unknown as { enabled: boolean }).enabled = false;
+
+    await service.search({ query: 'TOPIK', level: AccessLevel.PUBLIC });
+
+    expect(embeddings.embedMany).not.toHaveBeenCalled();
+    const { text } = sqlOf(queryRaw);
+    expect(text).not.toContain('<=>');
+    expect(text).toContain('plainto_tsquery');
   });
 
   it('keeps a chunk found only lexically, below the similarity floor', async () => {

@@ -90,6 +90,11 @@ class EnvironmentVariables {
   @IsOptional()
   GEMINI_SEARCH?: string;
 
+  /** `gemini` (default) or `none` — with `none` the knowledge base is searched without vectors. */
+  @IsString()
+  @IsOptional()
+  EMBEDDING_PROVIDER?: string;
+
   /** Claude, for the chat assistant. Optional: with no key, `claude-*` models cannot be served. */
   @IsString()
   @IsOptional()

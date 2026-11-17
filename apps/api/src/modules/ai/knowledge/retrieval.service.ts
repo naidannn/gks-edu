@@ -123,8 +123,20 @@ export class RetrievalService {
     const minSimilarity = query.minSimilarity ?? DEFAULT_MIN_SIMILARITY;
     const levels = allowedLevels(query.level);
 
-    const [vector] = await this.embeddings.embedMany([text], 'query');
-    const literal = `[${vector!.join(',')}]`;
+    // No embedder, no vector leg: the other two still find "TOPIK" and a school's name.
+    let semanticLeg = Prisma.sql`SELECT id, 0::float8 AS similarity, 0::bigint AS position FROM scope WHERE false`;
+    if (this.embeddings.enabled) {
+      const [vector] = await this.embeddings.embedMany([text], 'query');
+      const literal = `[${vector!.join(',')}]`;
+      semanticLeg = Prisma.sql`
+        SELECT id,
+               1 - (embedding <=> ${literal}::vector) AS similarity,
+               ROW_NUMBER() OVER (ORDER BY embedding <=> ${literal}::vector) AS position
+        FROM scope
+        WHERE embedding IS NOT NULL
+        ORDER BY embedding <=> ${literal}::vector
+        LIMIT ${Prisma.raw(String(CANDIDATES_PER_LEG))}`;
+    }
 
     // The tuning constants are inlined rather than bound. They are compile-time
     // numbers, never user input, and a bound parameter here is typed by context:
@@ -150,15 +162,7 @@ export class RetrievalService {
           AND (d."validUntil" IS NULL OR d."validUntil" >= NOW())
           AND c."accessLevel" = ANY(${levels}::"AccessLevel"[])
       ),
-      semantic AS (
-        SELECT id,
-               1 - (embedding <=> ${literal}::vector) AS similarity,
-               ROW_NUMBER() OVER (ORDER BY embedding <=> ${literal}::vector) AS position
-        FROM scope
-        WHERE embedding IS NOT NULL
-        ORDER BY embedding <=> ${literal}::vector
-        LIMIT ${candidates}
-      ),
+      semantic AS (${semanticLeg}),
       lexical AS (
         SELECT id,
                ts_rank(tsv, plainto_tsquery('simple', ${text})) AS rank,

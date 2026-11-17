@@ -59,6 +59,11 @@ export class EmbeddingService {
     return this.dimensions;
   }
 
+  /** False when `EMBEDDING_PROVIDER=none`: nothing is embedded and the vector leg of retrieval is skipped. */
+  get enabled(): boolean {
+    return this.config.get<string>('embeddingProvider') !== 'none';
+  }
+
   /** True when vectors are hashed locally rather than embedded by the model. */
   get isMock(): boolean {
     return !this.config.get<string>('gemini.apiKey') || (this.config.get<boolean>('gemini.mock') ?? true);

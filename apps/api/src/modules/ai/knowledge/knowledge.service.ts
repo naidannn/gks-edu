@@ -304,9 +304,13 @@ export class KnowledgeService {
 
     // Embedded text = document title + heading path + body, so that a chunk
     // under "Дотуур байр" still answers "Ёнсэгийн дотуур байр" (§4.3).
-    const vectors = await this.embeddings.embedMany(
-      chunks.map((chunk) => [documentTitle, chunk.heading, chunk.content].filter(Boolean).join('\n')),
-    );
+    // With embeddings off the column stays NULL; retrieval then runs on the
+    // full-text and trigram legs alone.
+    const vectors = this.embeddings.enabled
+      ? await this.embeddings.embedMany(
+          chunks.map((chunk) => [documentTitle, chunk.heading, chunk.content].filter(Boolean).join('\n')),
+        )
+      : null;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.knowledgeChunk.deleteMany({ where: { documentId } });
@@ -324,7 +328,7 @@ export class KnowledgeService {
             ${chunk.tokenCount},
             ${accessLevel}::"AccessLevel",
             ${universityId}::uuid,
-            ${this.toVectorLiteral(vectors[index]!)}::vector,
+            ${vectors ? this.toVectorLiteral(vectors[index]!) : null}::vector,
             NOW()
           )
         `;

@@ -27,7 +27,7 @@ function harness(existing: Record<string, unknown> | null = null) {
     knowledgeChunk: { updateMany: vi.fn().mockResolvedValue({ count: 3 }) },
   } as unknown as PrismaService;
 
-  const embeddings = { size: 1536, embedMany: vi.fn() } as unknown as EmbeddingService;
+  const embeddings = { size: 1536, enabled: true, embedMany: vi.fn() } as unknown as EmbeddingService;
 
   return { service: new KnowledgeService(prisma, embeddings), prisma };
 }
@@ -118,7 +118,7 @@ describe('KnowledgeService', () => {
           count: vi.fn().mockResolvedValue(0),
         },
       } as unknown as PrismaService;
-      const embeddings = { size: 1536 } as unknown as EmbeddingService;
+      const embeddings = { size: 1536, enabled: true } as unknown as EmbeddingService;
       return { service: new KnowledgeService(prisma, embeddings), prisma };
     }
 
