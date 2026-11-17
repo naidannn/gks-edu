@@ -255,6 +255,17 @@ describe('AnthropicChatProvider', () => {
     expect(body.messages[2]!.content.map((b) => b.type)).toEqual(['tool_result', 'tool_result']);
   });
 
+  it('leaves room for thinking beyond the answer budget', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(responseOf([]));
+
+    await collect(
+      new AnthropicChatProvider(claudeConfig).stream({ model: 'claude-haiku-5-5', system: 's', messages: [], maxOutputTokens: 700 }),
+    );
+
+    const body = JSON.parse((fetchSpy.mock.calls[0]![1] as { body: string }).body) as { max_tokens: number };
+    expect(body.max_tokens).toBe(2700);
+  });
+
   it('carries the status on a failure so the fallback rule can read it', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{"error":{"message":"overloaded"}}', { status: 529 }));
 

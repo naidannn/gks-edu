@@ -33,6 +33,16 @@ interface AnthropicEvent {
 }
 
 /**
+ * Room for the model's thinking on top of the answer.
+ *
+ * `max_tokens` covers the thinking as well as the reply, and the thinking comes
+ * first. At the admin's 700 the first Messenger replies on Haiku 5.5 (2026-11-17)
+ * came back empty: the budget went on thinking and no text was left. The answer's
+ * own length is limited by the prompt, so the headroom costs only what is thought.
+ */
+const THINKING_HEADROOM = 2000;
+
+/**
  * Claude, streaming, with tool use.
  *
  * Three things differ from the other two providers and are worth knowing:
@@ -67,7 +77,7 @@ export class AnthropicChatProvider implements LlmProvider {
       },
       body: JSON.stringify({
         model: request.model,
-        max_tokens: request.maxOutputTokens ?? 700,
+        max_tokens: (request.maxOutputTokens ?? 700) + THINKING_HEADROOM,
         stream: true,
         // The system prompt is the stable prefix: cached, it is billed at a tenth.
         system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
@@ -111,7 +121,7 @@ export class AnthropicChatProvider implements LlmProvider {
       cache_creation_input_tokens: 0,
     };
 
-    for await (const payload of sseDataLines(response.body, request.signal)) {
+    for await (const payload of readEvents(response.body, request.signal)) {
       const event = JSON.parse(payload) as AnthropicEvent;
 
       if (event.type === 'error') {
@@ -173,6 +183,20 @@ export class AnthropicChatProvider implements LlmProvider {
       finishReason: sawToolCall ? 'tool_calls' : finishReason,
       ...(trace.length ? { reasoning: JSON.stringify(trace) } : {}),
     };
+  }
+}
+
+/**
+ * The SSE lines, with a connection cut mid-stream reported as a 503.
+ * undici throws a bare `TypeError: terminated` there; the fallback rule only
+ * reads `LlmStreamError`, so without this a dropped stream ends the turn.
+ */
+async function* readEvents(body: ReadableStream<Uint8Array>, signal?: AbortSignal): AsyncGenerator<string> {
+  try {
+    yield* sseDataLines(body, signal);
+  } catch (error) {
+    if (signal?.aborted || error instanceof LlmStreamError) throw error;
+    throw new LlmStreamError(503, `Anthropic stream cut: ${(error as Error).message}`);
   }
 }
 
