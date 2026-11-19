@@ -488,6 +488,7 @@ export class PaymentsService {
     if (result.paidAmount !== undefined && result.paidAmount < Number(payment.amountMnt)) {
       this.logger.warn(`QPay дутуу төлбөр: ${payment.id} — ${result.paidAmount}₮ / ${payment.amountMnt}₮`);
       await this.slack.notify({
+        topic: 'payments',
         emoji: '⚠️',
         title: 'QPay дутуу төлбөр ирлээ',
         fields: [
@@ -507,6 +508,7 @@ export class PaymentsService {
   private async reportDoublePayment(payment: { id: string; caseId: string; qpayPaymentId: string | null }, incoming: string): Promise<void> {
     this.logger.warn(`Давхар төлбөр: ${payment.id} — ${payment.qpayPaymentId} дээр ${incoming} нэмж ирлээ`);
     await this.slack.notify({
+      topic: 'payments',
       emoji: '🚨',
       title: 'Давхар төлбөр',
       fields: [
@@ -619,6 +621,7 @@ export class PaymentsService {
         });
 
         await this.slack.notify({
+          topic: 'payments',
           emoji: '💰',
           title: 'Төлбөр баталгаажлаа',
           fields: [
@@ -677,6 +680,7 @@ export class PaymentsService {
       const reason = error instanceof Error ? error.message : String(error);
       this.logger.warn(`${payment.case.code}: төлбөр орсон ч ${CASE_STAGE_LABELS[targetStage]} руу шилжсэнгүй — ${reason}`);
       await this.slack.notify({
+        topic: 'payments',
         emoji: '⚠️',
         title: 'Төлбөр орсон ч үе шат хөдөлсөнгүй',
         fields: [
@@ -722,6 +726,7 @@ export class PaymentsService {
       const reason = error instanceof Error ? error.message : String(error);
       this.logger.warn(`${caseCode}: материалын жагсаалт үүсгэж чадсангүй — ${reason}`);
       await this.slack.notify({
+        topic: 'payments',
         emoji: '⚠️',
         title: 'Урьдчилгаа орсон ч материалын жагсаалт үүссэнгүй',
         fields: [

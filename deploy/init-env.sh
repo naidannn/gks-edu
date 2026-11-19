@@ -82,12 +82,11 @@ APP_PUBLIC_URL=https://$DOMAIN
 SMS_DAILY_LIMIT_PER_USER=3
 SMS_DAILY_LIMIT_GLOBAL=500
 
-# --- Slack (staff channel) --------------------------------------------------
-# Bot token (`xoxb-…`) with `chat:write`, and the channel the office watches.
-# The bot must be invited to the channel or Slack answers `not_in_channel`.
-# Unset either one and the API logs the message instead of posting.
+# --- Slack (staff channels) -------------------------------------------------
+# Bot token (`xoxb-…`) of the "GKSedu Bot" app. It creates and joins its own
+# per-topic channels; deploy.sh also uses it for #release-notes.
+# Unset and the API logs the message instead of posting.
 SLACK_BOT_TOKEN=
-SLACK_CHANNEL_ID=
 
 # --- Gemini (1H-10) ----------------------------------------------------------
 # The admin "research this school's intake calendar online" button. With no key

@@ -423,6 +423,7 @@ export class AuthService {
     });
 
     await this.slack.notify({
+      topic: 'signups',
       emoji: '🙋',
       title: 'Шинэ хэрэглэгч бүртгүүлсэн',
       fields: [

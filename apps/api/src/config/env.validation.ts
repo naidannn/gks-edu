@@ -207,14 +207,10 @@ class EnvironmentVariables {
   @IsOptional()
   SMS_DAILY_LIMIT_GLOBAL?: string;
 
-  /** Slack bot token (`xoxb-…`) with `chat:write`; unset logs instead of posting. */
+  /** Slack bot token (`xoxb-…`); unset logs instead of posting. Channels are by name (`SLACK_CHANNELS`). */
   @IsString()
   @IsOptional()
   SLACK_BOT_TOKEN?: string;
-
-  @IsString()
-  @IsOptional()
-  SLACK_CHANNEL_ID?: string;
 
   /** 1A-38 — Meta dataset (pixel) id. Same value as NUXT_PUBLIC_META_PIXEL_ID. */
   @IsString()

@@ -196,10 +196,22 @@ ssh … 'K=$(grep ^BREVO_API_KEY= /var/www/gks-edu/.env | cut -d= -f2-); \
   curl -s -o /dev/null -w "%{http_code}\n" -H "api-key: $K" https://api.brevo.com/v3/account'
 ```
 
-`SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID` **are** set (2026-09-06): a consultation
-request, a new account, a signed contract and a received payment post to the
-office channel. The bot has to stay invited to that channel — remove it and
-Slack answers `not_in_channel`, which the API logs and swallows.
+`SLACK_BOT_TOKEN` is the "GKSedu Bot" app in the **Gks Edu** workspace
+(2026-11-19; app `A0CJYKBAKJ7`, scopes `chat:write`, `channels:read`,
+`channels:manage`, `channels:join`). Each kind of event has its own channel —
+`#web-leads`, `#web-signups`, `#web-contracts`, `#web-payments`, `#web-chat`,
+`#web-ai-alerts` (`SLACK_CHANNELS` in `slack.service.ts`). The API creates a
+missing one, or joins one somebody else made, when it boots; nobody has to
+invite the bot. An archived channel is not revived — unarchive it in Slack.
+
+Every successful deploy also posts a short client-facing note to
+`#release-notes`: `release-note.mjs` hands the commits since the last deploy
+to Claude (`ANTHROPIC_API_KEY`), which rewrites the ones a client would notice
+as a few plain Mongolian lines and drops the rest. `$APP_DIR/DEPLOYED_COMMIT`
+on the server marks where the last note stopped; it moves only when the note
+went out, so a failed note is folded into the next deploy's. Preview with
+`node deploy/release-note.mjs --dry --since <commit>`; skip with
+`./deploy/deploy.sh --no-release-note`.
 
 ---
 

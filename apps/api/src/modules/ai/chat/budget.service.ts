@@ -58,6 +58,7 @@ export class BudgetService {
       this.announced.full = today;
       this.logger.warn(`Өдрийн токены тааз дүүрлээ: ${spent}/${limit}`);
       await this.slack.notify({
+        topic: 'ai',
         emoji: '🛑',
         title: 'AI туслахын өдрийн төсөв дууслаа',
         fields: [
@@ -73,6 +74,7 @@ export class BudgetService {
     if (ratio >= WARN_AT && ratio < 1 && this.announced.warn !== today) {
       this.announced.warn = today;
       await this.slack.notify({
+        topic: 'ai',
         emoji: '⚠️',
         title: 'AI туслах өдрийн төсвийн 80%-д хүрлээ',
         fields: [

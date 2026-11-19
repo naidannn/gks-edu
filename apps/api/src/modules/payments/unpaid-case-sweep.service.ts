@@ -147,6 +147,7 @@ export class UnpaidCaseSweepService {
   ): Promise<void> {
     const client = row.user.client;
     await this.slack.notify({
+      topic: 'payments',
       emoji: '🗂️',
       title: 'Төлбөргүй үйлчилгээ автоматаар цуцлагдлаа',
       fields: [

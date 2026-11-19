@@ -81,13 +81,13 @@ export interface AppConfig {
     replyToEmail?: string;
     slack: {
       /**
-       * Bot token (`xoxb-…`) with `chat:write`. Empty means "log the message
-       * instead of posting", so nothing is written to the real channel in
+       * Bot token (`xoxb-…`) with `chat:write`, `channels:read`,
+       * `channels:manage` and `channels:join` — the bot finds, creates and joins
+       * its own channels (`SLACK_CHANNELS`). Empty means "log the message
+       * instead of posting", so nothing is written to the real workspace in
        * development.
        */
       botToken: string;
-      /** The office channel every staff-side broadcast goes to. */
-      channelId: string;
     };
   };
   /**
@@ -296,7 +296,6 @@ export const configuration = (): AppConfig => ({
     replyToEmail: process.env.NOTIFICATION_REPLY_TO,
     slack: {
       botToken: process.env.SLACK_BOT_TOKEN ?? '',
-      channelId: process.env.SLACK_CHANNEL_ID ?? '',
     },
   },
   brevo: {

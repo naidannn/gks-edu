@@ -1049,6 +1049,7 @@ export class ClientsService {
   ): Promise<never> {
     const account = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
     await this.slack.notify({
+      topic: 'signups',
       emoji: '🔗',
       title: 'Харилцагч кабинетаа холбуулах шаардлагатай',
       fields: [

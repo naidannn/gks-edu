@@ -183,6 +183,7 @@ export class LeadsService {
       // saying out loud, not just filing. From the office it means they are
       // sitting in the waiting area right now.
       await this.slack.notify({
+        topic: 'leads',
         emoji: channel.key === 'office_qr' ? '🏢' : '🔁',
         title: channel.key === 'office_qr' ? 'Оффис дээр зөвлөгөө хүлээж байна' : 'Давтан зөвлөгөөний хүсэлт',
         fields: [
@@ -376,6 +377,7 @@ export class LeadsService {
       });
     }
     await this.slack.notify({
+      topic: 'leads',
       emoji: '👤',
       title: channel.key === 'office_qr' ? 'Үйлчлүүлэгч оффис дээр ирлээ' : 'Үйлчлүүлэгч дахин холбогдлоо',
       fields: [
@@ -453,6 +455,7 @@ export class LeadsService {
   }): Promise<void> {
     const atOffice = lead.source === LeadSource.OFFICE;
     await this.slack.notify({
+      topic: 'leads',
       emoji: atOffice ? '🏢' : '🔔',
       title: atOffice ? 'Оффис дээр зөвлөгөө хүлээж байна' : 'Шинэ зөвлөгөөний хүсэлт',
       fields: [

@@ -703,6 +703,7 @@ export class ContractsService {
     });
 
     await this.slack.notify({
+      topic: 'contracts',
       emoji: '✍️',
       title: 'Гэрээнд гарын үсэг зурагдлаа',
       fields: [

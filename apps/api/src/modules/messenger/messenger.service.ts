@@ -878,6 +878,7 @@ export class MessengerService {
     if (!isNew && this.events.staffOnline) return;
 
     await this.slack.notify({
+      topic: 'chat',
       emoji: isNew ? '💬' : '📨',
       title: isNew ? 'Шинэ чат нээгдлээ' : 'Чатад шинэ мессеж',
       fields: [

@@ -6,6 +6,7 @@
 #   --skip-migrate   do not run prisma migrate deploy
 #   --api-only       ship and restart the API only
 #   --web-only       ship and restart the web only
+#   --no-release-note  do not post the client-facing note to Slack #release-notes
 #
 # Nothing here touches another application: only $APP_DIR is written, and only
 # the two gksedu-* PM2 processes are restarted.
@@ -13,13 +14,14 @@
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 require_key
 
-SKIP_BUILD=0; SKIP_MIGRATE=0; DO_API=1; DO_WEB=1
+SKIP_BUILD=0; SKIP_MIGRATE=0; DO_API=1; DO_WEB=1; RELEASE_NOTE=1
 for arg in "$@"; do
   case "$arg" in
     --skip-build)   SKIP_BUILD=1 ;;
     --skip-migrate) SKIP_MIGRATE=1 ;;
     --api-only)     DO_WEB=0 ;;
     --web-only)     DO_API=0; SKIP_MIGRATE=1 ;;
+    --no-release-note) RELEASE_NOTE=0 ;;
     *) die "unknown flag: $arg" ;;
   esac
 done
@@ -119,6 +121,26 @@ if [[ $DO_WEB -eq 1 ]]; then
     sleep 2
   done
   [[ $WEB_OK -eq 1 ]] && ok "Web healthy on :$WEB_PORT" || warn "Web did not answer — ./deploy/logs.sh web"
+fi
+
+# ------------------------------------------------------------- release note
+# A few plain Mongolian lines for clients in Slack #release-notes, written by
+# Claude from the commits since the last deploy. DEPLOYED_COMMIT on the server
+# marks where the last note stopped; it only moves when the note went out (or
+# there was nothing client-facing), so a failed note rolls into the next one.
+# A failing note never fails the deploy.
+if [[ $RELEASE_NOTE -eq 1 && $API_OK -eq 1 && ${WEB_OK:-1} -eq 1 ]]; then
+  log "Posting the release note"
+  HEAD_COMMIT=$(git -C "$REPO_ROOT" rev-parse HEAD)
+  LAST_COMMIT=$(remote "cat $APP_DIR/DEPLOYED_COMMIT 2>/dev/null" || true)
+  NOTE_STATUS=0
+  node "$DEPLOY_DIR/release-note.mjs" --since "$LAST_COMMIT" || NOTE_STATUS=$?
+  if [[ $NOTE_STATUS -eq 0 || $NOTE_STATUS -eq 3 ]]; then
+    remote "echo $HEAD_COMMIT > $APP_DIR/DEPLOYED_COMMIT"
+    ok "Release note done"
+  else
+    warn "Release note not posted — it will cover these commits next deploy (node deploy/release-note.mjs --dry to test)"
+  fi
 fi
 
 remote_node "pm2 list" | grep -E "gksedu|name" || true
