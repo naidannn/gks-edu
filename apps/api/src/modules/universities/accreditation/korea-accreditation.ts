@@ -1,7 +1,15 @@
 /**
  * 교육국제화역량 인증제 — the Korean Ministry of Education's certification of a
- * university's capacity to host international students, as the office received
- * it in two lists (Шилдэг магадлан итгэмжлэгдсэн / Магадлан итгэмжлэгдсэн).
+ * university's capacity to host international students.
+ *
+ * Source: the 2025 cycle, published by 교육부·법무부 on 2026-02-12 —
+ * "2025년 교육국제화역량 인증대학 결과 명단" (붙임1): 우수 인증대학 (39) and
+ * 인증대학 – 학위과정 (181). Matched to the catalogue on the Korean name, 139 of
+ * 139; the campus spellings ("고려대학교(세종)", "국립공주대학교") are the list's.
+ * It replaced the office's two older lists, which named exactly the 135
+ * original schools: three fell from EXCELLENT to CERTIFIED (Dankook,
+ * Seokyeong, Seoul Women's), Dongshin is on neither list, and two of the four
+ * language-prep schools added in 2026-11 are certified.
  *
  * This is the strongest visa signal on a card. A student admitted to an
  * `EXCELLENT` school goes through 비자심사 간소화 — simplified D-2/D-4 screening,
@@ -9,42 +17,42 @@
  * does not. It is not a quality ranking and must never be presented as one:
  * Seoul National University is `CERTIFIED`, Joongbu University is `EXCELLENT`.
  *
- * The office's two lists named 135 schools, which was exactly the catalogue.
- * Four language-prep schools joined in 2026-11 and were looked up on the
- * Ministry's 2025 cycle instead: two are certified (below), and Hosan and
- * Catholic Kwandong are on neither list, so they are the first `NONE` — the
- * honest answer for "on neither list", never "not checked yet".
+ * The grade is the degree-programme one. The same release also lists
+ * 어학연수과정 (language-course) certification separately; it is not stored
+ * here.
+ *
+ * Not on either list, so `NONE` — "on neither list", never "not checked yet":
+ *   가톨릭관동대학교 (catholic-kwandong-university)
+ *   동신대학교 (dongshin-university)
+ *   호산대학교 (hosan-university)
  *
  * Refresh procedure when the next cycle lands: replace both arrays, then
- * `pnpm accreditation:import`.
+ * `pnpm accreditation:import` (it resets every school to `NONE` first).
  */
 
 export interface AccreditationRow {
-  /** Our catalogue slug. Every row matched one when the lists were imported. */
+  /** Our catalogue slug. Every row matched one when the list was imported. */
   slug: string;
   /** The school's Korean name as the list prints it — keeps an unmatched row recognisable. */
   nameKo: string;
   nameEn: string;
 }
 
-/** 우수인증대학 — Шилдэг магадлан итгэмжлэгдсэн (35 schools). */
+/** 우수인증대학 — Шилдэг магадлан итгэмжлэгдсэн (32 catalogue schools). */
 export const EXCELLENT_ACCREDITED: AccreditationRow[] = [
   { slug: 'konkuk-university', nameKo: '건국대학교', nameEn: "Konkuk University" },
-  { slug: 'konyang-university', nameKo: '건양대학교 (본교)', nameEn: "Konyang University" },
+  { slug: 'konyang-university', nameKo: '건양대학교', nameEn: "Konyang University" },
   { slug: 'kyungpook-national-university', nameKo: '경북대학교', nameEn: "Kyungpook National University" },
   { slug: 'kyungsung-university', nameKo: '경성대학교', nameEn: "Kyungsung University" },
   { slug: 'kyung-hee-university', nameKo: '경희대학교', nameEn: "Kyung Hee University" },
   { slug: 'keimyung-university', nameKo: '계명대학교', nameEn: "Keimyung University" },
   { slug: 'korea-university', nameKo: '고려대학교', nameEn: "Korea University" },
-  { slug: 'dankook-university', nameKo: '단국대학교 (본교)', nameEn: "Dankook University" },
   { slug: 'duksung-womens-university', nameKo: '덕성여자대학교', nameEn: "Duksung Women's University" },
   { slug: 'dongguk-university', nameKo: '동국대학교', nameEn: "Dongguk University" },
   { slug: 'pusan-national-university', nameKo: '부산대학교', nameEn: "Pusan National University" },
   { slug: 'busan-university-of-foreign-studies', nameKo: '부산외국어대학교', nameEn: "Busan University of Foreign Studies" },
-  { slug: 'seokyeong-university', nameKo: '서경대학교', nameEn: "Seokyeong University" },
   { slug: 'university-of-seoul', nameKo: '서울시립대학교', nameEn: "University of Seoul" },
   { slug: 'seoul-theological-university', nameKo: '서울신학대학교', nameEn: "Seoul Theological University" },
-  { slug: 'seoul-womens-university', nameKo: '서울여자대학교', nameEn: "Seoul Women's University" },
   { slug: 'sun-moon-university', nameKo: '선문대학교', nameEn: "Sun Moon University" },
   { slug: 'sungkyul-university', nameKo: '성결대학교', nameEn: "Sungkyul University" },
   { slug: 'sungkyunkwan-university', nameKo: '성균관대학교', nameEn: "Sungkyunkwan University (SKKU)" },
@@ -57,25 +65,25 @@ export const EXCELLENT_ACCREDITED: AccreditationRow[] = [
   { slug: 'inha-university', nameKo: '인하대학교', nameEn: "Inha University" },
   { slug: 'jeju-national-university', nameKo: '제주대학교', nameEn: "Jeju National University" },
   { slug: 'joongbu-university', nameKo: '중부대학교', nameEn: "Joongbu University" },
-  { slug: 'chung-ang-university', nameKo: '중앙대학교 (본교)', nameEn: "Chung-Ang University" },
+  { slug: 'chung-ang-university', nameKo: '중앙대학교', nameEn: "Chung-Ang University" },
   { slug: 'chungnam-national-university', nameKo: '충남대학교', nameEn: "Chungnam National University" },
   { slug: 'postech', nameKo: '포항공과대학교', nameEn: "Pohang University of Science and Technology (POSTECH)" },
   { slug: 'korea-aerospace-university', nameKo: '한국항공대학교', nameEn: "Korea Aerospace University" },
-  { slug: 'hansung-university', nameKo: '한성대학교 (본교)', nameEn: "Hansung University" },
+  { slug: 'hansung-university', nameKo: '한성대학교', nameEn: "Hansung University" },
   { slug: 'hanyang-university', nameKo: '한양대학교', nameEn: "Hanyang University" },
-  { slug: 'hongik-university', nameKo: '홍익대학교 (본교)', nameEn: "Hongik University" },
+  { slug: 'hongik-university', nameKo: '홍익대학교', nameEn: "Hongik University" },
 ];
 
-/** 인증대학 — Магадлан итгэмжлэгдсэн (100 schools/campuses). */
+/** 인증대학 (학위과정), less the excellent ones — Магадлан итгэмжлэгдсэн (104 catalogue schools). */
 export const CERTIFIED_ACCREDITED: AccreditationRow[] = [
   { slug: 'gachon-university', nameKo: '가천대학교', nameEn: "Gachon University" },
   { slug: 'catholic-university-of-korea', nameKo: '가톨릭대학교', nameEn: "The Catholic University of Korea" },
   { slug: 'kangnam-university', nameKo: '강남대학교', nameEn: "Kangnam University" },
   { slug: 'gangseo-university', nameKo: '강서대학교', nameEn: "Gangseo University" },
-  { slug: 'kangwon-national-university-gangneung', nameKo: '강원대학교(강릉캠퍼스)', nameEn: "Kangwon National University (Gangneung Campus)" },
-  { slug: 'kangwon-national-university-samcheok', nameKo: '강원대학교(삼척캠퍼스)', nameEn: "Kangwon National University (Samcheok Campus)" },
-  { slug: 'kangwon-national-university-wonju', nameKo: '강원대학교(원주캠퍼스)', nameEn: "Kangwon National University (Wonju Campus)" },
-  { slug: 'kangwon-national-university-chuncheon', nameKo: '강원대학교(춘천캠퍼스)', nameEn: "Kangwon National University (Chuncheon Campus)" },
+  { slug: 'kangwon-national-university-wonju', nameKo: '강원대학교', nameEn: "Kangwon National University (Wonju Campus)" },
+  { slug: 'kangwon-national-university-gangneung', nameKo: '강원대학교', nameEn: "Kangwon National University (Gangneung Campus)" },
+  { slug: 'kangwon-national-university-chuncheon', nameKo: '강원대학교', nameEn: "Kangwon National University (Chuncheon Campus)" },
+  { slug: 'kangwon-national-university-samcheok', nameKo: '강원대학교', nameEn: "Kangwon National University (Samcheok Campus)" },
   { slug: 'konkuk-university-glocal', nameKo: '건국대학교(글로컬)', nameEn: "Konkuk University GLOCAL Campus" },
   { slug: 'kyonggi-university', nameKo: '경기대학교', nameEn: "Kyonggi University" },
   { slug: 'kyungnam-university', nameKo: '경남대학교', nameEn: "Kyungnam University" },
@@ -104,6 +112,7 @@ export const CERTIFIED_ACCREDITED: AccreditationRow[] = [
   { slug: 'gimcheon-university', nameKo: '김천대학교', nameEn: "Gimcheon University" },
   { slug: 'korea-nazarene-university', nameKo: '나사렛대학교', nameEn: "Korea Nazarene University" },
   { slug: 'namseoul-university', nameKo: '남서울대학교', nameEn: "Namseoul University" },
+  { slug: 'dankook-university', nameKo: '단국대학교', nameEn: "Dankook University" },
   { slug: 'daegu-catholic-university', nameKo: '대구가톨릭대학교', nameEn: "Daegu Catholic University" },
   { slug: 'daegu-university', nameKo: '대구대학교', nameEn: "Daegu University" },
   { slug: 'daegu-haany-university', nameKo: '대구한의대학교', nameEn: "Daegu Haany University" },
@@ -114,19 +123,21 @@ export const CERTIFIED_ACCREDITED: AccreditationRow[] = [
   { slug: 'dongduk-womens-university', nameKo: '동덕여자대학교', nameEn: "Dongduk Women's University" },
   { slug: 'tongmyong-university', nameKo: '동명대학교', nameEn: "Tongmyong University" },
   { slug: 'dongseo-university', nameKo: '동서대학교', nameEn: "Dongseo University" },
-  { slug: 'dongshin-university', nameKo: '동신대학교', nameEn: "Dongshin University" },
   { slug: 'dong-a-university', nameKo: '동아대학교', nameEn: "Dong-A University" },
   { slug: 'dong-eui-university', nameKo: '동의대학교', nameEn: "Dong-Eui University" },
-  { slug: 'myongji-university-seoul', nameKo: '명지대학교(서울캠퍼스)', nameEn: "Myongji University (Seoul Campus)" },
+  { slug: 'myongji-university-seoul', nameKo: '명지대학교', nameEn: "Myongji University (Seoul Campus)" },
   { slug: 'mokwon-university', nameKo: '목원대학교', nameEn: "Mokwon University" },
   { slug: 'pai-chai-university', nameKo: '배재대학교', nameEn: "Pai Chai University" },
   { slug: 'baekseok-university', nameKo: '백석대학교', nameEn: "Baekseok University" },
   { slug: 'sahmyook-university', nameKo: '삼육대학교', nameEn: "Sahmyook University" },
   { slug: 'sangmyung-university', nameKo: '상명대학교', nameEn: "Sangmyung University" },
   { slug: 'sogang-university', nameKo: '서강대학교', nameEn: "Sogang University" },
+  { slug: 'seokyeong-university', nameKo: '서경대학교', nameEn: "Seokyeong University" },
   { slug: 'seoul-national-university-of-science-and-technology', nameKo: '서울과학기술대학교', nameEn: "Seoul National University of Science and Technology (SeoulTech)" },
   { slug: 'seoul-christian-university', nameKo: '서울기독대학교', nameEn: "Seoul Christian University" },
   { slug: 'seoul-national-university', nameKo: '서울대학교', nameEn: "Seoul National University" },
+  { slug: 'seoul-womens-university', nameKo: '서울여자대학교', nameEn: "Seoul Women's University" },
+  { slug: 'seojeong-university', nameKo: '서정대학교', nameEn: "Seojeong University" },
   { slug: 'sungkonghoe-university', nameKo: '성공회대학교', nameEn: "Sungkonghoe University" },
   { slug: 'semyung-university', nameKo: '세명대학교', nameEn: "Semyung University" },
   { slug: 'soonchunhyang-university', nameKo: '순천향대학교', nameEn: "Soonchunhyang University" },
@@ -160,6 +171,7 @@ export const CERTIFIED_ACCREDITED: AccreditationRow[] = [
   { slug: 'korea-national-university-of-education', nameKo: '한국교원대학교', nameEn: "Korea National University of Education" },
   { slug: 'koreatech', nameKo: '한국기술교육대학교', nameEn: "KOREATECH (Korea University of Technology and Education)" },
   { slug: 'korean-bible-university', nameKo: '한국성서대학교', nameEn: "Korean Bible University" },
+  { slug: 'korea-university-of-media-arts', nameKo: '한국영상대학교', nameEn: "Korea University of Media Arts" },
   { slug: 'hankuk-university-of-foreign-studies', nameKo: '한국외국어대학교', nameEn: "Hankuk University of Foreign Studies" },
   { slug: 'hannam-university', nameKo: '한남대학교', nameEn: "Hannam University" },
   { slug: 'handong-global-university', nameKo: '한동대학교', nameEn: "Handong Global University" },
@@ -168,11 +180,4 @@ export const CERTIFIED_ACCREDITED: AccreditationRow[] = [
   { slug: 'hansei-university', nameKo: '한세대학교', nameEn: "Hansei University" },
   { slug: 'hanyang-university-erica', nameKo: '한양대학교(ERICA)', nameEn: "Hanyang University (ERICA Campus)" },
   { slug: 'hoseo-university', nameKo: '호서대학교', nameEn: "Hoseo University" },
-  // Junior colleges added to the catalogue with the 2026-11 language-prep
-  // sheet. Read off the Ministry's 2025 cycle (교육부·법무부, 2026-02-12, 붙임1,
-  // 인증대학 – 학위과정 › 전문대학), not the office's lists above. Seojeong is
-  // certified for degrees only — it is absent from the 어학연수과정 list.
-  // Hosan and Catholic Kwandong appear on neither list and stay `NONE`.
-  { slug: 'seojeong-university', nameKo: '서정대학교', nameEn: "Seojeong University" },
-  { slug: 'korea-university-of-media-arts', nameKo: '한국영상대학교', nameEn: "Korea University of Media Arts" },
 ];

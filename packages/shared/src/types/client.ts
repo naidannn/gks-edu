@@ -165,8 +165,9 @@ export interface ClientStats {
   withContract: number;
   unassigned: number;
   /**
-   * Website sign-ups whose every case the unpaid sweep cancelled. Left out of
-   * every other figure here and out of the list by default.
+   * Website sign-ups that never started a case, or whose every case the
+   * unpaid sweep cancelled. Left out of every other figure here and out of
+   * the list by default.
    */
   abandonedOnline: number;
 }

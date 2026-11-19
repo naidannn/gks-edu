@@ -94,36 +94,45 @@ export function clientPhaseWhere(phase: ClientPhase): Prisma.ClientWhereInput {
 }
 
 /**
- * Somebody who signed up on the website, opened a case, never paid the
- * prepayment, and had every case cancelled by the unpaid sweep (1C-43).
+ * Somebody who signed up on the website and never became the office's client
+ * in substance: they opened no case at all, or every case they opened was
+ * cancelled by the unpaid sweep (1C-43) without a payment.
  *
  * The office never met these people, so the register hides them by default:
- * twenty abandoned self-service drafts beside thirty real clients made the
- * office look twice as busy as it is. Four conditions, all needed:
+ * 63 of them beside 36 real clients made the office look three times as busy
+ * as it is (1B-27). What both kinds share:
  *
  *   - `createdById` is null — the client row came from the website, not from
  *     a staff member typing it in. A client the office registered stays
- *     visible whatever happened to the money.
- *   - at least one case, and every case cancelled;
- *   - no cancellation was made by a person — a consultant cancelling a case is
- *     a decision about somebody the office dealt with;
- *   - no payment ever went through.
+ *     visible whatever happened next.
+ *
+ * and then either
+ *
+ *   - no case at all — the account was made and nothing followed; or
+ *   - at least one case, every case cancelled, none of the cancellations made
+ *     by a person (a consultant cancelling is a decision about somebody the
+ *     office dealt with), and no payment ever went through.
  *
  * Hidden is not deleted: the list shows them again when asked for, and on any
  * search, so a person who comes back is still found by name.
  */
 export const ABANDONED_ONLINE_WHERE: Prisma.ClientWhereInput = {
   createdById: null,
-  user: {
-    cases: {
-      some: {},
-      every: {
-        stage: CaseStage.CANCELLED,
-        transitions: { none: { toStage: CaseStage.CANCELLED, actorId: { not: null } } },
-        payments: { none: { status: PaymentStatus.PAID } },
+  OR: [
+    { user: { cases: { none: {} } } },
+    {
+      user: {
+        cases: {
+          some: {},
+          every: {
+            stage: CaseStage.CANCELLED,
+            transitions: { none: { toStage: CaseStage.CANCELLED, actorId: { not: null } } },
+            payments: { none: { status: PaymentStatus.PAID } },
+          },
+        },
       },
     },
-  },
+  ],
 };
 
 /** The register's default: everybody except {@link ABANDONED_ONLINE_WHERE}. */

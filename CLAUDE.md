@@ -145,10 +145,11 @@ It decides how hard the student visa is: an `EXCELLENT` school's students go thr
 be shown as one — Seoul National University is `CERTIFIED`, Joongbu University is `EXCELLENT`
 — so it never sorts the catalogue and never mixes with `theKoreaRank` or `gksRank`.
 
-The office's two lists named exactly the 135 original schools; the four language-prep
-schools added in 2026-11 were looked up on the Ministry's 2025 cycle, and two of them (Hosan,
-Catholic Kwandong) are on neither list — `NONE` means exactly that, never "not checked". A
-school you add to the catalogue gets looked up the same way before it goes public. The lists live in
+The grades are the Ministry's 2025 cycle (published 2026-02-12), matched 139 of 139 on the
+Korean name; three schools — Dongshin, Hosan, Catholic Kwandong — are on neither list, and
+`NONE` means exactly that, never "not checked". A school you add to the catalogue gets
+looked up on the current list before it goes public. The grade is the degree-programme one;
+the separate 어학연수과정 (language-course) list is not stored. The lists live in
 `apps/api/src/modules/universities/accreditation/korea-accreditation.ts` and only
 `pnpm accreditation:import` writes the column — it resets every school to `NONE` first, so a
 school dropped from the next cycle loses its grade instead of keeping a stale one

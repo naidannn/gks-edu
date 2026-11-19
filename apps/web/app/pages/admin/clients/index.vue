@@ -24,9 +24,9 @@ import { useAuthStore } from '~/stores/auth';
  * The header counts clients by business phase (1B-22) — "идэвхтэй" means the
  * prepayment is in, not that somebody once drafted a contract.
  *
- * Website sign-ups the unpaid sweep cancelled are left out of the table and of
- * every counter: the office never met them, and they made the register look
- * twice its size. Their own counter brings them back; a search always finds them.
+ * Website sign-ups that never opened a case, or whose cases the unpaid sweep
+ * cancelled, are left out of the table and of every counter: the office never
+ * met them, and they made the register look three times its size. Their own counter brings them back; a search always finds them.
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
@@ -217,10 +217,10 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
         type="button"
         class="gks-stat"
         :class="{ 'gks-stat--active': abandoned === 'show' }"
-        title="Вэбээр бүртгүүлээд урьдчилгаа төлбөрөө төлөөгүй тул автоматаар цуцлагдсан. Дээрх тоонд ороогүй; дарж жагсаалтад нэмнэ."
+        title="Вэбээр бүртгүүлээд хэрэг нээгээгүй, эсвэл урьдчилгаа төлбөрөө төлөөгүй тул автоматаар цуцлагдсан. Дээрх тоонд ороогүй; дарж жагсаалтад нэмнэ."
         @click="abandoned = abandoned === 'show' ? 'hide' : 'show'"
       >
-        <span>{{ abandoned === 'show' ? 'Төлөөгүй онлайн бүртгэл харагдаж байна' : 'Нуусан: төлөөгүй онлайн бүртгэл' }}</span>
+        <span>{{ abandoned === 'show' ? 'Нуусан онлайн бүртгэл харагдаж байна' : 'Нуусан онлайн бүртгэл' }}</span>
         <strong class="gks-tnum">{{ stats.abandonedOnline }}</strong>
       </button>
     </section>
