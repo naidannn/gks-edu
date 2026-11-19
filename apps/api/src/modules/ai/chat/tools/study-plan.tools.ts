@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AccessLevel, EducationLevel, ProgramLevel } from '../../../../prisma/client.js';
 import { QueryStudyPlanDto } from '../../../study-plan/dto/query-study-plan.dto.js';
 import { StudyPlanService } from '../../../study-plan/study-plan.service.js';
-import { annualTuitionKrw } from '../../../programs/tuition.js';
+import { annualTuitionKrw, enrollmentPeriodLabel, languagePrepEnrollment } from '../../../programs/tuition.js';
 import { readBoolean, readEnum, readInt, readString, requireEnum } from './args.js';
 import type { AiTool, AiToolProvider, ToolOutcome } from './tool.types.js';
 
@@ -277,6 +277,8 @@ function schoolCost(
   const livingMax = own ? own.monthlyMax * MONTHS_PER_YEAR * rate : (planLiving?.maxMnt ?? null);
   const years = program.durationYears ?? DEFAULT_YEARS[program.level];
   const admission = program.admissionFeeKrw ? program.admissionFeeKrw * rate : null;
+  // A language institute bills six months or a year up front, by school.
+  const enrollment = languagePrepEnrollment(program);
 
   return {
     сургууль: program.university.nameMn,
@@ -294,6 +296,14 @@ function schoolCost(
             [tuition * years, livingMax === null ? null : livingMax * years],
           )}`,
     элсэлтийн_хураамж: admission ? sayMnt(admission) : null,
+    ...(enrollment
+      ? {
+          элсэхэд_нэг_дор_төлөх:
+            enrollment.totalKrw === null
+              ? enrollmentPeriodLabel(enrollment.terms)
+              : `${enrollmentPeriodLabel(enrollment.terms)}: ${sayKrw(enrollment.totalKrw)} ≈ ${sayMnt(enrollment.totalKrw * rate)}`,
+        }
+      : {}),
     topik: program.topikLevel,
   };
 }

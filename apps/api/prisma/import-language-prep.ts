@@ -1,33 +1,38 @@
 /**
- * The nine schools GKS actually brokers language prep for, and their 2026
- * December round — the office's own "сургууль хугацаа" sheet.
+ * The language-prep schools GKS brokers, priced and dated from the office's own
+ * research — "Сургуулиудын мэдээллийн судалгаа.xlsx", sheet "хэлний бэлтгэл"
+ * (2026-11). The office called it the latest word: where it disagrees with
+ * the database, the sheet wins.
  *
  *   pnpm language-prep:import          # apply
  *   pnpm language-prep:import --dry    # report what would change, write nothing
  *
- * Three things happen here, in this order:
+ * Per school:
  *
- *  1. The seeded placeholders go. A fresh database used to get four rounds a
- *     year on six arbitrary schools, every one of them ending on the last day
- *     of the month and charging ₩1,700,000, so that the module had something to
- *     render. Next to real dates that is worse than an empty table, so any
- *     unreferenced language-prep round still carrying the seed note — and any
- *     unverified, machine-suggested language programme — is deleted. A row a
- *     case or an application points at is never touched; it is reported instead.
- *  2. The nine schools are marked `acceptsLanguagePrep`.
- *  3. Each gets its 한국어교육원 정규과정 with the real per-term tuition, and one
- *     `IntakeTerm` for 2026/12 carrying the school's own deadline.
+ *  1. The school exists. Four of the thirteen were not in the 135-school
+ *     catalogue (Seojeong, Hosan, Korea University of Media Arts, Catholic
+ *     Kwandong); they are created with what the sheet and the school's own
+ *     site give, published, and left for staff to fill in. An existing school
+ *     is never rewritten here beyond `acceptsLanguagePrep`.
+ *  2. Its 한국어교육원 programme carries the sheet's per-term tuition, its
+ *     minimum enrolment (`minEnrollmentTerms` — six months or a year, the
+ *     sheet's "төлбөрийн шалгуур") and its registration fee.
+ *  3. Each published 2027 round is upserted on (school, level, year, month):
+ *     opening day, the school's deadline, first day of classes, fee.
  *
- * `internalDeadline` is left to `resolveInternalDeadline` — deadline minus
- * `AdmissionConfig.internalLeadDays` — and a date a human has already typed
- * (`internalDeadlineIsManual`) is never overwritten. Three of the nine schools
- * close on 2026-09-15, which puts our internal date in the past: those rounds
- * read as closed, which is the honest answer, and staff can override the
- * internal date per row in `/admin/admissions`.
+ * `internalDeadline` is derived by `resolveInternalDeadline`. A date staff
+ * typed by hand (`internalDeadlineIsManual`) survives — unless the sheet moves
+ * the school's own deadline under it, in which case a frozen internal date
+ * belongs to a deadline that no longer exists: it is recomputed and reported.
  *
- * Re-running is safe: the deletes match only placeholder rows, and the writes
- * are upserts keyed on (university, level, year, month) and (university, level,
- * name).
+ * A round with no application dates (Hosan) is written as `PLANNED`, which no
+ * visitor sees, so staff can add the deadline before it goes public.
+ *
+ * This replaces the 2026-09 importer of the "сургууль хугацаа" sheet. That one
+ * also deleted unverified AI-researched language programmes as "placeholders"
+ * — by now about a hundred published rows — so that step is gone on purpose.
+ *
+ * Re-running is safe: every write is an upsert.
  */
 import { PrismaPg } from '@prisma/adapter-pg';
 import { config as loadEnv } from 'dotenv';
@@ -37,6 +42,7 @@ import {
   ProgramLevel,
   ProgramSource,
   PrismaClient,
+  UniversityType,
 } from '../src/generated/prisma/client.js';
 import {
   DEFAULT_INTERNAL_LEAD_DAYS,
@@ -51,52 +57,245 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
-/** The note `prisma/seed.ts` stamps on every intake round it invents. */
-const SEED_INTAKE_NOTE = 'Ерөнхий хуанлиар үүсгэсэн жишээ огноо — сургуулиас баталгаажуулаагүй.';
-/** The prefix `prisma/seed.ts` stamps on every programme it invents. */
-const SEED_PROGRAM_NOTE = 'Seed өгөгдөл';
-
 /** The language institute's regular course. One per school, named in Mongolian. */
 const PROGRAM_NAME_MN = 'Солонгос хэлний бэлтгэл';
 const PROGRAM_NAME_EN = 'Korean Language Program';
 const PROGRAM_NAME_KO = '한국어교육원 정규과정';
 
 /**
- * Staff-only provenance. It goes on the programme's `internalNote` and nowhere
- * near `IntakeTerm.note`, which the public detail payload renders verbatim —
- * "which spreadsheet this came from" is an answer for the office, not a
- * sentence a visitor should be reading under a deadline.
+ * Staff-only provenance — the programme's `internalNote`, never
+ * `IntakeTerm.note`, which the public payload renders verbatim.
  */
-const SOURCE_NOTE = 'GKS EDU-ийн "сургууль хугацаа" хүснэгт (2026 оны 12 сарын элсэлт).';
+const SOURCE_NOTE = 'GKS EDU-ийн "Сургуулиудын мэдээллийн судалгаа" (2026-11), хэлний бэлтгэл хуудас.';
 
-/** The intake this sheet describes: classes start in December 2026. */
-const INTAKE_YEAR = 2026;
-const INTAKE_MONTH = 12;
-/** Korean language institutes publish tuition per 10-week term; this is that year's table. */
-const TUITION_YEAR = 2026;
+/** The sheet prices the 2027 rounds. */
+const TUITION_YEAR = 2027;
 
-interface LanguagePrepRow {
-  slug: string;
-  /** As the office wrote it, so an unmatched row is recognisable. */
-  nameEn: string;
-  /** ₩ per 10-week term. Never the annual figure — the schools do not publish one. */
-  tuitionPerTermKrw: number;
-  /** The school's own last day, `YYYY-MM-DD`. Ours is derived from it, never typed here. */
-  applicationDeadline: string;
-  /** First day of classes, `YYYY-MM-DD`. Null where the sheet gives only the month. */
-  classStartDate: string | null;
+interface Round {
+  /** 3, 6, 9 or 12 — spring, summer, autumn, winter. */
+  month: number;
+  year: number;
+  /** `YYYY-MM-DD`. The school's window; null where the sheet gives none. */
+  openAt: string | null;
+  deadline: string | null;
+  /** First day of classes. Null keeps whatever the row already has. */
+  classStart: string | null;
+  /** Where the sheet was read rather than copied — printed on every run. */
+  fix?: string;
 }
 
-const ROWS: LanguagePrepRow[] = [
-  { slug: 'korea-university', nameEn: 'Korea University', tuitionPerTermKrw: 1_800_000, applicationDeadline: '2026-10-28', classStartDate: '2026-12-10' },
-  { slug: 'sungkyunkwan-university', nameEn: 'Sungkyunkwan University', tuitionPerTermKrw: 1_780_000, applicationDeadline: '2026-10-01', classStartDate: '2026-12-02' },
-  { slug: 'sookmyung-womens-university', nameEn: "Sookmyung Women's University", tuitionPerTermKrw: 1_660_000, applicationDeadline: '2026-09-15', classStartDate: null },
-  { slug: 'ajou-university', nameEn: 'Ajou University', tuitionPerTermKrw: 1_500_000, applicationDeadline: '2026-09-23', classStartDate: null },
-  { slug: 'hanyang-university', nameEn: 'Hanyang University', tuitionPerTermKrw: 1_850_000, applicationDeadline: '2026-09-15', classStartDate: null },
-  { slug: 'hanyang-university-erica', nameEn: 'Hanyang University ERICA', tuitionPerTermKrw: 1_500_000, applicationDeadline: '2026-09-15', classStartDate: null },
-  { slug: 'seoul-national-university', nameEn: 'Seoul National University', tuitionPerTermKrw: 1_800_000, applicationDeadline: '2026-09-22', classStartDate: '2026-12-07' },
-  { slug: 'yonsei-university', nameEn: 'Yonsei University', tuitionPerTermKrw: 1_800_000, applicationDeadline: '2026-10-16', classStartDate: '2026-12-01' },
-  { slug: 'cheongju-university', nameEn: 'Cheongju University', tuitionPerTermKrw: 1_860_000, applicationDeadline: '2026-10-01', classStartDate: null },
+interface Row {
+  slug: string;
+  nameKo: string;
+  /** ₩ per 10-week term. */
+  perTermKrw: number;
+  /** 2 = six months, 4 = a year — what a new student pays for in one go. */
+  minEnrollmentTerms: number;
+  /** "Бүртгэлийн хураамж" — the one-off registration fee, ₩. */
+  feeKrw: number;
+  rounds: Round[];
+}
+
+const ROWS: Row[] = [
+  {
+    slug: 'seojeong-university',
+    nameKo: '서정대학교',
+    perTermKrw: 1_100_000,
+    minEnrollmentTerms: 4,
+    feeKrw: 50_000,
+    rounds: [],
+  },
+  {
+    slug: 'busan-university-of-foreign-studies',
+    nameKo: '부산외국어대학교',
+    perTermKrw: 1_400_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 50_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-01', deadline: '2027-01-11', classStart: '2027-03-02' },
+      { month: 6, year: 2027, openAt: '2027-03-08', deadline: '2027-04-10', classStart: '2027-05-20' },
+      { month: 9, year: 2027, openAt: '2027-06-01', deadline: '2027-07-10', classStart: '2027-09-01' },
+      { month: 12, year: 2027, openAt: '2027-08-31', deadline: '2027-09-30', classStart: '2027-11-19' },
+    ],
+  },
+  {
+    slug: 'hanyang-university',
+    nameKo: '한양대학교',
+    perTermKrw: 1_850_000,
+    minEnrollmentTerms: 4,
+    feeKrw: 150_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-09', deadline: '2027-01-07', classStart: '2027-03-03' },
+      { month: 6, year: 2027, openAt: '2027-03-10', deadline: '2027-04-08', classStart: '2027-06-02' },
+      { month: 9, year: 2027, openAt: '2027-06-09', deadline: '2027-07-08', classStart: '2027-09-01' },
+      { month: 12, year: 2027, openAt: '2027-09-08', deadline: '2027-10-07', classStart: '2027-12-03' },
+    ],
+  },
+  {
+    slug: 'hanyang-university-erica',
+    nameKo: '한양대학교 ERICA',
+    perTermKrw: 1_500_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 100_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-07', deadline: '2027-01-08', classStart: '2027-03-02' },
+      { month: 6, year: 2027, openAt: '2027-03-08', deadline: '2027-04-02', classStart: '2027-06-02' },
+      { month: 9, year: 2027, openAt: '2027-05-31', deadline: '2027-07-09', classStart: '2027-09-01' },
+      { month: 12, year: 2027, openAt: '2027-09-06', deadline: '2027-10-08', classStart: '2027-12-01' },
+    ],
+  },
+  {
+    slug: 'sookmyung-womens-university',
+    nameKo: '숙명여자대학교',
+    perTermKrw: 1_660_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 60_000,
+    rounds: [],
+  },
+  {
+    slug: 'sungkyunkwan-university',
+    nameKo: '성균관대학교',
+    perTermKrw: 1_780_000,
+    minEnrollmentTerms: 4,
+    feeKrw: 80_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-07', deadline: '2027-01-22', classStart: '2027-03-08' },
+      { month: 6, year: 2027, openAt: '2027-03-15', deadline: '2027-04-30', classStart: '2027-06-07' },
+      { month: 9, year: 2027, openAt: '2027-06-14', deadline: '2027-07-30', classStart: '2027-09-06' },
+      { month: 12, year: 2027, openAt: '2027-09-08', deadline: '2027-10-29', classStart: '2027-12-06' },
+    ],
+  },
+  {
+    slug: 'seoul-national-university',
+    nameKo: '서울대학교',
+    perTermKrw: 1_800_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 100_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-11-02', deadline: '2026-12-24', classStart: '2027-03-08', fix: 'sheet says 2027.12.24; the window opens 2026.11.02 and classes start 2027.03.08' },
+      { month: 6, year: 2027, openAt: '2027-02-01', deadline: '2027-03-29', classStart: '2027-06-07' },
+      { month: 9, year: 2027, openAt: '2027-05-03', deadline: '2027-06-28', classStart: '2027-09-06' },
+      { month: 12, year: 2027, openAt: '2027-08-02', deadline: '2027-08-24', classStart: '2027-12-06' },
+    ],
+  },
+  {
+    slug: 'korea-university',
+    nameKo: '고려대학교',
+    perTermKrw: 1_960_000,
+    minEnrollmentTerms: 4,
+    feeKrw: 130_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-07', deadline: '2027-01-22', classStart: '2027-03-18' },
+      { month: 6, year: 2027, openAt: '2027-03-08', deadline: '2027-04-23', classStart: '2027-06-16' },
+      { month: 9, year: 2027, openAt: '2027-06-07', deadline: '2027-07-23', classStart: '2027-09-10' },
+      { month: 12, year: 2027, openAt: '2027-09-06', deadline: '2027-10-22', classStart: '2027-12-14' },
+    ],
+  },
+  {
+    slug: 'yonsei-university',
+    nameKo: '연세대학교',
+    perTermKrw: 1_960_000,
+    minEnrollmentTerms: 4,
+    feeKrw: 130_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-07', deadline: '2027-01-15', classStart: '2027-03-05' },
+      { month: 6, year: 2027, openAt: '2027-03-08', deadline: '2027-04-16', classStart: '2027-06-03' },
+      { month: 9, year: 2027, openAt: '2027-06-07', deadline: '2027-07-16', classStart: '2027-09-01' },
+      { month: 12, year: 2027, openAt: '2027-09-06', deadline: '2027-10-15', classStart: '2027-12-01' },
+    ],
+  },
+  {
+    slug: 'hosan-university',
+    nameKo: '호산대학교',
+    perTermKrw: 1_100_000,
+    minEnrollmentTerms: 4,
+    feeKrw: 100_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: null, deadline: null, classStart: '2027-03-16' },
+      { month: 6, year: 2027, openAt: null, deadline: null, classStart: '2027-06-15' },
+    ],
+  },
+  {
+    slug: 'silla-university',
+    nameKo: '신라대학교',
+    perTermKrw: 1_300_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 50_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-11-01', deadline: '2026-11-30', classStart: null },
+      { month: 9, year: 2027, openAt: '2027-05-01', deadline: '2027-05-30', classStart: null },
+    ],
+  },
+  {
+    slug: 'korea-university-of-media-arts',
+    nameKo: '한국영상대학교',
+    perTermKrw: 1_150_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 50_000,
+    rounds: [],
+  },
+  {
+    slug: 'catholic-kwandong-university',
+    nameKo: '가톨릭관동대학교',
+    perTermKrw: 1_200_000,
+    minEnrollmentTerms: 2,
+    feeKrw: 70_000,
+    rounds: [
+      { month: 3, year: 2027, openAt: '2026-12-15', deadline: '2027-01-23', classStart: '2027-03-03' },
+      { month: 6, year: 2027, openAt: '2027-03-16', deadline: '2027-04-24', classStart: '2027-06-01' },
+      { month: 9, year: 2027, openAt: '2027-06-22', deadline: '2027-07-24', classStart: '2027-09-01' },
+      { month: 12, year: 2027, openAt: '2027-09-21', deadline: '2027-10-23', classStart: '2027-12-01' },
+    ],
+  },
+];
+
+/** Not in the 135-school catalogue until this sheet. Created only if absent. */
+const NEW_SCHOOLS = [
+  {
+    slug: 'seojeong-university',
+    nameKo: '서정대학교',
+    nameEn: 'Seojeong University',
+    nameMn: 'Сөжон их сургууль',
+    cityEn: 'Yangju',
+    cityMn: 'Янжу',
+    regionEn: 'Gyeonggi',
+    regionMn: 'Кёнги',
+    website: 'https://www.seojeong.ac.kr',
+  },
+  {
+    // Gyeongsan, on Daegu's edge — filed under Daegu, as Daegu University is.
+    slug: 'hosan-university',
+    nameKo: '호산대학교',
+    nameEn: 'Hosan University',
+    nameMn: 'Хосан их сургууль',
+    cityEn: 'Gyeongsan',
+    cityMn: 'Кёнсан',
+    regionEn: 'Daegu',
+    regionMn: 'Тэгү',
+    website: 'https://www.hosan.ac.kr',
+  },
+  {
+    slug: 'korea-university-of-media-arts',
+    nameKo: '한국영상대학교',
+    nameEn: 'Korea University of Media Arts',
+    nameMn: 'Солонгосын Медиа урлагийн их сургууль',
+    cityEn: 'Sejong',
+    cityMn: 'Сэжон',
+    regionEn: 'Sejong',
+    regionMn: 'Сэжон',
+    website: 'https://www.pro.ac.kr',
+  },
+  {
+    slug: 'catholic-kwandong-university',
+    nameKo: '가톨릭관동대학교',
+    nameEn: 'Catholic Kwandong University',
+    nameMn: 'Католик Кваньдун их сургууль',
+    cityEn: 'Gangneung',
+    cityMn: 'Каннын',
+    regionEn: 'Gangwon',
+    regionMn: 'Канвон',
+    website: 'https://www.cku.ac.kr',
+  },
 ];
 
 /** A deadline is the whole of its last day, in UTC — the convention the module already uses. */
@@ -110,211 +309,175 @@ function dateUtc(date: string): Date {
   return new Date(Date.UTC(year!, month! - 1, day!));
 }
 
-/**
- * Remove the seeded language-prep placeholders, leaving anything a case, a
- * client or an application depends on exactly where it is.
- */
-async function purgePlaceholders(): Promise<void> {
-  const intakes = await prisma.intakeTerm.findMany({
-    where: { level: ProgramLevel.LANGUAGE_PREP, note: SEED_INTAKE_NOTE },
-    select: {
-      id: true,
-      year: true,
-      month: true,
-      university: { select: { nameEn: true } },
-      _count: { select: { cases: true, clients: true, applications: true } },
-    },
-  });
-  const removableIntakes = intakes.filter(
-    (intake) => intake._count.cases + intake._count.clients + intake._count.applications === 0,
+const day = (value: Date | null | undefined) => value?.toISOString().slice(0, 10) ?? '—';
+const krw = (value: number | null | undefined) => (value == null ? '—' : `₩${value.toLocaleString('en-US')}`);
+
+async function ensureNewSchools(): Promise<Set<string>> {
+  const existing = new Set(
+    (await prisma.university.findMany({ where: { slug: { in: NEW_SCHOOLS.map((s) => s.slug) } }, select: { slug: true } })).map(
+      (row) => row.slug,
+    ),
   );
-  for (const intake of intakes) {
-    if (!removableIntakes.includes(intake)) {
-      console.warn(`  kept (in use): ${intake.university.nameEn} ${intake.year}/${intake.month}`);
+  const pending = new Set<string>();
+  for (const school of NEW_SCHOOLS) {
+    if (existing.has(school.slug)) continue;
+    console.log(`${dryRun ? '[dry] would create' : 'Creating'} school ${school.nameEn} (${school.nameKo}), ${school.cityEn}`);
+    if (dryRun) {
+      pending.add(school.slug);
+      continue;
     }
+    const { website, ...fields } = school;
+    await prisma.university.create({
+      data: {
+        ...fields,
+        type: UniversityType.PRIVATE,
+        links: { officialWebsite: website },
+        acceptsLanguagePrep: true,
+        isPublished: true,
+        internalNote: `Хэлний бэлтгэлийн судалгааны хүснэгтээс нэмсэн (2026-11). Лого, танилцуулга, дотуур байрны мэдээллийг бөглөх.`,
+      },
+    });
   }
-
-  const programs = await prisma.universityProgram.findMany({
-    where: {
-      level: ProgramLevel.LANGUAGE_PREP,
-      OR: [
-        { internalNote: { startsWith: SEED_PROGRAM_NOTE } },
-        { sourceType: ProgramSource.AI_ASSISTED, verifiedAt: null },
-      ],
-    },
-    select: {
-      id: true,
-      nameMn: true,
-      university: { select: { nameEn: true } },
-      _count: { select: { cases: true, applications: true, caseChoices: true, intakeOverrides: true } },
-    },
-  });
-  const removablePrograms = programs.filter(
-    (program) =>
-      program._count.cases +
-        program._count.applications +
-        program._count.caseChoices +
-        program._count.intakeOverrides ===
-      0,
-  );
-  for (const program of programs) {
-    if (!removablePrograms.includes(program)) {
-      console.warn(`  kept (in use): ${program.university.nameEn} — ${program.nameMn}`);
-    }
-  }
-
-  console.log(
-    `${dryRun ? '[dry] would delete' : 'Deleting'} ${removableIntakes.length} placeholder intake round(s) and ${removablePrograms.length} placeholder programme(s)`,
-  );
-  if (dryRun) return;
-
-  await prisma.$transaction([
-    prisma.intakeTerm.deleteMany({ where: { id: { in: removableIntakes.map((intake) => intake.id) } } }),
-    prisma.universityProgram.deleteMany({
-      where: { id: { in: removablePrograms.map((program) => program.id) } },
-    }),
-  ]);
+  return pending;
 }
 
 async function main(): Promise<void> {
+  const pendingSchools = await ensureNewSchools();
+
   const universities = await prisma.university.findMany({
     where: { slug: { in: ROWS.map((row) => row.slug) } },
-    select: { id: true, slug: true, nameEn: true, acceptsLanguagePrep: true },
+    select: { id: true, slug: true, nameEn: true },
   });
   const bySlug = new Map(universities.map((university) => [university.slug, university]));
-
-  const missing = ROWS.filter((row) => !bySlug.has(row.slug));
-  if (missing.length) {
-    throw new Error(
-      `Not in the catalogue: ${missing.map((row) => `${row.slug} (${row.nameEn})`).join(', ')}`,
-    );
-  }
-
-  await purgePlaceholders();
+  const missing = ROWS.filter((row) => !bySlug.has(row.slug) && !pendingSchools.has(row.slug));
+  if (missing.length) throw new Error(`Not in the catalogue: ${missing.map((row) => row.slug).join(', ')}`);
 
   const config = await prisma.admissionConfig.findUnique({ where: { id: 'default' } });
   const leadDays = config?.internalLeadDays ?? DEFAULT_INTERNAL_LEAD_DAYS;
   const now = new Date();
+  let written = 0;
 
-  console.log(`\nInternal deadlines run ${leadDays} day(s) ahead of the school's:`);
+  console.log(`\nInternal deadlines run ${leadDays} day(s) ahead of the school's.\n`);
 
   for (const row of ROWS) {
-    const university = bySlug.get(row.slug)!;
-    const applicationDeadline = endOfDayUtc(row.applicationDeadline);
-    const classStartDate = row.classStartDate ? dateUtc(row.classStartDate) : null;
+    const university = bySlug.get(row.slug);
+    const program = university
+      ? await prisma.universityProgram.findUnique({
+          where: {
+            universityId_level_nameMn: { universityId: university.id, level: ProgramLevel.LANGUAGE_PREP, nameMn: PROGRAM_NAME_MN },
+          },
+          select: { tuitionPerTermKrw: true, minEnrollmentTerms: true, admissionFeeKrw: true },
+        })
+      : null;
 
-    const existing = await prisma.intakeTerm.findUnique({
-      where: {
-        universityId_level_year_month: {
-          universityId: university.id,
-          level: ProgramLevel.LANGUAGE_PREP,
-          year: INTAKE_YEAR,
-          month: INTAKE_MONTH,
-        },
-      },
-      select: { internalDeadline: true, internalDeadlineIsManual: true, note: true },
-    });
-
-    const internalDeadline = resolveInternalDeadline({
-      applicationDeadline,
-      internalDeadline: existing?.internalDeadline ?? null,
-      internalDeadlineIsManual: existing?.internalDeadlineIsManual ?? false,
-      leadDays,
-    });
-
-    // Undefined leaves whatever the office typed alone; null clears a
-    // provenance line an earlier version of this script wrote into the public
-    // field before that was noticed.
-    const note = existing?.note === SOURCE_NOTE ? null : undefined;
-
-    const flag = internalDeadline && internalDeadline < now ? '  ← already past' : '';
+    const priceChange = program?.tuitionPerTermKrw !== row.perTermKrw ? `  (was ${krw(program?.tuitionPerTermKrw)})` : '';
     console.log(
-      `  ${university.nameEn.padEnd(34)} school ${row.applicationDeadline}  ours ${internalDeadline?.toISOString().slice(0, 10) ?? '—'}  ₩${row.tuitionPerTermKrw.toLocaleString('en-US')}/улирал${flag}`,
+      `${row.nameKo} ${row.slug}\n  ${krw(row.perTermKrw)}/улирал${priceChange} · элсэхэд ${row.minEnrollmentTerms} улирал = ${krw(row.perTermKrw * row.minEnrollmentTerms)} · бүртгэл ${krw(row.feeKrw)}`,
     );
 
-    if (dryRun) continue;
-
-    await prisma.university.update({
-      where: { id: university.id },
-      data: { acceptsLanguagePrep: true },
-    });
-
-    await prisma.universityProgram.upsert({
-      where: {
-        universityId_level_nameMn: {
-          universityId: university.id,
-          level: ProgramLevel.LANGUAGE_PREP,
-          nameMn: PROGRAM_NAME_MN,
-        },
-      },
-      // Only what the sheet actually carries. Anything a colleague filled in
-      // since — 입학금, the scholarship note, the faculty — is left alone.
-      update: {
-        nameEn: PROGRAM_NAME_EN,
-        nameKo: PROGRAM_NAME_KO,
-        tuitionPerTermKrw: row.tuitionPerTermKrw,
+    if (!dryRun && university) {
+      await prisma.university.update({ where: { id: university.id }, data: { acceptsLanguagePrep: true } });
+      const prices = {
+        tuitionPerTermKrw: row.perTermKrw,
+        minEnrollmentTerms: row.minEnrollmentTerms,
+        admissionFeeKrw: row.feeKrw,
         tuitionYear: TUITION_YEAR,
         sourceType: ProgramSource.IMPORTED,
         verifiedAt: now,
         internalNote: SOURCE_NOTE,
         isPublished: true,
-      },
-      create: {
-        universityId: university.id,
-        level: ProgramLevel.LANGUAGE_PREP,
-        nameMn: PROGRAM_NAME_MN,
-        nameEn: PROGRAM_NAME_EN,
-        nameKo: PROGRAM_NAME_KO,
-        tuitionPerTermKrw: row.tuitionPerTermKrw,
-        // A language institute runs four 10-week terms, not two semesters, so
-        // the ×2 annual figure would be wrong. The sheet gives no annual price.
-        tuitionPerYearKrw: null,
-        admissionFeeKrw: null,
-        tuitionYear: TUITION_YEAR,
-        sourceType: ProgramSource.IMPORTED,
-        verifiedAt: now,
-        internalNote: SOURCE_NOTE,
-      },
-    });
-
-    await prisma.intakeTerm.upsert({
-      where: {
-        universityId_level_year_month: {
+      };
+      await prisma.universityProgram.upsert({
+        where: {
+          universityId_level_nameMn: { universityId: university.id, level: ProgramLevel.LANGUAGE_PREP, nameMn: PROGRAM_NAME_MN },
+        },
+        // A language institute runs four terms a year; the annual figure is
+        // derived on read (× 4), so none is stored.
+        update: { nameEn: PROGRAM_NAME_EN, nameKo: PROGRAM_NAME_KO, ...prices },
+        create: {
           universityId: university.id,
           level: ProgramLevel.LANGUAGE_PREP,
-          year: INTAKE_YEAR,
-          month: INTAKE_MONTH,
+          nameMn: PROGRAM_NAME_MN,
+          nameEn: PROGRAM_NAME_EN,
+          nameKo: PROGRAM_NAME_KO,
+          tuitionPerYearKrw: null,
+          ...prices,
         },
-      },
-      update: {
+      });
+    }
+
+    for (const round of row.rounds) {
+      const key = university
+        ? { universityId: university.id, level: ProgramLevel.LANGUAGE_PREP, year: round.year, month: round.month }
+        : null;
+      const existing = key
+        ? await prisma.intakeTerm.findUnique({
+            where: { universityId_level_year_month: key },
+            select: {
+              applicationDeadline: true,
+              internalDeadline: true,
+              internalDeadlineIsManual: true,
+              classStartDate: true,
+              openAt: true,
+            },
+          })
+        : null;
+
+      const applicationDeadline = round.deadline ? endOfDayUtc(round.deadline) : null;
+      const deadlineMoved = day(existing?.applicationDeadline) !== day(applicationDeadline);
+      // A hand-typed internal date is kept only while the school's deadline it
+      // was typed against still stands.
+      const keepManual = Boolean(existing?.internalDeadlineIsManual) && !deadlineMoved;
+      const internalDeadline = resolveInternalDeadline({
+        applicationDeadline,
+        internalDeadline: keepManual ? (existing?.internalDeadline ?? null) : null,
+        internalDeadlineIsManual: keepManual,
+        leadDays,
+      });
+      const status = applicationDeadline ? IntakeStatus.OPEN : IntakeStatus.PLANNED;
+
+      const flags = [
+        !existing ? 'new' : null,
+        existing && deadlineMoved ? `deadline was ${day(existing.applicationDeadline)}` : null,
+        existing?.internalDeadlineIsManual && !keepManual ? `manual internal ${day(existing.internalDeadline)} reset` : null,
+        keepManual ? 'manual internal kept' : null,
+        status === IntakeStatus.PLANNED ? 'PLANNED — no deadline' : null,
+        internalDeadline && internalDeadline < now ? 'ours already past' : null,
+        round.fix ? `READ: ${round.fix}` : null,
+      ].filter(Boolean);
+      console.log(
+        `    ${round.year}/${String(round.month).padStart(2)}  open ${round.openAt ?? '—'}  school ${round.deadline ?? '—'}  ours ${day(internalDeadline)}  class ${round.classStart ?? '(kept)'}${flags.length ? `   ← ${flags.join('; ')}` : ''}`,
+      );
+
+      if (dryRun || !key) continue;
+
+      const data = {
+        openAt: round.openAt ? dateUtc(round.openAt) : null,
         applicationDeadline,
         internalDeadline,
-        classStartDate,
-        status: IntakeStatus.OPEN,
-        sourceType: IntakeSource.IMPORTED,
-        note,
-        verifiedAt: now,
-      },
-      create: {
-        universityId: university.id,
-        level: ProgramLevel.LANGUAGE_PREP,
-        year: INTAKE_YEAR,
-        month: INTAKE_MONTH,
-        applicationDeadline,
-        internalDeadline,
-        classStartDate,
-        status: IntakeStatus.OPEN,
+        internalDeadlineIsManual: keepManual,
+        // The sheet sometimes gives the months, not the day: keep a known day.
+        ...(round.classStart ? { classStartDate: dateUtc(round.classStart) } : {}),
+        admissionFeeKrw: row.feeKrw,
+        status,
         sourceType: IntakeSource.IMPORTED,
         verifiedAt: now,
-      },
-    });
+      };
+      await prisma.intakeTerm.upsert({
+        where: { universityId_level_year_month: key },
+        update: data,
+        create: { ...key, ...data },
+      });
+      written += 1;
+    }
   }
 
   if (dryRun) {
     console.log('\n[dry] nothing written');
     return;
   }
-  console.log(`\nApplied ${ROWS.length} school(s) for ${INTAKE_YEAR}/${INTAKE_MONTH}.`);
+  console.log(`\nApplied ${ROWS.length} school(s), ${written} round(s).`);
+  console.log('Flush the API caches (admissions:*, university:*, universities:*, programs:*) so the site shows it.');
 }
 
 await main()

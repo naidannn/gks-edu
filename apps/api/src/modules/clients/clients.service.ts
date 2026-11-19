@@ -31,7 +31,14 @@ import { officeDateRange } from '../reports/report-period.js';
 import { absorbLogin, findLoginToAbsorb } from './absorb-login.js';
 import { attachLeadsToClient, findLeadsOfPerson, foldLeads } from './link-leads.js';
 import { DEADLINE_WARNING_MS, TERMINAL_STAGES, liveCase } from './client-cases.js';
-import { CLIENT_PHASES, type ClientPhase, clientPhaseOf, clientPhaseWhere } from './client-phase.js';
+import {
+  ABANDONED_ONLINE_WHERE,
+  CLIENT_PHASES,
+  type ClientPhase,
+  NOT_ABANDONED_ONLINE_WHERE,
+  clientPhaseOf,
+  clientPhaseWhere,
+} from './client-phase.js';
 import { ADULT_AGE, ageOn } from './dto/client-fields.js';
 import type { ConvertLeadDto } from './dto/convert-lead.dto.js';
 import type { CreateClientDto } from './dto/create-client.dto.js';
@@ -505,12 +512,23 @@ export class ClientsService {
    * and stays only for the filter that still reads it.
    */
   async stats() {
-    const [total, byStatusRows, withContract, unassigned, phaseCounts] = await Promise.all([
-      this.prisma.client.count(),
-      this.prisma.client.groupBy({ by: ['status'], _count: { _all: true } }),
-      this.prisma.client.count({ where: { user: { cases: { some: { contract: { isNot: null } } } } } }),
-      this.prisma.client.count({ where: { assignedConsultantId: null, status: ClientStatus.ACTIVE } }),
-      Promise.all(CLIENT_PHASES.map((phase) => this.prisma.client.count({ where: clientPhaseWhere(phase) }))),
+    // Every counter leaves the abandoned website sign-ups out, exactly as the
+    // list does by default — a header that counts people the table hides is
+    // the confusion this was meant to end. They get a counter of their own.
+    const visible = NOT_ABANDONED_ONLINE_WHERE;
+    const [total, byStatusRows, withContract, unassigned, phaseCounts, abandonedOnline] = await Promise.all([
+      this.prisma.client.count({ where: visible }),
+      this.prisma.client.groupBy({ by: ['status'], where: visible, _count: { _all: true } }),
+      this.prisma.client.count({
+        where: { AND: [visible, { user: { cases: { some: { contract: { isNot: null } } } } }] },
+      }),
+      this.prisma.client.count({
+        where: { AND: [visible, { assignedConsultantId: null, status: ClientStatus.ACTIVE }] },
+      }),
+      Promise.all(
+        CLIENT_PHASES.map((phase) => this.prisma.client.count({ where: { AND: [visible, clientPhaseWhere(phase)] } })),
+      ),
+      this.prisma.client.count({ where: ABANDONED_ONLINE_WHERE }),
     ]);
 
     return {
@@ -525,6 +543,7 @@ export class ClientsService {
       >,
       withContract,
       unassigned,
+      abandonedOnline,
     };
   }
 
@@ -1114,7 +1133,15 @@ export class ClientsService {
     if (createdAt) where.createdAt = createdAt;
     // The phase is its own clause over the same `user.cases` relation, so it is
     // ANDed beside the stage/contract filter above rather than merged into it.
-    if (query.phase) where.AND = [clientPhaseWhere(query.phase)];
+    const and: Prisma.ClientWhereInput[] = [];
+    if (query.phase) and.push(clientPhaseWhere(query.phase));
+    // Abandoned website sign-ups stay out of the register unless somebody is
+    // looking for them: by name, or through their own counter. Not through the
+    // "Цуцлагдсан" phase — its counter excludes them, and the list it opens
+    // has to hold the number it showed.
+    const lookingForAbandoned = query.includeAbandoned || Boolean(query.q?.trim());
+    if (!lookingForAbandoned) and.push(NOT_ABANDONED_ONLINE_WHERE);
+    if (and.length) where.AND = and;
 
     return where;
   }

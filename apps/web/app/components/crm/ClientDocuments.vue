@@ -61,8 +61,18 @@ async function act(action: () => Promise<unknown>) {
   }
 }
 
-function onReview(documentId: string, action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string) {
-  return act(() => api.post(`/case-documents/${documentId}/review`, { action, note: note || undefined }));
+/**
+ * `removeFileIds` comes with a RETURN: the versions that fail the requirement
+ * are withdrawn in the same call, and the client is emailed the reason.
+ */
+function onReview(documentId: string, action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string, removeFileIds: string[] = []) {
+  return act(() =>
+    api.post(`/case-documents/${documentId}/review`, {
+      action,
+      note: note || undefined,
+      ...(removeFileIds.length ? { removeFileIds } : {}),
+    }),
+  );
 }
 function onTransition(documentId: string, toStatus: DocumentStatus) {
   return act(() => api.post(`/case-documents/${documentId}/transitions`, { toStatus }));
@@ -223,7 +233,7 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           :document="document"
           mode="staff"
           :busy="busy"
-          @review="(action, note) => onReview(document.id, action, note)"
+          @review="(action, note, removeFileIds) => onReview(document.id, action, note, removeFileIds)"
           @transition="(status) => onTransition(document.id, status)"
           @receive="(note) => onReceive(document.id, note)"
           @send="(payload) => onSend(document.id, payload)"

@@ -164,6 +164,11 @@ export interface ClientStats {
   byPhase: Record<ClientPhase, number>;
   withContract: number;
   unassigned: number;
+  /**
+   * Website sign-ups whose every case the unpaid sweep cancelled. Left out of
+   * every other figure here and out of the list by default.
+   */
+  abandonedOnline: number;
 }
 
 /** Guardian details become mandatory below this age (§6.2). */

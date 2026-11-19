@@ -28,6 +28,8 @@ export interface ProgramForm {
   tuitionPerTermKrw: string;
   tuitionPerYearKrw: string;
   admissionFeeKrw: string;
+  /** Language prep only — '2' (six months) or '4' (a year); empty = unknown. */
+  minEnrollmentTerms: string;
   tuitionYear: string;
   scholarshipMaxPercent: string;
   scholarshipNote: string;
@@ -57,6 +59,7 @@ export function emptyProgramForm(universityId = ''): ProgramForm {
     tuitionPerTermKrw: '',
     tuitionPerYearKrw: '',
     admissionFeeKrw: '',
+    minEnrollmentTerms: '',
     // The current academic year is the useful default: a price is being typed
     // off a page the person is looking at right now.
     tuitionYear: String(new Date().getFullYear()),
@@ -86,6 +89,7 @@ export function fillProgramForm(form: ProgramForm, program: AdminProgram): void 
   form.tuitionPerTermKrw = numberInput(program.tuitionPerTermKrw);
   form.tuitionPerYearKrw = numberInput(program.tuitionPerYearKrw);
   form.admissionFeeKrw = numberInput(program.admissionFeeKrw);
+  form.minEnrollmentTerms = numberInput(program.minEnrollmentTerms ?? null);
   form.tuitionYear = numberInput(program.tuitionYear);
   form.scholarshipMaxPercent = numberInput(program.scholarshipMaxPercent);
   form.scholarshipNote = program.scholarshipNote ?? '';
@@ -172,6 +176,8 @@ export function programPayload(form: ProgramForm, options: { includeUniversity: 
     tuitionPerTermKrw: number(form.tuitionPerTermKrw),
     tuitionPerYearKrw: number(form.tuitionPerYearKrw),
     admissionFeeKrw: number(form.admissionFeeKrw),
+    // Only a language institute has a minimum enrolment; anything else stores none.
+    minEnrollmentTerms: form.level === 'LANGUAGE_PREP' ? number(form.minEnrollmentTerms) : null,
     tuitionYear: number(form.tuitionYear),
     scholarshipMaxPercent: number(form.scholarshipMaxPercent),
     scholarshipNote: text(form.scholarshipNote),
@@ -231,3 +237,10 @@ function number(value: string): number | null {
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? parsed : null;
 }
+
+/** The choices of the language-prep "minimum enrolment" select. */
+export const MIN_ENROLLMENT_OPTIONS = [
+  { value: '', label: 'Тодорхойгүй' },
+  { value: '2', label: '6 сар (2 улирал)' },
+  { value: '4', label: '1 жил (4 улирал)' },
+];

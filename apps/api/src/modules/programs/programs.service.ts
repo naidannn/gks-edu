@@ -47,6 +47,7 @@ export const PROGRAM_CARD_FIELDS = {
   tuitionPerTermKrw: true,
   tuitionPerYearKrw: true,
   admissionFeeKrw: true,
+  minEnrollmentTerms: true,
   // `tuitionYear` is deliberately absent: it is a staff signal — the admin list
   // sorts and flags stale prices on it — and never a line on a public card
   // (CLAUDE.md, ARCHITECTURE.md §3.3).

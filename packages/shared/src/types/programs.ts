@@ -72,6 +72,8 @@ export interface ProgramRow {
   tuitionPerYearKrw: number | null;
   /** 입학금 — the one-off entrance fee, paid in the first semester only. */
   admissionFeeKrw: number | null;
+  /** Language prep only: terms a new student enrols and pays for at once — 2 or 4. */
+  minEnrollmentTerms?: number | null;
   /**
    * Which academic year the figures above are from. A staff signal, not a
    * public one — the admin list sorts and flags stale prices on it, and no

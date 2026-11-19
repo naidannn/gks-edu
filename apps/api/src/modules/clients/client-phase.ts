@@ -1,4 +1,4 @@
-import { CaseStage, type Prisma } from '../../prisma/client.js';
+import { CaseStage, PaymentStatus, type Prisma } from '../../prisma/client.js';
 import { PRE_PREPAYMENT_STAGES } from '../cases/case-flow.js';
 
 /**
@@ -92,3 +92,39 @@ export function clientPhaseWhere(phase: ClientPhase): Prisma.ClientWhereInput {
 
   return { AND: [...none, has] };
 }
+
+/**
+ * Somebody who signed up on the website, opened a case, never paid the
+ * prepayment, and had every case cancelled by the unpaid sweep (1C-43).
+ *
+ * The office never met these people, so the register hides them by default:
+ * twenty abandoned self-service drafts beside thirty real clients made the
+ * office look twice as busy as it is. Four conditions, all needed:
+ *
+ *   - `createdById` is null — the client row came from the website, not from
+ *     a staff member typing it in. A client the office registered stays
+ *     visible whatever happened to the money.
+ *   - at least one case, and every case cancelled;
+ *   - no cancellation was made by a person — a consultant cancelling a case is
+ *     a decision about somebody the office dealt with;
+ *   - no payment ever went through.
+ *
+ * Hidden is not deleted: the list shows them again when asked for, and on any
+ * search, so a person who comes back is still found by name.
+ */
+export const ABANDONED_ONLINE_WHERE: Prisma.ClientWhereInput = {
+  createdById: null,
+  user: {
+    cases: {
+      some: {},
+      every: {
+        stage: CaseStage.CANCELLED,
+        transitions: { none: { toStage: CaseStage.CANCELLED, actorId: { not: null } } },
+        payments: { none: { status: PaymentStatus.PAID } },
+      },
+    },
+  },
+};
+
+/** The register's default: everybody except {@link ABANDONED_ONLINE_WHERE}. */
+export const NOT_ABANDONED_ONLINE_WHERE: Prisma.ClientWhereInput = { NOT: ABANDONED_ONLINE_WHERE };

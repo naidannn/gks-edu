@@ -66,3 +66,22 @@ describe('client phase (1B-22)', () => {
     }
   });
 });
+
+describe('ABANDONED_ONLINE_WHERE — the website sign-ups the register hides', () => {
+  it('is only self-registered clients whose every case the sweep cancelled, unpaid', async () => {
+    const { ABANDONED_ONLINE_WHERE } = await import('./client-phase.js');
+    expect(ABANDONED_ONLINE_WHERE).toEqual({
+      createdById: null,
+      user: {
+        cases: {
+          some: {},
+          every: {
+            stage: CaseStage.CANCELLED,
+            transitions: { none: { toStage: CaseStage.CANCELLED, actorId: { not: null } } },
+            payments: { none: { status: 'PAID' } },
+          },
+        },
+      },
+    });
+  });
+});

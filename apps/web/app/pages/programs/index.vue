@@ -334,6 +334,10 @@ useListingSeo('/programs');
             <span v-if="program.tuitionPerTermKrw" class="gks-prog-card__price-term">
               Нэг улирал {{ formatKrw(program.tuitionPerTermKrw) }} · {{ tuitionTermsNote(program.level) }}
             </span>
+            <!-- Language prep: six months or a year up front, by school. -->
+            <span v-if="enrollmentLine(program)" class="gks-prog-card__price-term gks-prog-card__price-enroll">
+              {{ enrollmentLine(program) }}
+            </span>
           </div>
 
           <!-- Label left, value right: the spec-sheet idiom the catalogue card

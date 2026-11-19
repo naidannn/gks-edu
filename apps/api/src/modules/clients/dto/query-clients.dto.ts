@@ -47,6 +47,15 @@ export class QueryClientsDto extends PaginationQueryDto {
   @IsOptional()
   phase?: ClientPhase;
 
+  @ApiPropertyOptional({
+    description:
+      'Вэбээр бүртгүүлээд урьдчилгаагаа төлөөгүйгээс автоматаар цуцлагдсан хүмүүсийг оруулах. Анхдагчаар нуугдана; нэрээр хайхад үргэлж гарна',
+  })
+  @Transform(({ value }) => (value === 'true' ? true : value === 'false' ? false : value))
+  @IsBoolean()
+  @IsOptional()
+  includeAbandoned?: boolean;
+
   @ApiPropertyOptional({ enum: LeadSource })
   @IsEnum(LeadSource)
   @IsOptional()

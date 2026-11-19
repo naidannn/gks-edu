@@ -6,6 +6,7 @@ import type {
   ProgramLevel,
   ProgramResearchRun,
 } from '@gks/shared';
+import { TERMS_PER_YEAR } from '@gks/shared';
 
 /**
  * Add or edit one programme, by hand or with Gemini's help.
@@ -82,10 +83,21 @@ async function loadExisting(id: string) {
  * Shown rather than stored: the columns keep what the school published, and a
  * derived number written into the database is one nobody can question later.
  */
+/** Terms in a year at this level — four for a language institute, two for a degree. */
+const termsPerYear = computed(() => (form.level ? TERMS_PER_YEAR[form.level] : 2));
 const derivedAnnual = computed(() => {
   if (form.tuitionPerYearKrw) return null;
   const term = Number(form.tuitionPerTermKrw);
-  return form.tuitionPerTermKrw && Number.isFinite(term) ? formatKrw(term * 2) : null;
+  return form.tuitionPerTermKrw && Number.isFinite(term) ? formatKrw(term * termsPerYear.value) : null;
+});
+
+/** The language institute's first bill: its minimum enrolment at the per-term price. */
+const enrollmentTotal = computed(() => {
+  const terms = Number(form.minEnrollmentTerms);
+  const term = Number(form.tuitionPerTermKrw);
+  return form.level === 'LANGUAGE_PREP' && terms && form.tuitionPerTermKrw && Number.isFinite(term)
+    ? formatKrw(term * terms)
+    : null;
 });
 
 async function save() {
@@ -533,11 +545,23 @@ function candidateAnnual(candidate: ProgramCandidate): string {
           />
           <DsInput v-model="form.admissionFeeKrw" label="Элсэлтийн хураамж 입학금 (₩)" type="number" />
           <DsInput v-model="form.tuitionYear" label="Аль оны үнэ вэ" type="number" :error="errors.tuitionYear" />
+          <DsSelect
+            v-if="form.level === 'LANGUAGE_PREP'"
+            v-model="form.minEnrollmentTerms"
+            :options="MIN_ENROLLMENT_OPTIONS"
+            label="Хамгийн багадаа хэдэн улирлаар элсүүлэх вэ"
+          />
         </div>
+
+        <p v-if="enrollmentTotal" class="gks-prog-form__derived">
+          <DsIcon name="wallet" :size="15" />
+          Элсэхдээ нэг дор төлөх: <strong class="gks-tnum">{{ enrollmentTotal }}</strong> — үйлчлүүлэгчдэд энэ
+          дүнгээр харагдана.
+        </p>
 
         <p v-if="derivedAnnual" class="gks-prog-form__derived">
           <DsIcon name="wand-sparkles" :size="15" />
-          Жилийн төлбөрийг хоосон орхивол хоёр улирлаар тооцоод
+          Жилийн төлбөрийг хоосон орхивол {{ termsPerYear === 4 ? 'дөрвөн' : 'хоёр' }} улирлаар тооцоод
           <strong class="gks-tnum">{{ derivedAnnual }}</strong> гэж харуулна. Сургууль өөрөө
           жилээр зарласан бол тэр тоог нь бичээрэй.
         </p>

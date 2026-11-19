@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AccessLevel, ProgramLevel, type AccreditationGrade } from '../../../../prisma/client.js';
 import { QueryProgramsDto } from '../../../programs/dto/query-programs.dto.js';
 import { ProgramsService } from '../../../programs/programs.service.js';
-import { annualTuitionKrw, TERMS_PER_YEAR } from '../../../programs/tuition.js';
+import { annualTuitionKrw, enrollmentPeriodLabel, languagePrepEnrollment, TERMS_PER_YEAR } from '../../../programs/tuition.js';
 import { QueryUniversitiesDto } from '../../../universities/dto/query-universities.dto.js';
 import { UniversitiesService } from '../../../universities/universities.service.js';
 import { readBoolean, readEnum, readInt, readString, requireString } from './args.js';
@@ -182,6 +182,14 @@ export class CatalogTools implements AiToolProvider {
               семестрийн_төлбөр_вон: card.tuitionPerTermKrw,
               жилийн_төлбөр_вон: card.tuitionPerYearKrw,
               жилийн_улирал: card.termsPerYear,
+              // Language prep only: six months or a year, by school — the
+              // first sum a family has to pay, and the question they ask next.
+              ...(card.enrollment
+                ? {
+                    элсэхэд_хамгийн_багадаа: enrollmentPeriodLabel(card.enrollment.terms),
+                    элсэхэд_нэг_дор_төлөх_вон: card.enrollment.totalKrw,
+                  }
+                : {}),
               topik: card.topikLevel,
               тэтгэлэг_хувь: card.scholarshipMaxPercent,
             })),
@@ -267,6 +275,7 @@ type ProgramRow = {
   durationYears: number | null;
   tuitionPerTermKrw: number | null;
   tuitionPerYearKrw: number | null;
+  minEnrollmentTerms: number | null;
   topikLevel: number | null;
   scholarshipMaxPercent: number | null;
   faculty: { nameMn: string } | null;
@@ -288,6 +297,7 @@ function programCard(row: ProgramRow) {
     tuitionPerTermKrw: row.tuitionPerTermKrw,
     tuitionPerYearKrw: annualTuitionKrw(row),
     termsPerYear: TERMS_PER_YEAR[row.level],
+    enrollment: languagePrepEnrollment(row),
     topikLevel: row.topikLevel,
     scholarshipMaxPercent: row.scholarshipMaxPercent,
     durationYears: row.durationYears,

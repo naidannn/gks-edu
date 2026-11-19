@@ -116,6 +116,16 @@ export class CreateProgramDto {
   @IsOptional()
   admissionFeeKrw?: number | null;
 
+  @ApiPropertyOptional({
+    description: 'Хэлний бэлтгэл: шинэ оюутан нэг дор элсэж төлөх улирлын тоо — 2 (6 сар) эсвэл 4 (1 жил)',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  @IsOptional()
+  minEnrollmentTerms?: number | null;
+
   @ApiPropertyOptional({ description: 'Academic year these figures were read off' })
   @Type(() => Number)
   @IsInt()

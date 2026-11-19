@@ -117,6 +117,8 @@ export interface UniversityProgram {
   tuitionPerYearKrw: number | null;
   /** 입학금 — the one-off entrance fee. */
   admissionFeeKrw: number | null;
+  /** Language prep only: terms a new student enrols and pays for at once — 2 or 4. */
+  minEnrollmentTerms?: number | null;
   /**
    * Which academic year the figures are from. A staff signal — the admin list
    * flags stale prices on it, and the public school page does not carry it

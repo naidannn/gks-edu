@@ -101,6 +101,7 @@ const PROGRAM_FIELDS = {
   tuitionPerYearKrw: true,
   tuitionPerTermKrw: true,
   admissionFeeKrw: true,
+  minEnrollmentTerms: true,
   tuitionYear: true,
   scholarshipMaxPercent: true,
   scholarshipNote: true,

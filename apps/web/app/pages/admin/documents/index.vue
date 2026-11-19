@@ -95,8 +95,14 @@ async function act(action: () => Promise<unknown>) {
   }
 }
 
-function onReview(action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string) {
-  return act(() => api.post(`/case-documents/${selectedId.value}/review`, { action, note: note || undefined }));
+function onReview(action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string, removeFileIds: string[] = []) {
+  return act(() =>
+    api.post(`/case-documents/${selectedId.value}/review`, {
+      action,
+      note: note || undefined,
+      ...(removeFileIds.length ? { removeFileIds } : {}),
+    }),
+  );
 }
 function onTransition(toStatus: DocumentStatus) {
   return act(() => api.post(`/case-documents/${selectedId.value}/transitions`, { toStatus }));

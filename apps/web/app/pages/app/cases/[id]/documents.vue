@@ -93,6 +93,17 @@ async function book() {
   }
 }
 
+/**
+ * What the client has to do comes first: a paper sent back, then whatever is
+ * not handed in yet. The office's own order holds inside each group.
+ */
+const ordered = computed(() => {
+  const rank: Partial<Record<DocumentStatus, number>> = { NEEDS_FIX: 0, RESUBMIT_REQUIRED: 0, NOT_STARTED: 1, IN_PROGRESS: 1 };
+  return [...(docs.checklist.value?.documents ?? [])].sort(
+    (a, b) => (rank[a.status] ?? 2) - (rank[b.status] ?? 2) || a.sortOrder - b.sortOrder,
+  );
+});
+
 const openAppointment = computed(() => appointmentView.value?.appointments.find((a) => a.status === 'SCHEDULED') ?? null);
 const originals = computed(() => appointmentView.value?.physicalOriginals ?? []);
 
@@ -119,7 +130,7 @@ const originals = computed(() => appointmentView.value?.physicalOriginals ?? [])
 
     <section v-if="docs.checklist.value?.documents.length" class="gks-docs__list">
       <DocumentsDocumentCard
-        v-for="document in docs.checklist.value.documents"
+        v-for="document in ordered"
         :key="document.id"
         :document="document"
         mode="client"

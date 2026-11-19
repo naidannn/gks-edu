@@ -6,6 +6,8 @@ import {
   annualTuitionKrw,
   annualTuitionWhere,
   compareAnnualTuition,
+  enrollmentPeriodLabel,
+  languagePrepEnrollment,
 } from './tuition.js';
 
 /** A bachelor's department priced the way Korean schools publish it. */
@@ -116,5 +118,32 @@ describe('ANNUAL_TUITION_SQL (1N-30)', () => {
    */
   it('binds no parameters', () => {
     expect(ANNUAL_TUITION_SQL.values).toEqual([]);
+  });
+});
+
+describe('languagePrepEnrollment — six months or a year up front, by school', () => {
+  it('prices the minimum enrolment at the per-term figure', () => {
+    expect(
+      languagePrepEnrollment({ level: ProgramLevel.LANGUAGE_PREP, minEnrollmentTerms: 2, tuitionPerTermKrw: 1_800_000 }),
+    ).toEqual({ terms: 2, months: 6, totalKrw: 3_600_000 });
+    expect(
+      languagePrepEnrollment({ level: ProgramLevel.LANGUAGE_PREP, minEnrollmentTerms: 4, tuitionPerTermKrw: 1_960_000 }),
+    ).toEqual({ terms: 4, months: 12, totalKrw: 7_840_000 });
+  });
+
+  it('says nothing for a degree, or while the minimum is unknown', () => {
+    expect(languagePrepEnrollment({ level: ProgramLevel.BACHELOR, minEnrollmentTerms: 2, tuitionPerTermKrw: 1 })).toBeNull();
+    expect(languagePrepEnrollment({ level: ProgramLevel.LANGUAGE_PREP, minEnrollmentTerms: null, tuitionPerTermKrw: 1 })).toBeNull();
+  });
+
+  it('keeps the period when the price is unknown', () => {
+    expect(
+      languagePrepEnrollment({ level: ProgramLevel.LANGUAGE_PREP, minEnrollmentTerms: 4, tuitionPerTermKrw: null }),
+    ).toEqual({ terms: 4, months: 12, totalKrw: null });
+  });
+
+  it('labels the period the way the office says it', () => {
+    expect(enrollmentPeriodLabel(2)).toBe('6 сар (2 улирал)');
+    expect(enrollmentPeriodLabel(4)).toBe('1 жил (4 улирал)');
   });
 });

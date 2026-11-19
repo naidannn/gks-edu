@@ -169,6 +169,7 @@ export class UniversitiesService {
                 tuitionPerTermKrw: true,
                 tuitionPerYearKrw: true,
                 admissionFeeKrw: true,
+                minEnrollmentTerms: true,
                 // `tuitionYear` stays behind the admin screen — a staff signal
                 // for a stale price, never a line on a public card (§3.3).
                 scholarshipMaxPercent: true,

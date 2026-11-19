@@ -70,7 +70,12 @@ import type {
   WorkTaskStatus,
   WorkTaskType,
 } from '@gks/shared';
-import { TERMS_PER_YEAR, annualTuitionKrw as sharedAnnualTuitionKrw } from '@gks/shared';
+import {
+  TERMS_PER_YEAR,
+  annualTuitionKrw as sharedAnnualTuitionKrw,
+  enrollmentPeriodLabel,
+  languagePrepEnrollment,
+} from '@gks/shared';
 
 /**
  * What we show instead of a missing value. Never render an unknown number as 0 —
@@ -729,6 +734,24 @@ export const annualTuitionKrw = sharedAnnualTuitionKrw;
  */
 export function tuitionTermsNote(level: ProgramLevel): string {
   return `жилд ${TERMS_PER_YEAR[level]} улирал`;
+}
+
+/**
+ * A language institute's first bill, as one line: "Элсэхдээ 6 сар (2 улирал)
+ * · ₩3,600,000". Schools take either six months or a full year up front, and
+ * that — not the per-term price — is what a family has to find before the
+ * visa. `null` for a degree programme, or while the school's minimum is unknown.
+ */
+export function enrollmentLine(program: {
+  level: ProgramLevel;
+  minEnrollmentTerms?: number | null;
+  tuitionPerTermKrw: number | null;
+}): string | null {
+  const enrollment = languagePrepEnrollment(program);
+  if (!enrollment) return null;
+  const period = `Элсэхдээ хамгийн багадаа ${enrollmentPeriodLabel(enrollment.terms)}`;
+  const total = formatKrw(enrollment.totalKrw);
+  return total ? `${period} · ${total}` : period;
 }
 
 /**

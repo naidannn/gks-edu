@@ -145,9 +145,10 @@ It decides how hard the student visa is: an `EXCELLENT` school's students go thr
 be shown as one — Seoul National University is `CERTIFIED`, Joongbu University is `EXCELLENT`
 — so it never sorts the catalogue and never mixes with `theKoreaRank` or `gksRank`.
 
-The two published lists together name exactly the 135 schools in the catalogue, so `NONE`
-currently applies to nobody; when it does apply it means "on neither list", never "not
-checked". The lists live in
+The office's two lists named exactly the 135 original schools; the four language-prep
+schools added in 2026-11 were looked up on the Ministry's 2025 cycle, and two of them (Hosan,
+Catholic Kwandong) are on neither list — `NONE` means exactly that, never "not checked". A
+school you add to the catalogue gets looked up the same way before it goes public. The lists live in
 `apps/api/src/modules/universities/accreditation/korea-accreditation.ts` and only
 `pnpm accreditation:import` writes the column — it resets every school to `NONE` first, so a
 school dropped from the next cycle loses its grade instead of keeping a stale one
@@ -206,7 +207,7 @@ pnpm prisma:migrate   # after any schema change
 pnpm prisma:seed
 pnpm ranking:import   # THE South Korea rank → theKoreaRank (--dry to preview)
 pnpm accreditation:import   # 교육국제화역량 인증제 tier → University.accreditation (--dry)
-pnpm language-prep:import   # the office's "сургууль хугацаа" sheet → intakes + tuition (--dry)
+pnpm language-prep:import   # the office's language-prep research sheet → tuition, minimum enrolment, 2027 rounds (--dry)
 pnpm typecheck && pnpm lint && pnpm test
 pnpm tasks            # roadmap progress
 ```

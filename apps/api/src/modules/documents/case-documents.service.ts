@@ -420,13 +420,45 @@ export class CaseDocumentsService {
     return this.prisma.caseDocument.findUniqueOrThrow({ where: { id } });
   }
 
-  /** Staff verdict on a submitted document (1D-09). */
+  /**
+   * Staff verdict on a document (1D-09).
+   *
+   * `ACCEPT` and `REQUEST_FIX` judge a submission. `RETURN` is "this does not
+   * meet the requirement — send a new one", and it can be said of anything the
+   * client has already handed in, including a paper we accepted and a school
+   * later refused: the row goes to `RESUBMIT_REQUIRED`, the files named in
+   * `removeFileIds` are withdrawn in the same step, and the client is told why.
+   * Staff used to write "файлаа устгаад дахин оруулна уу" in the note — to a
+   * client who has no way to delete a file once it is under review, and who
+   * then saw the rejected file still sitting on the card as if it were in.
+   */
   async review(id: string, dto: ReviewDocumentDto, actor: AuthenticatedUser) {
-    const doc = await this.getOrThrow(id, { case: { select: { id: true, code: true, userId: true } } });
+    const doc = await this.getOrThrow(id, {
+      case: { select: { id: true, code: true, userId: true } },
+      files: { where: { deletedAt: null }, select: { id: true, originalName: true } },
+    });
 
-    if (dto.action !== ReviewAction.ACCEPT && !dto.note?.trim()) {
+    const note = dto.note?.trim() ?? '';
+    if (dto.action !== ReviewAction.ACCEPT && !note) {
       throw new BadRequestException('Засвар хүсэх/буцаах үед тайлбар заавал бичнэ');
     }
+
+    const removeIds = [...new Set(dto.removeFileIds ?? [])];
+    if (removeIds.length && dto.action !== ReviewAction.RETURN) {
+      throw new BadRequestException('Файлыг зөвхөн материалыг буцаахдаа хасна');
+    }
+    const removing = removeIds.map((fileId) => {
+      const file = doc.files.find((row) => row.id === fileId);
+      if (!file) throw new BadRequestException('Хасах файл энэ материалд олдсонгүй — хуудсаа шинэчилнэ үү');
+      return file;
+    });
+    if (dto.action === ReviewAction.RETURN && (doc.status === DocumentStatus.NOT_STARTED || doc.status === DocumentStatus.IN_PROGRESS)) {
+      throw new BadRequestException('Илгээгдээгүй материалыг буцаах боломжгүй');
+    }
+
+    // The client reads which file went, not only why — "Хасагдсан файл" is
+    // what tells them the slot is empty again.
+    const body = removing.length ? `${note}\n\nХасагдсан файл: ${removing.map((file) => file.originalName).join(', ')}` : note;
 
     // Reviewing implies picking the document up: SUBMITTED → UNDER_REVIEW first.
     let status = doc.status;
@@ -435,19 +467,44 @@ export class CaseDocumentsService {
       status = DocumentStatus.UNDER_REVIEW;
     }
 
-    const target = REVIEW_TARGET[dto.action];
-    if (dto.action === ReviewAction.RETURN && status === DocumentStatus.UNDER_REVIEW) {
-      // RESUBMIT_REQUIRED is only reachable through NEEDS_FIX (§7.2).
-      await this.applyStatus(id, status, DocumentStatus.NEEDS_FIX, actor.id, dto.note ?? null);
-      const returned = await this.applyStatus(id, DocumentStatus.NEEDS_FIX, target, actor.id, null);
-      await this.notifyReview(doc, dto);
-      return returned;
+    const updated = await this.applyVerdict(id, status, dto.action, actor.id, body || null);
+
+    if (removing.length) {
+      await this.prisma.documentFile.updateMany({
+        where: { id: { in: removing.map((file) => file.id) }, caseDocumentId: id, deletedAt: null },
+        data: softDeletePatch(),
+      });
+    }
+
+    await this.notifyReview(doc, dto.action, body);
+    return updated;
+  }
+
+  /** The status writes behind one verdict, from wherever the document sits now. */
+  private async applyVerdict(id: string, status: DocumentStatus, action: ReviewAction, actorId: string, note: string | null) {
+    const target = REVIEW_TARGET[action];
+    if (action !== ReviewAction.RETURN) {
+      assertTransition(status, target);
+      return this.applyStatus(id, status, target, actorId, note);
+    }
+
+    // RESUBMIT_REQUIRED is only reachable from review through NEEDS_FIX (§7.2).
+    if (status === DocumentStatus.UNDER_REVIEW) {
+      await this.applyStatus(id, status, DocumentStatus.NEEDS_FIX, actorId, note);
+      return this.applyStatus(id, DocumentStatus.NEEDS_FIX, target, actorId, null);
+    }
+
+    // Already waiting for a new copy: nothing moves, but the new reason (and
+    // the file taken off) still has to reach the client.
+    if (status === DocumentStatus.RESUBMIT_REQUIRED) {
+      await this.prisma.documentReviewNote.create({
+        data: { caseDocumentId: id, authorId: actorId, body: note ?? '', fromStatus: status, toStatus: status },
+      });
+      return this.prisma.caseDocument.findUniqueOrThrow({ where: { id } });
     }
 
     assertTransition(status, target);
-    const updated = await this.applyStatus(id, status, target, actor.id, dto.note ?? null);
-    await this.notifyReview(doc, dto);
-    return updated;
+    return this.applyStatus(id, status, target, actorId, note);
   }
 
   /**
@@ -456,9 +513,10 @@ export class CaseDocumentsService {
    */
   private async notifyReview(
     doc: { id: string; stage: DocStage; case: { id: string; code: string; userId: string }; template: { nameMn: string } },
-    dto: ReviewDocumentDto,
+    action: ReviewAction,
+    reason: string,
   ): Promise<void> {
-    if (dto.action === ReviewAction.ACCEPT) {
+    if (action === ReviewAction.ACCEPT) {
       // "Yours is in" is worth an email on its own: without it the client only
       // ever hears from us when something is wrong, and starts to assume
       // silence means rejection.
@@ -484,17 +542,14 @@ export class CaseDocumentsService {
     }
 
     await this.notifications.dispatch({
-      event:
-        dto.action === ReviewAction.RETURN
-          ? NotificationEvent.DOCUMENT_REJECTED
-          : NotificationEvent.DOCUMENT_FIX_REQUIRED,
+      event: action === ReviewAction.RETURN ? NotificationEvent.DOCUMENT_REJECTED : NotificationEvent.DOCUMENT_FIX_REQUIRED,
       userIds: [doc.case.userId],
       caseId: doc.case.id,
       context: {
         caseId: doc.case.id,
         caseCode: doc.case.code,
         documentName: doc.template.nameMn,
-        reason: dto.note ?? '',
+        reason,
       },
     });
   }

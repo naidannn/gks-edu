@@ -10,6 +10,8 @@ import type {
 export interface ReviewPayload {
   action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN';
   note?: string;
+  /** RETURN only — the versions withdrawn along with the verdict. */
+  removeFileIds?: string[];
 }
 
 export interface CaseDocumentsOptions {

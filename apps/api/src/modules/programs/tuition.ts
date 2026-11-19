@@ -122,3 +122,34 @@ export function compareAnnualTuition(
   if (b === null) return -1;
   return order === 'desc' ? b - a : a - b;
 }
+
+/** A language institute's 10-week term, in calendar months, for labels. */
+export const LANGUAGE_TERM_MONTHS = 3;
+
+/**
+ * What a language institute bills a new student in one go: its minimum
+ * enrolment (`minEnrollmentTerms`, 2 or 4 terms) at its per-term price.
+ * `null` for any other level, or while the school's minimum is unknown.
+ *
+ * Mirrors `packages/shared/src/tuition.ts`.
+ */
+export function languagePrepEnrollment(program: {
+  level: ProgramLevel;
+  minEnrollmentTerms?: number | null;
+  tuitionPerTermKrw: number | null;
+}): { terms: number; months: number; totalKrw: number | null } | null {
+  if (program.level !== ProgramLevel.LANGUAGE_PREP || !program.minEnrollmentTerms) return null;
+  const terms = program.minEnrollmentTerms;
+  return {
+    terms,
+    months: terms * LANGUAGE_TERM_MONTHS,
+    totalKrw: program.tuitionPerTermKrw === null ? null : program.tuitionPerTermKrw * terms,
+  };
+}
+
+/** "6 сар (2 улирал)" / "1 жил (4 улирал)" — how the office says it. */
+export function enrollmentPeriodLabel(terms: number): string {
+  const months = terms * LANGUAGE_TERM_MONTHS;
+  const period = months % 12 === 0 ? `${months / 12} жил` : `${months} сар`;
+  return `${period} (${terms} улирал)`;
+}

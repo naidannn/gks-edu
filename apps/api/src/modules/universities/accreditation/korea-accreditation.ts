@@ -9,10 +9,11 @@
  * does not. It is not a quality ranking and must never be presented as one:
  * Seoul National University is `CERTIFIED`, Joongbu University is `EXCELLENT`.
  *
- * The two lists together name 135 schools, which is exactly the catalogue, so
- * every school gets a grade and `NONE` currently applies to nobody. That will
- * change when the next cycle is published or a school is added — `NONE` stays
- * the honest answer for "on neither list", never "not checked yet".
+ * The office's two lists named 135 schools, which was exactly the catalogue.
+ * Four language-prep schools joined in 2026-11 and were looked up on the
+ * Ministry's 2025 cycle instead: two are certified (below), and Hosan and
+ * Catholic Kwandong are on neither list, so they are the first `NONE` — the
+ * honest answer for "on neither list", never "not checked yet".
  *
  * Refresh procedure when the next cycle lands: replace both arrays, then
  * `pnpm accreditation:import`.
@@ -167,4 +168,11 @@ export const CERTIFIED_ACCREDITED: AccreditationRow[] = [
   { slug: 'hansei-university', nameKo: '한세대학교', nameEn: "Hansei University" },
   { slug: 'hanyang-university-erica', nameKo: '한양대학교(ERICA)', nameEn: "Hanyang University (ERICA Campus)" },
   { slug: 'hoseo-university', nameKo: '호서대학교', nameEn: "Hoseo University" },
+  // Junior colleges added to the catalogue with the 2026-11 language-prep
+  // sheet. Read off the Ministry's 2025 cycle (교육부·법무부, 2026-02-12, 붙임1,
+  // 인증대학 – 학위과정 › 전문대학), not the office's lists above. Seojeong is
+  // certified for degrees only — it is absent from the 어학연수과정 list.
+  // Hosan and Catholic Kwandong appear on neither list and stay `NONE`.
+  { slug: 'seojeong-university', nameKo: '서정대학교', nameEn: "Seojeong University" },
+  { slug: 'korea-university-of-media-arts', nameKo: '한국영상대학교', nameEn: "Korea University of Media Arts" },
 ];

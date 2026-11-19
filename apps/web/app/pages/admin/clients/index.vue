@@ -23,6 +23,10 @@ import { useAuthStore } from '~/stores/auth';
  *
  * The header counts clients by business phase (1B-22) — "идэвхтэй" means the
  * prepayment is in, not that somebody once drafted a contract.
+ *
+ * Website sign-ups the unpaid sweep cancelled are left out of the table and of
+ * every counter: the office never met them, and they made the register look
+ * twice its size. Their own counter brings them back; a search always finds them.
  */
 definePageMeta({ middleware: 'staff', layout: 'admin' });
 
@@ -58,6 +62,8 @@ const contractFilter = ref<'all' | 'with' | 'without'>('all');
    `useUrlFilters`' job now, below. */
 const attention = ref<ClientAttentionFilter | ''>('');
 const assignedFilter = ref<'all' | 'mine' | 'unassigned'>('all');
+/** A string rather than a boolean so it can live in the URL like the rest. */
+const abandoned = ref<'hide' | 'show'>('hide');
 const sort = ref('createdAt');
 const page = ref(1);
 
@@ -74,6 +80,7 @@ const query = computed(() => ({
   ...(source.value ? { source: source.value } : {}),
   ...(contractFilter.value === 'all' ? {} : { hasContract: contractFilter.value === 'with' }),
   ...(attention.value ? { attention: attention.value } : {}),
+  ...(abandoned.value === 'show' ? { includeAbandoned: true } : {}),
   ...(assignedFilter.value === 'mine' ? { assignedConsultantId: auth.user?.id } : {}),
   ...(assignedFilter.value === 'unassigned' ? { assignedConsultantId: 'unassigned' } : {}),
 }));
@@ -110,9 +117,10 @@ function clearFilters() {
   contractFilter.value = 'all';
   assignedFilter.value = 'all';
   attention.value = '';
+  abandoned.value = 'hide';
 }
 
-watch([serviceType, stage, status, phase, source, contractFilter, assignedFilter, attention, sort], () => {
+watch([serviceType, stage, status, phase, source, contractFilter, assignedFilter, attention, abandoned, sort], () => {
   page.value = 1;
   load();
 });
@@ -143,7 +151,8 @@ const totalPages = computed(() => data.value?.meta.totalPages ?? 1);
 const hasFilters = computed(() =>
   Boolean(q.value || serviceType.value || stage.value || status.value || phase.value || source.value || attention.value)
   || contractFilter.value !== 'all'
-  || assignedFilter.value !== 'all',
+  || assignedFilter.value !== 'all'
+  || abandoned.value === 'show',
 );
 
 /* Filters live in the URL: a filtered queue can be bookmarked, shared and
@@ -158,6 +167,7 @@ useUrlFilters({
   contract: [contractFilter, ['all', 'with', 'without']],
   assigned: [assignedFilter, ['all', 'mine', 'unassigned']],
   attention: [attention, ATTENTION_FILTERS.map((f) => f.value)],
+  abandoned: [abandoned, ['hide', 'show']],
   sort: [sort, SORT_OPTIONS.map((o) => o.value)],
 });
 
@@ -201,6 +211,17 @@ useHead({ title: 'Үйлчлүүлэгч · CRM' });
         @click="assignedFilter = assignedFilter === 'unassigned' ? 'all' : 'unassigned'"
       >
         <span>Хариуцагчгүй</span><strong class="gks-tnum">{{ stats.unassigned }}</strong>
+      </button>
+      <button
+        v-if="stats.abandonedOnline > 0"
+        type="button"
+        class="gks-stat"
+        :class="{ 'gks-stat--active': abandoned === 'show' }"
+        title="Вэбээр бүртгүүлээд урьдчилгаа төлбөрөө төлөөгүй тул автоматаар цуцлагдсан. Дээрх тоонд ороогүй; дарж жагсаалтад нэмнэ."
+        @click="abandoned = abandoned === 'show' ? 'hide' : 'show'"
+      >
+        <span>{{ abandoned === 'show' ? 'Төлөөгүй онлайн бүртгэл харагдаж байна' : 'Нуусан: төлөөгүй онлайн бүртгэл' }}</span>
+        <strong class="gks-tnum">{{ stats.abandonedOnline }}</strong>
       </button>
     </section>
 

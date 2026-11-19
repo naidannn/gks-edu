@@ -629,6 +629,11 @@ model UniversityProgram {
   tuitionPerYearKrw     Int?
   /// 입학금 — the one-off entrance fee, paid in the first semester only.
   admissionFeeKrw       Int?
+  /// LANGUAGE_PREP only: how many 10-week terms a new student must enrol and
+  /// pay for in one go — 2 (six months) or 4 (a full year). Each language
+  /// institute sets its own, and it is the first bill a client actually pays,
+  /// so it is shown publicly beside the per-term price. Null = not known yet.
+  minEnrollmentTerms    Int?
   /// The academic year these figures were read off. Null means unknown, which
   /// the UI must show as "мэдээлэл шинэчлэгдэж байна" rather than as current.
   tuitionYear           Int?

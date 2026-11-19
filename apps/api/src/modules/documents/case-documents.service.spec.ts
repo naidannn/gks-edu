@@ -25,6 +25,7 @@ function harness(overrides: Partial<Record<string, unknown>> = {}) {
       count: vi.fn().mockResolvedValue(0),
       create: vi.fn().mockResolvedValue({ id: 'doc-new' }),
       findFirst: vi.fn().mockResolvedValue(null),
+      findUniqueOrThrow: vi.fn().mockResolvedValue({ id: 'doc-1' }),
     },
     documentReviewNote: { create: vi.fn().mockResolvedValue({}) },
     case: { findUnique: vi.fn().mockResolvedValue({ userId: 'student-1' }) },
@@ -150,6 +151,107 @@ describe('CaseDocumentsService.review — the email counts what the cabinet coun
         event: NotificationEvent.DOCUMENT_APPROVED,
         context: expect.objectContaining({ remainingCount: '1 материал' }),
       }),
+    );
+  });
+});
+
+/**
+ * "Шаардлага хангахгүй — хасаад дахин авах". Staff used to write "файлаа
+ * устгаад дахин оруулна уу" to a client who cannot delete a file under review,
+ * and the rejected file stayed on the card looking handed in.
+ */
+describe('CaseDocumentsService.review RETURN — the bad file comes off and the client is told', () => {
+  function returnHarness(status: DocumentStatus) {
+    const h = harness({ documentFile: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } });
+    (h.prisma.caseDocument.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'doc-1',
+      stage: DocStage.ADMISSION,
+      status,
+      deletedAt: null,
+      template: { nameMn: 'Төрсний бүртгэлийн англи лавлагаа', needsTranslation: false },
+      case: { id: 'case-1', code: 'GKS-2026-0001', userId: 'student-1' },
+      files: [
+        { id: 'file-mn', originalName: 'mongol.jpg' },
+        { id: 'file-en', originalName: 'english.pdf' },
+      ],
+    });
+    return h;
+  }
+
+  it('withdraws only the files named, from an accepted document, and names them to the client', async () => {
+    const { service, prisma, notifications } = returnHarness(DocumentStatus.ACCEPTED);
+
+    await service.review(
+      'doc-1',
+      { action: ReviewAction.RETURN, note: 'Англи хэл дээрхийг оруулна уу', removeFileIds: ['file-mn'] },
+      STAFF,
+    );
+
+    expect(prisma.caseDocument.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'doc-1', status: DocumentStatus.ACCEPTED },
+        data: expect.objectContaining({ status: DocumentStatus.RESUBMIT_REQUIRED }),
+      }),
+    );
+    expect(prisma.documentFile.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['file-mn'] }, caseDocumentId: 'doc-1', deletedAt: null },
+      data: { deletedAt: expect.any(Date) },
+    });
+    expect(notifications.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: NotificationEvent.DOCUMENT_REJECTED,
+        context: expect.objectContaining({
+          reason: 'Англи хэл дээрхийг оруулна уу\n\nХасагдсан файл: mongol.jpg',
+        }),
+      }),
+    );
+  });
+
+  it('goes through NEEDS_FIX from review, the way §7.2 draws it', async () => {
+    const { service, prisma } = returnHarness(DocumentStatus.UNDER_REVIEW);
+
+    await service.review('doc-1', { action: ReviewAction.RETURN, note: 'Бүдэг байна', removeFileIds: [] }, STAFF);
+
+    const targets = (prisma.caseDocument.update as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
+      ([args]) => (args as { data: { status: DocumentStatus } }).data.status,
+    );
+    expect(targets).toEqual([DocumentStatus.NEEDS_FIX, DocumentStatus.RESUBMIT_REQUIRED]);
+    expect(prisma.documentFile.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('writes the new reason on a document already waiting, without a transition', async () => {
+    const { service, prisma, notifications } = returnHarness(DocumentStatus.RESUBMIT_REQUIRED);
+
+    await service.review('doc-1', { action: ReviewAction.RETURN, note: 'Дахиад буруу', removeFileIds: ['file-en'] }, STAFF);
+
+    expect(prisma.caseDocument.update).not.toHaveBeenCalled();
+    expect(prisma.documentReviewNote.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ toStatus: DocumentStatus.RESUBMIT_REQUIRED }),
+    });
+    expect(notifications.dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a file that is not on this document', async () => {
+    const { service } = returnHarness(DocumentStatus.ACCEPTED);
+
+    await expect(
+      service.review('doc-1', { action: ReviewAction.RETURN, note: 'x', removeFileIds: ['someone-else'] }, STAFF),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('refuses to remove files on an accept', async () => {
+    const { service } = returnHarness(DocumentStatus.UNDER_REVIEW);
+
+    await expect(
+      service.review('doc-1', { action: ReviewAction.ACCEPT, removeFileIds: ['file-mn'] }, STAFF),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('has nothing to send back before anything was handed in', async () => {
+    const { service } = returnHarness(DocumentStatus.NOT_STARTED);
+
+    await expect(service.review('doc-1', { action: ReviewAction.RETURN, note: 'x' }, STAFF)).rejects.toBeInstanceOf(
+      BadRequestException,
     );
   });
 });

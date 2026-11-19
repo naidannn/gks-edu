@@ -15,15 +15,21 @@ const props = defineProps<{
 const emit = defineEmits<{
   /** One action for the person: the files they picked, the words they typed, or both. */
   send: [payload: { files: File[]; note: string }];
-  review: [action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string];
+  /** `removeFileIds` — RETURN only: the versions that fail the requirement and come off the card. */
+  review: [action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN', note: string, removeFileIds: string[]];
   transition: [status: DocumentStatus];
   /** Staff registering the paper handed over the office desk (1D-24). */
   receive: [note: string];
   open: [fileId: string];
 }>();
 
-const expanded = ref(false);
+/** Notes the client should read first — the "why" behind a returned document. */
+const needsAttention = computed(() => ['NEEDS_FIX', 'RESUBMIT_REQUIRED'].includes(props.document.status));
+// A document sent back is opened for the client: the upload slot is inside
+// the body, and a collapsed card with a warning on it reads like "done".
+const expanded = ref(props.mode === 'client' && needsAttention.value);
 const reviewNote = ref('');
+const returnNote = ref('');
 const clientNote = ref('');
 /**
  * Picked, not yet sent. Uploading on selection and then offering a separate
@@ -45,14 +51,44 @@ const requirements = computed(() =>
   ].filter((chip): chip is { icon: string; label: string } => Boolean(chip)),
 );
 
-/** Notes the client should read first — the "why" behind a returned document. */
 const visibleNotes = computed(() => (props.document.notes ?? []).filter((note) => props.mode === 'staff' || !note.isInternal));
 
-const needsAttention = computed(() => ['NEEDS_FIX', 'RESUBMIT_REQUIRED'].includes(props.document.status));
+/**
+ * The reason the document came back: the newest note written *with* the
+ * verdict. The newest note of any kind used to stand in for it, so a client
+ * who typed "иргэний үнэмлэхийн лавлагаа" under a returned paper saw their own
+ * words in the warning box and the officer's reason disappeared.
+ */
+const fixReason = computed(
+  () =>
+    visibleNotes.value.find((note) => note.toStatus === 'NEEDS_FIX' || note.toStatus === 'RESUBMIT_REQUIRED')
+    ?? visibleNotes.value[0]
+    ?? null,
+);
 const canUpload = computed(() =>
   ['NOT_STARTED', 'IN_PROGRESS', 'NEEDS_FIX', 'RESUBMIT_REQUIRED'].includes(props.document.status) || props.mode === 'staff',
 );
 const canReview = computed(() => props.mode === 'staff' && ['SUBMITTED', 'UNDER_REVIEW'].includes(props.document.status));
+
+/**
+ * "Шаардлага хангахгүй — хасаад дахин авах". Anything the client has handed
+ * in can be sent back, including a paper already accepted or posted that a
+ * school refused; from review it sits beside the other two verdicts, from
+ * anywhere else it is offered on its own.
+ */
+const canReturn = computed(() => props.mode === 'staff' && !['NOT_STARTED', 'IN_PROGRESS'].includes(props.document.status));
+const returnOnly = computed(() => canReturn.value && !canReview.value);
+
+/** Files to take off on RETURN. All of them unless staff untick one that is fine. */
+const removeIds = ref<string[]>([]);
+watch(
+  () => props.document.files.map((file) => file.id).join(','),
+  () => { removeIds.value = props.document.files.map((file) => file.id); },
+  { immediate: true },
+);
+function toggleRemove(fileId: string, on: boolean) {
+  removeIds.value = on ? [...new Set([...removeIds.value, fileId])] : removeIds.value.filter((id) => id !== fileId);
+}
 
 /**
  * 1D-24 — a client standing at the desk with the paper in their hand.
@@ -104,8 +140,14 @@ const dueLabel = computed(() => {
 });
 
 function submitReview(action: 'ACCEPT' | 'REQUEST_FIX' | 'RETURN') {
-  emit('review', action, reviewNote.value.trim());
+  emit('review', action, reviewNote.value.trim(), action === 'RETURN' ? [...removeIds.value] : []);
   reviewNote.value = '';
+}
+
+function submitReturn() {
+  if (!returnNote.value.trim()) return;
+  emit('review', 'RETURN', returnNote.value.trim(), [...removeIds.value]);
+  returnNote.value = '';
 }
 
 function stage(files: File[]) {
@@ -171,9 +213,9 @@ function formatSize(bytes: number): string {
     </div>
 
     <!-- The reason a document came back is the one thing a client must not miss (1D-15). -->
-    <p v-if="needsAttention && visibleNotes[0]" class="gks-doc__fix">
+    <p v-if="needsAttention && fixReason" class="gks-doc__fix">
       <DsIcon name="triangle-alert" :size="14" />
-      <span>{{ visibleNotes[0].body }}</span>
+      <span>{{ fixReason.body }}</span>
     </p>
 
     <div v-if="expanded" class="gks-doc__body">
@@ -201,6 +243,13 @@ function formatSize(bytes: number): string {
           <button type="button" class="gks-doc__file-name" @click="emit('open', file.id)">{{ file.originalName }}</button>
           <span class="gks-doc__file-meta gks-tnum">v{{ file.version }} · {{ formatSize(file.sizeBytes) }}</span>
           <DsBadge v-if="file.isFinal" tone="success">Эцсийн хувилбар</DsBadge>
+          <DsCheckbox
+            v-if="canReturn"
+            class="gks-doc__file-remove"
+            label="Буцаахад хасна"
+            :model-value="removeIds.includes(file.id)"
+            @update:model-value="(on: boolean) => toggleRemove(file.id, on)"
+          />
         </li>
       </ul>
 
@@ -235,7 +284,7 @@ function formatSize(bytes: number): string {
       </div>
 
       <div v-if="canReview" class="gks-doc__review">
-        <DsTextarea v-model="reviewNote" :rows="2" placeholder="Тайлбар — засвар хүсэх/буцаах үед заавал" />
+        <DsTextarea v-model="reviewNote" :rows="2" placeholder="Тайлбар — засвар хүсэх / хасаад дахин авах үед заавал. Үйлчлүүлэгчид имэйлээр очно." />
         <div class="gks-doc__actions">
           <DsButton size="sm" variant="accent" icon-left="check" :disabled="busy" @click="submitReview('ACCEPT')">
             Зөвшөөрөх
@@ -244,7 +293,29 @@ function formatSize(bytes: number): string {
             Засвар хүсэх
           </DsButton>
           <DsButton size="sm" variant="danger" icon-left="undo-2" :disabled="busy" @click="submitReview('RETURN')">
-            Буцаах
+            {{ removeIds.length ? 'Хасаад дахин авах' : 'Дахин авах' }}
+          </DsButton>
+        </div>
+      </div>
+
+      <!-- Sending back a paper that is already past review: accepted, posted,
+           or waiting on a fix the client got wrong again. -->
+      <div v-if="returnOnly" class="gks-doc__review">
+        <p class="gks-doc__review-title">Шаардлага хангахгүй бол — дахин авах хүсэлт</p>
+        <DsTextarea
+          v-model="returnNote"
+          :rows="2"
+          placeholder="Юу нь шаардлага хангахгүй, яаж шинээр авах вэ — үйлчлүүлэгчид имэйлээр очно"
+        />
+        <div class="gks-doc__actions">
+          <DsButton
+            size="sm"
+            variant="danger"
+            icon-left="undo-2"
+            :disabled="busy || !returnNote.trim()"
+            @click="submitReturn"
+          >
+            {{ removeIds.length ? `${removeIds.length} файл хасаад дахин авах` : 'Дахин авах хүсэлт илгээх' }}
           </DsButton>
         </div>
       </div>
@@ -388,6 +459,9 @@ function formatSize(bytes: number): string {
 .gks-doc__file-meta { color: var(--text-subtle); font-size: var(--fs-caption); }
 
 .gks-doc__review { display: flex; flex-direction: column; gap: var(--sp-2); }
+.gks-doc__review-title { font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.gks-doc__file { flex-wrap: wrap; }
+.gks-doc__file-remove { margin-left: auto; font-size: var(--fs-caption); }
 .gks-doc__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 
 .gks-doc__notes-title { font-size: var(--fs-label); font-weight: var(--fw-semibold); margin-bottom: var(--sp-2); }

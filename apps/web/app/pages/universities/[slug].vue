@@ -623,6 +623,10 @@ useHead(() => ({
               <small v-if="program.tuitionPerTermKrw" class="gks-tnum">
                 улирал {{ formatKrw(program.tuitionPerTermKrw) }} · {{ tuitionTermsNote(program.level) }}
               </small>
+              <!-- Language prep: the school's minimum enrolment, the first bill a family pays. -->
+              <small v-if="enrollmentLine(program)" class="gks-tnum gks-uni__program-enroll">
+                {{ enrollmentLine(program) }}
+              </small>
               <small v-if="program.admissionFeeKrw" class="gks-tnum">
                 элсэлтийн хураамж {{ formatKrw(program.admissionFeeKrw) }}
               </small>
@@ -1039,6 +1043,7 @@ useHead(() => ({
   color: var(--text-strong);
 }
 .gks-uni__program-price small { font-size: var(--fs-micro); color: var(--text-subtle); }
+.gks-uni__program-price .gks-uni__program-enroll { color: var(--text-body); font-weight: var(--fw-medium); }
 
 /* ---- Давуу тал ---- */
 .gks-uni__advantages {

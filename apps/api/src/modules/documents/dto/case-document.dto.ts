@@ -1,6 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { DocStage, DocumentStatus, Necessity } from '../../../prisma/client.js';
 
@@ -33,6 +47,18 @@ export class ReviewDocumentDto {
   @MaxLength(2000)
   @IsOptional()
   note?: string;
+
+  /**
+   * RETURN only: the versions that do not meet the requirement. They are
+   * withdrawn (soft-deleted) in the same step, so the client is left with an
+   * empty slot to fill instead of a rejected file that still looks handed in.
+   */
+  @ApiPropertyOptional({ type: [String], description: 'RETURN үед — шаардлага хангаагүй тул хасах файлууд' })
+  @IsUUID('all', { each: true })
+  @IsArray()
+  @ArrayMaxSize(50)
+  @IsOptional()
+  removeFileIds?: string[];
 }
 
 /**
