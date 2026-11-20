@@ -5,6 +5,7 @@ import type {
   IntakeRiskReport,
   ManagementOverview,
   OutcomesReport,
+  PeopleReport,
   PipelineReport,
   ReportPeriodInfo,
   StaffReport,
@@ -15,6 +16,7 @@ import { CacheService } from '../../redis/cache.service.js';
 import { FinanceReportService } from './finance-report.service.js';
 import { IntakeRiskReportService, DEFAULT_HORIZON_DAYS } from './intake-risk-report.service.js';
 import { OutcomesReportService } from './outcomes-report.service.js';
+import { PeopleReportService } from './people-report.service.js';
 import { DEFAULT_STALL_DAYS, PipelineReportService } from './pipeline-report.service.js';
 import { changePercent, resolvePeriod, type ReportPeriod, type ReportPreset } from './report-period.js';
 import { CASE_DOC_PROGRESS, CLOSED_STAGES, inPeriod, inPreviousPeriod, money, percent } from './report-sql.js';
@@ -65,6 +67,7 @@ export class ReportsService {
     private readonly outcomes: OutcomesReportService,
     private readonly intakeRisk: IntakeRiskReportService,
     private readonly staff: StaffReportService,
+    private readonly people: PeopleReportService,
   ) {}
 
   /** Drops every cached report; the "Одоо шинэчлэх" button and nothing else. */
@@ -90,6 +93,11 @@ export class ReportsService {
 
   staffReport(request: ReportRequest): Promise<StaffReport> {
     return this.cached('staff', request, (period, info) => this.staff.build(period, info));
+  }
+
+  /** 1M-11 — who became a client, who asked for and who got a consultation. */
+  peopleReport(request: ReportRequest): Promise<PeopleReport> {
+    return this.cached('people', request, (period, info) => this.people.build(period, info));
   }
 
   /** No period: a deadline does not belong to a reporting month. */

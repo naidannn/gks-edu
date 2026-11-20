@@ -1,4 +1,11 @@
-import type { PipelineMilestone, ReceivableBucket, ReportMetric, ReportPreset } from '@gks/shared';
+import type {
+  PipelineMilestone,
+  ReceivableBucket,
+  ReportMetric,
+  ReportPeriodInfo,
+  ReportPreset,
+  ReportWorkbook,
+} from '@gks/shared';
 
 /**
  * Labels and pure helpers for the management reports (1M).
@@ -122,4 +129,27 @@ export function reportQueryString(query: ReportQuery, extra: Record<string, stri
   if (query.stallDays) params.set('stallDays', String(query.stallDays));
   if (query.horizonDays) params.set('horizonDays', String(query.horizonDays));
   return params.toString();
+}
+
+/**
+ * The same period as {@link reportQueryString}, as a JSON body — for
+ * `POST /reports/email`, which takes everything that went into the mail in one
+ * request.
+ */
+export function periodBody(query: ReportQuery): Record<string, string | number> {
+  return Object.fromEntries(
+    Array.from(new URLSearchParams(reportQueryString(query)), ([key, value]) =>
+      key === 'stallDays' || key === 'horizonDays' ? [key, Number(value)] : [key, value],
+    ),
+  );
+}
+
+/**
+ * The Excel file's name, matching the server's (`report-xlsx.ts`): ASCII, and
+ * the period's last day *inclusive* — `period.to` is the exclusive bound.
+ */
+export function workbookFilename(period: Pick<ReportPeriodInfo, 'from' | 'to'>, kind: ReportWorkbook): string {
+  const [year, month, day] = period.to.split('-').map(Number);
+  const last = new Date(Date.UTC(year!, month! - 1, day! - 1)).toISOString().slice(0, 10);
+  return `${kind === 'clients' ? 'uilchluulegch' : 'zuvluguu'}-${period.from}-${last}.xlsx`;
 }

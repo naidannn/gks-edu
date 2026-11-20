@@ -1,11 +1,14 @@
 import {
+  Body,
   Controller,
   ForbiddenException,
   Get,
   Header,
+  HttpCode,
   Post,
   Query,
   Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
@@ -17,7 +20,12 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Role } from '../../prisma/client.js';
-import { ReportExportQueryDto, ReportQueryDto } from './dto/report-query.dto.js';
+import {
+  ReportEmailDto,
+  ReportExportQueryDto,
+  ReportQueryDto,
+  ReportWorkbookQueryDto,
+} from './dto/report-query.dto.js';
 import {
   incomeCsv,
   intakeRiskCsv,
@@ -27,7 +35,9 @@ import {
   stalledCasesCsv,
   type CsvFile,
 } from './report-csv.js';
+import { ReportMailService } from './report-mail.service.js';
 import type { ReportExport } from './report-types.js';
+import { peopleWorkbook, XLSX_CONTENT_TYPE } from './report-xlsx.js';
 import { ReportsService } from './reports.service.js';
 
 /**
@@ -60,7 +70,10 @@ const EXPORT_ROLES: Record<ReportExport, readonly Role[]> = {
 @UseGuards(RolesGuard)
 @Controller('reports')
 export class ReportsController {
-  constructor(private readonly reports: ReportsService) {}
+  constructor(
+    private readonly reports: ReportsService,
+    private readonly mail: ReportMailService,
+  ) {}
 
   @Get('overview')
   @Roles(...STAFF_ROLES)
@@ -128,6 +141,42 @@ export class ReportsController {
     // Without this the CSV opens inline in the API's own domain (task 0-21).
     response.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
     return file.content;
+  }
+
+  // ── People (1M-11) — CRM data, so the CRM roles; the document officer has none ──
+
+  @Get('people')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Үйлчлүүлэгч болсон, зөвлөгөө хүссэн/авсан хүмүүс — сонгосон хугацаанд' })
+  people(@Query() query: ReportQueryDto) {
+    return this.reports.peopleReport(query);
+  }
+
+  @Get('excel')
+  @Roles(...STAFF_ROLES)
+  @ApiProduces(XLSX_CONTENT_TYPE)
+  @ApiOperation({ summary: 'Хүмүүсийн тайланг Excel (.xlsx) болгон татах' })
+  async excel(@Query() query: ReportWorkbookQueryDto): Promise<StreamableFile> {
+    const file = await peopleWorkbook(await this.reports.peopleReport(query), query.report);
+    return new StreamableFile(file.content, {
+      type: XLSX_CONTENT_TYPE,
+      disposition: `attachment; filename="${file.filename}"`,
+    });
+  }
+
+  @Get('email/recipients')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Тайлан хүлээн авч болох ажилтнууд (идэвхтэй админ, зөвлөх)' })
+  emailRecipients() {
+    return this.mail.recipients();
+  }
+
+  @Post('email')
+  @HttpCode(200)
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'Хүмүүсийн тайланг Excel хавсралттайгаар сонгосон ажилтан руу и-мэйлээр илгээх' })
+  email(@Body() dto: ReportEmailDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.mail.send(dto, dto.workbooks, dto.recipientIds, user);
   }
 
   @Post('refresh')

@@ -2,7 +2,8 @@ import type { ServiceType } from '../schemas/lead';
 import type { UserRole } from '../schemas/user';
 import type { ApplicationDecision } from './applications';
 import type { CaseStage, PaymentKind, PaymentMethod } from './case-contract-payment';
-import type { LeadSource } from './lead-crm';
+import type { ClientPhase } from './client';
+import type { LeadSource, LeadStage } from './lead-crm';
 import type { ProgramLevel } from './university';
 import type { VisaType } from './visa-departure';
 
@@ -339,3 +340,68 @@ export interface StaffReport {
 /** What `GET /reports/export` will render. */
 export const REPORT_EXPORTS = ['receivables', 'income', 'outcomes', 'staff', 'intake-risk', 'stalled-cases'] as const;
 export type ReportExport = (typeof REPORT_EXPORTS)[number];
+
+// ── People (1M-11): who became a client, who asked for and got a consultation ──
+
+export interface ClientReportRow {
+  clientId: string;
+  code: string;
+  lastName: string;
+  firstName: string;
+  phone: string;
+  email: string | null;
+  serviceType: ServiceType;
+  universityNameMn: string | null;
+  targetMajor: string | null;
+  source: LeadSource;
+  consultantName: string | null;
+  phase: ClientPhase;
+  fromLead: boolean;
+  registeredAt: string;
+  contractSignedAt: string | null;
+  prepaymentPaidAt: string | null;
+}
+
+export interface ConsultationReportRow {
+  leadId: string;
+  lastName: string;
+  firstName: string;
+  phone: string;
+  email: string | null;
+  source: LeadSource;
+  stage: LeadStage;
+  interestedServices: ServiceType[];
+  interestedMajor: string | null;
+  assignedToName: string | null;
+  requestedAt: string;
+  /** When the enquiry first reached a consulted stage; null = not consulted yet. */
+  consultedAt: string | null;
+  clientCode: string | null;
+}
+
+export interface PeopleReport {
+  period: ReportPeriodInfo;
+  /** Clients registered in the period (abandoned website sign-ups left out). */
+  clients: ClientReportRow[];
+  /** Enquiries that arrived in the period. */
+  requested: ConsultationReportRow[];
+  /** Enquiries first consulted in the period, whenever they arrived. */
+  consulted: ConsultationReportRow[];
+}
+
+/** The Excel workbooks `/reports/excel` renders and `/reports/email` attaches. */
+export const REPORT_WORKBOOKS = ['clients', 'consultations'] as const;
+export type ReportWorkbook = (typeof REPORT_WORKBOOKS)[number];
+
+/** A staff account the report can be mailed to (`GET /reports/email/recipients`). */
+export interface ReportRecipient {
+  id: string;
+  name: string | null;
+  email: string;
+  role: UserRole;
+}
+
+export interface ReportMailResult {
+  sent: string[];
+  failed: { email: string; error: string }[];
+}

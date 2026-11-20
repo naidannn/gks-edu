@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { FinanceReportService } from './finance-report.service.js';
 import { IntakeRiskReportService } from './intake-risk-report.service.js';
 import { OutcomesReportService } from './outcomes-report.service.js';
+import { PeopleReportService } from './people-report.service.js';
 import { PipelineReportService } from './pipeline-report.service.js';
+import { ReportMailService } from './report-mail.service.js';
 import { ReportsController } from './reports.controller.js';
 import { ReportsService } from './reports.service.js';
 import { StaffReportService } from './staff-report.service.js';
@@ -21,6 +23,8 @@ import { StaffReportService } from './staff-report.service.js';
     OutcomesReportService,
     IntakeRiskReportService,
     StaffReportService,
+    PeopleReportService,
+    ReportMailService,
   ],
   exports: [ReportsService],
 })

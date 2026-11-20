@@ -7,7 +7,9 @@ import {
   describeChange,
   formatRate,
   formatReportMonth,
+  periodBody,
   reportQueryString,
+  workbookFilename,
 } from '../app/utils/reports';
 
 /**
@@ -118,5 +120,26 @@ describe('the vocabulary', () => {
 
   it('names every aging bucket', () => {
     expect(Object.keys(RECEIVABLE_BUCKET_LABELS)).toHaveLength(5);
+  });
+});
+
+describe('the people workbooks (1M-11)', () => {
+  it('names the file by the last day inclusive, as the server does', () => {
+    expect(workbookFilename({ from: '2026-11-01', to: '2026-12-01' }, 'clients')).toBe(
+      'uilchluulegch-2026-11-01-2026-11-30.xlsx',
+    );
+    expect(workbookFilename({ from: '2026-01-01', to: '2027-01-01' }, 'consultations')).toBe(
+      'zuvluguu-2026-01-01-2026-12-31.xlsx',
+    );
+  });
+
+  it('mails the same period the screen shows, with numbers as numbers', () => {
+    expect(periodBody({ preset: 'custom', from: '2026-11-03', to: '2026-11-09', stallDays: 30 })).toEqual({
+      preset: 'custom',
+      from: '2026-11-03',
+      to: '2026-11-09',
+      stallDays: 30,
+    });
+    expect(periodBody({ preset: 'month', from: '2026-11-03' })).toEqual({ preset: 'month' });
   });
 });

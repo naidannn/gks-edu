@@ -2,6 +2,7 @@ import type {
   ApplicationDecision,
   CaseStage,
   LeadSource,
+  LeadStage,
   PaymentKind,
   PaymentMethod,
   ProgramLevel,
@@ -9,6 +10,7 @@ import type {
   ServiceType,
   VisaType,
 } from '../../prisma/client.js';
+import type { ClientPhase } from '../clients/client-phase.js';
 import type { ReportPreset } from './report-period.js';
 
 /**
@@ -327,3 +329,60 @@ export interface StaffReport {
 /** What `GET /reports/export` will render. */
 export const REPORT_EXPORTS = ['receivables', 'income', 'outcomes', 'staff', 'intake-risk', 'stalled-cases'] as const;
 export type ReportExport = (typeof REPORT_EXPORTS)[number];
+
+// ── People (1M-11): who became a client, who asked for and got a consultation ──
+
+/** One client registered in the period — a row of the "Үйлчлүүлэгч болсон" workbook. */
+export interface ClientReportRow {
+  clientId: string;
+  code: string;
+  lastName: string;
+  firstName: string;
+  phone: string;
+  email: string | null;
+  serviceType: ServiceType;
+  universityNameMn: string | null;
+  targetMajor: string | null;
+  source: LeadSource;
+  consultantName: string | null;
+  phase: ClientPhase;
+  /** True when the client was converted from an enquiry rather than registered cold. */
+  fromLead: boolean;
+  registeredAt: string;
+  /** The first contract this client signed, if any. */
+  contractSignedAt: string | null;
+  /** The first prepayment that went through — the office's "became a client". */
+  prepaymentPaidAt: string | null;
+}
+
+/** One enquiry — a row of the "Зөвлөгөө хүссэн / авсан" workbook. */
+export interface ConsultationReportRow {
+  leadId: string;
+  lastName: string;
+  firstName: string;
+  phone: string;
+  email: string | null;
+  source: LeadSource;
+  stage: LeadStage;
+  interestedServices: ServiceType[];
+  interestedMajor: string | null;
+  assignedToName: string | null;
+  requestedAt: string;
+  /** When the enquiry first reached `CONSULTED` or beyond; null = not consulted yet. */
+  consultedAt: string | null;
+  /** The client this enquiry became, if it did. */
+  clientCode: string | null;
+}
+
+export interface PeopleReport {
+  period: ReportPeriodInfo;
+  clients: ClientReportRow[];
+  /** Enquiries that arrived in the period. */
+  requested: ConsultationReportRow[];
+  /** Enquiries first consulted in the period, whenever they arrived. */
+  consulted: ConsultationReportRow[];
+}
+
+/** The Excel workbooks `/reports/excel` renders and `/reports/email` attaches. */
+export const REPORT_WORKBOOKS = ['clients', 'consultations'] as const;
+export type ReportWorkbook = (typeof REPORT_WORKBOOKS)[number];

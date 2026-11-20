@@ -4,6 +4,13 @@ import { renderEmail, type EmailMessage } from './email/email-template.js';
 
 export type { EmailMessage } from './email/email-template.js';
 
+/** A file sent with the message. Resend takes the bytes base64-encoded, up to 40 MB in all. */
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+}
+
 /** Resend rejects tags whose value is not `[A-Za-z0-9_-]`. */
 const TAG_SAFE = /[^A-Za-z0-9_-]/g;
 
@@ -30,8 +37,9 @@ export class EmailService {
   /**
    * @param tag Groups the send in Resend's dashboard — the notification event,
    *            or the name of the transactional mail (`password_reset`).
+   * @param attachments Files to carry — the emailed reports (1M-11), nothing else yet.
    */
-  async send(to: string, message: EmailMessage, tag?: string): Promise<void> {
+  async send(to: string, message: EmailMessage, tag?: string, attachments: EmailAttachment[] = []): Promise<void> {
     const apiKey = this.config.get<string>('notifications.resendApiKey');
     const from = this.config.get<string>('notifications.fromEmail') ?? 'GKSedu <noreply@gksedu.mn>';
     const replyTo = this.config.get<string>('notifications.replyToEmail');
@@ -40,7 +48,8 @@ export class EmailService {
     const { html, text } = renderEmail(message, appUrl);
 
     if (!apiKey) {
-      this.logger.log(`[EMAIL→${to}] ${message.subject}\n${text}`);
+      const files = attachments.length ? `\n[хавсралт: ${attachments.map((file) => file.filename).join(', ')}]` : '';
+      this.logger.log(`[EMAIL→${to}] ${message.subject}\n${text}${files}`);
       return;
     }
 
@@ -54,6 +63,15 @@ export class EmailService {
         html,
         text,
         ...(replyTo ? { reply_to: [replyTo] } : {}),
+        ...(attachments.length
+          ? {
+              attachments: attachments.map((file) => ({
+                filename: file.filename,
+                content: file.content.toString('base64'),
+                ...(file.contentType ? { content_type: file.contentType } : {}),
+              })),
+            }
+          : {}),
         ...(tag ? { tags: [{ name: 'kind', value: tag.replace(TAG_SAFE, '_').slice(0, 60) }] } : {}),
       }),
     });

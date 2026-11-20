@@ -4,6 +4,7 @@ import type {
   IntakeRiskReport,
   ManagementOverview,
   OutcomesReport,
+  PeopleReport,
   PipelineReport,
   ReportPeriodInfo,
   ReportPreset,
@@ -47,7 +48,7 @@ const roleKnown = ref(false);
 onMounted(() => { roleKnown.value = true; });
 const canSeeMoney = computed(() => roleKnown.value && auth.user?.role === 'ADMIN');
 
-type TabKey = 'overview' | 'finance' | 'pipeline' | 'outcomes' | 'intake-risk' | 'staff';
+type TabKey = 'overview' | 'finance' | 'pipeline' | 'outcomes' | 'intake-risk' | 'staff' | 'people';
 
 const TABS: { key: TabKey; label: string; icon: string; adminOnly?: boolean }[] = [
   { key: 'overview', label: 'Тойм', icon: 'layout-dashboard' },
@@ -56,6 +57,7 @@ const TABS: { key: TabKey; label: string; icon: string; adminOnly?: boolean }[] 
   { key: 'outcomes', label: 'Үр дүн', icon: 'award' },
   { key: 'intake-risk', label: 'Хугацаа', icon: 'calendar-clock' },
   { key: 'staff', label: 'Ажилтан', icon: 'users', adminOnly: true },
+  { key: 'people', label: 'Хүмүүс', icon: 'contact' },
 ];
 
 const tabs = computed(() => TABS.filter((item) => !item.adminOnly || canSeeMoney.value));
@@ -96,6 +98,7 @@ const pipeline = ref<PipelineReport | null>(null);
 const outcomes = ref<OutcomesReport | null>(null);
 const intakeRisk = ref<IntakeRiskReport | null>(null);
 const staff = ref<StaffReport | null>(null);
+const people = ref<PeopleReport | null>(null);
 
 const pending = ref(false);
 const errorMsg = ref<string | null>(null);
@@ -135,6 +138,10 @@ async function load(key: TabKey = tab.value) {
         staff.value = await api.get<StaffReport>(`/reports/staff?${search}`);
         period.value = staff.value.period;
         break;
+      case 'people':
+        people.value = await api.get<PeopleReport>(`/reports/people?${search}`);
+        period.value = people.value.period;
+        break;
     }
   } catch (error) {
     errorMsg.value = error instanceof ApiError ? error.message : 'Тайланг ачаалж чадсангүй';
@@ -147,7 +154,7 @@ onMounted(() => load());
 
 /** A new tab loads once; a new period reloads whatever is on screen. */
 watch(tab, (key) => {
-  const loaded = { overview, finance, pipeline, outcomes, 'intake-risk': intakeRisk, staff }[key];
+  const loaded = { overview, finance, pipeline, outcomes, 'intake-risk': intakeRisk, staff, people }[key];
   if (!loaded.value) load(key);
 });
 
@@ -162,6 +169,7 @@ watch(
     outcomes.value = null;
     intakeRisk.value = null;
     staff.value = null;
+    people.value = null;
     load();
   },
 );
@@ -274,6 +282,10 @@ async function download(report: string) {
 
     <template v-else-if="tab === 'staff' && staff">
       <ReportsStaffPanel :report="staff" :download="download" />
+    </template>
+
+    <template v-else-if="tab === 'people' && people">
+      <ReportsPeoplePanel :report="people" :query="query" />
     </template>
 
     <p v-if="period && tab !== 'intake-risk'" class="gks-reports__stamp gks-tnum">
