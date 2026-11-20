@@ -4,8 +4,11 @@ import {
   allQuestions,
   answersAsText,
   essayDefinition,
+  asksHighSchool,
   MAX_ANSWER_LENGTH,
   missingRecommenderFields,
+  PROFILE_QUESTIONS,
+  profileDefinition,
   questionnaireProgress,
   recommendationDefinition,
   sanitizeAnswers,
@@ -18,7 +21,10 @@ import { suggestQuestionnaireLevel } from '../questionnaire-level.js';
  * a few invariants the type system cannot see. A duplicate id would silently
  * make two questions share one answer.
  */
-describe.each(ALL_DEFINITIONS.map((definition) => [`${definition.kind} ${definition.level}`, definition] as const))(
+describe.each([
+  ...ALL_DEFINITIONS.map((definition) => [`${definition.kind} ${definition.level}`, definition] as const),
+  ['PROFILE', PROFILE_QUESTIONS] as const,
+])(
   'questionnaire %s',
   (_name, definition) => {
     const questions = allQuestions(definition);
@@ -69,6 +75,28 @@ describe('the essay sets differ by level', () => {
     expect(recommendationDefinition('BACHELOR').lettersNeeded).toBe(1);
     expect(recommendationDefinition('MASTER').lettersNeeded).toBe(2);
     expect(recommendationDefinition('PHD').lettersNeeded).toBe(2);
+  });
+});
+
+describe('the profile questionnaire (1B-29)', () => {
+  const ids = (asks: boolean) => allQuestions(profileDefinition({ asksHighSchool: asks })).map((question) => question.id);
+
+  it('asks for the high school only where a school-leaving certificate is what the client applies on', () => {
+    expect(asksHighSchool({ serviceTypes: ['LANGUAGE_PREP'] })).toBe(true);
+    expect(asksHighSchool({ serviceTypes: ['BACHELOR'] })).toBe(true);
+    expect(asksHighSchool({ serviceTypes: ['MASTER'] })).toBe(false);
+    expect(asksHighSchool({ serviceTypes: ['GKS_SCHOLARSHIP'], educationLevel: 'SECONDARY_SCHOOL' })).toBe(true);
+    expect(asksHighSchool({ serviceTypes: ['GKS_SCHOLARSHIP'], educationLevel: 'BACHELOR' })).toBe(false);
+    expect(ids(true)).toContain('hs_address');
+    expect(ids(false)).not.toContain('hs_address');
+  });
+
+  it('asks every client about the family, the sponsor and the dormitory', () => {
+    for (const id of ['father_occupation', 'mother_income', 'sponsor_other', 'dorm']) expect(ids(false)).toContain(id);
+  });
+
+  it('keeps a high-school answer when the set no longer asks it', () => {
+    expect(sanitizeAnswers(PROFILE_QUESTIONS, { hs_name: '1-р сургууль', made_up: 'x' })).toEqual({ hs_name: '1-р сургууль' });
   });
 });
 

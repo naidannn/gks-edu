@@ -123,6 +123,43 @@ export class CreateClientDto {
   @IsOptional()
   guardianRelation?: string;
 
+  // ── Family contacts (1B-28) ───────────────────────────────────────────────
+  //    Each optional here; the service requires one parent and the emergency
+  //    contact on a new registration only (`assertFamilyContactsPresent`).
+
+  @ApiPropertyOptional({ example: '99112233' })
+  @TransformPhone()
+  @IsString()
+  @Matches(PHONE_PATTERN, { message: 'Аавын утасны дугаар буруу байна' })
+  @IsOptional()
+  fatherPhone?: string;
+
+  @ApiPropertyOptional({ example: '88112233' })
+  @TransformPhone()
+  @IsString()
+  @Matches(PHONE_PATTERN, { message: 'Ээжийн утасны дугаар буруу байна' })
+  @IsOptional()
+  motherPhone?: string;
+
+  @ApiPropertyOptional({ example: 'Болд' })
+  @IsString()
+  @MaxLength(120)
+  @IsOptional()
+  emergencyContactName?: string;
+
+  @ApiPropertyOptional({ example: 'Эгч' })
+  @IsString()
+  @MaxLength(60)
+  @IsOptional()
+  emergencyContactRelation?: string;
+
+  @ApiPropertyOptional({ example: '95112233' })
+  @TransformPhone()
+  @IsString()
+  @Matches(PHONE_PATTERN, { message: 'Яаралтай үед холбоо барих хүний утасны дугаар буруу байна' })
+  @IsOptional()
+  emergencyContactPhone?: string;
+
   // ── Academic background ───────────────────────────────────────────────────
 
   @ApiPropertyOptional({ enum: EducationLevel })

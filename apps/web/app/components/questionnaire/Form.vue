@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QuestionnaireAnswers, QuestionnaireDefinition, RecommenderField } from '@gks/shared';
+import type { QuestionnaireAnswers, QuestionSet, RecommenderField } from '@gks/shared';
 import type { AutosaveState } from '~/composables/useQuestionnaireAutosave';
 
 /**
@@ -18,7 +18,7 @@ import type { AutosaveState } from '~/composables/useQuestionnaireAutosave';
  */
 const props = withDefaults(
   defineProps<{
-    definition: QuestionnaireDefinition;
+    definition: QuestionSet;
     answers: QuestionnaireAnswers;
     /** Section V of a recommendation — the teacher's own details, as a last screen. */
     recommenderFields?: RecommenderField[];

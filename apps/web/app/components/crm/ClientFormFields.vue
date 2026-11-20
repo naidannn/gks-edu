@@ -22,8 +22,10 @@ const props = withDefaults(
      * theirs to set, so they are left out rather than shown disabled.
      */
     variant?: 'staff' | 'self';
+    /** A new registration asks for the family contacts (1B-28); an old record's edit does not. */
+    requireFamilyContacts?: boolean;
   }>(),
-  { variant: 'staff' },
+  { variant: 'staff', requireFamilyContacts: false },
 );
 
 const GENDER_OPTIONS = selectOptions(GENDER_LABELS, 'Сонгоогүй');
@@ -35,6 +37,9 @@ const universityOptions = computed(() => toUniversityOptions(props.universities)
 
 const age = computed(() => clientAge(form.value));
 const isMinor = computed(() => isMinorForm(form.value));
+
+/** Card numbers shift when the guardian card appears. */
+const eyebrow = (position: number) => String(isMinor.value ? position + 1 : position);
 
 /**
  * Switching service changes how many schools may be picked and on which track,
@@ -94,7 +99,52 @@ function setSingleUniversity(universityId: string): void {
     </div>
   </DsCard>
 
-  <DsCard title="Боловсрол ба хэлний түвшин" :eyebrow="isMinor ? '3' : '2'">
+  <DsCard title="Гэр бүл ба яаралтай үед холбоо барих" :eyebrow="eyebrow(2)">
+    <p class="gks-client-form__note">
+      Таньтай холбогдож чадахгүй үед зөвлөх эдгээр дугаар руу залгана.
+      <template v-if="requireFamilyContacts">Аав, ээжийн аль нэгийн утас ба яаралтай холбоо барих хүн заавал.</template>
+    </p>
+    <div class="gks-grid">
+      <DsInput
+        v-model="form.fatherPhone"
+        label="Аавын утас"
+        type="tel"
+        placeholder="99112233"
+        :required="requireFamilyContacts && !form.motherPhone.trim()"
+        :error="errors.fatherPhone"
+      />
+      <DsInput
+        v-model="form.motherPhone"
+        label="Ээжийн утас"
+        type="tel"
+        placeholder="88112233"
+        :required="requireFamilyContacts && !form.fatherPhone.trim()"
+        :error="errors.motherPhone"
+      />
+      <DsInput
+        v-model="form.emergencyContactName"
+        label="Яаралтай үед холбоо барих хүн"
+        placeholder="Овог нэр"
+        :required="requireFamilyContacts"
+        :error="errors.emergencyContactName"
+      />
+      <DsInput
+        v-model="form.emergencyContactRelation"
+        label="Таны юу болох"
+        placeholder="Эгч / Авга ах / Найз"
+      />
+      <DsInput
+        v-model="form.emergencyContactPhone"
+        label="Холбоо барих хүний утас"
+        type="tel"
+        placeholder="95112233"
+        :required="requireFamilyContacts"
+        :error="errors.emergencyContactPhone"
+      />
+    </div>
+  </DsCard>
+
+  <DsCard title="Боловсрол ба хэлний түвшин" :eyebrow="eyebrow(3)">
     <div class="gks-grid">
       <DsSelect v-model="form.educationLevel" label="Боловсролын түвшин" :options="EDUCATION_OPTIONS" />
       <DsInput v-model="form.schoolName" label="Төгссөн/суралцаж буй сургууль" />
@@ -107,7 +157,7 @@ function setSingleUniversity(universityId: string): void {
     </div>
   </DsCard>
 
-  <DsCard title="Үйлчилгээ ба зуучлал" :eyebrow="isMinor ? '4' : '3'">
+  <DsCard title="Үйлчилгээ ба зуучлал" :eyebrow="eyebrow(4)">
     <div class="gks-grid">
       <DsSelect
         v-model="form.primaryServiceType"

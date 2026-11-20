@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ProfileQuestionnaireView } from '@gks/shared';
+
 /**
  * The client's home screen (1G-15): where their case stands, the one thing to
  * do next, and — when there is no case yet — the way to start one.
@@ -13,6 +15,26 @@ onMounted(() => load());
 const profile = computed(() => overview.value?.profile ?? null);
 const otherCases = computed(() =>
   (overview.value?.cases ?? []).filter((row) => row.id !== overview.value?.activeCaseId),
+);
+
+/**
+ * 1B-29 — once someone is a client (a record and a service), the office asks
+ * the rest through a short questionnaire. Its card stays until it is sent.
+ */
+const api = useApi();
+const questionnaire = ref<ProfileQuestionnaireView | null>(null);
+const isClient = computed(() => Boolean(profile.value?.exists && overview.value?.cases.length));
+watch(isClient, async (value) => {
+  if (!value || questionnaire.value) return;
+  try {
+    questionnaire.value = await api.get<ProfileQuestionnaireView>('/me/profile-questionnaire');
+  } catch {
+    // The card is a nudge, not the page — a failed load just leaves it out.
+  }
+}, { immediate: true });
+const questionnaireDue = computed(() => questionnaire.value && questionnaire.value.questionnaire?.status !== 'SUBMITTED');
+const questionnaireAsksSchool = computed(() =>
+  Boolean(questionnaire.value?.definition.parts.some((part) => part.sections.some((section) => section.id === 'high-school'))),
 );
 
 const TAB_LINKS = [
@@ -89,6 +111,20 @@ const TAB_LINKS = [
         </p>
         <DsButton variant="accent" icon-right="arrow-right" class="gks-home__cta" @click="navigateTo('/app/start')">
           Үйлчилгээ эхлүүлэх
+        </DsButton>
+      </DsCard>
+
+      <DsCard v-if="questionnaireDue && questionnaire" title="Нэмэлт мэдээллийн асуулга">
+        <p class="gks-home__lede">
+          Сургуулийн мэдүүлэг, визний материалд хэрэгтэй хэдэн мэдээлэл: гэр бүлийн ажил, орлого, дотуур байр
+          <template v-if="questionnaireAsksSchool">, ахлах сургууль</template>.
+          <template v-if="questionnaire.questionnaire?.reopenNote"><br><strong>Зөвлөхийн тэмдэглэл:</strong> {{ questionnaire.questionnaire.reopenNote }}</template>
+        </p>
+        <p v-if="questionnaire.progress.answered" class="gks-home__lede gks-tnum">
+          {{ questionnaire.progress.answered }} / {{ questionnaire.progress.total }} асуултад хариулсан
+        </p>
+        <DsButton variant="accent" icon-right="arrow-right" class="gks-home__cta" @click="navigateTo('/app/questionnaire')">
+          {{ questionnaire.questionnaire ? 'Үргэлжлүүлэх' : 'Бөглөх' }}
         </DsButton>
       </DsCard>
 

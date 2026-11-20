@@ -104,6 +104,12 @@ export interface ClientForm {
   guardianPhone: string;
   guardianRelation: string;
 
+  fatherPhone: string;
+  motherPhone: string;
+  emergencyContactName: string;
+  emergencyContactRelation: string;
+  emergencyContactPhone: string;
+
   educationLevel: EducationLevel | '';
   schoolName: string;
   gpa: string;
@@ -131,6 +137,7 @@ export function emptyClientForm(): ClientForm {
     lastName: '', firstName: '', birthDate: '', registerNumber: '', gender: '',
     phone: '', phoneAlt: '', email: '', address: '',
     guardianLastName: '', guardianFirstName: '', guardianRegisterNumber: '', guardianPhone: '', guardianRelation: '',
+    fatherPhone: '', motherPhone: '', emergencyContactName: '', emergencyContactRelation: '', emergencyContactPhone: '',
     educationLevel: '', schoolName: '', gpa: '', gpaScale: '', koreanLevel: '', englishLevel: '',
     passportNumber: '', passportExpiry: '',
     primaryServiceType: '', universityChoices: [{ universityId: '', track: 'REGULAR' }],
@@ -178,6 +185,11 @@ export function fillFromClient(form: ClientForm, client: ClientDetail): void {
   form.guardianRegisterNumber = client.guardianRegisterNumber ?? '';
   form.guardianPhone = client.guardianPhone ?? '';
   form.guardianRelation = client.guardianRelation ?? '';
+  form.fatherPhone = client.fatherPhone ?? '';
+  form.motherPhone = client.motherPhone ?? '';
+  form.emergencyContactName = client.emergencyContactName ?? '';
+  form.emergencyContactRelation = client.emergencyContactRelation ?? '';
+  form.emergencyContactPhone = client.emergencyContactPhone ?? '';
   form.educationLevel = client.educationLevel ?? '';
   form.schoolName = client.schoolName ?? '';
   form.gpa = client.gpa === null ? '' : String(client.gpa);
@@ -207,8 +219,18 @@ export function isMinorForm(form: ClientForm): boolean {
   return age !== null && age < ADULT_AGE;
 }
 
-/** Fills `errors` in place and reports whether the form may be submitted. */
-export function validateClientForm(form: ClientForm, errors: Record<string, string>): boolean {
+/**
+ * Fills `errors` in place and reports whether the form may be submitted.
+ *
+ * `requireFamilyContacts` is on for a new registration (1B-28): one parent's
+ * phone and the emergency contact are asked when a person becomes a client, but
+ * a record from before then can still be edited without them.
+ */
+export function validateClientForm(
+  form: ClientForm,
+  errors: Record<string, string>,
+  options: { requireFamilyContacts?: boolean } = {},
+): boolean {
   for (const key of Object.keys(errors)) Reflect.deleteProperty(errors, key);
 
   if (form.lastName.trim().length < 2) errors.lastName = 'Овгоо бөглөнө үү';
@@ -223,6 +245,16 @@ export function validateClientForm(form: ClientForm, errors: Record<string, stri
   }
   if (!PHONE_PATTERN.test(stripPhone(form.phone))) errors.phone = 'Утасны дугаар буруу байна';
   if (form.phoneAlt && !PHONE_PATTERN.test(stripPhone(form.phoneAlt))) errors.phoneAlt = 'Утасны дугаар буруу байна';
+  for (const key of ['fatherPhone', 'motherPhone', 'emergencyContactPhone'] as const) {
+    if (form[key] && !PHONE_PATTERN.test(stripPhone(form[key]))) errors[key] = 'Утасны дугаар буруу байна';
+  }
+  if (options.requireFamilyContacts) {
+    if (!form.fatherPhone.trim() && !form.motherPhone.trim()) {
+      errors.fatherPhone = 'Аав эсвэл ээжийн утасны аль нэгийг бөглөнө үү';
+    }
+    if (form.emergencyContactName.trim().length < 2) errors.emergencyContactName = 'Холбоо барих хүний нэрийг бөглөнө үү';
+    if (!form.emergencyContactPhone.trim()) errors.emergencyContactPhone = 'Холбоо барих хүний утсыг бөглөнө үү';
+  }
   if (!form.primaryServiceType) errors.primaryServiceType = 'Үйлчилгээний төрлийг сонгоно уу';
 
   const picked = filledChoices(form).map((choice) => choice.universityId);
@@ -272,6 +304,12 @@ export function clientPayload(form: ClientForm): Record<string, unknown> {
     guardianPhone: minor && form.guardianPhone ? stripPhone(form.guardianPhone) : undefined,
     guardianRelation: minor ? text(form.guardianRelation) : undefined,
 
+    fatherPhone: form.fatherPhone.trim() ? stripPhone(form.fatherPhone) : undefined,
+    motherPhone: form.motherPhone.trim() ? stripPhone(form.motherPhone) : undefined,
+    emergencyContactName: text(form.emergencyContactName),
+    emergencyContactRelation: text(form.emergencyContactRelation),
+    emergencyContactPhone: form.emergencyContactPhone.trim() ? stripPhone(form.emergencyContactPhone) : undefined,
+
     educationLevel: form.educationLevel || undefined,
     schoolName: text(form.schoolName),
     gpa: form.gpa ? Number(form.gpa) : undefined,
@@ -308,8 +346,12 @@ export function myProfilePayload(form: ClientForm): Record<string, unknown> {
 }
 
 /** The portal also needs the address the contract prints (§6.2). */
-export function validateMyProfileForm(form: ClientForm, errors: Record<string, string>): boolean {
-  const valid = validateClientForm(form, errors);
+export function validateMyProfileForm(
+  form: ClientForm,
+  errors: Record<string, string>,
+  options: { requireFamilyContacts?: boolean } = {},
+): boolean {
+  const valid = validateClientForm(form, errors, options);
   if (!form.address.trim()) errors.address = 'Гэрийн хаягаа бөглөнө үү — гэрээнд бичигдэнэ';
   return valid && Object.keys(errors).length === 0;
 }

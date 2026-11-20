@@ -177,6 +177,7 @@ export class ClientsService {
   async create(dto: CreateClientDto, actorId: string) {
     const choices = this.resolveChoices(dto);
     this.assertGuardianPresent(new Date(dto.birthDate), dto);
+    this.assertFamilyContactsPresent(dto);
     await this.assertRegisterFree(dto.registerNumber);
     const existingAccount = await this.accountToAdopt(dto.email);
     if (dto.assignedConsultantId) await this.assertStaff(dto.assignedConsultantId);
@@ -267,6 +268,7 @@ export class ClientsService {
 
     const choices = this.resolveChoices(merged);
     this.assertGuardianPresent(new Date(merged.birthDate), merged);
+    this.assertFamilyContactsPresent(merged);
     await this.assertRegisterFree(merged.registerNumber);
     // A lead the assistant took from a signed-in visitor already names their
     // account; the address on the lead may be a different one, or none.
@@ -567,6 +569,9 @@ export class ClientsService {
     const birthDate = dto.birthDate ? new Date(dto.birthDate) : existing?.birthDate;
     if (!birthDate) throw new BadRequestException('Төрсөн огноог бөглөнө үү');
     this.assertGuardianPresent(birthDate, dto);
+    // Asked when the record is first made; a client who registered before
+    // 1B-28 is not stopped from fixing a typo until they add their family.
+    if (!existing) this.assertFamilyContactsPresent(dto);
 
     if (dto.registerNumber !== existing?.registerNumber) {
       await this.assertOwnRegisterFree(userId, dto, existing?.id);
@@ -622,6 +627,11 @@ export class ClientsService {
         guardianRegisterNumber: true,
         guardianPhone: true,
         guardianRelation: true,
+        fatherPhone: true,
+        motherPhone: true,
+        emergencyContactName: true,
+        emergencyContactRelation: true,
+        emergencyContactPhone: true,
         educationLevel: true,
         schoolName: true,
         gpa: true,
@@ -813,6 +823,11 @@ export class ClientsService {
       guardianRegisterNumber: dto.guardianRegisterNumber,
       guardianPhone: dto.guardianPhone,
       guardianRelation: dto.guardianRelation,
+      fatherPhone: dto.fatherPhone,
+      motherPhone: dto.motherPhone,
+      emergencyContactName: dto.emergencyContactName?.trim(),
+      emergencyContactRelation: dto.emergencyContactRelation?.trim(),
+      emergencyContactPhone: dto.emergencyContactPhone,
       educationLevel: dto.educationLevel,
       schoolName: dto.schoolName,
       gpa: dto.gpa,
@@ -963,6 +978,25 @@ export class ClientsService {
         '18 нас хүрээгүй тул төлөөлөн гэрээ байгуулах хүний овог, нэр, регистрийн дугаарыг заавал бөглөнө',
       );
     }
+  }
+
+  /**
+   * 1B-28 — the office has to be able to reach the family when the client
+   * cannot be reached, so a new registration carries at least one parent's
+   * phone and a named emergency contact. Either parent alone is enough: not
+   * every client has both.
+   */
+  private assertFamilyContactsPresent(values: {
+    fatherPhone?: string | null;
+    motherPhone?: string | null;
+    emergencyContactName?: string | null;
+    emergencyContactPhone?: string | null;
+  }): void {
+    const missing: string[] = [];
+    if (!values.fatherPhone && !values.motherPhone) missing.push('аав эсвэл ээжийн утас');
+    if (!values.emergencyContactName?.trim()) missing.push('яаралтай үед холбоо барих хүний нэр');
+    if (!values.emergencyContactPhone) missing.push('яаралтай үед холбоо барих хүний утас');
+    if (missing.length) throw new BadRequestException(`Дараахыг бөглөнө үү: ${missing.join(', ')}`);
   }
 
   /**

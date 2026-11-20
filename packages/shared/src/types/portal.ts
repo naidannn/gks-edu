@@ -151,6 +151,11 @@ export interface MyProfileInput {
   guardianRegisterNumber?: string;
   guardianPhone?: string;
   guardianRelation?: string;
+  fatherPhone?: string;
+  motherPhone?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
   educationLevel?: EducationLevel;
   schoolName?: string;
   gpa?: number;

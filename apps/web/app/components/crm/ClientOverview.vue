@@ -124,6 +124,7 @@ const summary = computed(() => {
               Тэтгэлгийн сонголтоос гадна нэг сургуульд нэмэлт төлбөргүй зуучилна (гэрээний 3.11).
             </p>
           </DsCard>
+          <CrmClientProfileQuestionnaire :client-id="client.id" />
         </div>
 
         <aside class="gks-cov__side">
@@ -146,6 +147,15 @@ const summary = computed(() => {
               <div><dt>Утас</dt><dd class="gks-tnum">{{ client.phone }}</dd></div>
               <div v-if="client.phoneAlt"><dt>Нэмэлт утас</dt><dd class="gks-tnum">{{ client.phoneAlt }}</dd></div>
               <div><dt>И-мэйл</dt><dd>{{ client.email ?? '—' }}</dd></div>
+              <div v-if="client.fatherPhone"><dt>Аав</dt><dd class="gks-tnum">{{ client.fatherPhone }}</dd></div>
+              <div v-if="client.motherPhone"><dt>Ээж</dt><dd class="gks-tnum">{{ client.motherPhone }}</dd></div>
+              <div v-if="client.emergencyContactPhone">
+                <dt>Яаралтай үед</dt>
+                <dd>
+                  {{ client.emergencyContactName ?? '' }}<template v-if="client.emergencyContactRelation"> ({{ client.emergencyContactRelation }})</template>
+                  · <span class="gks-tnum">{{ client.emergencyContactPhone }}</span>
+                </dd>
+              </div>
               <div><dt>Суваг</dt><dd>{{ LEAD_SOURCE_LABELS[client.source] }}</dd></div>
               <div><dt>Бүртгэсэн</dt><dd class="gks-tnum">{{ formatDate(client.createdAt) }}</dd></div>
             </dl>

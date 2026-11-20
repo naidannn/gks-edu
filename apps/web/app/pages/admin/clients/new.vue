@@ -52,7 +52,7 @@ const submitError = ref<string | null>(null);
 
 async function submit() {
   submitError.value = null;
-  if (!validateClientForm(form, errors)) {
+  if (!validateClientForm(form, errors, { requireFamilyContacts: true })) {
     submitError.value = 'Улаанаар тэмдэглэсэн талбаруудыг шалгана уу.';
     return;
   }
@@ -133,6 +133,7 @@ useHead({ title: leadId.value ? 'Сэжмээс хэрэглэгч үүсгэх 
     <form class="gks-form-body" @submit.prevent="submit">
       <CrmClientFormFields
         v-model="form"
+        require-family-contacts
         :errors="errors"
         :universities="universities"
         :loading-universities="universitiesLoading"

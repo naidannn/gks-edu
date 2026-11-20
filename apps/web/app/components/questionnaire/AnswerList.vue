@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QuestionnaireAnswers, QuestionnaireDefinition } from '@gks/shared';
+import type { QuestionnaireAnswers, QuestionSet } from '@gks/shared';
 
 /**
  * A questionnaire read back, section by section (1D-27) — what the writer
@@ -9,7 +9,7 @@ import type { QuestionnaireAnswers, QuestionnaireDefinition } from '@gks/shared'
  */
 const props = withDefaults(
   defineProps<{
-    definition: QuestionnaireDefinition;
+    definition: QuestionSet;
     answers: QuestionnaireAnswers;
     /** Hide the unanswered ones — for the client's own read-back. */
     answeredOnly?: boolean;

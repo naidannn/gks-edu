@@ -135,6 +135,13 @@ export interface ClientDetail extends ClientListItem {
   guardianRegisterNumber: string | null;
   guardianPhone: string | null;
   guardianRelation: string | null;
+
+  /** 1B-28 — required on a new registration, null on records that predate it. */
+  fatherPhone: string | null;
+  motherPhone: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelation: string | null;
+  emergencyContactPhone: string | null;
   /** Derived from `birthDate` on the server — a minor needs a guardian to sign. */
   isMinor: boolean;
 

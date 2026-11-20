@@ -6,11 +6,13 @@ import type {
   Question,
   QuestionnaireDefinition,
   QuestionnaireLevel,
+  QuestionSet,
   RecommendationDefinition,
   RecommenderField,
 } from './types.js';
 
 export * from './types.js';
+export { asksHighSchool, PROFILE_QUESTIONS, profileDefinition } from './profile.js';
 
 const ESSAYS: Record<QuestionnaireLevel, QuestionnaireDefinition> = {
   BACHELOR: ESSAY_BACHELOR,
@@ -43,7 +45,7 @@ export const MAX_ANSWER_LENGTH = 8000;
 
 export type Answers = Record<string, string>;
 
-export function allQuestions(definition: QuestionnaireDefinition): Question[] {
+export function allQuestions(definition: QuestionSet): Question[] {
   return definition.parts.flatMap((part) => part.sections.flatMap((section) => [...section.questions]));
 }
 
@@ -67,7 +69,7 @@ export interface QuestionnaireProgress {
 }
 
 /** Counts only questions that are asked: a "no" at a gate removes its follow-ups from the total. */
-export function questionnaireProgress(definition: QuestionnaireDefinition, answers: Answers): QuestionnaireProgress {
+export function questionnaireProgress(definition: QuestionSet, answers: Answers): QuestionnaireProgress {
   const asked = allQuestions(definition).filter((question) => isVisible(question, answers));
   return {
     answered: asked.filter((question) => isAnswered(answers[question.id])).length,
@@ -86,7 +88,7 @@ export function questionnaireProgress(definition: QuestionnaireDefinition, answe
  * Answers to questions a gate has since hidden are kept on purpose: flipping
  * "Тийм" → "Үгүй" → "Тийм" by mistake must not erase a paragraph.
  */
-export function sanitizeAnswers(definition: QuestionnaireDefinition, raw: unknown): Answers {
+export function sanitizeAnswers(definition: QuestionSet, raw: unknown): Answers {
   const known = new Map(allQuestions(definition).map((question) => [question.id, question]));
   return cleanRecord(raw, (id, value) => {
     const question = known.get(id);
@@ -125,7 +127,7 @@ function cleanRecord(raw: unknown, keep: (id: string, value: string) => string |
  * into a draft. Unasked questions are left out; unanswered ones say so, because
  * "the client skipped this" is information too.
  */
-export function answersAsText(definition: QuestionnaireDefinition, answers: Answers): string {
+export function answersAsText(definition: QuestionSet, answers: Answers): string {
   const lines: string[] = [definition.title.toUpperCase(), ''];
   for (const part of definition.parts) {
     lines.push(`═══ ${part.title}${part.titleEn ? ` (${part.titleEn})` : ''} ═══`, '');

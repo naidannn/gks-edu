@@ -1,10 +1,10 @@
 import type {
   Question,
   QuestionnaireAnswers,
-  QuestionnaireDefinition,
   QuestionnaireLevel,
   QuestionnaireProgress,
   QuestionSection,
+  QuestionSet,
 } from '@gks/shared';
 
 /**
@@ -38,7 +38,7 @@ export interface QuestionnaireStep {
   section: QuestionSection;
 }
 
-export function questionnaireSteps(definition: QuestionnaireDefinition): QuestionnaireStep[] {
+export function questionnaireSteps(definition: QuestionSet): QuestionnaireStep[] {
   return definition.parts.flatMap((part) =>
     part.sections.map((section, index) => ({
       key: `${part.id}.${section.id}`,
@@ -61,7 +61,7 @@ export function sectionProgress(section: QuestionSection, answers: Questionnaire
 }
 
 export function questionnaireProgress(
-  definition: QuestionnaireDefinition,
+  definition: QuestionSet,
   answers: QuestionnaireAnswers,
 ): QuestionnaireProgress {
   const sections = definition.parts.flatMap((part) => part.sections);
@@ -79,7 +79,7 @@ export function questionnaireProgress(
 }
 
 /** Minutes left, from each unfinished section's estimate — "~25 мин үлдлээ". */
-export function minutesLeft(definition: QuestionnaireDefinition, answers: QuestionnaireAnswers): number {
+export function minutesLeft(definition: QuestionSet, answers: QuestionnaireAnswers): number {
   return definition.parts
     .flatMap((part) => part.sections)
     .reduce((sum, section) => {

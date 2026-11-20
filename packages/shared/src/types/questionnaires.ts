@@ -42,12 +42,21 @@ export interface QuestionPart {
   sections: QuestionSection[];
 }
 
-export interface QuestionnaireDefinition {
-  kind: 'ESSAY' | 'RECOMMENDATION';
-  level: QuestionnaireLevel;
+/** What the form walks — any questionnaire's questions, whatever it is for. */
+export interface QuestionSet {
   title: string;
   intro: string[];
   parts: QuestionPart[];
+}
+
+export interface QuestionnaireDefinition extends QuestionSet {
+  kind: 'ESSAY' | 'RECOMMENDATION';
+  level: QuestionnaireLevel;
+}
+
+/** 1B-29 — the questionnaire every client answers after signing on. */
+export interface ProfileQuestionnaireDefinition extends QuestionSet {
+  kind: 'PROFILE';
 }
 
 export interface RecommenderField {
@@ -87,6 +96,14 @@ export interface EssayQuestionnaireView {
     updatedAt: string;
   } | null;
   progress: QuestionnaireProgress | null;
+}
+
+/** `GET /me/profile-questionnaire`, `GET /clients/:id/profile-questionnaire` (1B-29) */
+export interface ProfileQuestionnaireView {
+  applicantName: string;
+  definition: ProfileQuestionnaireDefinition;
+  questionnaire: EssayQuestionnaireView['questionnaire'];
+  progress: QuestionnaireProgress;
 }
 
 export interface RecommendationItem {

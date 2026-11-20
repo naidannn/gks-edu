@@ -20,6 +20,14 @@ export class SaveEssayDto {
   answers?: Record<string, string>;
 }
 
+/** 1B-29 — the same autosave for the profile questionnaire, which has no level to pick. */
+export class SaveProfileQuestionnaireDto {
+  @ApiPropertyOptional({ description: '{ [questionId]: string } — зөвхөн өөрчлөгдсөн хариултууд' })
+  @IsObject()
+  @IsOptional()
+  answers?: Record<string, string>;
+}
+
 export class ReopenEssayDto {
   @ApiProperty({ description: 'Юуг засах, нэмэхийг үйлчлүүлэгчид хэлэх тэмдэглэл' })
   @IsString()

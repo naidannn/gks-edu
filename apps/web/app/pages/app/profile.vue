@@ -42,7 +42,7 @@ onMounted(async () => {
 async function save() {
   errorMsg.value = null;
   savedAt.value = null;
-  if (!validateMyProfileForm(form, errors)) {
+  if (!validateMyProfileForm(form, errors, { requireFamilyContacts: !profile.value?.client })) {
     errorMsg.value = 'Улаанаар тэмдэглэсэн талбаруудыг шалгана уу';
     return;
   }
@@ -95,6 +95,7 @@ const completeness = computed(() => profile.value?.completeness ?? null);
         <CrmClientFormFields
           v-model="form"
           variant="self"
+          :require-family-contacts="!profile?.client"
           :errors="errors"
           :universities="catalogue.universities.value"
           :loading-universities="catalogue.loading.value"

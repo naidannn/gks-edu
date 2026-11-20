@@ -60,13 +60,22 @@ export interface QuestionPart {
 
 export type QuestionnaireKind = 'ESSAY' | 'RECOMMENDATION';
 
-export interface QuestionnaireDefinition {
-  kind: QuestionnaireKind;
-  level: QuestionnaireLevel;
+/** What the form walks and the answer helpers read — any questionnaire's questions. */
+export interface QuestionSet {
   title: string;
   /** Paragraphs shown before the first question. */
   intro: readonly string[];
   parts: readonly QuestionPart[];
+}
+
+export interface QuestionnaireDefinition extends QuestionSet {
+  kind: QuestionnaireKind;
+  level: QuestionnaireLevel;
+}
+
+/** The client's after-registration questionnaire (1B-29) — one set, not one per level. */
+export interface ProfileQuestionnaireDefinition extends QuestionSet {
+  kind: 'PROFILE';
 }
 
 /** Section V of the office's recommendation form — who is writing the letter. */

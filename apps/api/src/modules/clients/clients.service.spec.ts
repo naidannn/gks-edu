@@ -16,6 +16,9 @@ const SNU = '11111111-1111-1111-1111-111111111111';
 const KOREA = '22222222-2222-2222-2222-222222222222';
 const HANYANG = '33333333-3333-3333-3333-333333333333';
 
+/** The family contacts every new registration carries (1B-28). */
+const FAMILY = { motherPhone: '88112233', emergencyContactName: 'Болд', emergencyContactPhone: '95112233' };
+
 function adultDto(overrides: Partial<CreateClientDto> = {}): CreateClientDto {
   return {
     lastName: 'Батбаяр',
@@ -24,6 +27,7 @@ function adultDto(overrides: Partial<CreateClientDto> = {}): CreateClientDto {
     registerNumber: 'УБ12345678',
     phone: '99112233',
     primaryServiceType: ServiceType.BACHELOR,
+    ...FAMILY,
     ...overrides,
   } as CreateClientDto;
 }
@@ -310,7 +314,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
 
     await service.createFromLead(
       'lead-1',
-      { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' },
+      { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' },
       'staff-1',
     );
 
@@ -337,7 +341,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
     const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
-      service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
+      service.createFromLead('lead-1', { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
     ).rejects.toThrow(ConflictException);
     expect(tx.client.create).not.toHaveBeenCalled();
   });
@@ -347,7 +351,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
     const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
-      service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
+      service.createFromLead('lead-1', { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -366,7 +370,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
     (claimsStub.inviteQuietly as ReturnType<typeof vi.fn>).mockClear();
 
-    await service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1');
+    await service.createFromLead('lead-1', { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1');
 
     expect(tx.user.create).not.toHaveBeenCalled();
     expect(tx.client.create).toHaveBeenCalledWith(
@@ -384,7 +388,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
     const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
-      service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
+      service.createFromLead('lead-1', { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
     ).rejects.toThrow(ConflictException);
     expect(tx.client.create).not.toHaveBeenCalled();
   });
@@ -400,7 +404,7 @@ describe('ClientsService.createFromLead (1B-10)', () => {
     const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
 
     await expect(
-      service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
+      service.createFromLead('lead-1', { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1'),
     ).rejects.toThrow(ConflictException);
     expect(tx.client.create).not.toHaveBeenCalled();
   });
@@ -535,6 +539,64 @@ describe('ClientsService portal invitation (1B-19)', () => {
 });
 
 /**
+ * 1B-28 — the office has to reach the family when the client cannot be
+ * reached, so a new registration needs a parent's phone and an emergency
+ * contact. Either parent is enough, and an old record is never held to it.
+ */
+describe('ClientsService — family contacts on a new registration (1B-28)', () => {
+  it('refuses a registration with neither parent nor an emergency contact, and names what is missing', async () => {
+    const { prisma, tx } = prismaStub();
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+
+    const bare = adultDto({ motherPhone: undefined, emergencyContactName: undefined, emergencyContactPhone: undefined });
+    await expect(service.create(bare, 'staff-1')).rejects.toThrow(/аав эсвэл ээжийн утас.*яаралтай үед холбоо барих хүний нэр/);
+    expect(tx.client.create).not.toHaveBeenCalled();
+  });
+
+  it('takes one parent alone, and stores what was given', async () => {
+    const { prisma, tx } = prismaStub();
+    const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
+    vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
+
+    await service.create(adultDto({ motherPhone: undefined, fatherPhone: '99887766', emergencyContactRelation: 'Эгч' }), 'staff-1');
+
+    expect(tx.client.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          fatherPhone: '99887766',
+          emergencyContactName: 'Болд',
+          emergencyContactRelation: 'Эгч',
+          emergencyContactPhone: '95112233',
+        }),
+      }),
+    );
+  });
+
+  it('does not hold an existing client to it when they edit their own record', async () => {
+    const tx = { client: { create: vi.fn(), update: vi.fn() }, user: { update: vi.fn() } };
+    const prisma = {
+      client: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'client-1',
+          userId: 'user-1',
+          birthDate: new Date(ADULT_BIRTH_DATE),
+          registerNumber: 'УБ12345678',
+          email: null,
+        }),
+      },
+      user: { findUnique: vi.fn().mockResolvedValue(null) },
+      $transaction: vi.fn().mockImplementation((fn: (client: typeof tx) => unknown) => fn(tx)),
+    };
+    const service = new ClientsService(prisma as unknown as PrismaService, casesStub, claimsStub, contractsStub, slackStub);
+    vi.spyOn(service, 'findByUserId').mockResolvedValue(null);
+
+    const old = adultDto({ motherPhone: undefined, emergencyContactName: undefined, emergencyContactPhone: undefined });
+    await service.upsertOwn('user-1', old as never);
+    expect(tx.client.update).toHaveBeenCalled();
+  });
+});
+
+/**
  * A site login filling in a profile whose register number the office already
  * holds — the same person, registered by the office under another address.
  * Showing them another client's code was a dead end; the office now hears
@@ -644,7 +706,7 @@ describe('ClientsService — the person\'s enquiries follow them (1B-26)', () =>
     const service = new ClientsService(prisma, casesStub, claimsStub, contractsStub, slackStub);
     vi.spyOn(service, 'findOne').mockResolvedValue({ id: 'client-1' } as never);
 
-    await service.createFromLead('lead-1', { birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1');
+    await service.createFromLead('lead-1', { ...FAMILY, birthDate: ADULT_BIRTH_DATE, registerNumber: 'УБ12345678' }, 'staff-1');
 
     expect(tx.lead.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['earlier-web-form'] } },

@@ -1140,6 +1140,16 @@ model Client {
   /// Free text: "Эх", "Эцэг", "Асран хамгаалагч" …
   guardianRelation       String?
 
+  // ── Family contacts (1B-28) — who the office calls when the client cannot be
+  //    reached. Required on a new registration (one parent at least, plus the
+  //    emergency contact), never forced onto a record that predates them.
+  fatherPhone              String?
+  motherPhone              String?
+  emergencyContactName     String?
+  /// Free text: "Эгч", "Авга ах" …
+  emergencyContactRelation String?
+  emergencyContactPhone    String?
+
   // ── Academic background carried over from the lead, kept editable here.
   educationLevel EducationLevel?
   schoolName     String?
@@ -1172,8 +1182,9 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  campaignRecipients EmailCampaignRecipient[]
-  facebookThreads    FacebookThread[]
+  campaignRecipients   EmailCampaignRecipient[]
+  facebookThreads      FacebookThread[]
+  profileQuestionnaire ClientProfileQuestionnaire?
 
   @@index([status])
   @@index([assignedConsultantId])
@@ -1732,8 +1743,7 @@ model DocumentTemplate {
   /// "Эх хувиар авчрах" — cannot be closed out online (1D-11).
   needsPhysicalOriginal Boolean @default(false)
 
-  /// A photo sent for a PDF-only template is converted to one PDF on upload (1D-32).
-  acceptedFileTypes String[] @default(["pdf"])
+  acceptedFileTypes String[] @default(["pdf", "jpg", "png"])
   sampleFilePath    String?
   tipsMn            String?
   isActive          Boolean  @default(true)
@@ -3061,6 +3071,29 @@ enum EssayDocumentStatus {
   SHARED
   /// The client said "this is right". Any later edit sends it back to SHARED.
   APPROVED
+/// What the office needs to know about a client once they have signed on
+/// (1B-29) — high school, the family's occupations and income, the dormitory —
+/// asked through the same questionnaire walk as the essay. One per client, not
+/// per case: none of it changes with the school being applied to.
+model ClientProfileQuestionnaire {
+  id       String @id @default(uuid()) @db.Uuid
+  clientId String @unique @db.Uuid
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  /// `{ [questionId]: string }` — the same shape as `EssayQuestionnaire.answers`.
+  answers Json                @default("{}")
+  status  QuestionnaireStatus @default(DRAFT)
+
+  submittedAt DateTime?
+  reopenNote  String?
+  reopenedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("client_profile_questionnaires")
+}
+
 }
 
 /// One essay, written in the system instead of in Word (1D-28). The body is
