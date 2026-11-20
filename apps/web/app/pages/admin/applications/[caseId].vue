@@ -32,6 +32,7 @@ const error = ref<string | null>(null);
 
 const application = computed(() => view.value?.application ?? null);
 const readiness = computed(() => view.value?.readiness ?? null);
+const showParallel = computed(() => !!view.value && (view.value.parallel.length > 0 || view.value.parallelCandidates.length > 0));
 
 async function load() {
   pending.value = true;
@@ -191,6 +192,16 @@ useHead({ title: 'Мэдүүлгийн удирдлага · CRM' });
       <p class="gks-muted">Энэ үйлчилгээнд сургуулийн мэдүүлэг үүсээгүй байна.</p>
       <DsButton variant="accent" :loading="busy" @click="open">Мэдүүлэг нээх</DsButton>
     </DsCard>
+
+    <!-- 1E-13: the other schools, tracked whether or not the primary is open. -->
+    <CrmParallelApplications
+      v-if="view && showParallel"
+      :case-id="caseId"
+      :service-type="application?.case.serviceType"
+      :parallel="view.parallel"
+      :candidates="view.parallelCandidates"
+      @changed="load"
+    />
 
     <template v-if="application">
       <DsCard :title="application.case.code" :eyebrow="SERVICE_LABELS[application.case.serviceType]">

@@ -30,6 +30,11 @@ export interface ApplicationResult {
 export interface Application {
   id: string;
   caseId: string;
+  /**
+   * The case's own submission (1E-13). The others are the further schools the
+   * same materials went to: tracked beside it, never moving the case stage.
+   */
+  isPrimary: boolean;
   status: ApplicationStatus;
   applicationNo: string | null;
   admissionFeeKrw: string | null;
@@ -59,9 +64,20 @@ export interface ApplicationReadiness {
   missing: { id: string; code: string; nameMn: string; status: DocumentStatus }[];
 }
 
+/** A chosen school no parallel application has been opened to yet (1E-13). */
+export interface ParallelApplicationCandidate {
+  universityId: string;
+  university: { id: string; nameMn: string; nameEn: string; nameKo: string } | null;
+  program: { id: string; nameMn: string; level: string } | null;
+}
+
 export interface ApplicationView {
+  /** The primary application. */
   application: Application | null;
   readiness: ApplicationReadiness;
+  /** The other schools the materials went to, oldest first (1E-13). */
+  parallel: Application[];
+  parallelCandidates: ParallelApplicationCandidate[];
 }
 
 export interface SchoolInvoiceItem {

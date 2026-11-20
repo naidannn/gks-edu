@@ -1427,7 +1427,8 @@ model Case {
   documents      CaseDocument[]
   workTasks      WorkTask[]
   appointments   OfficeAppointment[]
-  application    Application?
+  /// One per school the office applies to (1E-13); exactly one is `isPrimary`.
+  applications   Application[]
   schoolInvoices SchoolInvoice[]
   invitation     Invitation?
   visaCase       VisaCase?
@@ -2030,10 +2031,19 @@ enum ApplicationDecision {
 
 /// One case's submission to one university. GKS decides in two rounds, regular
 /// brokerage in one — the difference lives in `ApplicationResult.round` (§7).
+///
+/// A case may hold several (1E-13, ARCHITECTURE §18-20): the office sends the
+/// same materials to more than one school at once. Exactly one is the primary —
+/// the GKS scholarship submission, or a regular case's first choice — and only
+/// it moves the case stage, closes out documents and gates on readiness. The
+/// others are tracked side by side and never touch the case. "One primary per
+/// case" is a partial unique index the migration writes in SQL; Prisma cannot
+/// express it.
 model Application {
-  id     String @id @default(uuid()) @db.Uuid
-  caseId String @unique @db.Uuid
-  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  caseId    String  @db.Uuid
+  case      Case    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  isPrimary Boolean @default(true)
 
   /// Snapshot of the target at submission time; the case may be re-pointed later.
   universityId String?            @db.Uuid
@@ -2060,6 +2070,8 @@ model Application {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([caseId, universityId])
+  @@index([caseId])
   @@index([status])
   @@index([universityId])
   /// Admission outcomes are timed by the submission, not by the case (1M).
@@ -3059,19 +3071,6 @@ model RecommendationRequest {
   @@map("recommendation_requests")
 }
 
-/// The two essays the office writes from the questionnaire (1D-28).
-enum EssayDocumentKind {
-  PERSONAL_STATEMENT
-  STUDY_PLAN
-}
-
-enum EssayDocumentStatus {
-  /// Staff are still writing — the client cannot see it.
-  DRAFT
-  /// Shown to the client, who reads it and leaves comments.
-  SHARED
-  /// The client said "this is right". Any later edit sends it back to SHARED.
-  APPROVED
 /// What the office needs to know about a client once they have signed on
 /// (1B-29) — high school, the family's occupations and income, the dormitory —
 /// asked through the same questionnaire walk as the essay. One per client, not
@@ -3095,6 +3094,19 @@ model ClientProfileQuestionnaire {
   @@map("client_profile_questionnaires")
 }
 
+/// The two essays the office writes from the questionnaire (1D-28).
+enum EssayDocumentKind {
+  PERSONAL_STATEMENT
+  STUDY_PLAN
+}
+
+enum EssayDocumentStatus {
+  /// Staff are still writing — the client cannot see it.
+  DRAFT
+  /// Shown to the client, who reads it and leaves comments.
+  SHARED
+  /// The client said "this is right". Any later edit sends it back to SHARED.
+  APPROVED
 }
 
 /// One essay, written in the system instead of in Word (1D-28). The body is

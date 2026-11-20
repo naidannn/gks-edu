@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -22,6 +23,7 @@ import type { AuthenticatedUser } from '../../common/types/authenticated-user.js
 import { ApplicationsService } from './applications.service.js';
 import {
   CreateApplicationDto,
+  CreateParallelApplicationDto,
   QueryApplicationsDto,
   RecordResultDto,
   RequestAdditionalDocsDto,
@@ -62,7 +64,7 @@ export class ApplicationsController {
   }
 
   @Get('cases/:caseId/application')
-  @ApiOperation({ summary: 'The case`s application plus its document-readiness gate (1E-03)' })
+  @ApiOperation({ summary: 'The case`s primary application, its parallel ones (1E-13) and the document-readiness gate (1E-03)' })
   findForCase(@Param('caseId', ParseUUIDPipe) caseId: string, @CurrentUser() user: AuthenticatedUser) {
     return this.applications.findForCase(caseId, user);
   }
@@ -72,6 +74,20 @@ export class ApplicationsController {
   @ApiOperation({ summary: 'Open the application for a case (1E-01)' })
   create(@Param('caseId', ParseUUIDPipe) caseId: string, @Body() dto: CreateApplicationDto) {
     return this.applications.createForCase(caseId, dto);
+  }
+
+  @Post('cases/:caseId/applications')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Track one more of the case`s chosen schools as a parallel application (1E-13)' })
+  createParallel(@Param('caseId', ParseUUIDPipe) caseId: string, @Body() dto: CreateParallelApplicationDto) {
+    return this.applications.createParallel(caseId, dto);
+  }
+
+  @Delete('applications/:id')
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Remove a parallel application opened by mistake, before it was sent (1E-13)' })
+  removeParallel(@Param('id', ParseUUIDPipe) id: string) {
+    return this.applications.removeParallel(id);
   }
 
   @Patch('applications/:id')

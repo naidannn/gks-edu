@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { ApplicationDecision, ApplicationStatus, ServiceType } from '../../../prisma/client.js';
 
@@ -13,6 +13,21 @@ export class CreateApplicationDto {
   @ApiPropertyOptional() @IsUUID() @IsOptional() programId?: string;
   @ApiPropertyOptional() @IsUUID() @IsOptional() intakeId?: string;
 }
+
+/** 1E-13 — open an application to one more of the case's chosen schools. */
+export class CreateParallelApplicationDto {
+  @ApiProperty({ description: 'Үйлчилгээн дээр сонгосон сургуулиудын нэг' })
+  @IsUUID()
+  universityId!: string;
+
+  @ApiPropertyOptional({ description: 'Хоосон бол сонголт дээрх хөтөлбөрийг авна' })
+  @IsUUID()
+  @IsOptional()
+  programId?: string;
+}
+
+export const APPLICATION_KINDS = ['PRIMARY', 'PARALLEL'] as const;
+export type ApplicationKind = (typeof APPLICATION_KINDS)[number];
 
 export class UpdateApplicationDto {
   @ApiPropertyOptional() @IsUUID() @IsOptional() universityId?: string;
@@ -90,6 +105,11 @@ export class QueryApplicationsDto extends PaginationQueryDto {
   @IsEnum(ServiceType)
   @IsOptional()
   serviceType?: ServiceType;
+
+  @ApiPropertyOptional({ enum: APPLICATION_KINDS, description: 'Үндсэн мэдүүлэг эсвэл зэрэгцээ (нэмэлт сургууль)' })
+  @IsIn(APPLICATION_KINDS)
+  @IsOptional()
+  kind?: ApplicationKind;
 
   @ApiPropertyOptional() @IsUUID() @IsOptional() universityId?: string;
   @ApiPropertyOptional() @IsString() @IsOptional() q?: string;

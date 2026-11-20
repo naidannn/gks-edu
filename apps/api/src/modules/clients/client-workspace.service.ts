@@ -42,7 +42,18 @@ const WORKSPACE_CASE_INCLUDE = {
   payments: { orderBy: { createdAt: 'desc' } },
   assignedConsultant: { select: { id: true, name: true, email: true } },
   assignedDocOfficer: { select: { id: true, name: true, email: true } },
-  application: { select: { id: true, status: true, submittedAt: true, interviewAt: true } },
+  applications: {
+    orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+    select: {
+      id: true,
+      isPrimary: true,
+      status: true,
+      submittedAt: true,
+      interviewAt: true,
+      decidedAt: true,
+      university: { select: { id: true, nameMn: true, nameEn: true } },
+    },
+  },
   invitation: { select: { id: true, issuedAt: true, receivedAt: true } },
   visaCase: { select: { id: true, status: true, appointmentAt: true, visaNumber: true, decidedAt: true } },
   departurePlan: { select: { id: true, departureAt: true } },
@@ -232,9 +243,14 @@ export class ClientWorkspaceService {
     ]);
 
     const stageIndex = journey.indexOf(row.stage);
+    const { applications, ...rest } = row;
 
     return {
-      ...row,
+      ...rest,
+      // The case's own submission, plus the other schools the same materials
+      // went to (1E-13) — tracked beside it, never driving the stage.
+      application: applications.find((application) => application.isPrimary) ?? null,
+      parallelApplications: applications.filter((application) => !application.isPrimary),
       journey,
       /**
        * How far along the service is, as the position of the stage in this

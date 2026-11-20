@@ -40,6 +40,8 @@ onMounted(load);
 
 const application = computed(() => view.value?.application ?? null);
 const readiness = computed(() => view.value?.readiness ?? null);
+/** 1E-13 — the other schools the office sent the same materials to. */
+const parallel = computed(() => view.value?.parallel ?? []);
 
 /** GKS decides twice; regular brokerage once (§7). */
 const rounds = computed(() => application.value?.results ?? []);
@@ -102,6 +104,24 @@ async function openInvitation() {
 
     <DsCard v-else-if="!pending" title="Мэдүүлэг">
       <p class="gks-app-stage__empty">Материал бүрдсэний дараа сургуулийн мэдүүлгийн үе шат нээгдэнэ.</p>
+    </DsCard>
+
+    <DsCard v-if="parallel.length" title="Нэмэлт сургууль">
+      <p class="gks-app-stage__note">Таны материалыг дараах сургуульд мөн илгээж байна.</p>
+      <ul class="gks-app-stage__parallel">
+        <li v-for="row in parallel" :key="row.id">
+          <div>
+            <p class="gks-app-stage__school">{{ universityName(row.university, UNKNOWN_LABEL) }}</p>
+            <p class="gks-app-stage__meta gks-tnum">
+              {{ row.program?.nameMn ?? '' }}
+              <template v-if="row.submittedAt">{{ row.program ? ' · ' : '' }}илгээсэн {{ formatLongDate(row.submittedAt) }}</template>
+              <template v-if="row.interviewAt"> · ярилцлага {{ formatLongDate(row.interviewAt) }}</template>
+              <template v-if="row.decidedAt"> · хариу {{ formatLongDate(row.decidedAt) }}</template>
+            </p>
+          </div>
+          <DsBadge :tone="APPLICATION_STATUS_TONE[row.status]">{{ APPLICATION_STATUS_LABELS[row.status] }}</DsBadge>
+        </li>
+      </ul>
     </DsCard>
 
     <!-- 1E-03: the gate, stated as the remaining work rather than as an error. -->
@@ -198,6 +218,10 @@ async function openInvitation() {
 .gks-app-stage__ok { margin-top: var(--sp-2); display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--success-fg); }
 .gks-app-stage__invitation { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-sm); color: var(--text-body); }
 .gks-app-stage__note { margin: var(--sp-2) 0 var(--sp-3); font-size: var(--fs-body-sm); color: var(--text-muted); }
+.gks-app-stage__parallel { display: flex; flex-direction: column; gap: var(--sp-3); }
+.gks-app-stage__parallel li { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); padding-top: var(--sp-3); border-top: var(--border-hair) solid var(--line-hairline); }
+.gks-app-stage__school { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.gks-app-stage__meta { margin-top: 2px; font-size: var(--fs-caption); color: var(--text-muted); }
 .gks-app-stage__empty { color: var(--text-subtle); font-style: italic; }
 .gks-app-stage__error { color: var(--danger-fg); font-size: var(--fs-body-sm); margin-bottom: var(--sp-3); }
 </style>

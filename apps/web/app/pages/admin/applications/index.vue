@@ -13,12 +13,19 @@ definePageMeta({ middleware: 'doc-staff', layout: 'admin' });
 type Paginated = PaginatedResult<Application>;
 
 const STATUS_OPTIONS = selectOptions(APPLICATION_STATUS_LABELS, 'Бүх төлөв');
+/** 1E-13 — the case's own submission vs. the further schools the materials went to. */
+const KIND_OPTIONS = [
+  { value: '', label: 'Бүх мэдүүлэг' },
+  { value: 'PRIMARY', label: 'Үндсэн мэдүүлэг' },
+  { value: 'PARALLEL', label: 'Нэмэлт сургууль' },
+];
 const SERVICE_OPTIONS = selectOptions(SERVICE_LABELS, 'Бүх үйлчилгээ');
 
 const api = useApi();
 const q = ref('');
 const status = ref<ApplicationStatus | ''>('');
 const serviceType = ref<ServiceType | ''>('');
+const kind = ref<'PRIMARY' | 'PARALLEL' | ''>('');
 const page = ref(1);
 
 const data = ref<Paginated | null>(null);
@@ -32,6 +39,7 @@ const query = computed(() => ({
   ...(q.value ? { q: q.value } : {}),
   ...(status.value ? { status: status.value } : {}),
   ...(serviceType.value ? { serviceType: serviceType.value } : {}),
+  ...(kind.value ? { kind: kind.value } : {}),
 }));
 
 async function load() {
@@ -51,7 +59,7 @@ async function load() {
   }
 }
 
-watch([status, serviceType], () => { page.value = 1; load(); });
+watch([status, serviceType, kind], () => { page.value = 1; load(); });
 watch(page, load);
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 watch(q, () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { page.value = 1; load(); }, 350); });
@@ -80,6 +88,7 @@ useUrlFilters({
   q,
   status: [status, STATUS_OPTIONS.map((o) => o.value)],
   serviceType: [serviceType, SERVICE_OPTIONS.map((o) => o.value)],
+  kind: [kind, KIND_OPTIONS.map((o) => o.value)],
 });
 
 useHead({ title: 'Мэдүүлэг · CRM' });
@@ -120,6 +129,7 @@ useHead({ title: 'Мэдүүлэг · CRM' });
         />
         <DsSelect v-model="status" :options="STATUS_OPTIONS" aria-label="Төлөв" />
         <DsSelect v-model="serviceType" :options="SERVICE_OPTIONS" aria-label="Үйлчилгээ" />
+        <DsSelect v-model="kind" :options="KIND_OPTIONS" aria-label="Мэдүүлгийн төрөл" />
       </div>
     </DsCard>
 
@@ -138,7 +148,10 @@ useHead({ title: 'Мэдүүлэг · CRM' });
           <tr v-for="item in data.items" :key="item.id" class="gks-row" tabindex="0" @click="navigateTo(`/admin/applications/${item.case.id}`)" @keydown.enter="navigateTo(`/admin/applications/${item.case.id}`)">
             <td class="gks-tnum" data-label="Үйлчилгээ">{{ item.case.code }}</td>
             <td data-label="Хэрэглэгч">{{ item.case.user?.name ?? '—' }}</td>
-            <td data-label="Сургууль">{{ universityName(item.university, UNKNOWN_LABEL) }}</td>
+            <td data-label="Сургууль">
+              {{ universityName(item.university, UNKNOWN_LABEL) }}
+              <DsBadge v-if="!item.isPrimary" tone="neutral">Нэмэлт</DsBadge>
+            </td>
             <td data-label="Үйлчилгээ">{{ SERVICE_LABELS[item.case.serviceType] }}</td>
             <td data-label="Төлөв"><DsBadge :tone="APPLICATION_STATUS_TONE[item.status]">{{ APPLICATION_STATUS_LABELS[item.status] }}</DsBadge></td>
             <td class="gks-tnum" data-label="Илгээсэн">{{ formatDate(item.submittedAt) }}</td>

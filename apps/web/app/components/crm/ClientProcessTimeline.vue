@@ -178,6 +178,19 @@ function isOverdue(task: WorkTask): boolean {
               </DsButton>
             </div>
 
+            <!-- 1E-13: the further schools the same materials went to. -->
+            <div v-for="extra in workspaceCase.parallelApplications" :key="extra.id" class="gks-cproc__desk">
+              <div>
+                <p class="gks-cproc__desk-label">Нэмэлт сургууль · {{ universityName(extra.university, UNKNOWN_LABEL) }}</p>
+                <p class="gks-cproc__desk-value">
+                  {{ APPLICATION_STATUS_LABELS[extra.status] }}
+                  <span v-if="extra.decidedAt ?? extra.submittedAt" class="gks-tnum">
+                    · {{ formatDate(extra.decidedAt ?? extra.submittedAt) }}
+                  </span>
+                </p>
+              </div>
+            </div>
+
             <div class="gks-cproc__desk">
               <div>
                 <p class="gks-cproc__desk-label">Виз</p>

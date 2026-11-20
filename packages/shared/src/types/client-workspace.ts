@@ -47,6 +47,16 @@ export interface ClientActivityEntry {
   caseId: string | null;
 }
 
+export interface WorkspaceApplication {
+  id: string;
+  isPrimary: boolean;
+  status: ApplicationStatus;
+  submittedAt: string | null;
+  interviewAt: string | null;
+  decidedAt: string | null;
+  university: UniversityRef | null;
+}
+
 /** One of the client's service cycles, decorated for the workspace. */
 export interface WorkspaceCase {
   id: string;
@@ -64,7 +74,9 @@ export interface WorkspaceCase {
   payments: StaffPaymentItem[];
   assignedConsultant: PersonRef | null;
   assignedDocOfficer: PersonRef | null;
-  application: { id: string; status: ApplicationStatus; submittedAt: string | null; interviewAt: string | null } | null;
+  application: WorkspaceApplication | null;
+  /** The further schools applied to beside the primary one (1E-13). */
+  parallelApplications: WorkspaceApplication[];
   invitation: { id: string; issuedAt: string | null; receivedAt: string | null } | null;
   visaCase: {
     id: string;

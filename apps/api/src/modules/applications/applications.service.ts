@@ -19,6 +19,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { assertApplicationTransition } from './application-status.js';
 import type {
   CreateApplicationDto,
+  CreateParallelApplicationDto,
   QueryApplicationsDto,
   RecordResultDto,
   RequestAdditionalDocsDto,
@@ -26,6 +27,7 @@ import type {
   TransitionApplicationDto,
   UpdateApplicationDto,
 } from './dto/application.dto.js';
+import { parallelChoices } from './parallel-applications.js';
 
 /**
  * The states in which a school decision can actually arrive (1N-20). Recording
@@ -47,6 +49,9 @@ const DECIDABLE_STATUSES: readonly ApplicationStatus[] = [
  */
 const DECISION_STATUSES: readonly ApplicationStatus[] = [ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED];
 
+/** A parallel application opened by mistake may be removed until it has left the office. */
+const REMOVABLE_STATUSES: readonly ApplicationStatus[] = [ApplicationStatus.PREPARING, ApplicationStatus.READY];
+
 const APPLICATION_INCLUDE = {
   university: { select: { id: true, nameMn: true, nameEn: true, nameKo: true, logoPath: true } },
   program: { select: { id: true, nameMn: true, level: true } },
@@ -60,6 +65,12 @@ const APPLICATION_INCLUDE = {
  * gate (nothing is submitted while a required document is missing) and the GKS
  * two-round decision, which lives in `ApplicationResult.round` rather than in
  * extra statuses.
+ *
+ * 1E-13 — a case may also apply to its other chosen schools at the same time.
+ * Those parallel applications share the case's one set of documents and walk
+ * the same status graph, but they are bookkeeping only: they never gate on
+ * readiness, never mark documents sent, never move the case stage, and always
+ * decide in a single round. The primary application alone drives the case.
  */
 @Injectable()
 export class ApplicationsService {
@@ -75,6 +86,7 @@ export class ApplicationsService {
   async findAll(query: QueryApplicationsDto) {
     const where: Prisma.ApplicationWhereInput = {};
     if (query.status) where.status = query.status;
+    if (query.kind) where.isPrimary = query.kind === 'PRIMARY';
     if (query.universityId) where.universityId = query.universityId;
     const caseFilter: Prisma.CaseWhereInput = {};
     if (query.serviceType) caseFilter.serviceType = query.serviceType;
@@ -104,9 +116,44 @@ export class ApplicationsService {
 
   async findForCase(caseId: string, actor: AuthenticatedUser) {
     await this.documents.assertCaseAccess(caseId, actor);
-    const application = await this.prisma.application.findUnique({ where: { caseId }, include: APPLICATION_INCLUDE });
-    const readiness = await this.readiness(caseId);
-    return { application, readiness };
+    const [applications, found, readiness] = await Promise.all([
+      this.prisma.application.findMany({
+        where: { caseId },
+        include: APPLICATION_INCLUDE,
+        orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+      }),
+      this.prisma.case.findUnique({
+        where: { id: caseId },
+        select: {
+          serviceType: true,
+          universityId: true,
+          universityChoices: {
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              universityId: true,
+              track: true,
+              university: { select: { id: true, nameMn: true, nameEn: true, nameKo: true } },
+              program: { select: { id: true, nameMn: true, level: true } },
+            },
+          },
+        },
+      }),
+      this.readiness(caseId),
+    ]);
+
+    const application = applications.find((row) => row.isPrimary) ?? null;
+    const parallel = applications.filter((row) => !row.isPrimary);
+
+    // The chosen schools nobody has opened an application to yet — what the
+    // staff console offers to start tracking.
+    const opened = new Set(parallel.map((row) => row.universityId));
+    const parallelCandidates = found
+      ? parallelChoices(found.serviceType, found.universityChoices, application?.universityId ?? found.universityId)
+          .filter((choice) => !opened.has(choice.universityId))
+          .map(({ universityId, university, program }) => ({ universityId, university, program }))
+      : [];
+
+    return { application, readiness, parallel, parallelCandidates };
   }
 
   /**
@@ -147,18 +194,21 @@ export class ApplicationsService {
 
   // ─── Writing ────────────────────────────────────────────────────────────────
 
-  /** Idempotent: one case has exactly one application (§5). */
+  /** Idempotent: one case has exactly one primary application (§5). */
   async createForCase(caseId: string, dto: CreateApplicationDto) {
     const gksCase = await this.prisma.case.findUnique({ where: { id: caseId } });
     if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
-    const existing = await this.prisma.application.findUnique({ where: { caseId } });
-    if (existing) return this.prisma.application.findUnique({ where: { caseId }, include: APPLICATION_INCLUDE });
+    const existing = await this.prisma.application.findFirst({ where: { caseId, isPrimary: true }, include: APPLICATION_INCLUDE });
+    if (existing) return existing;
+
+    const universityId = dto.universityId ?? gksCase.universityId;
+    await this.assertSchoolFree(caseId, universityId, null);
 
     return this.prisma.application.create({
       data: {
         caseId,
-        universityId: dto.universityId ?? gksCase.universityId,
+        universityId,
         programId: dto.programId ?? gksCase.programId,
         intakeId: dto.intakeId ?? gksCase.intakeId,
       },
@@ -166,8 +216,66 @@ export class ApplicationsService {
     });
   }
 
+  /**
+   * 1E-13 — start tracking one more school the materials are going to. The
+   * school must be one the case names, and not one the primary application
+   * already covers (`parallelChoices`); the choice list stays the one place a
+   * case's schools are decided.
+   */
+  async createParallel(caseId: string, dto: CreateParallelApplicationDto) {
+    const found = await this.prisma.case.findUnique({
+      where: { id: caseId },
+      select: {
+        serviceType: true,
+        universityId: true,
+        universityChoices: { select: { universityId: true, track: true, programId: true } },
+        applications: { where: { isPrimary: true }, select: { universityId: true } },
+      },
+    });
+    if (!found) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
+
+    const primaryUniversityId = found.applications[0]?.universityId ?? found.universityId;
+    const choice = parallelChoices(found.serviceType, found.universityChoices, primaryUniversityId).find(
+      (row) => row.universityId === dto.universityId,
+    );
+    if (!choice) {
+      throw new BadRequestException(
+        found.serviceType === ServiceType.GKS_SCHOLARSHIP
+          ? 'Нэмэлт мэдүүлгийг зөвхөн үйлчилгээн дээр сонгосон энгийн зуучлалын сургуульд нээнэ'
+          : 'Нэмэлт мэдүүлгийг зөвхөн үйлчилгээн дээр сонгосон бусад сургуульд нээнэ',
+      );
+    }
+    await this.assertSchoolFree(caseId, dto.universityId, null);
+
+    return this.prisma.application.create({
+      data: {
+        caseId,
+        isPrimary: false,
+        universityId: dto.universityId,
+        programId: dto.programId ?? choice.programId,
+      },
+      include: APPLICATION_INCLUDE,
+    });
+  }
+
+  /** 1E-13 — undo a parallel application opened by mistake, before anything was sent. */
+  async removeParallel(id: string) {
+    const application = await this.getOrThrow(id);
+    if (application.isPrimary) {
+      throw new BadRequestException('Үндсэн мэдүүлгийг устгах боломжгүй');
+    }
+    if (!REMOVABLE_STATUSES.includes(application.status)) {
+      throw new BadRequestException('Сургуульд илгээсэн мэдүүлгийг устгах боломжгүй — хариуг нь бүртгэнэ үү');
+    }
+    await this.prisma.application.delete({ where: { id } });
+    return { id };
+  }
+
   async update(id: string, dto: UpdateApplicationDto) {
-    await this.getOrThrow(id);
+    const application = await this.getOrThrow(id);
+    if (dto.universityId && dto.universityId !== application.universityId) {
+      await this.assertSchoolFree(application.caseId, dto.universityId, id);
+    }
     return this.prisma.application.update({
       where: { id },
       data: {
@@ -189,7 +297,7 @@ export class ApplicationsService {
     }
     assertApplicationTransition(application.status, dto.toStatus);
 
-    if (dto.toStatus === ApplicationStatus.READY) {
+    if (dto.toStatus === ApplicationStatus.READY && application.isPrimary) {
       const readiness = await this.readiness(application.caseId);
       if (!readiness.isReady) {
         throw new BadRequestException(
@@ -208,7 +316,7 @@ export class ApplicationsService {
       include: APPLICATION_INCLUDE,
     });
 
-    if (dto.toStatus === ApplicationStatus.SUBMITTED) {
+    if (dto.toStatus === ApplicationStatus.SUBMITTED && application.isPrimary) {
       await this.markDocumentsSent(application.caseId);
       await this.cases.applyDomainTransition(application.caseId, CaseStage.APPLICATION_SUBMITTED, actor.id, 'Мэдүүлэг сургуульд илгээгдсэн');
     }
@@ -294,7 +402,8 @@ export class ApplicationsService {
    */
   async recordResult(id: string, dto: RecordResultDto, actor: AuthenticatedUser) {
     const application = await this.getOrThrow(id);
-    const isGks = application.case.serviceType === ServiceType.GKS_SCHOLARSHIP;
+    // A GKS case's parallel school is ordinary brokerage: it decides once.
+    const isGks = application.case.serviceType === ServiceType.GKS_SCHOLARSHIP && application.isPrimary;
     const round = dto.round ?? 1;
 
     if (!isGks && round !== 1) {
@@ -339,7 +448,9 @@ export class ApplicationsService {
       include: APPLICATION_INCLUDE,
     });
 
-    const stage = this.caseStageFor(dto.decision, round, isGks);
+    // A parallel school's answer is the office's to act on — it never moves the
+    // case, which follows the primary application alone.
+    const stage = application.isPrimary ? this.caseStageFor(dto.decision, round, isGks) : null;
     if (stage) {
       await this.cases.applyDomainTransition(application.caseId, stage, actor.id, `Мэдүүлгийн ${round}-р шатны хариу: ${dto.decision}`);
     }
@@ -391,6 +502,19 @@ export class ApplicationsService {
     for (const doc of ready) {
       await this.documents.applyStatus(doc.id, doc.status, 'SENT_TO_UNIVERSITY', null, null);
     }
+  }
+
+  /**
+   * One application per school per case. The unique index would catch it too,
+   * but as a Prisma error rather than a sentence staff can act on.
+   */
+  private async assertSchoolFree(caseId: string, universityId: string | null, exceptId: string | null): Promise<void> {
+    if (!universityId) return;
+    const clash = await this.prisma.application.findFirst({
+      where: { caseId, universityId, ...(exceptId ? { id: { not: exceptId } } : {}) },
+      select: { id: true },
+    });
+    if (clash) throw new BadRequestException('Энэ сургуульд мэдүүлэг аль хэдийн нээгдсэн байна');
   }
 
   private async getOrThrow(id: string) {

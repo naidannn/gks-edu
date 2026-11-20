@@ -18,10 +18,14 @@ function harness(options: {
   status?: ApplicationStatus;
   serviceType?: ServiceType;
   results?: Record<1 | 2, Record<string, unknown> | null>;
+  isPrimary?: boolean;
+  caseRow?: Record<string, unknown>;
+  clash?: boolean;
 }) {
   const application = {
     id: 'app-1',
     caseId: 'case-1',
+    isPrimary: options.isPrimary ?? true,
     status: options.status ?? ApplicationStatus.UNDER_REVIEW,
     case: { id: 'case-1', code: 'GKS-2026-0001', userId: 'student-1', serviceType: options.serviceType ?? ServiceType.BACHELOR },
     university: { nameMn: 'Кёнхи их сургууль' },
@@ -31,8 +35,12 @@ function harness(options: {
   const prisma = {
     application: {
       findUnique: vi.fn().mockResolvedValue(application),
+      findFirst: vi.fn().mockResolvedValue(options.clash ? { id: 'other' } : null),
       update: vi.fn().mockResolvedValue(application),
+      create: vi.fn().mockImplementation(({ data }: { data: unknown }) => Promise.resolve(data)),
+      delete: vi.fn().mockResolvedValue(application),
     },
+    case: { findUnique: vi.fn().mockResolvedValue(options.caseRow ?? null) },
     applicationResult: {
       findUnique: vi.fn().mockImplementation(({ where }: { where: { applicationId_round: { round: 1 | 2 } } }) =>
         Promise.resolve(results[where.applicationId_round.round]),
@@ -45,7 +53,10 @@ function harness(options: {
   const cases = { applyDomainTransition: vi.fn().mockResolvedValue(true) } as unknown as CasesService & {
     applyDomainTransition: ReturnType<typeof vi.fn>;
   };
-  const documents = { missingRequired: vi.fn().mockResolvedValue({ requiredTotal: 0, missing: [] }) } as unknown as CaseDocumentsService;
+  const documents = {
+    // Nothing collected: a primary application could not be marked ready.
+    missingRequired: vi.fn().mockResolvedValue({ requiredTotal: 2, missing: [{ id: 'd', template: { code: 'x', nameMn: 'Паспорт' }, status: 'NOT_STARTED' }] }),
+  } as unknown as CaseDocumentsService;
   const notifications = { dispatch: vi.fn().mockResolvedValue(1) } as unknown as NotificationsService;
 
   return { service: new ApplicationsService(prisma, cases, documents, notifications), prisma, cases, notifications };
@@ -142,5 +153,143 @@ describe('ApplicationsService.transition — the decision targets belong to thei
     await service.transition('app-1', { toStatus: ApplicationStatus.INTERVIEW_SCHEDULED }, ACTOR);
 
     expect(prisma.application.update).toHaveBeenCalled();
+  });
+});
+
+/**
+ * 1E-13 — the office sends the same materials to a second school beside the
+ * case's own submission. That one is tracked, but the case follows the primary.
+ */
+describe('ApplicationsService — parallel applications (1E-13)', () => {
+  const GKS_CASE = {
+    serviceType: ServiceType.GKS_SCHOLARSHIP,
+    universityId: 'snu',
+    universityChoices: [
+      { universityId: 'snu', track: 'SCHOLARSHIP', programId: null },
+      { universityId: 'ku', track: 'SCHOLARSHIP', programId: null },
+      { universityId: 'kyunghee', track: 'REGULAR', programId: 'prog-1' },
+    ],
+    applications: [{ universityId: 'snu' }],
+  };
+
+  it('opens one on the GKS case`s ordinary-brokerage school, carrying the choice`s programme', async () => {
+    const { service, prisma } = harness({ caseRow: GKS_CASE });
+
+    await service.createParallel('case-1', { universityId: 'kyunghee' });
+
+    expect(prisma.application.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ isPrimary: false, universityId: 'kyunghee', programId: 'prog-1' }) }),
+    );
+  });
+
+  it.each([ServiceType.LANGUAGE_PREP, ServiceType.BACHELOR])(
+    'opens one on any further school of a %s case — the office applies to several at once',
+    async (serviceType) => {
+      const { service, prisma } = harness({
+        caseRow: {
+          serviceType,
+          universityId: 'a',
+          universityChoices: [
+            { universityId: 'a', track: 'REGULAR', programId: null },
+            { universityId: 'b', track: 'REGULAR', programId: null },
+            { universityId: 'c', track: 'REGULAR', programId: null },
+          ],
+          applications: [{ universityId: 'a' }],
+        },
+      });
+
+      await service.createParallel('case-1', { universityId: 'b' });
+      await service.createParallel('case-1', { universityId: 'c' });
+      await expect(service.createParallel('case-1', { universityId: 'a' })).rejects.toThrow(/бусад сургууль/);
+
+      expect(prisma.application.create).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('refuses a scholarship school — those are all the one NIIED submission', async () => {
+    const { service, prisma } = harness({ caseRow: GKS_CASE });
+
+    await expect(service.createParallel('case-1', { universityId: 'ku' })).rejects.toThrow(/энгийн зуучлалын/);
+    expect(prisma.application.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses a school the case never chose', async () => {
+    const { service } = harness({ caseRow: GKS_CASE });
+
+    await expect(service.createParallel('case-1', { universityId: 'yonsei' })).rejects.toThrow(/сонгосон/);
+  });
+
+  it('refuses a second application to the same school', async () => {
+    const { service } = harness({ caseRow: GKS_CASE, clash: true });
+
+    await expect(service.createParallel('case-1', { universityId: 'kyunghee' })).rejects.toThrow(/аль хэдийн/);
+  });
+
+  it('can be marked ready while the shared checklist is still open — the gate guards the primary only', async () => {
+    const { service, prisma } = harness({ isPrimary: false, status: ApplicationStatus.PREPARING });
+
+    await service.transition('app-1', { toStatus: ApplicationStatus.READY }, ACTOR);
+
+    expect(prisma.application.update).toHaveBeenCalled();
+  });
+
+  it('still gates the primary on the checklist', async () => {
+    const { service } = harness({ status: ApplicationStatus.PREPARING });
+
+    await expect(service.transition('app-1', { toStatus: ApplicationStatus.READY }, ACTOR)).rejects.toThrow(/материал/);
+  });
+
+  it('is submitted without moving the case or closing out its documents', async () => {
+    const { service, cases, prisma } = harness({ isPrimary: false, status: ApplicationStatus.READY });
+
+    await service.transition('app-1', { toStatus: ApplicationStatus.SUBMITTED }, ACTOR);
+
+    expect(cases.applyDomainTransition).not.toHaveBeenCalled();
+    expect(prisma.caseDocument.findMany).not.toHaveBeenCalled();
+  });
+
+  it('records its answer and tells the client, but leaves the case where the primary put it', async () => {
+    const { service, cases, notifications, prisma } = harness({
+      isPrimary: false,
+      serviceType: ServiceType.GKS_SCHOLARSHIP,
+      status: ApplicationStatus.UNDER_REVIEW,
+    });
+
+    await service.recordResult('app-1', { decision: ApplicationDecision.PASSED }, ACTOR);
+
+    expect(cases.applyDomainTransition).not.toHaveBeenCalled();
+    expect(notifications.dispatch).toHaveBeenCalled();
+    // A GKS case's fallback school is ordinary brokerage: one round, concluded.
+    expect(prisma.application.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: ApplicationStatus.ACCEPTED }) }),
+    );
+  });
+
+  it('decides in one round even on a GKS case', async () => {
+    const { service } = harness({
+      isPrimary: false,
+      serviceType: ServiceType.GKS_SCHOLARSHIP,
+      status: ApplicationStatus.UNDER_REVIEW,
+      results: { 1: { round: 1, decision: ApplicationDecision.PASSED }, 2: null },
+    });
+
+    await expect(
+      service.recordResult('app-1', { decision: ApplicationDecision.PASSED, round: 2 }, ACTOR),
+    ).rejects.toThrow(/2-р шатны/);
+  });
+
+  it('may be removed before it is sent, never after', async () => {
+    const draft = harness({ isPrimary: false, status: ApplicationStatus.PREPARING });
+    await draft.service.removeParallel('app-1');
+    expect(draft.prisma.application.delete).toHaveBeenCalled();
+
+    const sent = harness({ isPrimary: false, status: ApplicationStatus.SUBMITTED });
+    await expect(sent.service.removeParallel('app-1')).rejects.toThrow(/илгээсэн/);
+  });
+
+  it('never removes the primary', async () => {
+    const { service } = harness({ status: ApplicationStatus.PREPARING });
+
+    await expect(service.removeParallel('app-1')).rejects.toThrow(/Үндсэн/);
   });
 });
