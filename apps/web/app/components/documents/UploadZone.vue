@@ -18,8 +18,21 @@ const emit = defineEmits<{ select: [files: File[]] }>();
 const input = ref<HTMLInputElement>();
 const dragging = ref(false);
 
-const accept = computed(() => props.acceptedFileTypes.map((type) => `.${type}`).join(','));
-const hint = computed(() => `${props.acceptedFileTypes.join(', ').toUpperCase()} · 20MB хүртэл`);
+/**
+ * A template that takes PDF takes a phone photo too — the API turns the photos
+ * of one upload into one PDF (1D-32) — so the picker offers them, and the
+ * phone's camera with them.
+ */
+const PHOTO_TYPES = ['jpg', 'jpeg', 'png', 'webp'];
+const convertsPhotos = computed(() => props.acceptedFileTypes.includes('pdf'));
+const accept = computed(() =>
+  [...new Set([...props.acceptedFileTypes, ...(convertsPhotos.value ? PHOTO_TYPES : [])])].map((type) => `.${type}`).join(','),
+);
+const hint = computed(() => {
+  const types = props.acceptedFileTypes.join(', ').toUpperCase();
+  const photos = convertsPhotos.value && !props.acceptedFileTypes.includes('jpg') ? ' · зураг автоматаар PDF болно' : '';
+  return `${types}${photos} · 20MB хүртэл`;
+});
 
 function pick(list: FileList | null) {
   const files = Array.from(list ?? []);

@@ -257,7 +257,8 @@ export class DocumentActionsController {
   }
 
   @Delete('document-files/:id')
-  @ApiOperation({ summary: 'Withdraw an uploaded version (soft delete, §9)' })
+  @Roles(...DOC_STAFF_ROLES)
+  @ApiOperation({ summary: 'Withdraw an uploaded version — staff only (soft delete, §9, 1D-31)' })
   removeFile(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.files.remove(id, user);
   }

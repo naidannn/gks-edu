@@ -99,6 +99,10 @@ function onSend(documentId: string, payload: { files: File[]; note: string }) {
     if (payload.note) await api.post(`/case-documents/${documentId}/notes`, { body: payload.note });
   });
 }
+/** 1D-31 — staff withdrawing one version; a soft delete, the bytes stay (§9). */
+function onRemoveFile(fileId: string) {
+  return act(() => api.delete(`/document-files/${fileId}`));
+}
 async function openFile(fileId: string) {
   const signed = await api.get<SignedFile>(`/document-files/${fileId}/url`);
   window.open(`${config.public.apiBase}/files/${signed.token}`, '_blank', 'noopener');
@@ -238,6 +242,7 @@ const hasVisaStage = computed(() => props.workspaceCase.documents.visa.requiredT
           @receive="(note) => onReceive(document.id, note)"
           @send="(payload) => onSend(document.id, payload)"
           @open="openFile"
+          @remove="onRemoveFile"
         />
       </li>
     </ul>

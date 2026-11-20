@@ -40,6 +40,7 @@ const blankTemplate = () => ({
   needsNotary: false,
   needsApostille: false,
   needsPhysicalOriginal: false,
+  acceptedFileTypes: ['pdf'] as string[],
   tipsMn: '',
 });
 const draft = reactive(blankTemplate());
@@ -97,6 +98,13 @@ function toggle<T>(list: T[], value: T) {
   else list.splice(index, 1);
 }
 
+/**
+ * 1D-32 — what a template takes. PDF alone is the rule: a photo sent for it is
+ * turned into a PDF on upload. Ticking JPG/PNG keeps pictures as pictures, for
+ * the one paper a school wants as an image file (the 3×4 photo).
+ */
+const FILE_TYPE_OPTIONS = [['pdf', 'PDF'], ['jpg', 'JPG'], ['png', 'PNG']] as const;
+
 async function createTemplate() {
   saving.value = true;
   error.value = null;
@@ -124,9 +132,9 @@ async function saveTemplate() {
   if (!selected.value) return;
   saving.value = true;
   try {
-    const { id, code, nameMn, descriptionMn, sourceHint, issuerHint, validityDays, needsTranslation, needsNotary, needsApostille, needsPhysicalOriginal, tipsMn, isActive } = selected.value;
+    const { id, code, nameMn, descriptionMn, sourceHint, issuerHint, validityDays, needsTranslation, needsNotary, needsApostille, needsPhysicalOriginal, acceptedFileTypes, tipsMn, isActive } = selected.value;
     await api.patch(`/document-templates/${id}`, {
-      code, nameMn, descriptionMn, sourceHint, issuerHint, validityDays, needsTranslation, needsNotary, needsApostille, needsPhysicalOriginal, tipsMn, isActive,
+      code, nameMn, descriptionMn, sourceHint, issuerHint, validityDays, needsTranslation, needsNotary, needsApostille, needsPhysicalOriginal, acceptedFileTypes, tipsMn, isActive,
     });
     await load();
   } catch (e) {
@@ -210,6 +218,17 @@ useHead({ title: 'Материалын загвар · CRM' });
         <DsCheckbox v-model="draft.needsApostille" label="Апостиль" />
         <DsCheckbox v-model="draft.needsPhysicalOriginal" label="Эх хувиар авчрах" />
       </div>
+      <div class="gks-tpl__flags">
+        <span class="gks-tpl__flags-label">Файлын төрөл</span>
+        <DsCheckbox
+          v-for="[type, label] in FILE_TYPE_OPTIONS"
+          :key="type"
+          :label="label"
+          :model-value="draft.acceptedFileTypes.includes(type)"
+          :disabled="draft.acceptedFileTypes.length === 1 && draft.acceptedFileTypes.includes(type)"
+          @update:model-value="toggle(draft.acceptedFileTypes, type)"
+        />
+      </div>
       <DsButton variant="accent" :loading="saving" :disabled="!draft.code || !draft.nameMn" @click="createTemplate">Үүсгэх</DsButton>
     </DsCard>
 
@@ -250,6 +269,20 @@ useHead({ title: 'Материалын загвар · CRM' });
             <DsCheckbox v-model="selected.needsPhysicalOriginal" label="Эх хувиар авчрах" />
             <DsCheckbox v-model="selected.isActive" label="Идэвхтэй" />
           </div>
+          <div class="gks-tpl__flags">
+            <span class="gks-tpl__flags-label">Файлын төрөл</span>
+            <DsCheckbox
+              v-for="[type, label] in FILE_TYPE_OPTIONS"
+              :key="type"
+              :label="label"
+              :model-value="selected.acceptedFileTypes.includes(type)"
+              :disabled="selected.acceptedFileTypes.length === 1 && selected.acceptedFileTypes.includes(type)"
+              @update:model-value="toggle(selected.acceptedFileTypes, type)"
+            />
+          </div>
+          <p v-if="!selected.acceptedFileTypes.includes('jpg') && selected.acceptedFileTypes.includes('pdf')" class="gks-tpl__hint">
+            Үйлчлүүлэгчийн илгээсэн зураг (JPG, PNG) автоматаар нэг PDF болж хадгалагдана.
+          </p>
         </DsCard>
 
         <DsCard title="Дүрмүүд" eyebrow="Хэн энэ материалыг бүрдүүлэх вэ">
@@ -327,6 +360,8 @@ useHead({ title: 'Материалын загвар · CRM' });
 .gks-queue-item.gks-tpl__off { opacity: .55; }
 .gks-tpl__detail { display: flex; flex-direction: column; gap: var(--sp-4); }
 .gks-tpl__flags { display: flex; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-3); }
+.gks-tpl__flags-label { font-size: var(--fs-caption); font-weight: var(--fw-medium); color: var(--text-muted); align-self: center; }
+.gks-tpl__hint { margin-top: var(--sp-2); font-size: var(--fs-caption); color: var(--text-subtle); }
 .gks-tpl__rules { display: flex; flex-direction: column; gap: var(--sp-2); }
 .gks-tpl__rule { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-3); border: var(--border-hair) solid var(--line-hairline); border-radius: var(--radius-2); }
 .gks-tpl__rule--off { opacity: .5; }

@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { describe, expect, it, vi } from 'vitest';
 import { DocumentStatus, Role } from '../../prisma/client.js';
 import type { AuthenticatedUser } from '../../common/types/authenticated-user.js';
@@ -10,8 +11,10 @@ const CLIENT = { id: 'student-1', role: Role.USER } as unknown as AuthenticatedU
 
 /** A real PDF header — `assertAcceptable` sniffs the bytes, not the filename. */
 const PDF = Buffer.from('255044462d312e340a25e2e3cfd30a', 'hex');
-/** A real PNG header, for a template that only accepts PDFs. */
+/** A real PNG header — a type the permissive template takes as it is. */
 const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+/** A GIF header: an image, but not one a PDF-only template converts. */
+const GIF = Buffer.from('GIF89a\x01\x00\x01\x00\x00\x00\x00', 'latin1');
 
 function file(name: string, buffer: Buffer): Express.Multer.File {
   return { originalname: name, buffer, size: buffer.length, mimetype: 'application/octet-stream' } as Express.Multer.File;
@@ -31,6 +34,9 @@ function harness(options: { acceptedFileTypes?: string[]; maxVersion?: number | 
     documentFile: {
       findFirst: vi.fn().mockResolvedValue(options.maxVersion === undefined ? null : { version: options.maxVersion }),
       create: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => data),
+      findUnique: vi.fn(),
+      count: vi.fn(),
+      update: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => data),
     },
     $transaction: vi.fn().mockImplementation((writes: unknown[]) => Promise.resolve(writes)),
   } as unknown as PrismaService;
@@ -53,7 +59,7 @@ describe('DocumentFilesService.upload — every buffer is judged before any is s
   it('stores nothing when a later file in the batch is unacceptable', async () => {
     const { service, storage, documents } = harness({ acceptedFileTypes: ['pdf'] });
 
-    await expect(service.upload('doc-1', [file('a.pdf', PDF), file('b.png', PNG)], CLIENT)).rejects.toThrow(/зөвхөн pdf/);
+    await expect(service.upload('doc-1', [file('a.pdf', PDF), file('b.gif', GIF)], CLIENT)).rejects.toThrow(/зөвхөн pdf/);
 
     expect(storage.upload).not.toHaveBeenCalled();
     expect(documents.applyStatus).not.toHaveBeenCalled();
@@ -62,7 +68,7 @@ describe('DocumentFilesService.upload — every buffer is judged before any is s
   it('enforces the template`s own accepted list, judged on the real bytes', async () => {
     const { service } = harness({ acceptedFileTypes: ['pdf'] });
 
-    await expect(service.upload('doc-1', [file('scan.pdf', PNG)], CLIENT)).rejects.toThrow(/зөвхөн pdf/);
+    await expect(service.upload('doc-1', [file('scan.pdf', GIF)], CLIENT)).rejects.toThrow(/зөвхөн pdf/);
   });
 
   it('accepts a type the template allows', async () => {
@@ -143,5 +149,109 @@ describe('DocumentFilesService.upload — a scan of a paper just handed in is no
       expect.objectContaining({ data: expect.objectContaining({ isFinal: true }) }),
     );
     expect(documents.applyStatus).not.toHaveBeenCalled();
+  });
+});
+
+/** A real photo, so the conversion runs on bytes `sharp` can decode. */
+function photo(format: 'jpeg' | 'png', width = 300, height = 200): Promise<Buffer> {
+  return sharp({ create: { width, height, channels: 3, background: '#d0d8e0' } })[format]().toBuffer();
+}
+
+function stored(prisma: PrismaService) {
+  const calls = (prisma.documentFile.create as unknown as ReturnType<typeof vi.fn>).mock.calls as [
+    { data: { originalName: string; mimeType: string; sizeBytes: number } },
+  ][];
+  return calls.map((call) => call[0].data);
+}
+
+/**
+ * 1D-32 — every material is kept as a PDF, and most clients send a phone
+ * photo. Refusing it meant a client with no scanner app never uploaded at all.
+ */
+describe('DocumentFilesService.upload — photos for a PDF-only template become one PDF (1D-32)', () => {
+  it('turns every photo of an upload into one PDF, beside the PDFs sent as they are', async () => {
+    const { service, prisma, storage } = harness({ acceptedFileTypes: ['pdf'] });
+
+    await service.upload(
+      'doc-1',
+      [file('IMG_0001.jpg', await photo('jpeg')), file('a.pdf', PDF), file('IMG_0002.PNG', await photo('png'))],
+      CLIENT,
+    );
+
+    // The two photos are one version, at the place of the first.
+    expect(stored(prisma).map((row) => [row.originalName, row.mimeType])).toEqual([
+      ['IMG_0001.pdf', 'application/pdf'],
+      ['a.pdf', 'application/pdf'],
+    ]);
+    const uploads = (storage.upload as unknown as ReturnType<typeof vi.fn>).mock.calls as [{ buffer: Buffer }][];
+    const merged = uploads[0]![0].buffer;
+    expect(merged.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(merged.toString('latin1').match(/\/Type \/Page\b/g)).toHaveLength(2);
+    expect(stored(prisma)[0]!.sizeBytes).toBe(merged.byteLength);
+  });
+
+  it('refuses a photo it cannot decode before anything is stored', async () => {
+    const { service, storage } = harness({ acceptedFileTypes: ['pdf'] });
+
+    await expect(service.upload('doc-1', [file('a.pdf', PDF), file('broken.png', PNG)], CLIENT)).rejects.toThrow(
+      /PDF болгож чадсангүй/,
+    );
+    expect(storage.upload).not.toHaveBeenCalled();
+  });
+
+  it('keeps the picture as it is when the template still takes images', async () => {
+    const { service, prisma } = harness({ acceptedFileTypes: ['pdf', 'jpg'] });
+
+    await service.upload('doc-1', [file('photo-3x4.jpg', await photo('jpeg'))], CLIENT);
+
+    expect(stored(prisma).map((row) => [row.originalName, row.mimeType])).toEqual([['photo-3x4.jpg', 'image/jpeg']]);
+  });
+});
+
+/**
+ * 1D-31 — only staff delete a file (the route carries the role). The last file
+ * of a document already handed in is withdrawn through RETURN, which tells the
+ * client why; deleting it here would leave the row with nothing behind it.
+ */
+describe('DocumentFilesService.remove — the last file of a handed-in document goes through RETURN (1D-31)', () => {
+  const STAFF = { id: 'staff-1', role: Role.DOC_OFFICER } as unknown as AuthenticatedUser;
+
+  function withFile(prisma: PrismaService, status: DocumentStatus, others: number) {
+    (prisma.documentFile.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'file-1',
+      caseDocumentId: 'doc-1',
+      deletedAt: null,
+      caseDocument: { caseId: 'case-1', status },
+    });
+    (prisma.documentFile.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(others);
+  }
+
+  it('refuses the only file of a submitted document', async () => {
+    const { service, prisma } = harness();
+    withFile(prisma, DocumentStatus.SUBMITTED, 0);
+
+    await expect(service.remove('file-1', STAFF)).rejects.toThrow(/Хасаад дахин авах/);
+    expect(prisma.documentFile.update).not.toHaveBeenCalled();
+  });
+
+  it('soft-deletes one of several files of an accepted document', async () => {
+    const { service, prisma } = harness();
+    withFile(prisma, DocumentStatus.ACCEPTED, 1);
+
+    await service.remove('file-1', STAFF);
+
+    expect(prisma.documentFile.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'file-1' }, data: expect.objectContaining({ deletedAt: expect.any(Date) }) }),
+    );
+  });
+
+  it('lets the last file go while the document is still waiting for a submission', async () => {
+    const { service, prisma } = harness();
+    withFile(prisma, DocumentStatus.RESUBMIT_REQUIRED, 0);
+
+    await service.remove('file-1', STAFF);
+
+    expect(prisma.documentFile.count).not.toHaveBeenCalled();
+    expect(prisma.documentFile.update).toHaveBeenCalled();
   });
 });

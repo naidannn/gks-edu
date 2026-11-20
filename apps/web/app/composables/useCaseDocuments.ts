@@ -87,11 +87,6 @@ export function useCaseDocuments(caseId: Ref<string> | string, options: CaseDocu
     await load();
   }
 
-  async function removeFile(fileId: string) {
-    await api.delete(`/document-files/${fileId}`);
-    await load();
-  }
-
   /** Mints a 5-minute signed token and returns the URL that serves the bytes (§9). */
   async function fileUrl(fileId: string): Promise<string> {
     const signed = await api.get<SignedFile>(`/document-files/${fileId}/url`);
@@ -132,7 +127,6 @@ export function useCaseDocuments(caseId: Ref<string> | string, options: CaseDocu
     transition,
     review,
     addNote,
-    removeFile,
     fileUrl,
     openFile,
     printChecklist,

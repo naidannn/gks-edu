@@ -1732,7 +1732,8 @@ model DocumentTemplate {
   /// "Эх хувиар авчрах" — cannot be closed out online (1D-11).
   needsPhysicalOriginal Boolean @default(false)
 
-  acceptedFileTypes String[] @default(["pdf", "jpg", "png"])
+  /// A photo sent for a PDF-only template is converted to one PDF on upload (1D-32).
+  acceptedFileTypes String[] @default(["pdf"])
   sampleFilePath    String?
   tipsMn            String?
   isActive          Boolean  @default(true)

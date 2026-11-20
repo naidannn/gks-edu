@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
+
+/** What a template may ask for; a photo sent for a PDF-only template becomes a PDF (1D-32). */
+export const DOCUMENT_FILE_TYPES = ['pdf', 'jpg', 'png'] as const;
 
 export class CreateDocumentTemplateDto {
   @ApiProperty({ example: 'PASSPORT', description: 'Stable machine code — SCREAMING_SNAKE' })
@@ -46,9 +49,10 @@ export class CreateDocumentTemplateDto {
   @IsOptional()
   needsPhysicalOriginal?: boolean;
 
-  @ApiPropertyOptional({ type: [String], example: ['pdf', 'jpg', 'png'] })
+  @ApiPropertyOptional({ type: [String], enum: DOCUMENT_FILE_TYPES, example: ['pdf'] })
   @IsArray()
-  @IsString({ each: true })
+  @ArrayNotEmpty()
+  @IsIn(DOCUMENT_FILE_TYPES, { each: true })
   @IsOptional()
   acceptedFileTypes?: string[];
 

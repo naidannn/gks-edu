@@ -21,6 +21,8 @@ const emit = defineEmits<{
   /** Staff registering the paper handed over the office desk (1D-24). */
   receive: [note: string];
   open: [fileId: string];
+  /** Staff withdrawing one uploaded version (1D-31) — clients upload the next one instead. */
+  remove: [fileId: string];
 }>();
 
 /** Notes the client should read first — the "why" behind a returned document. */
@@ -88,6 +90,19 @@ watch(
 );
 function toggleRemove(fileId: string, on: boolean) {
   removeIds.value = on ? [...new Set([...removeIds.value, fileId])] : removeIds.value.filter((id) => id !== fileId);
+}
+
+/**
+ * 1D-31 — only staff delete a file. The last file of a document already handed
+ * in goes through "Хасаад дахин авах" instead, which tells the client why; the
+ * API refuses it here, so the button is not offered.
+ */
+const canDeleteFile = computed(
+  () => props.mode === 'staff' && (AWAITING_SUBMISSION.includes(props.document.status) || props.document.files.length > 1),
+);
+function deleteFile(file: { id: string; originalName: string }) {
+  if (!globalThis.confirm(`"${file.originalName}" файлыг устгах уу?`)) return;
+  emit('remove', file.id);
 }
 
 /**
@@ -249,6 +264,14 @@ function formatSize(bytes: number): string {
             label="Буцаахад хасна"
             :model-value="removeIds.includes(file.id)"
             @update:model-value="(on: boolean) => toggleRemove(file.id, on)"
+          />
+          <DsIconButton
+            v-if="canDeleteFile"
+            icon="trash-2"
+            label="Файл устгах"
+            size="sm"
+            :disabled="busy"
+            @click="deleteFile(file)"
           />
         </li>
       </ul>

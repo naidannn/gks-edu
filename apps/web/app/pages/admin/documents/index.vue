@@ -121,6 +121,10 @@ function onSend(payload: { files: File[]; note: string }) {
     if (payload.note) await api.post(`/case-documents/${selectedId.value}/notes`, { body: payload.note });
   });
 }
+/** 1D-31 — staff withdrawing one version; a soft delete, the bytes stay (§9). */
+function onRemoveFile(fileId: string) {
+  return act(() => api.delete(`/document-files/${fileId}`));
+}
 async function openFile(fileId: string) {
   const signed = await api.get<SignedFile>(`/document-files/${fileId}/url`);
   window.open(`${config.public.apiBase}/files/${signed.token}`, '_blank', 'noopener');
@@ -214,6 +218,7 @@ useHead({ title: 'Материал шалгах · CRM' });
           @receive="onReceive"
           @send="onSend"
           @open="openFile"
+          @remove="onRemoveFile"
         />
         <DsCard v-else padding="var(--sp-8)"><p class="gks-empty">Зүүн талаас материал сонгоно уу.</p></DsCard>
 
