@@ -27,6 +27,7 @@
     "ranking:import": "pnpm --filter @gks/api ranking:import",
     "accreditation:import": "pnpm --filter @gks/api accreditation:import",
     "language-prep:import": "pnpm --filter @gks/api language-prep:import",
+    "visa-requirements:import": "pnpm --filter @gks/api visa-requirements:import",
     "intakes:import": "pnpm --filter @gks/api intakes:import",
     "programs:import": "pnpm --filter @gks/api programs:import",
     "universities:import": "pnpm --filter @gks/api universities:import",

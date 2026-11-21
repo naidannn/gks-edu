@@ -873,6 +873,7 @@ export const GUARANTOR_TYPE_LABELS: Record<GuarantorType, string> = {
   EMPLOYEE: 'Ажилтан',
   COMPANY_DIRECTOR: 'Компанийн захирал',
   SELF_EMPLOYED: 'Хувиараа бизнес эрхлэгч',
+  NO_SOCIAL_INSURANCE: 'Нийгмийн даатгал төлдөггүй',
 };
 
 export const GUARANTOR_RELATION_LABELS: Record<GuarantorRelation, string> = {

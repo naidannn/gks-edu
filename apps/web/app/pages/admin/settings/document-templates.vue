@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {
+  AccreditationGrade,
   DocStage,
   DocumentTemplate,
   EducationLevel,
@@ -52,6 +53,7 @@ const blankRule = () => ({
   educationLevels: [] as EducationLevel[],
   guarantorTypes: [] as GuarantorType[],
   guarantorRelations: [] as GuarantorRelation[],
+  accreditationGrades: [] as AccreditationGrade[],
   universityId: '',
   conditionNote: '',
   sortOrder: 100,
@@ -90,6 +92,7 @@ const SERVICE_OPTIONS = Object.entries(SERVICE_LABELS) as [ServiceType, string][
 const EDUCATION_OPTIONS = Object.entries(EDUCATION_LEVEL_LABELS) as [EducationLevel, string][];
 const GUARANTOR_OPTIONS = Object.entries(GUARANTOR_TYPE_LABELS) as [GuarantorType, string][];
 const RELATION_OPTIONS = Object.entries(GUARANTOR_RELATION_LABELS) as [GuarantorRelation, string][];
+const ACCREDITATION_OPTIONS = Object.entries(ACCREDITATION_LABELS) as [AccreditationGrade, string][];
 const UNIVERSITY_OPTIONS = computed(() => toUniversityOptions(universities.value, 'Бүх сургууль'));
 
 function toggle<T>(list: T[], value: T) {
@@ -157,6 +160,7 @@ async function addRule() {
       educationLevels: ruleDraft.educationLevels,
       guarantorTypes: ruleDraft.guarantorTypes,
       guarantorRelations: ruleDraft.guarantorRelations,
+      accreditationGrades: ruleDraft.accreditationGrades,
       universityId: ruleDraft.universityId || undefined,
       conditionNote: ruleDraft.conditionNote || undefined,
       sortOrder: Number(ruleDraft.sortOrder),
@@ -182,6 +186,7 @@ function describe(rule: RequirementRule): string {
   if (rule.educationLevels.length) parts.push(rule.educationLevels.map((e) => EDUCATION_LEVEL_LABELS[e]).join(', '));
   if (rule.guarantorTypes.length) parts.push(rule.guarantorTypes.map((g) => GUARANTOR_TYPE_LABELS[g]).join(', '));
   if (rule.guarantorRelations.length) parts.push(rule.guarantorRelations.map((r) => GUARANTOR_RELATION_LABELS[r]).join(', '));
+  if (rule.accreditationGrades.length) parts.push(rule.accreditationGrades.map((a) => ACCREDITATION_LABELS[a]).join(', '));
   if (rule.university) parts.push(universityName(rule.university));
   return parts.length ? parts.join(' · ') : 'Бүх тохиолдолд';
 }
@@ -342,6 +347,12 @@ useHead({ title: 'Материалын загвар · CRM' });
                 <p class="gks-tpl__dim-label">Батлан даагчийн хамаарал <span>хоосон = бүгд</span></p>
                 <div class="gks-chips">
                   <DsTag v-for="[value, label] in RELATION_OPTIONS" :key="value" clickable :selected="ruleDraft.guarantorRelations.includes(value)" @click="toggle(ruleDraft.guarantorRelations, value)">{{ label }}</DsTag>
+                </div>
+              </div>
+              <div>
+                <p class="gks-tpl__dim-label">Сургуулийн магадлан итгэмжлэл <span>хоосон = бүгд</span></p>
+                <div class="gks-chips">
+                  <DsTag v-for="[value, label] in ACCREDITATION_OPTIONS" :key="value" clickable :selected="ruleDraft.accreditationGrades.includes(value)" @click="toggle(ruleDraft.accreditationGrades, value)">{{ label }}</DsTag>
                 </div>
               </div>
             </div>

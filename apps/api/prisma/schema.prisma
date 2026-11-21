@@ -1691,6 +1691,9 @@ enum GuarantorType {
   EMPLOYEE
   COMPANY_DIRECTOR
   SELF_EMPLOYED
+  /// Parents with no social-insurance record: the visa proves income from
+  /// bank statements instead (1F-12).
+  NO_SOCIAL_INSURANCE
 }
 
 /// Who the guarantor is to the applicant. Anything but a parent adds the
@@ -1774,6 +1777,9 @@ model RequirementRule {
   educationLevels    EducationLevel[]    @default([])
   guarantorTypes     GuarantorType[]     @default([])
   guarantorRelations GuarantorRelation[] @default([])
+  /// The school's 교육국제화역량 tier. A non-accredited (`NONE`) school's
+  /// students need a guarantor for the visa; an accredited one's do not (1F-12).
+  accreditationGrades AccreditationGrade[] @default([])
   /// Null = every university; set for a school's extra requirement (1D-18).
   universityId       String?             @db.Uuid
   university         University?         @relation(fields: [universityId], references: [id], onDelete: Cascade)

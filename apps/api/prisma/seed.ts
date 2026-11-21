@@ -22,9 +22,9 @@ import {
   ServiceType,
 } from '../src/generated/prisma/client.js';
 import { buildCaseFlowDefinitions } from '../src/modules/cases/case-flow.js';
+import { type RuleSeed, type TemplateSeed, VISA_DOCUMENT_TEMPLATES, visaRules } from './data/visa-requirements.js';
 import { CONTRACT_BODY_TEMPLATE } from '../src/modules/contracts/contract-body.template.js';
 import { NOTIFICATION_TEMPLATES } from '../src/modules/notifications/notification-templates.data.js';
-import { STUDY_FIELD_TAXONOMY } from '../src/modules/programs/study-fields.data.js';
 
 loadEnv({ path: ['.env', '../../.env'], quiet: true });
 
@@ -101,13 +101,11 @@ async function seedContractTemplates(): Promise<void> {
 // 1D-05 — the real requirement base, transcribed from
 // `docs/Burduuleh_materialiin_jagsaalt_negdsen.docx`: the two education tracks
 // (ЕБС / их сургууль төгссөн) × three guarantor occupations, plus the kinship
-// reference. 1F-03 adds the visa-stage rules on the same engine.
+// reference. The visa-stage base lives in `data/visa-requirements.ts` (1F-12).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const E_MONGOLIA = 'E-Mongolia-аас';
 const UNI_LEVELS: EducationLevel[] = [EducationLevel.BACHELOR, EducationLevel.MASTER, EducationLevel.PHD];
-
-type TemplateSeed = Omit<Prisma.DocumentTemplateCreateInput, 'rules' | 'caseDocuments'>;
 
 const DOCUMENT_TEMPLATES: TemplateSeed[] = [
   // ── Identity, needed by everyone.
@@ -243,57 +241,7 @@ const DOCUMENT_TEMPLATES: TemplateSeed[] = [
     sourceHint: E_MONGOLIA,
     validityDays: 30,
   },
-
-  // ── Visa stage (1F-03).
-  {
-    code: 'VISA_FORM',
-    nameMn: 'Визний анкет',
-    descriptionMn: 'БНСУ-ын Элчин сайдын яамны маягтын дагуу бөглөнө.',
-    tipsMn: 'Анкетыг ажилтан хамт бөглөж, шалгаж өгнө.',
-  },
-  {
-    code: 'VISA_PHOTO',
-    nameMn: 'Цээж зураг (3.5 × 4.5 см)',
-    descriptionMn: 'Сүүлийн 6 сард авахуулсан, цагаан дэвсгэртэй.',
-    needsPhysicalOriginal: true,
-  },
-  {
-    code: 'ADMISSION_LETTER',
-    nameMn: 'Сургуулийн элсэлтийн батламж / урилга',
-    issuerHint: 'Элсэх сургууль',
-  },
-  {
-    code: 'TUITION_RECEIPT',
-    nameMn: 'Сургалтын төлбөр төлсөн баримт',
-    descriptionMn: 'Банкны шилжүүлгийн баримт, сургуулийн баталгаажуулалттай.',
-  },
-  {
-    code: 'BANK_BALANCE_CERT',
-    nameMn: 'Дансны үлдэгдлийн баталгаа (санхүүгийн нотлох баримт)',
-    descriptionMn: 'Шаардагдах дүн нь визний төрөл, сургуулиас хамаарна.',
-    issuerHint: 'Арилжааны банк',
-    validityDays: 30,
-  },
-  {
-    code: 'FAMILY_REF_EN',
-    nameMn: 'Гэр бүлийн лавлагаа (англи хэлээр)',
-    sourceHint: E_MONGOLIA,
-    validityDays: 30,
-  },
-  {
-    code: 'TB_TEST',
-    nameMn: 'Сүрьеэгийн шинжилгээний бичиг',
-    descriptionMn: 'БНСУ-ын Элчин сайдын яамнаас зөвшөөрсөн эмнэлгээс авна.',
-    needsPhysicalOriginal: true,
-  },
-  {
-    code: 'VISA_FEE_RECEIPT',
-    nameMn: 'Визний хураамжийн баримт',
-  },
 ];
-
-/** `[templateCode, rule]` — the rule's `templateId` is filled in after upsert. */
-type RuleSeed = [string, Omit<Prisma.RequirementRuleUncheckedCreateInput, 'templateId'>];
 
 function admissionRules(): RuleSeed[] {
   const rules: RuleSeed[] = [];
@@ -336,30 +284,9 @@ function admissionRules(): RuleSeed[] {
   return rules;
 }
 
-function visaRules(): RuleSeed[] {
-  const rules: RuleSeed[] = [];
-  let order = 0;
-  const add = (code: string, rule: Partial<Omit<Prisma.RequirementRuleUncheckedCreateInput, 'templateId'>> = {}) => {
-    rules.push([code, { stage: DocStage.VISA, necessity: Necessity.REQUIRED, sortOrder: (order += 10), ...rule }]);
-  };
-
-  add('VISA_FORM');
-  add('VISA_PHOTO');
-  add('PASSPORT');
-  add('ADMISSION_LETTER');
-  add('TUITION_RECEIPT');
-  add('BANK_BALANCE_CERT');
-  add('FAMILY_REF_EN');
-  // D-4 language training is the visa the tuberculosis certificate is asked for.
-  add('TB_TEST', { serviceTypes: [ServiceType.LANGUAGE_PREP] });
-  add('VISA_FEE_RECEIPT', { necessity: Necessity.CONDITIONAL, conditionNote: 'Виз мэдүүлсний дараа' });
-
-  return rules;
-}
-
 async function seedDocumentTemplates(): Promise<Map<string, string>> {
   const ids = new Map<string, string>();
-  for (const template of DOCUMENT_TEMPLATES) {
+  for (const template of [...DOCUMENT_TEMPLATES, ...VISA_DOCUMENT_TEMPLATES]) {
     // Update, so a wording fix in this file reaches an existing database — but
     // never touch `isActive`, which an admin may have deliberately turned off.
     const row = await prisma.documentTemplate.upsert({
@@ -379,8 +306,10 @@ async function seedRequirementRules(templateIds: Map<string, string>): Promise<v
   const seeded = [...admissionRules(), ...visaRules()];
   const codes = new Set(seeded.map(([code]) => code));
 
+  // Every universal visa rule goes, not only the seeded codes': the office's
+  // list replaced 1F-03's, and a rule for a code it dropped would linger.
   await prisma.requirementRule.deleteMany({
-    where: { universityId: null, template: { code: { in: [...codes] } } },
+    where: { universityId: null, OR: [{ template: { code: { in: [...codes] } } }, { stage: DocStage.VISA }] },
   });
 
   await prisma.requirementRule.createMany({

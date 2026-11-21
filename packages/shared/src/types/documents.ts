@@ -1,9 +1,10 @@
 import type { EducationLevel, ServiceType } from '../schemas/lead';
+import type { AccreditationGrade } from './university';
 
 /** Material requirement engine payloads (1D-01 … 1D-19). */
 
 export type DocStage = 'ADMISSION' | 'VISA';
-export type GuarantorType = 'NONE' | 'EMPLOYEE' | 'COMPANY_DIRECTOR' | 'SELF_EMPLOYED';
+export type GuarantorType = 'NONE' | 'EMPLOYEE' | 'COMPANY_DIRECTOR' | 'SELF_EMPLOYED' | 'NO_SOCIAL_INSURANCE';
 export type GuarantorRelation = 'PARENT' | 'SIBLING' | 'UNCLE_AUNT' | 'OTHER';
 export type Necessity = 'REQUIRED' | 'CONDITIONAL' | 'OPTIONAL';
 
@@ -90,6 +91,8 @@ export interface RequirementRule {
   educationLevels: EducationLevel[];
   guarantorTypes: GuarantorType[];
   guarantorRelations: GuarantorRelation[];
+  /** Empty = every school; `['NONE']` = only a non-accredited one's visa (1F-12). */
+  accreditationGrades: AccreditationGrade[];
   universityId: string | null;
   necessity: Necessity;
   conditionNote: string | null;

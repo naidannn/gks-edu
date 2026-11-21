@@ -1131,8 +1131,12 @@ snapshot-ууд нь харилцагчийн зөвшөөрсөн дүн бөг
 **`RequirementRule`** — дүрмийн **тулгах хэмжээсүүд**, доорх шийдэлт яг эдгээрээр шүүнэ:
 `stage` (`ADMISSION | VISA`, §6/§10), `serviceTypes`, `educationLevels`, `universityId`
 (`null` = бүх сургууль), `guarantorTypes` (`EMPLOYEE | COMPANY_DIRECTOR | SELF_EMPLOYED |
-NONE`), `guarantorRelations` (`PARENT | SIBLING | UNCLE_AUNT | OTHER` — батлан даагч эцэг эх
-биш үед төрөл садангийн лавлагаа нэмэгдэнэ, §6.1 III). Үр дүнг `necessity`
+NO_SOCIAL_INSURANCE | NONE`), `guarantorRelations` (`PARENT | SIBLING | UNCLE_AUNT | OTHER` —
+батлан даагч эцэг эх биш үед төрөл садангийн лавлагаа нэмэгдэнэ, §6.1 III),
+`accreditationGrades` (сургуулийн магадлан итгэмжлэл, §3.1.1). Визний жагсаалт (1F-12,
+`prisma/data/visa-requirements.ts`) хоёр хэсэгтэй: суурь материал хүн бүрт; батлан даагчийн
+материал зөвхөн магадлан итгэмжлэгдээгүй (`NONE`) сургуульд — итгэмжлэгдсэн сургуулийн
+оюутан хялбаршуулсан шалгалтаар ордог. Production-д `pnpm visa-requirements:import`. Үр дүнг `necessity`
 (`REQUIRED | CONDITIONAL | OPTIONAL`), `conditionNote` ("байгаа тохиолдолд") ба `sortOrder`
 тодорхойлно. **Массив талбар бүр `@default([])`** — шалтгааныг доор.
 

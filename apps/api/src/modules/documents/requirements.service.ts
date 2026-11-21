@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {
+  type AccreditationGrade,
   type CaseConditions,
   CaseStage,
   DocStage,
@@ -22,6 +23,8 @@ export interface ResolutionContext {
   guarantorType: GuarantorType;
   guarantorRelation: CaseConditions['guarantorRelation'];
   universityId: string | null;
+  /** The case's school's tier; null while no school is chosen (1F-12). */
+  accreditation: AccreditationGrade | null;
 }
 
 export interface ResolutionSummary {
@@ -67,7 +70,11 @@ export class RequirementsService {
   async resolveForCase(caseId: string, stage: DocStage, actorId: string | null = null): Promise<ResolutionSummary> {
     const gksCase = await this.prisma.case.findUnique({
       where: { id: caseId },
-      include: { conditions: true, user: { select: { client: { select: { educationLevel: true } } } } },
+      include: {
+        conditions: true,
+        university: { select: { accreditation: true } },
+        user: { select: { client: { select: { educationLevel: true } } } },
+      },
     });
     if (!gksCase) throw new NotFoundException(`Үйлчилгээ ${caseId} олдсонгүй`);
 
@@ -86,6 +93,7 @@ export class RequirementsService {
       guarantorType: gksCase.conditions?.guarantorType ?? GuarantorType.NONE,
       guarantorRelation: gksCase.conditions?.guarantorRelation ?? null,
       universityId: gksCase.universityId,
+      accreditation: gksCase.university?.accreditation ?? null,
     };
 
     const rules = await this.matchingRules(stage, context);
@@ -196,6 +204,11 @@ export function buildRuleWhere(context: ResolutionContext): Prisma.RequirementRu
     context.universityId === null
       ? { universityId: null }
       : { OR: [{ universityId: null }, { universityId: context.universityId }] },
+    // A guarantor-only visa rule names `[NONE]`; with no school chosen there is
+    // no tier to match, so only tier-agnostic rules apply (1F-12).
+    context.accreditation === null
+      ? { accreditationGrades: { isEmpty: true } }
+      : { OR: [{ accreditationGrades: { isEmpty: true } }, { accreditationGrades: { has: context.accreditation } }] },
   ];
 
   return { AND: clauses };

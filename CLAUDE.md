@@ -149,7 +149,9 @@ The grades are the Ministry's 2025 cycle (published 2026-02-12), matched 139 of 
 Korean name; three schools — Dongshin, Hosan, Catholic Kwandong — are on neither list, and
 `NONE` means exactly that, never "not checked". A school you add to the catalogue gets
 looked up on the current list before it goes public. The grade is the degree-programme one;
-the separate 어학연수과정 (language-course) list is not stored. The lists live in
+the separate 어학연수과정 (language-course) list is not stored. The tier also picks the
+visa checklist: a `NONE` school's students bring a guarantor's papers, an accredited
+school's do not (`RequirementRule.accreditationGrades`, 1F-12). The lists live in
 `apps/api/src/modules/universities/accreditation/korea-accreditation.ts` and only
 `pnpm accreditation:import` writes the column — it resets every school to `NONE` first, so a
 school dropped from the next cycle loses its grade instead of keeping a stale one
@@ -209,6 +211,7 @@ pnpm prisma:seed
 pnpm ranking:import   # THE South Korea rank → theKoreaRank (--dry to preview)
 pnpm accreditation:import   # 교육국제화역량 인증제 tier → University.accreditation (--dry)
 pnpm language-prep:import   # the office's language-prep research sheet → tuition, minimum enrolment, 2027 rounds (--dry)
+pnpm visa-requirements:import   # the office's visa checklist → universal VISA rules; the prod-safe alternative to seeding (--dry)
 pnpm typecheck && pnpm lint && pnpm test
 pnpm tasks            # roadmap progress
 ```

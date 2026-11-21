@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  AccreditationGrade,
   CaseStage,
   DocStage,
   DocumentStatus,
@@ -26,6 +27,7 @@ const HIGH_SCHOOL_LEAVER: ResolutionContext = {
   guarantorType: GuarantorType.EMPLOYEE,
   guarantorRelation: GuarantorRelation.PARENT,
   universityId: null,
+  accreditation: null,
 };
 
 /**
@@ -63,6 +65,19 @@ describe('buildRuleWhere (1D-04)', () => {
     const clauses = buildRuleWhere({ ...HIGH_SCHOOL_LEAVER, universityId: 'uni-1' })
       .AND as Prisma.RequirementRuleWhereInput[];
     expect(clauses).toContainEqual({ OR: [{ universityId: null }, { universityId: 'uni-1' }] });
+  });
+
+  it('keeps tier-specific rules away from a case with no school', () => {
+    const clauses = buildRuleWhere(HIGH_SCHOOL_LEAVER).AND as Prisma.RequirementRuleWhereInput[];
+    expect(clauses).toContainEqual({ accreditationGrades: { isEmpty: true } });
+  });
+
+  it("matches a non-accredited school's guarantor rules by its tier (1F-12)", () => {
+    const clauses = buildRuleWhere({ ...HIGH_SCHOOL_LEAVER, universityId: 'uni-1', accreditation: AccreditationGrade.NONE })
+      .AND as Prisma.RequirementRuleWhereInput[];
+    expect(clauses).toContainEqual({
+      OR: [{ accreditationGrades: { isEmpty: true } }, { accreditationGrades: { has: AccreditationGrade.NONE } }],
+    });
   });
 
   it('never lets a NONE guarantor pick up sponsor paperwork', () => {

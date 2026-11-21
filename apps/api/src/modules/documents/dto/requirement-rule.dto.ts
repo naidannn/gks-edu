@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
-import { DocStage, EducationLevel, GuarantorRelation, GuarantorType, Necessity, ServiceType } from '../../../prisma/client.js';
+import { AccreditationGrade, DocStage, EducationLevel, GuarantorRelation, GuarantorType, Necessity, ServiceType } from '../../../prisma/client.js';
 
 export class CreateRequirementRuleDto {
   @ApiProperty() @IsUUID() templateId!: string;
@@ -33,6 +33,16 @@ export class CreateRequirementRuleDto {
   @IsEnum(GuarantorRelation, { each: true })
   @IsOptional()
   guarantorRelations?: GuarantorRelation[];
+
+  @ApiPropertyOptional({
+    enum: AccreditationGrade,
+    isArray: true,
+    description: 'Сургуулийн магадлан итгэмжлэл; хоосон = бүх сургуульд (1F-12)',
+  })
+  @IsArray()
+  @IsEnum(AccreditationGrade, { each: true })
+  @IsOptional()
+  accreditationGrades?: AccreditationGrade[];
 
   @ApiPropertyOptional({ description: 'Хоосон = бүх сургуульд (1D-18)' })
   @IsUUID()
