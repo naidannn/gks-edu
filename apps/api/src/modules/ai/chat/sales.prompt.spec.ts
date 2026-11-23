@@ -28,30 +28,28 @@ describe('officeStatus', () => {
     expect(status).toContain('өнөөдөр 09:00-д нээгдэнэ');
   });
 
-  it('opens later on Saturday than on a weekday', () => {
-    expect(officeStatus(at('2026-10-10T02:00:00Z'))).toContain('өнөөдөр 11:00-д нээгдэнэ');
+  it('points at tomorrow once a weekday has closed', () => {
+    // Thursday 19:00 -> Friday 09:00.
+    expect(officeStatus(at('2026-10-08T11:00:00Z'))).toContain('маргааш 09:00-д');
   });
 
-  it('points at tomorrow once the day has closed', () => {
-    // Friday 19:00 -> Saturday 11:00.
-    expect(officeStatus(at('2026-10-09T11:00:00Z'))).toContain('маргааш 11:00-д');
-  });
-
-  it('skips the closed Sunday', () => {
-    // Saturday 19:00 -> Sunday is closed, so Monday 09:00.
-    expect(officeStatus(at('2026-10-10T11:00:00Z'))).toContain('Даваа гарагт 09:00-д');
+  it('skips the whole weekend — Saturday is a day off since 2026-11-23', () => {
+    // Friday 19:00 -> Monday 09:00.
+    expect(officeStatus(at('2026-10-09T11:00:00Z'))).toContain('Даваа гарагт 09:00-д');
+    // Saturday morning is closed all day, not "opens at 11:00".
+    expect(officeStatus(at('2026-10-10T02:00:00Z'))).toContain('Даваа гарагт 09:00-д');
     // And on Sunday itself, Monday is simply tomorrow.
     expect(officeStatus(at('2026-10-11T05:00:00Z'))).toContain('маргааш 09:00-д');
   });
 });
 
 describe('officeWeek', () => {
-  it('lists seven days with our own date and weekday, Sunday marked closed', () => {
+  it('lists seven days with our own date and weekday, the weekend marked closed', () => {
     // Saturday 16:12 in Ulaanbaatar — when thread 19ddc578 was booked for "маргааш (10-11)".
     const week = officeWeek(at('2026-10-10T08:12:00Z')).split('\n');
 
     expect(week).toHaveLength(7);
-    expect(week[0]).toBe('- Өнөөдөр — Бямба, 2026-10-10: 11:00–18:00');
+    expect(week[0]).toBe('- Өнөөдөр — Бямба, 2026-10-10: **хаалттай**');
     expect(week[1]).toBe('- Маргааш — Ням, 2026-10-11: **хаалттай**');
     expect(week[2]).toBe('- Даваа, 2026-10-12: 09:00–18:00');
   });
@@ -63,7 +61,8 @@ describe('officeWeek', () => {
 });
 
 describe('officeSlotProblem', () => {
-  const now = at('2026-10-10T08:12:00Z');
+  // Friday 16:12 in Ulaanbaatar.
+  const now = at('2026-10-09T08:12:00Z');
 
   it('accepts an open hour', () => {
     expect(officeSlotProblem('2026-10-12', '14:00', now)).toBeNull();
@@ -71,16 +70,18 @@ describe('officeSlotProblem', () => {
 
   it('accepts an open day with no hour — come any time while we are open', () => {
     expect(officeSlotProblem('2026-10-12', null, now)).toBeNull();
-    // Saturday 16:12: today still counts until 18:00, Sunday never does.
-    expect(officeSlotProblem('2026-10-10', null, now)).toBeNull();
+    // Friday 16:12: today still counts until 18:00; the weekend never does.
+    expect(officeSlotProblem('2026-10-09', null, now)).toBeNull();
+    expect(officeSlotProblem('2026-10-10', null, now)).toContain('хаалттай');
     expect(officeSlotProblem('2026-10-11', null, now)).toContain('хаалттай');
   });
 
   it.each([
     ['2026-10-11', '16:00', 'Ням гараг'],
-    ['2026-10-17', '10:00', '11:00–18:00'],
+    ['2026-10-17', '14:00', 'Бямба гараг'],
+    ['2026-10-12', '08:30', '09:00–18:00'],
     ['2026-10-12', '18:00', '09:00–18:00'],
-    ['2026-10-10', '15:00', 'өнгөрсөн'],
+    ['2026-10-09', '15:00', 'өнгөрсөн'],
     ['10-12', '14:00', 'буруу'],
   ])('refuses %s %s', (date, time, reason) => {
     expect(officeSlotProblem(date, time, now)).toContain(reason);
@@ -103,7 +104,8 @@ describe('salesPrompt', () => {
     const text = salesPrompt(AccessLevel.PUBLIC, at('2026-10-09T02:00:00Z'))!;
 
     expect(text).toContain('Eco International Tower, 17 давхар, 1707 тоот');
-    expect(text).toContain('Даваа–Баасан 09:00–18:00, Бямба 11:00–18:00');
+    expect(text).toContain('Даваа–Баасан 09:00–18:00, Бямба, Ням гарагт амарна');
+    expect(text).not.toContain('11:00');
     expect(text).toContain('нээлттэй');
   });
 

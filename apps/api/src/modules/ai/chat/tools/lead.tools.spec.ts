@@ -9,6 +9,7 @@ import {
   type ChatSession,
 } from '../../../../prisma/client.js';
 import type { PrismaService } from '../../../../prisma/prisma.service.js';
+import type { ConsultationAppointmentsService } from '../../../leads/consultation-appointments.service.js';
 import type { LeadsService } from '../../../leads/leads.service.js';
 import { LeadTools } from './lead.tools.js';
 import { ToolArgumentError, type AiTool, type ToolContext } from './tool.types.js';
@@ -43,10 +44,14 @@ function harness(options: { session?: Partial<ChatSession & { profile: unknown }
     createFromPublicForm: vi.fn().mockResolvedValue({ id: 'lead-1', merged: false }),
   } as unknown as LeadsService;
 
-  const provider = new LeadTools(prisma, leads);
+  const appointments = {
+    bookFromAssistant: vi.fn().mockResolvedValue({ id: 'appointment-1' }),
+  } as unknown as ConsultationAppointmentsService;
+
+  const provider = new LeadTools(prisma, leads, appointments);
   const [profileTool, requestTool] = provider.tools() as [AiTool, AiTool];
 
-  return { profileTool, requestTool, prisma, leads };
+  return { profileTool, requestTool, prisma, leads, appointments };
 }
 
 function context(overrides: Partial<ToolContext> = {}): ToolContext {
@@ -227,7 +232,7 @@ describe('create_consultation_request', () => {
     const saturday = context({ now: new Date('2026-10-10T08:12:00Z') });
 
     it('puts the time on the first line of the lead, with our weekday', async () => {
-      const { requestTool, leads } = harness();
+      const { requestTool, leads, appointments } = harness();
 
       const outcome = await requestTool.run(
         { phone: '99112233', summary: 'Бакалавр', visitDate: '2026-10-12', visitTime: '14:00', contactMode: 'OFFICE' },
@@ -237,11 +242,15 @@ describe('create_consultation_request', () => {
       const [dto] = vi.mocked(leads.createFromPublicForm).mock.calls[0]!;
       expect(dto.note).toMatch(/^Тохирсон цаг: 2026-10-12 \(Даваа\) 14:00, оффис дээр уулзах\./);
       expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирсон', гараг: 'Даваа' });
+      // 1B-30 — and onto the staff calendar as a row.
+      expect(appointments.bookFromAssistant).toHaveBeenCalledWith(
+        expect.objectContaining({ leadId: 'lead-1', date: '2026-10-12', time: '14:00', mode: 'OFFICE' }),
+      );
     });
 
     it('files the lead but flags a Sunday visit, and tells the model to offer another time', async () => {
       // Production, thread 19ddc578: "Маргааш (10-11) 09:00–18:00 ажиллана" on a Saturday.
-      const { requestTool, leads } = harness();
+      const { requestTool, leads, appointments } = harness();
 
       const outcome = await requestTool.run(
         { phone: '99112233', summary: 'Бакалавр', visitDate: '2026-10-11', visitTime: '16:00' },
@@ -252,27 +261,42 @@ describe('create_consultation_request', () => {
       expect(dto.note).toMatch(/^⚠ Хүссэн цаг тохирохгүй/);
       expect(outcome.data).toMatchObject({ created: true, цаг_тохирох_эсэх: 'тохирохгүй', гараг: 'Ням' });
       expect((outcome.data as { message: string }).message).toContain('ажлын цагийн хүрээг');
+      // A time the office cannot do never reaches the calendar.
+      expect(appointments.bookFromAssistant).not.toHaveBeenCalled();
     });
 
-    it('rejects a Saturday hour before the office opens', async () => {
+    it('refuses Saturday too — the office rests both weekend days (2026-11-23)', async () => {
+      const { requestTool, appointments } = harness();
+
+      const outcome = await requestTool.run(
+        { phone: '99112233', summary: 'Асуулт', visitDate: '2026-10-17', visitTime: '14:00' },
+        saturday,
+      );
+
+      expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирохгүй', гараг: 'Бямба' });
+      expect(appointments.bookFromAssistant).not.toHaveBeenCalled();
+    });
+
+    it('rejects a weekday hour before the office opens', async () => {
       const { requestTool } = harness();
 
       const outcome = await requestTool.run(
-        { phone: '99112233', summary: 'Асуулт', visitDate: '2026-10-17', visitTime: '10:00' },
+        { phone: '99112233', summary: 'Асуулт', visitDate: '2026-10-13', visitTime: '08:00' },
         saturday,
       );
 
       expect(outcome.data).toMatchObject({ цаг_тохирох_эсэх: 'тохирохгүй' });
-      expect((outcome.data as { шалтгаан: string }).шалтгаан).toContain('11:00–18:00');
+      expect((outcome.data as { шалтгаан: string }).шалтгаан).toContain('09:00–18:00');
     });
 
     it('takes a day without an hour, since visitors may come any time we are open', async () => {
-      const { requestTool, leads } = harness();
+      const { requestTool, leads, appointments } = harness();
 
       const outcome = await requestTool.run(
         { phone: '99112233', summary: 'Ирнэ', visitDate: '2026-10-12', contactMode: 'OFFICE' },
         saturday,
       );
+      expect(vi.mocked(appointments.bookFromAssistant).mock.calls[0]![0]).not.toHaveProperty('time');
 
       const [dto] = vi.mocked(leads.createFromPublicForm).mock.calls[0]!;
       expect(dto.note).toMatch(/^Тохирсон цаг: 2026-10-12 \(Даваа\), ажлын цагаар, оффис дээр уулзах\./);
@@ -288,7 +312,7 @@ describe('create_consultation_request', () => {
     });
 
     it('writes a changed time onto the lead that already exists', async () => {
-      const { requestTool, prisma, leads } = harness({ session: { leadId: 'lead-9' } });
+      const { requestTool, prisma, leads, appointments } = harness({ session: { leadId: 'lead-9' } });
 
       const outcome = await requestTool.run(
         { phone: '99112233', summary: 'Мягмар болгосон', visitDate: '2026-10-13', visitTime: '15:00' },
@@ -301,6 +325,10 @@ describe('create_consultation_request', () => {
         body: expect.stringContaining('2026-10-13 (Мягмар) 15:00'),
       });
       expect(outcome.data).toMatchObject({ created: false, гараг: 'Мягмар' });
+      // The service moves the assistant's open booking rather than adding a second one.
+      expect(appointments.bookFromAssistant).toHaveBeenCalledWith(
+        expect.objectContaining({ leadId: 'lead-9', date: '2026-10-13', time: '15:00' }),
+      );
     });
   });
 });

@@ -8,6 +8,7 @@ import {
   ServiceType,
 } from '../../../../prisma/client.js';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
+import { ConsultationAppointmentsService, type AssistantBooking } from '../../../leads/consultation-appointments.service.js';
 import { LeadsService } from '../../../leads/leads.service.js';
 import type { CreatePublicLeadDto } from '../../../leads/dto/create-public-lead.dto.js';
 import { officeSlotProblem, weekdayOf } from '../sales.prompt.js';
@@ -75,6 +76,7 @@ export class LeadTools implements AiToolProvider {
   constructor(
     private readonly prisma: PrismaService,
     private readonly leads: LeadsService,
+    private readonly appointments: ConsultationAppointmentsService,
   ) {}
 
   tools(): AiTool[] {
@@ -230,6 +232,7 @@ export class LeadTools implements AiToolProvider {
                 meta: { channel: channelKey(context), sessionCode: context.session.code, slotChanged: true },
               },
             });
+            await this.book(slot, { leadId: session.leadId, name, phone, note: summary });
           }
 
           return {
@@ -260,6 +263,7 @@ export class LeadTools implements AiToolProvider {
           : null;
 
         if (existing) {
+          if (slot) await this.book(slot, { leadId: existing.leadId, clientId: existing.id, note: summary });
           if (existing.leadId) {
             await this.prisma.leadActivity.create({
               data: {
@@ -312,6 +316,8 @@ export class LeadTools implements AiToolProvider {
           source: context.session.channel === ChatChannel.FACEBOOK ? LeadSource.SOCIAL : LeadSource.AI_CHAT,
           userId: context.userId,
         });
+
+        if (slot) await this.book(slot, { leadId: result.id, clientId: result.client?.id ?? null, name, phone, note: summary });
 
         // 1B-26 — the number is an existing client's. No lead was filed; the
         // office was told. The visitor is not told whose number it is: anyone
@@ -374,6 +380,21 @@ export class LeadTools implements AiToolProvider {
         };
       },
     };
+  }
+
+  /**
+   * 1B-30 — the agreed day goes onto the staff calendar as a row, not only as
+   * the first line of the lead's note. A time the office cannot do is left
+   * off: it is flagged on the lead and handed back to the model to correct.
+   */
+  private async book(slot: Slot, who: Omit<AssistantBooking, 'date' | 'time' | 'mode'>) {
+    if (slot.problem || !slot.date) return;
+    await this.appointments.bookFromAssistant({
+      ...who,
+      date: slot.date,
+      ...(slot.time ? { time: slot.time } : {}),
+      ...(slot.mode ? { mode: slot.mode } : {}),
+    });
   }
 
   // ─── the profile column ─────────────────────────────────────────────────────

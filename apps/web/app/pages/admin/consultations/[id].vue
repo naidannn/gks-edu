@@ -323,6 +323,13 @@ useHead({ title: () => (lead.value ? `${lead.value.lastName} ${lead.value.firstN
           </div>
           <!-- Only appears when a Messenger thread is linked to this lead (2F). -->
           <FacebookThreadLink :lead-id="lead.id" />
+          <DsButton
+            variant="secondary"
+            icon-left="calendar-plus"
+            @click="navigateTo(`/admin/consultations/calendar?leadId=${lead.id}`)"
+          >
+            Цаг товлох
+          </DsButton>
           <!-- Conversion is the point of the funnel; it is offered once, here (1B-10). -->
           <DsButton
             v-if="lead.client"

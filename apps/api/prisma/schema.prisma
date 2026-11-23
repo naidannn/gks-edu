@@ -82,11 +82,13 @@ model User {
 
   caseConditions      CaseConditions[]
   documentFiles       DocumentFile[]
-  receivedDocuments   CaseDocument[]       @relation("CaseDocumentReceiver")
+  receivedDocuments   CaseDocument[]            @relation("CaseDocumentReceiver")
   documentReviewNotes DocumentReviewNote[]
-  assignedWorkTasks   WorkTask[]           @relation("WorkTaskAssignee")
-  createdWorkTasks    WorkTask[]           @relation("WorkTaskCreator")
+  assignedWorkTasks   WorkTask[]                @relation("WorkTaskAssignee")
+  createdWorkTasks    WorkTask[]                @relation("WorkTaskCreator")
   officeAppointments  OfficeAppointment[]
+  consultationsHosted ConsultationAppointment[] @relation("ConsultationStaff")
+  consultationsBooked ConsultationAppointment[] @relation("ConsultationCreator")
   applicationResults  ApplicationResult[]
   invitations         Invitation[]
 
@@ -1034,14 +1036,15 @@ model Lead {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  activities         LeadActivity[]
-  workTasks          WorkTask[]
-  notifications      Notification[]
-  chatSessions       ChatSession[]
-  campaignRecipients EmailCampaignRecipient[]
-  facebookThreads    FacebookThread[]
+  activities               LeadActivity[]
+  workTasks                WorkTask[]
+  notifications            Notification[]
+  chatSessions             ChatSession[]
+  campaignRecipients       EmailCampaignRecipient[]
+  facebookThreads          FacebookThread[]
+  consultationAppointments ConsultationAppointment[]
   /// Set once staff convert this lead into a client (1B-10) — the lead row stays as history.
-  client             Client?
+  client                   Client?
 
   /// 1B-09 — set when this row was merged into another lead; kept as history.
   mergedIntoId String?   @db.Uuid
@@ -1182,9 +1185,10 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  campaignRecipients   EmailCampaignRecipient[]
-  facebookThreads      FacebookThread[]
-  profileQuestionnaire ClientProfileQuestionnaire?
+  campaignRecipients       EmailCampaignRecipient[]
+  facebookThreads          FacebookThread[]
+  profileQuestionnaire     ClientProfileQuestionnaire?
+  consultationAppointments ConsultationAppointment[]
 
   @@index([status])
   @@index([assignedConsultantId])
@@ -1769,20 +1773,20 @@ model RequirementRule {
   templateId String           @db.Uuid
   template   DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  stage              DocStage
+  stage               DocStage
   // `@default([])` matters: without it an omitted array is written as SQL NULL,
   // which no `isEmpty` filter matches — and "empty means everyone" is the whole
   // shape of the rule base (§7.1).
-  serviceTypes       ServiceType[]       @default([])
-  educationLevels    EducationLevel[]    @default([])
-  guarantorTypes     GuarantorType[]     @default([])
-  guarantorRelations GuarantorRelation[] @default([])
+  serviceTypes        ServiceType[]        @default([])
+  educationLevels     EducationLevel[]     @default([])
+  guarantorTypes      GuarantorType[]      @default([])
+  guarantorRelations  GuarantorRelation[]  @default([])
   /// The school's 교육국제화역량 tier. A non-accredited (`NONE`) school's
   /// students need a guarantor for the visa; an accredited one's do not (1F-12).
   accreditationGrades AccreditationGrade[] @default([])
   /// Null = every university; set for a school's extra requirement (1D-18).
-  universityId       String?             @db.Uuid
-  university         University?         @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  universityId        String?              @db.Uuid
+  university          University?          @relation(fields: [universityId], references: [id], onDelete: Cascade)
 
   necessity     Necessity @default(REQUIRED)
   /// "байгаа тохиолдолд", "манай байгууллагаас шаардсан үед" …
@@ -2009,6 +2013,58 @@ model OfficeAppointment {
   @@index([caseId])
   @@index([scheduledAt])
   @@map("office_appointments")
+}
+
+/// How a consultation happens — the assistant's `contactMode`, kept as a column.
+enum ConsultationMode {
+  OFFICE
+  PHONE
+  ONLINE
+}
+
+/// 1B-30 — one booked consultation: a block on the staff calendar.
+///
+/// The assistant used to write the agreed time only into `Lead.note` as a
+/// sentence, so nobody could see the day's bookings without opening every lead.
+/// Rows come from two places: the assistant's `create_consultation_request`
+/// (`createdById` null) and staff adding a time themselves. `name`/`phone` are
+/// a snapshot so a time booked for somebody not yet in the CRM still reads.
+model ConsultationAppointment {
+  id String @id @default(uuid()) @db.Uuid
+
+  startsAt        DateTime
+  durationMinutes Int      @default(30)
+  /// A day agreed without an hour — the office asked visitors to come any time
+  /// inside opening hours. `startsAt` is then that day's opening.
+  allDay          Boolean  @default(false)
+
+  mode   ConsultationMode  @default(OFFICE)
+  status AppointmentStatus @default(SCHEDULED)
+
+  name  String
+  phone String?
+  note  String?
+
+  leadId   String? @db.Uuid
+  lead     Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  clientId String? @db.Uuid
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  /// The consultant who will see them.
+  staffId     String? @db.Uuid
+  staff       User?   @relation("ConsultationStaff", fields: [staffId], references: [id], onDelete: SetNull)
+  /// Null when the assistant booked it.
+  createdById String? @db.Uuid
+  createdBy   User?   @relation("ConsultationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startsAt])
+  @@index([leadId])
+  @@index([clientId])
+  @@index([staffId, startsAt])
+  @@map("consultation_appointments")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

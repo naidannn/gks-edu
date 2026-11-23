@@ -1,4 +1,8 @@
 import { AccessLevel } from '../../../prisma/client.js';
+import { DAY_NAMES, OFFICE, officeClock, officeDate, pad, scheduleLine } from '../../../common/office-hours.js';
+
+/** The office's week moved to `common/office-hours.ts` (1B-30); these are re-exported for the tools. */
+export { OFFICE, officeSlotProblem, weekdayOf } from '../../../common/office-hours.js';
 
 /**
  * The sales layer of the system prompt (2G-03, `AI-SALES-IMPROVEMENT.md` §4.1).
@@ -13,54 +17,6 @@ import { AccessLevel } from '../../../prisma/client.js';
  * `AiAssistantConfig.leadCaptureAfterMessages`; this layer only guarantees that
  * a turn which asks nothing still ends on something the visitor can do.
  */
-
-/**
- * Office hours, Asia/Ulaanbaatar. `0` is Sunday. Confirmed by the business
- * 2026-10-09 except Sunday, which they did not mention and is assumed closed.
- * Hard-coded until `AiAssistantConfig.handoffHours` is wired into the prompt.
- *
- * The phone is the only number the assistant may give as ours (confirmed
- * 2026-10-09). Without it in the prompt, "лавлах утас байна уу?" got a
- * plausible invented one — 7700-1123 — sent to a real person on Messenger.
- */
-export const OFFICE = {
-  address: 'Улаанбаатар, Төв шуудангийн урд, Eco International Tower, 17 давхар, 1707 тоот',
-  phone: '7710-9000',
-  hours: {
-    0: null,
-    1: [9, 18],
-    2: [9, 18],
-    3: [9, 18],
-    4: [9, 18],
-    5: [9, 18],
-    6: [11, 18],
-  } as Record<number, [number, number] | null>,
-};
-
-const DAY_NAMES = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
-
-interface OfficeClock {
-  day: number;
-  hour: number;
-  minute: number;
-}
-
-/** The wall clock in Ulaanbaatar — a model left to work this out answers in UTC. */
-function officeClock(now: Date): OfficeClock {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Ulaanbaatar',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(now);
-  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
-  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(part('weekday'));
-
-  return { day, hour: Number(part('hour')), minute: Number(part('minute')) };
-}
-
-const pad = (n: number) => String(n).padStart(2, '0');
 
 /**
  * One sentence on whether the office is open right now, and when it next is.
@@ -93,21 +49,7 @@ export function officeStatus(now: Date = new Date()): string {
   return `Одоо ${stamp} — оффис хаалттай.`;
 }
 
-function scheduleLine(): string {
-  return `Даваа–Баасан 09:00–18:00, Бямба 11:00–18:00, Ням гарагт хаалттай`;
-}
-
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** `2026-10-12` in Ulaanbaatar. Mongolia has no daylight saving, so a day is always 24 hours. */
-function officeDate(now: Date): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Ulaanbaatar',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
-}
 
 /**
  * The next seven days, each with its date, weekday and hours.
@@ -131,50 +73,6 @@ export function officeWeek(now: Date = new Date()): string {
   }
 
   return lines.join('\n');
-}
-
-/**
- * Why a proposed visit or call time does not work, or null when it does.
- *
- * `date` is `YYYY-MM-DD` and `time` `HH:MM`, both Ulaanbaatar. `time` may be
- * null: the office wants people to come whenever suits them inside opening
- * hours, so a day alone is a complete answer and only has to be an open one
- * that has not already closed. The answer is a Mongolian phrase the tool hands
- * back to the model, so it can say exactly what is wrong.
- */
-export function officeSlotProblem(date: string, time: string | null, now: Date = new Date()): string | null {
-  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
-  const timeMatch = time === null ? null : /^(\d{1,2}):(\d{2})$/.exec(time.trim());
-  if (!dateMatch || (time !== null && !timeMatch)) return 'огноо эсвэл цаг буруу бичигдсэн';
-
-  const hour = timeMatch ? Number(timeMatch[1]) : 12;
-  const minute = timeMatch ? Number(timeMatch[2]) : 0;
-  const at = new Date(`${date.trim()}T${pad(hour)}:${pad(minute)}:00+08:00`);
-  if (Number.isNaN(at.getTime()) || hour > 23 || minute > 59) return 'огноо эсвэл цаг буруу бичигдсэн';
-
-  const { day } = officeClock(at);
-  const hours = OFFICE.hours[day];
-  if (!hours) return `${date.trim()} бол ${DAY_NAMES[day]} гараг — оффис хаалттай`;
-
-  if (!timeMatch) {
-    const closes = new Date(`${date.trim()}T${pad(hours[1])}:00:00+08:00`);
-    return closes.getTime() <= now.getTime() ? 'тэр өдрийн ажлын цаг аль хэдийн дууссан' : null;
-  }
-
-  const minutes = hour * 60 + minute;
-  if (minutes < hours[0] * 60 || minutes >= hours[1] * 60) {
-    return `${DAY_NAMES[day]} гарагт оффис ${pad(hours[0])}:00–${pad(hours[1])}:00 ажиллана`;
-  }
-
-  if (at.getTime() < now.getTime()) return 'энэ цаг аль хэдийн өнгөрсөн';
-
-  return null;
-}
-
-/** `Даваа` for a `YYYY-MM-DD` in Ulaanbaatar — what the tool repeats back, so the model cannot mislabel it. */
-export function weekdayOf(date: string): string | null {
-  const at = new Date(`${date.trim()}T12:00:00+08:00`);
-  return Number.isNaN(at.getTime()) ? null : DAY_NAMES[officeClock(at).day]!;
 }
 
 /** Null for the levels where selling is the wrong job: a client's case, or staff. */
@@ -249,7 +147,7 @@ export function salesPrompt(level: AccessLevel, now: Date = new Date()): string 
 
 Хэрэглэгч өөрөө цаг санал болгосон, "гэрээ байгуулъя / бүртгүүлье" гэсэн, эсвэл утсаа өгсөн бол тэр **халуун** — яг энд л борлуулалт алдагддаг.
 - "Болно", "заа" гэж ганц үгээр хариулж ярианыг бүү дуус. Хариулт дотор өдөр-цаг, оффисын хаяг, нэр, утасны дугаар дөрвийг баталгаажуул (нэр, дугаарыг аль хэдийн өгсөн бол дахин бүү асуу).
-- Цаг санал болгохдоо хоёр цагаас сонгуулж **бүү шаха** — хүн өөрийн хүссэн цагтаа л ирдэг. Оффисын ажлын цагийн хүрээг хэл ("Даваа–Баасан 09:00–18:00, Бямба 11:00–18:00-ын хооронд танд тохирох цагтаа ирж болно") тэгээд аль өдөр, ойролцоогоор хэдэн цагт ирэхийг нь асуу.
+- Цаг санал болгохдоо хоёр цагаас сонгуулж **бүү шаха** — хүн өөрийн хүссэн цагтаа л ирдэг. Оффисын ажлын цагийн хүрээг хэл ("Даваа–Баасан 09:00–18:00-ын хооронд танд тохирох цагтаа ирж болно; Бямба, Ням гарагт амардаг") тэгээд аль өдөр, ойролцоогоор хэдэн цагт ирэхийг нь асуу.
 - Цагаа өөрчлөх хүнд "ирж уулзах уу?" гэж шинээр бүү эхэл — өмнөх цагийг хүлээн зөвшөөрч шинэ өдөр/цагийг нь асуу (\`summary\`-д "цаг өөрчилсөн" гэж бич).
 - Утсаа өгсөн хүнийг "тун удахгүй" гэсэн хоосон үгээр бүү хая — хэзээ, хэн залгахыг дараагийн ажлын цагаар тодорхой хэл.
 

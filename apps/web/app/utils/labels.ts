@@ -18,6 +18,7 @@ import type {
   ApplicationStatus,
   AppointmentStatus,
   BalanceTrigger,
+  ConsultationMode,
   CaseStage,
   CatalogueCheck,
   CatalogueGapState,
@@ -908,6 +909,20 @@ export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   COMPLETED: 'Ирсэн',
   CANCELLED: 'Цуцалсан',
   NO_SHOW: 'Ирээгүй',
+};
+
+export const APPOINTMENT_STATUS_TONE: Record<AppointmentStatus, 'neutral' | 'info' | 'success' | 'danger' | 'warning'> = {
+  SCHEDULED: 'info',
+  COMPLETED: 'success',
+  CANCELLED: 'neutral',
+  NO_SHOW: 'danger',
+};
+
+/** 1B-30 — how a consultation happens. */
+export const CONSULTATION_MODE_LABELS: Record<ConsultationMode, string> = {
+  OFFICE: 'Оффис дээр',
+  PHONE: 'Утсаар',
+  ONLINE: 'Онлайн',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

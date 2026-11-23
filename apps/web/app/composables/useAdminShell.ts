@@ -52,6 +52,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       },
       { to: '/admin/consultations', label: 'Зөвлөгөө хүсэлт', icon: 'message-square', exact: true, keywords: 'lead сэжим enquiry' },
       { to: '/admin/consultations/board', label: 'Борлуулалтын самбар', icon: 'kanban', keywords: 'kanban pipeline' },
+      { to: '/admin/consultations/calendar', label: 'Зөвлөгөөний цаг', icon: 'calendar-days', keywords: 'calendar календарь цаг захиалга уулзалт товлох booking appointment' },
       { to: '/admin/clients', label: 'Үйлчлүүлэгч', icon: 'users', keywords: 'client хэрэглэгч' },
       { to: '/admin/work-tasks', label: 'Ажил & хуваарь', icon: 'list-checks', keywords: 'task todo' },
     ],

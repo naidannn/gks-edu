@@ -29,3 +29,4 @@ export * from './types/ai-knowledge';
 export * from './types/facebook';
 export * from './tuition';
 export * from './types/questionnaires';
+export * from './types/consultation-calendar';
