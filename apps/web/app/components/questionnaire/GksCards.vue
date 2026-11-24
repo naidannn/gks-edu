@@ -32,6 +32,8 @@ const essayPercent = computed(() => {
   const progress = essay.value?.progress;
   return progress?.total ? Math.round((progress.answered / progress.total) * 100) : 0;
 });
+/** The questionnaire's own estimate — a language-prep set is not the length of a GKS one. */
+const essayMinutes = computed(() => (essay.value?.definition ? minutesLeft(essay.value.definition, {}) : null));
 const essaySubmitted = computed(() => essay.value?.questionnaire?.status === 'SUBMITTED');
 const essayReopened = computed(() => Boolean(essay.value?.questionnaire?.reopenNote) && !essaySubmitted.value);
 
@@ -61,7 +63,9 @@ const lettersToSign = computed(() => recs.value?.items.filter((item) => item.sta
           <span class="gks-gksq__bar"><span :style="{ width: `${essayPercent}%` }" /></span>
           {{ essayPercent }}% бөглөсөн
         </span>
-        <span v-else class="gks-gksq__state">~1.5 цаг · хэд хуваагаад бөглөж болно</span>
+        <span v-else class="gks-gksq__state">
+          <template v-if="essayMinutes">~{{ essayMinutes }} минут · </template>хэд хуваагаад бөглөж болно
+        </span>
       </span>
       <span class="gks-gksq__cta">
         {{ essaySubmitted ? 'Харах' : essay?.progress?.answered ? 'Үргэлжлүүлэх' : 'Эхлэх' }}

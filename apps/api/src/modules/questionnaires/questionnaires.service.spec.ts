@@ -89,7 +89,7 @@ describe('EssayQuestionnaireService (1D-27)', () => {
     const view = await essay.get('case-1', OWNER);
     expect(view.track).toBe('REGULAR');
     expect(view.level).toBe('MASTER');
-    expect(view.definition?.title).toBe('Эссэ бэлтгэх асуулга');
+    expect(view.definition?.title).toBe('Бакалаврын эссэ бэлтгэх асуулга');
     const ids = allQuestions(view.definition!).map((question) => question.id);
     expect(ids).not.toContain('gksWhy');
     expect(ids).toContain('majorWhy');

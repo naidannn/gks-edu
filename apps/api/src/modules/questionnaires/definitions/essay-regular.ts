@@ -15,7 +15,7 @@ import type { QuestionnaireDefinition } from './types.js';
 export const ESSAY_REGULAR: QuestionnaireDefinition = {
   kind: 'ESSAY',
   level: 'BACHELOR',
-  title: 'Эссэ бэлтгэх асуулга',
+  title: 'Бакалаврын эссэ бэлтгэх асуулга',
   intro: [
     'Энэ асуулгын хариултаар манай мэргэжилтэн таны Personal Statement (Өөрийн танилцуулга) болон Study Plan (Суралцах төлөвлөгөө)-ийг бичнэ.',
     'Монголоор, өөрийнхөөрөө бичээрэй — англи, солонгос руу бид хөрвүүлнэ. Боломжтой бол он, сар, байгууллагын нэр, өөрийн гүйцэтгэсэн үүрэг, гарсан үр дүнг тодорхой бичээрэй.',
