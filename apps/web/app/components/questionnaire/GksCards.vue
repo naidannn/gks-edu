@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import type { EssayDocumentListView, EssayQuestionnaireView, RecommendationListView } from '@gks/shared';
+import type { EssayDocumentListView, EssayQuestionnaireView, EssayTrack, RecommendationListView } from '@gks/shared';
 
 /**
- * The way into the two GKS questionnaires from the case's "Материал" tab
- * (1D-27). Each card says where that questionnaire stands and the one thing to
- * do next — the questionnaires themselves open on their own pages. Once the
- * questionnaire is sent, a third card leads to the essays written from it (1D-28).
+ * The way into the questionnaires from the case's "Материал" tab (1D-27).
+ * Each card says where that questionnaire stands and the one thing to do next
+ * — the questionnaires themselves open on their own pages. Once the
+ * questionnaire is sent, another card leads to the essays written from it
+ * (1D-28). The teachers' letters are GKS's alone: a regular case (1D-33) gets
+ * the essay cards only.
  */
-const props = defineProps<{ caseId: string }>();
+const props = defineProps<{ caseId: string; track: EssayTrack }>();
+const isGks = computed(() => props.track === 'GKS');
 
 const api = useApi();
 const essay = ref<EssayQuestionnaireView | null>(null);
@@ -17,11 +20,11 @@ const documents = ref<EssayDocumentListView | null>(null);
 onMounted(async () => {
   const [essayView, recView, docView] = await Promise.allSettled([
     api.get<EssayQuestionnaireView>(`/cases/${props.caseId}/essay`),
-    api.get<RecommendationListView>(`/cases/${props.caseId}/recommendations`),
+    isGks.value ? api.get<RecommendationListView>(`/cases/${props.caseId}/recommendations`) : Promise.resolve(null),
     api.get<EssayDocumentListView>(`/cases/${props.caseId}/essay/documents`),
   ]);
   if (essayView.status === 'fulfilled') essay.value = essayView.value;
-  if (recView.status === 'fulfilled') recs.value = recView.value;
+  if (recView.status === 'fulfilled' && recView.value) recs.value = recView.value;
   if (docView.status === 'fulfilled') documents.value = docView.value;
 });
 
@@ -42,7 +45,7 @@ const lettersToSign = computed(() => recs.value?.items.filter((item) => item.sta
 </script>
 
 <template>
-  <section class="gks-gksq" aria-label="GKS эссэ ба тодорхойлолт">
+  <section class="gks-gksq" :aria-label="isGks ? 'GKS эссэ ба тодорхойлолт' : 'Эссэ'">
     <NuxtLink :to="`/app/essay/${caseId}`" class="gks-gksq__card" :class="{ 'gks-gksq__card--attn': essayReopened }">
       <span class="gks-gksq__icon"><DsIcon name="notebook-pen" :size="22" /></span>
       <span class="gks-gksq__text">
@@ -66,7 +69,12 @@ const lettersToSign = computed(() => recs.value?.items.filter((item) => item.sta
       </span>
     </NuxtLink>
 
-    <NuxtLink :to="`/app/recommenders/${caseId}`" class="gks-gksq__card" :class="{ 'gks-gksq__card--attn': lettersToSign }">
+    <NuxtLink
+      v-if="isGks"
+      :to="`/app/recommenders/${caseId}`"
+      class="gks-gksq__card"
+      :class="{ 'gks-gksq__card--attn': lettersToSign }"
+    >
       <span class="gks-gksq__icon"><DsIcon name="signature" :size="22" /></span>
       <span class="gks-gksq__text">
         <span class="gks-gksq__title">Багшийн тодорхойлолт</span>
@@ -90,8 +98,8 @@ const lettersToSign = computed(() => recs.value?.items.filter((item) => item.sta
     <NuxtLink
       v-if="showEssays && documents"
       :to="`/app/essays/${caseId}`"
-      class="gks-gksq__card gks-gksq__card--wide"
-      :class="{ 'gks-gksq__card--attn': essaysToRead }"
+      class="gks-gksq__card"
+      :class="{ 'gks-gksq__card--wide': isGks, 'gks-gksq__card--attn': essaysToRead }"
     >
       <span class="gks-gksq__icon"><DsIcon name="file-text" :size="22" /></span>
       <span class="gks-gksq__text">

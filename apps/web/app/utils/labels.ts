@@ -27,7 +27,8 @@ import type {
   ClientStatus,
   EssayDocumentKind,
   EssayDocumentStatus,
-  QuestionnaireLevel,
+  EssayLevel,
+  EssayTrack,
   QuestionnaireStatus,
   RecommendationStatus,
   ContractStatus,
@@ -1160,10 +1161,17 @@ export const AI_FEEDBACK_REASON_LABELS: Record<AiFeedbackReason, string> = {
 
 // ── 1D-27 — GKS essay and recommendation questionnaires ─────────────────────
 
-export const QUESTIONNAIRE_LEVEL_LABELS: Record<QuestionnaireLevel, string> = {
+export const QUESTIONNAIRE_LEVEL_LABELS: Record<EssayLevel, string> = {
   BACHELOR: 'Бакалавр',
   MASTER: 'Магистр',
   PHD: 'Доктор',
+  LANGUAGE_PREP: 'Хэлний бэлтгэл',
+};
+
+/** The eyebrow over an essay questionnaire — which kind of application it feeds. */
+export const ESSAY_TRACK_LABELS: Record<EssayTrack, string> = {
+  GKS: 'GKS тэтгэлэг',
+  REGULAR: 'Элсэлт',
 };
 
 export const ESSAY_STATUS_LABELS: Record<QuestionnaireStatus, string> = {

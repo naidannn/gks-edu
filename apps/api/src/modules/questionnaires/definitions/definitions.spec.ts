@@ -22,7 +22,7 @@ import { suggestQuestionnaireLevel } from '../questionnaire-level.js';
  * make two questions share one answer.
  */
 describe.each([
-  ...ALL_DEFINITIONS.map((definition) => [`${definition.kind} ${definition.level}`, definition] as const),
+  ...ALL_DEFINITIONS.map((definition) => [`${definition.kind} ${definition.level} «${definition.title}»`, definition] as const),
   ['PROFILE', PROFILE_QUESTIONS] as const,
 ])(
   'questionnaire %s',
@@ -64,7 +64,7 @@ describe.each([
 
 describe('the essay sets differ by level', () => {
   it('asks a doctoral applicant for a research plan and a bachelor applicant for none', () => {
-    const ids = (level: 'BACHELOR' | 'PHD') => allQuestions(essayDefinition(level)).map((question) => question.id);
+    const ids = (level: 'BACHELOR' | 'PHD') => allQuestions(essayDefinition(level, 'GKS')).map((question) => question.id);
     expect(ids('PHD')).toContain('proposedTopic');
     expect(ids('BACHELOR')).not.toContain('proposedTopic');
     // The office's doctoral file was a copy of the bachelor one; this is the guard.
@@ -101,7 +101,7 @@ describe('the profile questionnaire (1B-29)', () => {
 });
 
 describe('questionnaireProgress', () => {
-  const definition = essayDefinition('BACHELOR');
+  const definition = essayDefinition('BACHELOR', 'GKS');
 
   it('drops the follow-ups of a "no" from the total instead of counting them as missing', () => {
     const before = questionnaireProgress(definition, {}).total;
@@ -128,7 +128,7 @@ describe('questionnaireProgress', () => {
 });
 
 describe('sanitizeAnswers', () => {
-  const definition = essayDefinition('BACHELOR');
+  const definition = essayDefinition('BACHELOR', 'GKS');
 
   it('keeps only questions the set asks, as strings', () => {
     expect(sanitizeAnswers(definition, { major: 'Хими', invented: 'x', majorWhy: 42 })).toEqual({ major: 'Хими' });
@@ -176,7 +176,7 @@ describe('recommender details', () => {
 
 describe('answersAsText — the writer’s copy', () => {
   it('prints asked questions in order and says which were skipped', () => {
-    const text = answersAsText(essayDefinition('BACHELOR'), { major: 'Хими', hasWork: 'no' });
+    const text = answersAsText(essayDefinition('BACHELOR', 'GKS'), { major: 'Хими', hasWork: 'no' });
     expect(text).toContain('Хими');
     expect(text).toContain('Үгүй');
     expect(text).toContain('(хариулаагүй)');
@@ -199,4 +199,40 @@ describe('suggestQuestionnaireLevel', () => {
   it('asks rather than guesses when nothing is known', () => {
     expect(suggestQuestionnaireLevel({})).toBeNull();
   });
+});
+
+describe('the regular essay sets (1D-33)', () => {
+  const ids = (level: 'BACHELOR' | 'MASTER' | 'PHD' | 'LANGUAGE_PREP') =>
+    allQuestions(essayDefinition(level, 'REGULAR')).map((question) => question.id);
+
+  it('asks bachelor, master and PhD the same questions', () => {
+    expect(ids('MASTER')).toEqual(ids('BACHELOR'));
+    expect(ids('PHD')).toEqual(ids('BACHELOR'));
+    expect(essayDefinition('PHD', 'REGULAR').level).toBe('PHD');
+  });
+
+  it('asks language prep its own, shorter set — no major, no study goals by year', () => {
+    expect(essayDefinition('LANGUAGE_PREP', 'REGULAR').title).toBe('Хэлний бэлтгэлийн эссэ бэлтгэх асуулга');
+    expect(ids('LANGUAGE_PREP')).not.toContain('major');
+    expect(ids('LANGUAGE_PREP')).not.toContain('years12');
+    expect(ids('LANGUAGE_PREP')).toContain('koreaWhy');
+    expect(ids('LANGUAGE_PREP').length).toBeLessThan(ids('BACHELOR').length);
+  });
+
+  it('has no language-prep set on the GKS track', () => {
+    expect(essayDefinition('LANGUAGE_PREP', 'GKS' as 'REGULAR' | 'GKS')).toBeNull();
+  });
+
+  it.each(['BACHELOR', 'LANGUAGE_PREP'] as const)('never mentions the scholarship (%s)', (level) => {
+    const text = JSON.stringify(essayDefinition(level, 'REGULAR'));
+    expect(text).not.toMatch(/GKS|тэтгэлэг/u);
+  });
+
+  it.each(['BACHELOR', 'LANGUAGE_PREP'] as const)(
+    'reuses the bachelor GKS ids, so a case moved between sets keeps its answers (%s)',
+    (level) => {
+      const gks = new Set(allQuestions(essayDefinition('BACHELOR', 'GKS')).map((question) => question.id));
+      expect(ids(level).filter((id) => !gks.has(id))).toEqual([]);
+    },
+  );
 });

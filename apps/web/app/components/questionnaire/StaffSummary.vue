@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import type { EssayDocumentListView, EssayQuestionnaireView, RecommendationListView } from '@gks/shared';
+import type { EssayDocumentListView, EssayQuestionnaireView, EssayTrack, RecommendationListView } from '@gks/shared';
 
 /**
  * One line each for the essay and the teachers' letters, on the client
  * workspace's documents tab (1D-27) — enough for staff to see whether there is
  * anything to read, with the reading itself on `/admin/questionnaires/:caseId`.
  * The essays written from it (1D-28) get a line too, with the client's
- * unresolved comments — the thing staff most need to notice.
+ * unresolved comments — the thing staff most need to notice. A regular case
+ * (1D-33) has no teachers' letters, so no letters line.
  */
-const props = defineProps<{ caseId: string }>();
+const props = defineProps<{ caseId: string; track: EssayTrack }>();
+const isGks = computed(() => props.track === 'GKS');
 
 const api = useApi();
 const essay = ref<EssayQuestionnaireView | null>(null);
@@ -18,7 +20,7 @@ const documents = ref<EssayDocumentListView | null>(null);
 async function load() {
   const [essayView, recView, docView] = await Promise.allSettled([
     api.get<EssayQuestionnaireView>(`/cases/${props.caseId}/essay`),
-    api.get<RecommendationListView>(`/cases/${props.caseId}/recommendations`),
+    isGks.value ? api.get<RecommendationListView>(`/cases/${props.caseId}/recommendations`) : Promise.resolve(null),
     api.get<EssayDocumentListView>(`/cases/${props.caseId}/essay/documents`),
   ]);
   essay.value = essayView.status === 'fulfilled' ? essayView.value : null;
@@ -41,7 +43,7 @@ const essayLine = computed(() => {
 </script>
 
 <template>
-  <DsCard eyebrow="GKS" title="Эссэ ба багшийн тодорхойлолт">
+  <DsCard :eyebrow="isGks ? 'GKS' : 'Элсэлт'" :title="isGks ? 'Эссэ ба багшийн тодорхойлолт' : 'Эссэ'">
     <template #action>
       <NuxtLink :to="`/admin/questionnaires/${caseId}`" class="gks-qsum__open">Хариултыг унших →</NuxtLink>
     </template>
@@ -66,7 +68,7 @@ const essayLine = computed(() => {
         </span>
         <NuxtLink :to="`/admin/questionnaires/${caseId}?tab=write`" class="gks-qsum__open">Бичих →</NuxtLink>
       </div>
-      <div class="gks-qsum__row">
+      <div v-if="isGks" class="gks-qsum__row">
         <DsIcon name="signature" :size="18" />
         <span class="gks-qsum__label">
           Тодорхойлолт<template v-if="recs?.lettersNeeded"> · {{ recs.lettersNeeded }} хэрэгтэй</template>

@@ -99,7 +99,7 @@ useHead({ title: 'Миний эссэ' });
 
     <template v-else>
       <header>
-        <p class="gks-eyebrow">GKS тэтгэлэг · Эссэ</p>
+        <p class="gks-eyebrow">Миний эссэ</p>
         <h1 class="gks-essays__h1">Personal Statement ба Study Plan</h1>
         <p class="gks-essays__lead">
           Таны асуулгын хариултад үндэслэн манай мэргэжилтэн бичсэн. Уншаад засах, нэмэх зүйлээ хэсгийг нь сонгож

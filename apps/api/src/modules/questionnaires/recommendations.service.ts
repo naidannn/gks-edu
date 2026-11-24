@@ -15,6 +15,7 @@ import {
   answersAsText,
   missingRecommenderFields,
   type QuestionnaireLevel,
+  QUESTIONNAIRE_LEVELS,
   questionnaireProgress,
   recommendationDefinition,
   sanitizeAnswers,
@@ -57,7 +58,7 @@ export class RecommendationsService {
   // ── The client's and staff's side ─────────────────────────────────────────
 
   async list(caseId: string, actor: AuthenticatedUser) {
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const [rows, essay] = await Promise.all([
       this.prisma.recommendationRequest.findMany({
         where: { caseId, deletedAt: null },
@@ -66,7 +67,7 @@ export class RecommendationsService {
       this.prisma.essayQuestionnaire.findUnique({ where: { caseId }, select: { level: true } }),
     ]);
 
-    const level = (essay?.level as QuestionnaireLevel | undefined) ?? gksCase.suggestedLevel;
+    const level = gksLevel(essay?.level) ?? gksLevel(gksCase.suggestedLevel);
     const definition = level ? recommendationDefinition(level) : null;
     // A letter keeps the level it was asked at, even if the case's changed since.
     const levels = new Set<QuestionnaireLevel>(rows.map((row) => row.level as QuestionnaireLevel));
@@ -82,7 +83,7 @@ export class RecommendationsService {
   }
 
   async create(caseId: string, dto: CreateRecommendationDto, actor: AuthenticatedUser) {
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const [count, essay] = await Promise.all([
       this.prisma.recommendationRequest.count({ where: { caseId, deletedAt: null } }),
       this.prisma.essayQuestionnaire.findUnique({ where: { caseId }, select: { level: true } }),
@@ -91,7 +92,7 @@ export class RecommendationsService {
       throw new BadRequestException(`Нэг үйлчилгээнд ${MAX_RECOMMENDERS}-өөс олон тодорхойлолт хүсэх шаардлагагүй`);
     }
 
-    const level = dto.level ?? (essay?.level as QuestionnaireLevel | undefined) ?? gksCase.suggestedLevel;
+    const level = dto.level ?? gksLevel(essay?.level) ?? gksLevel(gksCase.suggestedLevel);
     if (!level) throw new BadRequestException('Аль түвшний тэтгэлэгт хамрагдахаа сонгоно уу');
 
     const row = await this.prisma.recommendationRequest.create({
@@ -108,7 +109,7 @@ export class RecommendationsService {
   }
 
   async update(caseId: string, id: string, dto: UpdateRecommendationDto, actor: AuthenticatedUser) {
-    await loadQuestionnaireCase(this.prisma, caseId, actor);
+    await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
     const staff = isStaff(actor.role);
 
@@ -145,7 +146,7 @@ export class RecommendationsService {
 
   /** The client (on the teacher's behalf) or staff hand the answers in. */
   async submit(caseId: string, id: string, actor: AuthenticatedUser) {
-    await loadQuestionnaireCase(this.prisma, caseId, actor);
+    await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
     if (!isStaff(actor.role) && !row.filledByApplicant) {
       throw new ForbiddenException('Энэ тодорхойлолтыг багш өөрөө холбоосоор илгээнэ');
@@ -154,7 +155,7 @@ export class RecommendationsService {
   }
 
   async remove(caseId: string, id: string, actor: AuthenticatedUser) {
-    await loadQuestionnaireCase(this.prisma, caseId, actor);
+    await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
     if (!isStaff(actor.role) && row.status !== RecommendationStatus.INVITED) {
       throw new ConflictException('Хариулт ирсэн тодорхойлолтыг устгах бол зөвлөхдөө хэлнэ үү');
@@ -170,7 +171,7 @@ export class RecommendationsService {
    */
   async setStatus(caseId: string, id: string, dto: SetRecommendationStatusDto, actor: AuthenticatedUser) {
     if (!isStaff(actor.role)) throw new ForbiddenException('Зөвхөн ажилтан');
-    await loadQuestionnaireCase(this.prisma, caseId, actor);
+    await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
     if (dto.status === RecommendationStatus.LETTER_READY && !row.letterPath) {
       throw new BadRequestException('Эхлээд англи хувилбарын файлыг хавсаргана уу');
@@ -199,7 +200,7 @@ export class RecommendationsService {
   ) {
     if (!isStaff(actor.role)) throw new ForbiddenException('Зөвхөн ажилтан');
     if (!file) throw new BadRequestException('Файл сонгоно уу');
-    await loadQuestionnaireCase(this.prisma, caseId, actor);
+    await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
 
     const { path } = await this.storage.upload({ caseId, docCode: 'RECOMMENDATION_LETTER', buffer: file.buffer });
@@ -217,7 +218,7 @@ export class RecommendationsService {
   }
 
   async letterUrl(caseId: string, id: string, actor: AuthenticatedUser) {
-    await loadQuestionnaireCase(this.prisma, caseId, actor);
+    await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
     if (!row.letterPath) throw new NotFoundException('Англи хувилбар хараахан хавсаргагдаагүй байна');
     return { ...this.storage.sign(row.letterPath), originalName: row.letterName };
@@ -226,7 +227,7 @@ export class RecommendationsService {
   /** Staff read-out of every answered letter, for pasting into the English draft. */
   async asText(caseId: string, id: string, actor: AuthenticatedUser): Promise<string> {
     if (!isStaff(actor.role)) throw new ForbiddenException('Зөвхөн ажилтанд');
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor, { gksOnly: true });
     const row = await this.getRow(caseId, id);
     const definition = recommendationDefinition(row.level as QuestionnaireLevel);
     const recommender = toAnswers(row.recommender);
@@ -358,4 +359,9 @@ export class RecommendationsService {
       recommender: canRead ? toAnswers(row.recommender) : null,
     };
   }
+}
+
+/** A level a GKS letter can be asked at — never language prep, which GKS does not have. */
+function gksLevel(value: string | null | undefined): QuestionnaireLevel | null {
+  return QUESTIONNAIRE_LEVELS.includes(value as QuestionnaireLevel) ? (value as QuestionnaireLevel) : null;
 }

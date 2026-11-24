@@ -1,4 +1,5 @@
 import type {
+  EssayTrack,
   Question,
   QuestionnaireAnswers,
   QuestionnaireLevel,
@@ -14,6 +15,16 @@ import type {
  * how far along a section is — from
  * `apps/api/src/modules/questionnaires/definitions/index.ts`.
  */
+
+/**
+ * Which essay questionnaire a case's service answers (1D-33): GKS its own,
+ * every other service ordinary admission's (the API picks the bachelor's or
+ * the language-prep set from the level).
+ */
+export function essayTrackFor(serviceType: string | null | undefined): EssayTrack | null {
+  if (!serviceType) return null;
+  return serviceType === 'GKS_SCHOLARSHIP' ? 'GKS' : 'REGULAR';
+}
 
 export function isAnswered(value: string | undefined | null): boolean {
   return typeof value === 'string' && value.trim().length > 0;

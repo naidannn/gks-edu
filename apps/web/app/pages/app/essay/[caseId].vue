@@ -6,9 +6,9 @@ import type { EssayQuestionnaireView, QuestionnaireAnswers, QuestionnaireLevel }
  * a long sitting of writing has the whole width and nothing else asking for
  * attention.
  *
- * Four states, in the order a client meets them: which level (only if we could
- * not tell), a short "how this works", the form itself, and "sent" with what
- * happens next.
+ * Four states, in the order a client meets them: which level (GKS only, and
+ * only if we could not tell — a regular case's level is its service), a short
+ * "how this works", the form itself, and "sent" with what happens next.
  */
 definePageMeta({ middleware: 'auth', layout: 'portal' });
 
@@ -85,7 +85,12 @@ async function submit() {
 
 const definition = computed(() => view.value?.definition ?? null);
 const submitted = computed(() => view.value?.questionnaire?.status === 'SUBMITTED');
-const needsLevel = computed(() => !view.value?.level || choosingLevel.value);
+const isGks = computed(() => view.value?.track === 'GKS');
+const needsLevel = computed(() => isGks.value && (!view.value?.level || choosingLevel.value));
+const eyebrow = computed(() => {
+  const track = view.value ? ESSAY_TRACK_LABELS[view.value.track] : '';
+  return definition.value ? `${track} · ${QUESTIONNAIRE_LEVEL_LABELS[definition.value.level]}` : track;
+});
 const sectionCount = computed(() => definition.value?.parts.reduce((sum, part) => sum + part.sections.length, 0) ?? 0);
 const totalMinutes = computed(() => (definition.value ? minutesLeft(definition.value, {}) : 0));
 
@@ -156,7 +161,7 @@ useHead({ title: 'Эссэ бэлтгэх асуулга' });
 
       <!-- ── 2. How this works ──────────────────────────────────── -->
       <section v-else-if="!started && definition" class="gks-essay__intro">
-        <p class="gks-eyebrow">GKS тэтгэлэг · {{ QUESTIONNAIRE_LEVEL_LABELS[definition.level] }}</p>
+        <p class="gks-eyebrow">{{ eyebrow }}</p>
         <h1 class="gks-essay__h1">Эссэ бэлтгэх асуулга</h1>
         <p v-for="(paragraph, index) in definition.intro" :key="index" class="gks-essay__lead">{{ paragraph }}</p>
 
@@ -179,7 +184,7 @@ useHead({ title: 'Эссэ бэлтгэх асуулга' });
 
         <div class="gks-essay__actions">
           <DsButton variant="accent" size="lg" icon-right="arrow-right" @click="started = true">Эхлэх</DsButton>
-          <DsButton variant="ghost" @click="choosingLevel = true">Түвшин солих</DsButton>
+          <DsButton v-if="isGks" variant="ghost" @click="choosingLevel = true">Түвшин солих</DsButton>
         </div>
       </section>
 
@@ -187,7 +192,7 @@ useHead({ title: 'Эссэ бэлтгэх асуулга' });
       <template v-else-if="definition">
         <header class="gks-essay__formhead">
           <div>
-            <p class="gks-eyebrow">GKS тэтгэлэг · {{ QUESTIONNAIRE_LEVEL_LABELS[definition.level] }}</p>
+            <p class="gks-eyebrow">{{ eyebrow }}</p>
             <h1 class="gks-essay__h2">{{ definition.title }}</h1>
           </div>
         </header>

@@ -5,6 +5,10 @@
  */
 
 export type QuestionnaireLevel = 'BACHELOR' | 'MASTER' | 'PHD';
+/** GKS and the teachers' letters use the degree levels; ordinary admission also has language prep. */
+export type EssayLevel = QuestionnaireLevel | 'LANGUAGE_PREP';
+/** GKS has a set per level; ordinary admission one set for every degree level and one for language prep (1D-33). */
+export type EssayTrack = 'GKS' | 'REGULAR';
 export type QuestionKind = 'long' | 'short' | 'yesno' | 'choice';
 export type QuestionnaireStatus = 'DRAFT' | 'SUBMITTED';
 export type RecommendationStatus = 'INVITED' | 'ANSWERED' | 'LETTER_READY' | 'RECEIVED';
@@ -51,7 +55,7 @@ export interface QuestionSet {
 
 export interface QuestionnaireDefinition extends QuestionSet {
   kind: 'ESSAY' | 'RECOMMENDATION';
-  level: QuestionnaireLevel;
+  level: EssayLevel;
 }
 
 /** 1B-29 — the questionnaire every client answers after signing on. */
@@ -84,8 +88,9 @@ export interface QuestionnaireProgress {
 /** `GET /cases/:id/essay` */
 export interface EssayQuestionnaireView {
   applicantName: string;
-  suggestedLevel: QuestionnaireLevel | null;
-  level: QuestionnaireLevel | null;
+  track: EssayTrack;
+  suggestedLevel: EssayLevel | null;
+  level: EssayLevel | null;
   definition: QuestionnaireDefinition | null;
   questionnaire: {
     status: QuestionnaireStatus;

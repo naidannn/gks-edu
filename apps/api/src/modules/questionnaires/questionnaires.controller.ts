@@ -43,9 +43,10 @@ import { RecommendationsService } from './recommendations.service.js';
 const MAX_LETTER_BYTES = 20 * 1024 * 1024;
 
 /**
- * The GKS essay and recommendation questionnaires of one case (1D-27). Open to
- * the case's owner and to staff; the services check which and refuse a case
- * that is not GKS.
+ * The essay and recommendation questionnaires of one case (1D-27, 1D-33). Open
+ * to the case's owner and to staff; the services check which. The essay is
+ * GKS's or ordinary admission's depending on the case; the teachers' letters
+ * are GKS-only, and a language-prep case has neither.
  */
 @ApiTags('questionnaires')
 @ApiBearerAuth()

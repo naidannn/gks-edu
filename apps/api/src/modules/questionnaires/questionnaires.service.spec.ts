@@ -76,9 +76,30 @@ function harness(options: { serviceType?: ServiceType; essay?: unknown; recommen
 }
 
 describe('EssayQuestionnaireService (1D-27)', () => {
-  it('refuses a case that is not GKS — the essay is scholarship paperwork', async () => {
-    const { essay } = harness({ serviceType: ServiceType.BACHELOR });
-    await expect(essay.get('case-1', OWNER)).rejects.toBeInstanceOf(BadRequestException);
+  it('gives a language-prep case its own set, with nothing to pick (1D-33)', async () => {
+    const { essay } = harness({ serviceType: ServiceType.LANGUAGE_PREP });
+    const view = await essay.get('case-1', OWNER);
+    expect(view.track).toBe('REGULAR');
+    expect(view.level).toBe('LANGUAGE_PREP');
+    expect(view.definition?.title).toBe('Хэлний бэлтгэлийн эссэ бэлтгэх асуулга');
+  });
+
+  it('gives a regular master’s case the regular set at its own level, with nothing to pick (1D-33)', async () => {
+    const { essay } = harness({ serviceType: ServiceType.MASTER });
+    const view = await essay.get('case-1', OWNER);
+    expect(view.track).toBe('REGULAR');
+    expect(view.level).toBe('MASTER');
+    expect(view.definition?.title).toBe('Эссэ бэлтгэх асуулга');
+    const ids = allQuestions(view.definition!).map((question) => question.id);
+    expect(ids).not.toContain('gksWhy');
+    expect(ids).toContain('majorWhy');
+  });
+
+  it('keeps a regular case at its service’s level whatever the client sends', async () => {
+    const { essay, prisma } = harness({ serviceType: ServiceType.PHD });
+    await essay.save('case-1', { level: 'BACHELOR', answers: { major: 'Хими', gksWhy: 'x' } }, OWNER);
+    const call = vi.mocked(prisma.essayQuestionnaire.upsert).mock.calls[0]![0];
+    expect(call.create).toMatchObject({ level: 'PHD', answers: { major: 'Хими' } });
   });
 
   it('refuses another client’s case', async () => {
@@ -117,7 +138,7 @@ describe('EssayQuestionnaireService (1D-27)', () => {
   });
 
   it('submits once the required questions are answered', async () => {
-    const answers = requiredAnswers(allQuestions(essayDefinition('BACHELOR')));
+    const answers = requiredAnswers(allQuestions(essayDefinition('BACHELOR', 'GKS')));
     const { essay } = harness({
       essay: { caseId: 'case-1', level: 'BACHELOR', answers, status: QuestionnaireStatus.DRAFT },
     });
@@ -137,6 +158,13 @@ describe('EssayQuestionnaireService (1D-27)', () => {
 });
 
 describe('RecommendationsService (1D-27)', () => {
+  it('asks no teacher’s letter of a regular case — letters are GKS paperwork', async () => {
+    const { recommendations } = harness({ serviceType: ServiceType.BACHELOR });
+    await expect(recommendations.list('case-1', OWNER)).rejects.toBeInstanceOf(BadRequestException);
+    const prep = harness({ serviceType: ServiceType.LANGUAGE_PREP });
+    await expect(prep.recommendations.list('case-1', OWNER)).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('keeps a teacher’s own answers from the student', async () => {
     const { recommendations } = harness({ recommendation: { answers: { finalWord: 'Маш хичээнгүй' } } });
     const [asClient] = (await recommendations.list('case-1', OWNER)).items;

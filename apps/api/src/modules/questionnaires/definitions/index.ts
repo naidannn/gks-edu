@@ -1,8 +1,12 @@
 import { ESSAY_BACHELOR } from './essay-bachelor.js';
 import { ESSAY_MASTER } from './essay-master.js';
 import { ESSAY_PHD } from './essay-phd.js';
+import { ESSAY_LANGUAGE_PREP } from './essay-language-prep.js';
+import { ESSAY_REGULAR } from './essay-regular.js';
 import { RECOMMENDATION_BACHELOR, RECOMMENDATION_MASTER, RECOMMENDATION_PHD } from './recommendation.js';
 import type {
+  EssayLevel,
+  EssayTrack,
   Question,
   QuestionnaireDefinition,
   QuestionnaireLevel,
@@ -26,8 +30,25 @@ const RECOMMENDATIONS: Record<QuestionnaireLevel, RecommendationDefinition> = {
   PHD: RECOMMENDATION_PHD,
 };
 
-export function essayDefinition(level: QuestionnaireLevel): QuestionnaireDefinition {
-  return ESSAYS[level];
+/**
+ * Ordinary admission asks every degree level the same questions (the office's
+ * call, 2026-11-24) — the level is stamped on so payloads still say which it
+ * is — and language prep its own.
+ */
+const REGULAR_ESSAYS: Record<EssayLevel, QuestionnaireDefinition> = {
+  BACHELOR: { ...ESSAY_REGULAR, level: 'BACHELOR' },
+  MASTER: { ...ESSAY_REGULAR, level: 'MASTER' },
+  PHD: { ...ESSAY_REGULAR, level: 'PHD' },
+  LANGUAGE_PREP: ESSAY_LANGUAGE_PREP,
+};
+
+/** Null for a level the track does not have — GKS has no language-prep set. */
+export function essayDefinition(level: QuestionnaireLevel, track: 'GKS'): QuestionnaireDefinition;
+export function essayDefinition(level: EssayLevel, track: 'REGULAR'): QuestionnaireDefinition;
+export function essayDefinition(level: EssayLevel, track: EssayTrack): QuestionnaireDefinition | null;
+export function essayDefinition(level: EssayLevel, track: EssayTrack): QuestionnaireDefinition | null {
+  if (track === 'REGULAR') return REGULAR_ESSAYS[level];
+  return level === 'LANGUAGE_PREP' ? null : ESSAYS[level];
 }
 
 export function recommendationDefinition(level: QuestionnaireLevel): RecommendationDefinition {
@@ -37,6 +58,8 @@ export function recommendationDefinition(level: QuestionnaireLevel): Recommendat
 /** Every definition, for the tests that hold the whole set to its invariants. */
 export const ALL_DEFINITIONS: readonly QuestionnaireDefinition[] = [
   ...Object.values(ESSAYS),
+  REGULAR_ESSAYS.BACHELOR,
+  REGULAR_ESSAYS.LANGUAGE_PREP,
   ...Object.values(RECOMMENDATIONS),
 ];
 

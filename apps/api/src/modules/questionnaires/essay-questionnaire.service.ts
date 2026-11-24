@@ -7,16 +7,20 @@ import {
   type Answers,
   answersAsText,
   essayDefinition,
+  type EssayLevel,
+  QUESTIONNAIRE_LEVELS,
   type QuestionnaireLevel,
   questionnaireProgress,
   sanitizeAnswers,
 } from './definitions/index.js';
 import type { ReopenEssayDto, SaveEssayDto } from './dto/questionnaire.dto.js';
-import { loadQuestionnaireCase } from './questionnaire-case.js';
+import { loadQuestionnaireCase, type QuestionnaireCase } from './questionnaire-case.js';
 
 /**
- * The client's essay questionnaire (1D-27): one per GKS case, filled in over
- * several sittings, then handed to the office's writer.
+ * The client's essay questionnaire (1D-27): one per case, filled in over
+ * several sittings, then handed to the office's writer. A GKS case answers its
+ * level's scholarship set; a bachelor's, master's or doctoral case answers the
+ * one regular set (1D-33), at the level its service already says.
  *
  * Every save is a merge of the answers that changed — the portal autosaves as
  * the client types, and a whole questionnaire of honest Mongolian paragraphs
@@ -27,23 +31,24 @@ export class EssayQuestionnaireService {
   constructor(private readonly prisma: PrismaService) {}
 
   async get(caseId: string, actor: AuthenticatedUser) {
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const essayCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
     const row = await this.prisma.essayQuestionnaire.findUnique({ where: { caseId } });
-    return this.view(row, gksCase.suggestedLevel, gksCase.applicantName);
+    return this.view(row, essayCase);
   }
 
   async save(caseId: string, dto: SaveEssayDto, actor: AuthenticatedUser) {
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const essayCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
     const existing = await this.prisma.essayQuestionnaire.findUnique({ where: { caseId } });
 
     if (existing?.status === QuestionnaireStatus.SUBMITTED) {
       throw new ConflictException('Асуулга мэргэжилтэнд илгээгдсэн тул засах боломжгүй. Засах зүйл байвал зөвлөхдөө хэлнэ үү.');
     }
 
-    const level = dto.level ?? (existing?.level as QuestionnaireLevel | undefined);
-    if (!level) throw new BadRequestException('Аль түвшний тэтгэлэгт хамрагдахаа сонгоно уу');
+    // A regular case's level is its service; only a GKS client chooses one.
+    const level = essayCase.fixedLevel ?? dto.level ?? (existing ? levelOf(existing, essayCase) : null);
+    const definition = level ? essayDefinition(level, essayCase.track) : null;
+    if (!level || !definition) throw new BadRequestException('Аль түвшний тэтгэлэгт хамрагдахаа сонгоно уу');
 
-    const definition = essayDefinition(level);
     const answers = sanitizeAnswers(definition, { ...toAnswers(existing?.answers), ...(dto.answers ?? {}) });
 
     const row = await this.prisma.essayQuestionnaire.upsert({
@@ -51,19 +56,19 @@ export class EssayQuestionnaireService {
       create: { caseId, level, answers },
       update: { level, answers },
     });
-    return this.view(row, gksCase.suggestedLevel, gksCase.applicantName);
+    return this.view(row, essayCase);
   }
 
   /** Hands the answers to the writer. Only the required questions gate this. */
   async submit(caseId: string, actor: AuthenticatedUser) {
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const essayCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
     const existing = await this.prisma.essayQuestionnaire.findUnique({ where: { caseId } });
     if (!existing) throw new BadRequestException('Асуулга хараахан бөглөгдөөгүй байна');
-    if (existing.status === QuestionnaireStatus.SUBMITTED) {
-      return this.view(existing, gksCase.suggestedLevel, gksCase.applicantName);
-    }
+    if (existing.status === QuestionnaireStatus.SUBMITTED) return this.view(existing, essayCase);
 
-    const definition = essayDefinition(existing.level as QuestionnaireLevel);
+    const level = levelOf(existing, essayCase);
+    const definition = level ? essayDefinition(level, essayCase.track) : null;
+    if (!definition) throw new BadRequestException('Аль түвшний тэтгэлэгт хамрагдахаа сонгоно уу');
     const progress = questionnaireProgress(definition, toAnswers(existing.answers));
     if (progress.missingRequired.length) {
       throw new BadRequestException(`Заавал хариулах ${progress.missingRequired.length} асуулт үлдсэн байна`);
@@ -73,37 +78,41 @@ export class EssayQuestionnaireService {
       where: { caseId },
       data: { status: QuestionnaireStatus.SUBMITTED, submittedAt: new Date(), reopenNote: null },
     });
-    return this.view(row, gksCase.suggestedLevel, gksCase.applicantName);
+    return this.view(row, essayCase);
   }
 
   /** Staff send it back with a note saying what to add. */
   async reopen(caseId: string, dto: ReopenEssayDto, actor: AuthenticatedUser) {
     if (!isStaff(actor.role)) throw new ForbiddenException('Зөвхөн ажилтан буцааж нээнэ');
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const essayCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
     const row = await this.prisma.essayQuestionnaire.update({
       where: { caseId },
       data: { status: QuestionnaireStatus.DRAFT, reopenNote: dto.note.trim(), reopenedAt: new Date() },
     });
-    return this.view(row, gksCase.suggestedLevel, gksCase.applicantName);
+    return this.view(row, essayCase);
   }
 
   /** The writer's copy: every asked question and its answer, as one block of text. */
   async asText(caseId: string, actor: AuthenticatedUser): Promise<string> {
     if (!isStaff(actor.role)) throw new ForbiddenException('Зөвхөн ажилтанд');
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const essayCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
     const row = await this.prisma.essayQuestionnaire.findUnique({ where: { caseId } });
     if (!row) return '';
-    const definition = essayDefinition(row.level as QuestionnaireLevel);
-    return `${gksCase.applicantName}\n\n${answersAsText(definition, toAnswers(row.answers))}`;
+    const level = levelOf(row, essayCase);
+    const definition = level ? essayDefinition(level, essayCase.track) : null;
+    if (!definition) return '';
+    return `${essayCase.applicantName}\n\n${answersAsText(definition, toAnswers(row.answers))}`;
   }
 
-  private view(row: EssayQuestionnaire | null, suggestedLevel: QuestionnaireLevel | null, applicantName: string) {
-    const level = (row?.level as QuestionnaireLevel | undefined) ?? null;
-    const definition = level ? essayDefinition(level) : null;
+  /** A regular case has its definition before the first save — there is nothing to pick. */
+  private view(row: EssayQuestionnaire | null, essayCase: QuestionnaireCase) {
+    const level = row ? levelOf(row, essayCase) : essayCase.fixedLevel;
+    const definition = level ? essayDefinition(level, essayCase.track) : null;
     const answers = toAnswers(row?.answers);
     return {
-      applicantName,
-      suggestedLevel,
+      applicantName: essayCase.applicantName,
+      track: essayCase.track,
+      suggestedLevel: essayCase.suggestedLevel,
       level,
       definition,
       questionnaire: row
@@ -119,6 +128,18 @@ export class EssayQuestionnaireService {
       progress: definition ? questionnaireProgress(definition, answers) : null,
     };
   }
+}
+
+/**
+ * The stored level, unless the case's service has since fixed a different one.
+ * A GKS case holding a language-prep row (the case was moved over) has no level
+ * yet: the client picks one, and the answers with shared ids carry across.
+ */
+function levelOf(row: EssayQuestionnaire, essayCase: QuestionnaireCase): EssayLevel | null {
+  if (essayCase.fixedLevel) return essayCase.fixedLevel;
+  const stored = row.level as EssayLevel;
+  if (essayCase.track === 'GKS' && !QUESTIONNAIRE_LEVELS.includes(stored as QuestionnaireLevel)) return null;
+  return stored;
 }
 
 /** A JSON column read back as the answer map it was written as. */

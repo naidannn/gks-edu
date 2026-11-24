@@ -14,6 +14,19 @@ export type QuestionnaireLevel = 'BACHELOR' | 'MASTER' | 'PHD';
 export const QUESTIONNAIRE_LEVELS: readonly QuestionnaireLevel[] = ['BACHELOR', 'MASTER', 'PHD'];
 
 /**
+ * The level an essay questionnaire is for. GKS and the teachers' letters use
+ * only the three degree levels; ordinary admission also has language prep.
+ */
+export type EssayLevel = QuestionnaireLevel | 'LANGUAGE_PREP';
+
+/**
+ * Which essay questionnaire a case answers: the scholarship's, one set per
+ * level, or ordinary admission's — one set for bachelor, master and PhD alike,
+ * and its own for language prep (1D-33).
+ */
+export type EssayTrack = 'GKS' | 'REGULAR';
+
+/**
  * `long` is a growing textarea, `short` one line, `yesno` a two-button gate
  * that other questions hang off, `choice` one of `options`.
  */
@@ -70,7 +83,7 @@ export interface QuestionSet {
 
 export interface QuestionnaireDefinition extends QuestionSet {
   kind: QuestionnaireKind;
-  level: QuestionnaireLevel;
+  level: EssayLevel;
 }
 
 /** The client's after-registration questionnaire (1B-29) — one set, not one per level. */

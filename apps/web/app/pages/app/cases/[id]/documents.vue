@@ -21,8 +21,8 @@ const printing = ref(false);
 /** The case shell resolves `/me/cases/:id`; the code names the printed file. */
 const caseDetail = inject<{ gksCase: Ref<{ code: string; serviceType: string } | null> } | null>('caseDetail', null);
 const caseCode = computed(() => caseDetail?.gksCase.value?.code);
-/** A GKS case also writes an essay and collects teachers' letters (1D-27). */
-const isGks = computed(() => caseDetail?.gksCase.value?.serviceType === 'GKS_SCHOLARSHIP');
+/** A GKS case writes an essay and collects teachers' letters (1D-27); a bachelor's, master's or PhD case writes an essay (1D-33). */
+const essayTrack = computed(() => essayTrackFor(caseDetail?.gksCase.value?.serviceType));
 
 async function loadAppointments() {
   appointmentView.value = await docs.appointments();
@@ -122,7 +122,7 @@ const originals = computed(() => appointmentView.value?.physicalOriginals ?? [])
       </div>
     </DsCard>
 
-    <QuestionnaireGksCards v-if="isGks" :case-id="caseId" />
+    <QuestionnaireGksCards v-if="essayTrack" :case-id="caseId" :track="essayTrack" />
 
     <DocumentsConditionsForm :conditions="docs.conditions.value" :saving="saving" @save="onSaveConditions" />
 

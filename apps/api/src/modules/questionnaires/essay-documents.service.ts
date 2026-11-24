@@ -39,11 +39,11 @@ export class EssayDocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(caseId: string, actor: AuthenticatedUser) {
-    const gksCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
+    const essayCase = await loadQuestionnaireCase(this.prisma, caseId, actor);
     const rows = await this.prisma.essayDocument.findMany({ where: { caseId }, include: documentInclude });
     const staff = isStaff(actor.role);
     return {
-      applicantName: gksCase.applicantName,
+      applicantName: essayCase.applicantName,
       documents: ESSAY_DOCUMENT_KINDS.map((kind) => this.view(kind, rows.find((row) => row.kind === kind) ?? null, staff)),
     };
   }

@@ -2,8 +2,8 @@
 import type { EssayQuestionnaireView, RecommendationItem, RecommendationListView } from '@gks/shared';
 
 /**
- * The writer's desk for one GKS case (1D-27): the client's essay answers and
- * every teacher's answers, laid out to be read, copied into a draft, printed —
+ * The writer's desk for one case (1D-27): the client's essay answers and, for
+ * GKS, every teacher's answers (a regular case, 1D-33, has no letters tab), laid out to be read, copied into a draft, printed —
  * and the few moves staff make on them: send the essay back with a note,
  * attach the English letter, mark the signed envelope received. The
  * Personal Statement and Study Plan themselves are written on the third tab
@@ -30,12 +30,15 @@ const busy = ref<string | null>(null);
 
 async function load() {
   try {
-    const [essayView, recView] = await Promise.all([
+    // Both at once; a regular case's letters call is refused, and that is its answer.
+    const [essayView, recView] = await Promise.allSettled([
       api.get<EssayQuestionnaireView>(`/cases/${caseId.value}/essay`),
       api.get<RecommendationListView>(`/cases/${caseId.value}/recommendations`),
     ]);
-    essay.value = essayView;
-    recs.value = recView;
+    if (essayView.status === 'rejected') throw essayView.reason;
+    if (essayView.value.track === 'GKS' && recView.status === 'rejected') throw recView.reason;
+    recs.value = recView.status === 'fulfilled' ? recView.value : null;
+    essay.value = essayView.value;
   } catch (error) {
     loadError.value = apiErrorMessage(error, 'Асуулгыг ачаалж чадсангүй');
   }
@@ -129,7 +132,7 @@ function printAnswers() {
   window.print();
 }
 
-useHead({ title: 'GKS асуулга · CRM' });
+useHead({ title: 'Эссэний асуулга · CRM' });
 </script>
 
 <template>
@@ -139,12 +142,12 @@ useHead({ title: 'GKS асуулга · CRM' });
     </NuxtLink>
 
     <DsCard v-if="loadError" accent><p>{{ loadError }}</p></DsCard>
-    <div v-else-if="!essay || !recs" class="gks-skeleton__row gks-skeleton--page" />
+    <div v-else-if="!essay || (essay.track === 'GKS' && !recs)" class="gks-skeleton__row gks-skeleton--page" />
 
     <template v-else>
       <header class="gks-qadmin__head">
         <div>
-          <p class="gks-eyebrow">GKS асуулга<template v-if="essay.level"> · {{ QUESTIONNAIRE_LEVEL_LABELS[essay.level] }}</template></p>
+          <p class="gks-eyebrow">{{ ESSAY_TRACK_LABELS[essay.track] }}<template v-if="essay.level"> · {{ QUESTIONNAIRE_LEVEL_LABELS[essay.level] }}</template></p>
           <h1 class="gks-qadmin__h1">{{ essay.applicantName }}</h1>
         </div>
       </header>
@@ -156,7 +159,7 @@ useHead({ title: 'GKS асуулга · CRM' });
         <button type="button" class="gks-tab" :class="{ 'gks-tab--active': tab === 'write' }" @click="openTab('write')">
           <DsIcon name="file-pen-line" :size="16" /><span>Personal Statement · Study Plan</span>
         </button>
-        <button type="button" class="gks-tab" :class="{ 'gks-tab--active': tab === 'letters' }" @click="openTab('letters')">
+        <button v-if="recs" type="button" class="gks-tab" :class="{ 'gks-tab--active': tab === 'letters' }" @click="openTab('letters')">
           <DsIcon name="signature" :size="16" /><span>Багшийн тодорхойлолт</span>
           <span v-if="recs.items.length" class="gks-tab__count gks-tnum">{{ recs.items.length }}</span>
         </button>
@@ -226,7 +229,7 @@ useHead({ title: 'GKS асуулга · CRM' });
       <EssayWriterDesk v-else-if="tab === 'write'" :case-id="caseId" :essay="essay" />
 
       <!-- ── Letters ───────────────────────────────────────────── -->
-      <template v-else>
+      <template v-else-if="recs">
         <DsCard v-if="!recs.items.length" padding="var(--sp-8)">
           <p class="gks-qadmin__empty">
             Үйлчлүүлэгч тодорхойлолт хүсэх багшаа хараахан нэмээгүй байна.
