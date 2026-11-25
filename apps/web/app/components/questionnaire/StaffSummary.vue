@@ -34,9 +34,11 @@ watch(() => props.caseId, load);
 
 const essayLine = computed(() => {
   const view = essay.value;
-  if (!view?.questionnaire) return 'Эхлээгүй';
-  const progress = view.progress;
+  // A regular case knows its questions before the first answer, so even an
+  // untouched questionnaire says how long it is — "0/52", not a bare word.
+  const progress = view?.progress;
   const count = progress ? `${progress.answered}/${progress.total} асуулт` : '';
+  if (!view?.questionnaire) return count ? `Эхлээгүй · ${count}` : 'Эхлээгүй';
   if (view.questionnaire.status === 'SUBMITTED') return `Илгээсэн · ${count}`;
   return `Бөглөж байна · ${count}`;
 });
